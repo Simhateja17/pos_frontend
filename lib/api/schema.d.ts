@@ -352,6 +352,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/terminal/pin/switch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description PIN-switch the acting operator on a shared terminal. Requires an existing authenticated session (authMiddleware); does not create a new Supabase Auth session — issues a short-lived signed operator token instead (D-09/D-10). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PinSwitchRequest"];
+                };
+            };
+            responses: {
+                /** @description PIN-switch successful */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PinSwitchResponse"];
+                    };
+                };
+                /** @description Incorrect PIN, locked out, or unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -413,6 +460,18 @@ export interface components {
             role: "owner" | "manager" | "cashier";
         };
         SetPinRequest: {
+            pin: string;
+        };
+        PinSwitchResponse: {
+            operatorToken: string;
+            staff: {
+                id: string;
+                /** @enum {string} */
+                role: "owner" | "manager" | "cashier";
+            };
+        };
+        PinSwitchRequest: {
+            staffId: string;
             pin: string;
         };
     };
