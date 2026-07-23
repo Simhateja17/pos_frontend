@@ -1,0 +1,9 @@
+{
+  "name": "openapi-gen-tool",
+  "private": true,
+  "description": "Isolated toolchain for running openapi-typescript, which requires typescript@^5.x as a peer dependency, without conflicting with the main frontend project's pinned typescript@7.0.2 (see 01-10-SUMMARY.md for the incompatibility this works around).",
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.7.0"
+  }
+}
