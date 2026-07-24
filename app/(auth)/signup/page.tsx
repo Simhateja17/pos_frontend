@@ -1,107 +1,100 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { IndiaAuthShell } from '@/components/auth/india-auth-shell'
+import styles from '@/components/auth/india-auth.module.css'
 
-type StepOneFields = {
+type AccountFields = {
   ownerName: string
-  businessName: string
+  phone: string
   email: string
   password: string
 }
 
-type StepTwoFields = {
+type BusinessFields = {
+  businessName: string
   addressLine1: string
   addressLine2: string
   city: string
   state: string
   postalCode: string
-  country: string
   taxId: string
 }
 
-const DUPLICATE_EMAIL_ERROR =
-  'An account already exists with this email. Log in instead'
-const GENERIC_PROFILE_ERROR =
-  "We couldn't save your business details. Check the highlighted fields and try again."
-
-function labelStyle() {
-  return {
-    fontSize: '13px',
-    fontWeight: 700 as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
-  }
-}
+const DUPLICATE_EMAIL_ERROR = 'An account already exists with this email. Log in instead'
 
 export default function SignupPage() {
   const router = useRouter()
-  const [step, setStep] = useState<1 | 2>(1)
-  const [stepOne, setStepOne] = useState<StepOneFields>({
+  const [step, setStep] = useState<'account' | 'business'>('account')
+  const [showPassword, setShowPassword] = useState(false)
+  const [agreed, setAgreed] = useState(false)
+  const [account, setAccount] = useState<AccountFields>({
     ownerName: '',
-    businessName: '',
+    phone: '',
     email: '',
     password: '',
   })
-  const [stepTwo, setStepTwo] = useState<StepTwoFields>({
+  const [business, setBusiness] = useState<BusinessFields>({
+    businessName: '',
     addressLine1: '',
     addressLine2: '',
-    city: '',
-    state: '',
+    city: 'Mumbai',
+    state: 'Maharashtra',
     postalCode: '',
-    country: 'US',
     taxId: '',
   })
   const [error, setError] = useState<string | null>(null)
-  const [isDuplicateEmail, setIsDuplicateEmail] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleStepOneSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleAccountSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    setStep(2)
+    if (!agreed) {
+      setError('Please accept the Terms of Service and Privacy Policy to continue.')
+      return
+    }
+    localStorage.setItem(
+      'couture.signup.draft',
+      JSON.stringify({ ownerName: account.ownerName, phone: account.phone, email: account.email }),
+    )
+    setStep('business')
   }
 
-  async function handleStepTwoSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleBusinessSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    setIsDuplicateEmail(false)
     setIsSubmitting(true)
 
     const { data, error: signupError } = await apiClient.POST('/auth/signup', {
       body: {
-        ownerName: stepOne.ownerName,
-        businessName: stepOne.businessName,
-        email: stepOne.email,
-        password: stepOne.password,
-        addressLine1: stepTwo.addressLine1,
-        addressLine2: stepTwo.addressLine2 || undefined,
-        city: stepTwo.city,
-        state: stepTwo.state,
-        postalCode: stepTwo.postalCode,
-        country: stepTwo.country,
-        taxId: stepTwo.taxId || undefined,
+        ownerName: account.ownerName,
+        businessName: business.businessName,
+        email: account.email,
+        password: account.password,
+        addressLine1: business.addressLine1,
+        addressLine2: business.addressLine2 || undefined,
+        city: business.city,
+        state: business.state,
+        postalCode: business.postalCode,
+        country: 'IN',
+        taxId: business.taxId || undefined,
       },
     })
 
     setIsSubmitting(false)
 
     if (signupError) {
-      const status = (signupError as { error?: string }).error
-      const is409 = status === 'An account already exists with this email. Log in instead'
-      if (is409) {
-        setIsDuplicateEmail(true)
-        setError(DUPLICATE_EMAIL_ERROR)
-      } else {
-        setError(GENERIC_PROFILE_ERROR)
-      }
+      const message = (signupError as { error?: string }).error
+      setError(
+        message === DUPLICATE_EMAIL_ERROR
+          ? DUPLICATE_EMAIL_ERROR
+          : "We couldn't create your account. Check the details and try again.",
+      )
       return
     }
 
@@ -112,248 +105,143 @@ export default function SignupPage() {
       })
     }
 
+    localStorage.removeItem('couture.signup.draft')
     router.push('/store-type')
   }
 
   return (
-    <div className="flex w-full max-w-[400px] flex-col gap-3">
-      <p className="text-center text-sm" style={{ color: '#64748B' }}>
-        {step === 1 ? 'Step 1 of 2' : 'Step 2 of 2'}
-      </p>
-      <Card className="w-full" style={{ backgroundColor: '#FFFFFF' }}>
-        <CardHeader>
-          {step === 1 ? (
-            <h1
-              className="mb-2"
-              style={{
-                fontFamily: 'Sora, sans-serif',
-                fontSize: '28px',
-                fontWeight: 700,
-                lineHeight: 1.2,
-              }}
-            >
-              Create your account
-            </h1>
-          ) : (
-            <h2
-              className="mb-2"
-              style={{
-                fontFamily: 'Sora, sans-serif',
-                fontSize: '20px',
-                fontWeight: 700,
-                lineHeight: 1.2,
-              }}
-            >
-              Business &amp; tax profile
-            </h2>
-          )}
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>
-                {isDuplicateEmail ? (
-                  <>
-                    {DUPLICATE_EMAIL_ERROR.replace(' Log in instead', '')}{' '}
-                    <a href="/login" style={{ color: '#0058BA' }}>
-                      Log in instead
-                    </a>
-                  </>
-                ) : (
-                  error
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {step === 1 && (
-            <form onSubmit={handleStepOneSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ownerName" style={labelStyle()}>
-                  Owner name
-                </Label>
-                <Input
-                  id="ownerName"
+    <IndiaAuthShell mode="signup">
+      {step === 'account' ? (
+        <>
+          <h1 className={styles.heading}>Create your store account.</h1>
+          <p className={styles.subheading}>14-day free trial · No credit card required.</p>
+          {error && <div className={styles.alert} role="alert">{error}</div>}
+          <form onSubmit={handleAccountSubmit}>
+            <label className={styles.field}>
+              <span className={styles.label}>Full name<span className={styles.required}>*</span></span>
+              <input
+                className={styles.input}
+                placeholder="Your name"
+                autoComplete="name"
+                required
+                value={account.ownerName}
+                onChange={(event) => setAccount((current) => ({ ...current, ownerName: event.target.value }))}
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Mobile number<span className={styles.required}>*</span></span>
+              <span className={styles.phoneRow}>
+                <span className={styles.countryCode} aria-hidden="true">🇮🇳 +91⌄</span>
+                <input
+                  className={`${styles.input} ${styles.phoneInput}`}
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="98200 00000"
+                  autoComplete="tel"
+                  minLength={10}
                   required
-                  value={stepOne.ownerName}
-                  onChange={(e) =>
-                    setStepOne((s) => ({ ...s, ownerName: e.target.value }))
-                  }
+                  value={account.phone}
+                  onChange={(event) => setAccount((current) => ({ ...current, phone: event.target.value }))}
                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="businessName" style={labelStyle()}>
-                  Business name
-                </Label>
-                <Input
-                  id="businessName"
-                  required
-                  value={stepOne.businessName}
-                  onChange={(e) =>
-                    setStepOne((s) => ({ ...s, businessName: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" style={labelStyle()}>
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={stepOne.email}
-                  onChange={(e) =>
-                    setStepOne((s) => ({ ...s, email: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password" style={labelStyle()}>
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
+              </span>
+              <span className={styles.hint}>Used as your store contact number</span>
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Email address</span>
+              <input
+                className={styles.input}
+                type="email"
+                placeholder="owner@yourstore.com"
+                autoComplete="email"
+                required
+                value={account.email}
+                onChange={(event) => setAccount((current) => ({ ...current, email: event.target.value }))}
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Password<span className={styles.required}>*</span></span>
+              <span className={styles.passwordWrap}>
+                <input
+                  className={styles.input}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min 8 characters"
                   autoComplete="new-password"
                   minLength={8}
                   required
-                  value={stepOne.password}
-                  onChange={(e) =>
-                    setStepOne((s) => ({ ...s, password: e.target.value }))
-                  }
+                  value={account.password}
+                  onChange={(event) => setAccount((current) => ({ ...current, password: event.target.value }))}
                 />
-              </div>
-              <Button
-                type="submit"
-                className="w-full"
-                style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
-              >
-                Create your account
-              </Button>
-              <p className="text-center text-sm" style={{ color: '#64748B' }}>
-                Already have an account?{' '}
-                <a href="/login" style={{ color: '#0058BA' }}>
-                  Log in
-                </a>
-              </p>
-            </form>
-          )}
-
-          {step === 2 && (
-            <form onSubmit={handleStepTwoSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="addressLine1" style={labelStyle()}>
-                  Address line 1
-                </Label>
-                <Input
-                  id="addressLine1"
-                  required
-                  value={stepTwo.addressLine1}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, addressLine1: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="addressLine2" style={labelStyle()}>
-                  Address line 2 (optional)
-                </Label>
-                <Input
-                  id="addressLine2"
-                  value={stepTwo.addressLine2}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, addressLine2: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="city" style={labelStyle()}>
-                  City
-                </Label>
-                <Input
-                  id="city"
-                  required
-                  value={stepTwo.city}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, city: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="state" style={labelStyle()}>
-                  State
-                </Label>
-                <Input
-                  id="state"
-                  required
-                  value={stepTwo.state}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, state: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="postalCode" style={labelStyle()}>
-                  Postal code
-                </Label>
-                <Input
-                  id="postalCode"
-                  required
-                  value={stepTwo.postalCode}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, postalCode: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="country" style={labelStyle()}>
-                  Country
-                </Label>
-                <Input
-                  id="country"
-                  required
-                  value={stepTwo.country}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, country: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="taxId" style={labelStyle()}>
-                  Tax ID (optional)
-                </Label>
-                <Input
-                  id="taxId"
-                  value={stepTwo.taxId}
-                  onChange={(e) =>
-                    setStepTwo((s) => ({ ...s, taxId: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
+                <button
+                  className={styles.eye}
                   type="button"
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="w-full"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword((visible) => !visible)}
                 >
-                  Back
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full"
-                  style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
-                >
-                  Finish setup
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </span>
+            </label>
+            <label className={styles.agreement}>
+              <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+              <span>
+                I agree to Couture POS <a className={styles.link} href="#terms">Terms of Service</a> and{' '}
+                <a className={styles.link} href="#privacy">Privacy Policy</a>
+              </span>
+            </label>
+            <button className={styles.primary} type="submit">Create account &amp; continue →</button>
+          </form>
+          <div className={styles.separator}>or</div>
+          <p className={styles.footerText}>
+            Already have an account? <Link className={styles.link} href="/login">Sign in</Link>
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className={styles.heading}>Complete your business profile.</h1>
+          <p className={styles.subheading}>These details appear on your invoices and tax records.</p>
+          {error && <div className={styles.alert} role="alert">{error}</div>}
+          <form onSubmit={handleBusinessSubmit}>
+            <label className={styles.field}>
+              <span className={styles.label}>Business name<span className={styles.required}>*</span></span>
+              <input className={styles.input} placeholder="Your registered business name" required value={business.businessName} onChange={(event) => setBusiness((current) => ({ ...current, businessName: event.target.value }))} />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Business address<span className={styles.required}>*</span></span>
+              <input className={styles.input} placeholder="Address line 1" required value={business.addressLine1} onChange={(event) => setBusiness((current) => ({ ...current, addressLine1: event.target.value }))} />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Address line 2</span>
+              <input className={styles.input} placeholder="Area or landmark (optional)" value={business.addressLine2} onChange={(event) => setBusiness((current) => ({ ...current, addressLine2: event.target.value }))} />
+            </label>
+            <div className={styles.actions}>
+              <label className={styles.field}>
+                <span className={styles.label}>City<span className={styles.required}>*</span></span>
+                <input className={styles.input} required value={business.city} onChange={(event) => setBusiness((current) => ({ ...current, city: event.target.value }))} />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>State<span className={styles.required}>*</span></span>
+                <input className={styles.input} required value={business.state} onChange={(event) => setBusiness((current) => ({ ...current, state: event.target.value }))} />
+              </label>
+            </div>
+            <div className={styles.actions}>
+              <label className={styles.field}>
+                <span className={styles.label}>PIN code<span className={styles.required}>*</span></span>
+                <input className={styles.input} inputMode="numeric" required value={business.postalCode} onChange={(event) => setBusiness((current) => ({ ...current, postalCode: event.target.value }))} />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>GSTIN</span>
+                <input className={styles.input} placeholder="Optional" value={business.taxId} onChange={(event) => setBusiness((current) => ({ ...current, taxId: event.target.value }))} />
+              </label>
+            </div>
+            <div className={styles.actions}>
+              <button className={styles.secondary} type="button" onClick={() => setStep('account')}>← Back</button>
+              <button className={styles.primary} type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating account…' : 'Create account →'}
+              </button>
+            </div>
+          </form>
+        </>
+      )}
+    </IndiaAuthShell>
   )
 }
