@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useReactToPrint } from 'react-to-print'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
@@ -57,6 +58,14 @@ function formatPrice(price: string) {
 }
 
 export default function LabelsPage() {
+  return (
+    <Suspense fallback={null}>
+      <LabelsPageContent />
+    </Suspense>
+  )
+}
+
+function LabelsPageContent() {
   const searchParams = useSearchParams()
   const preselectVariantId = searchParams.get('variantId')
 
@@ -64,6 +73,9 @@ export default function LabelsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  const contentRef = useRef<HTMLDivElement>(null)
+  const handlePrint = useReactToPrint({ contentRef })
 
   const loadVariants = useCallback(async () => {
     setIsLoading(true)
@@ -121,6 +133,14 @@ export default function LabelsPage() {
         >
           Print labels
         </h1>
+        <Button
+          type="button"
+          disabled={selectedRows.length === 0}
+          onClick={() => handlePrint()}
+          style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
+        >
+          Print labels
+        </Button>
       </div>
 
       {loadError && (
@@ -193,6 +213,20 @@ export default function LabelsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Actual printable content — natural (1x) scale, hidden on screen via sr-only,
+          made visible in @media print via globals.css's .label-sheet rules. Kept in
+          the DOM at all times so contentRef always has content to print. */}
+      <div ref={contentRef} className="label-sheet sr-only">
+        {selectedRows.map((row) => (
+          <BarcodeLabel
+            key={row.variant.id}
+            sku={row.variant.sku}
+            name={variantDisplayName(row)}
+            price={formatPrice(row.variant.price)}
+          />
+        ))}
       </div>
     </div>
   )
