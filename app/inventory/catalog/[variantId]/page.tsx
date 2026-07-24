@@ -252,6 +252,15 @@ export default function VariantDetailPage() {
     if (!variant) return
 
     setAdjustError(null)
+
+    // WR-06: mirror CreateStockMovementSchema's "quantityDelta must not be
+    // zero" refine client-side so a 0 entry gets a field-specific message
+    // instead of the generic error (0 passes HTML5 required validation).
+    if (Number(adjustQty) === 0) {
+      setAdjustError('Quantity cannot be zero')
+      return
+    }
+
     setIsAdjusting(true)
 
     const headers = await authHeader()
@@ -290,6 +299,15 @@ export default function VariantDetailPage() {
     if (!variant) return
 
     setTransferError(null)
+
+    // WR-06: mirror CreateStockMovementSchema's "quantityDelta must not be
+    // zero" refine client-side so a 0 entry gets a field-specific message
+    // instead of the generic error (0 passes HTML5 required validation).
+    if (Number(transferQty) === 0) {
+      setTransferError('Quantity cannot be zero')
+      return
+    }
+
     setIsTransferring(true)
 
     const headers = await authHeader()
