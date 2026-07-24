@@ -21,6 +21,7 @@ import {
   type TenderRow,
 } from '@/components/checkout/payment-method-grid'
 import { ManagerApprovalModal } from '@/components/checkout/manager-approval-modal'
+import { Receipt, type ReceiptSale } from '@/components/checkout/receipt'
 
 type Variant = {
   id: string
@@ -49,6 +50,17 @@ type Customer = {
   name: string | null
   phone: string | null
   email: string | null
+}
+
+type SaleResponse = {
+  id: string
+  createdAt: string
+  subtotal: string
+  discountAmount: string
+  taxAmount: string
+  totalAmount: string
+  businessName?: string | null
+  lines: { variantId: string; quantity: number; unitPrice: string; lineTotal: string }[]
 }
 
 const SCAN_PLACEHOLDER = 'Scan barcode or search by name…'
@@ -135,6 +147,11 @@ function CheckoutPageInner() {
   const [showApprovalModal, setShowApprovalModal] = useState(false)
   const [pendingSaleBody, setPendingSaleBody] = useState<PendingSaleBody | null>(null)
 
+  // Post-charge receipt (CHECK-06). Stays visible until the cashier starts a
+  // new sale (typing in the scan field or adding a new cart line clears it).
+  const [completedSale, setCompletedSale] = useState<ReceiptSale | null>(null)
+  const [businessName, setBusinessName] = useState('')
+
   // D-12: pre-attach an existing customer id from the query param on mount.
   useEffect(() => {
     if (customerIdParam) {
@@ -163,6 +180,8 @@ function CheckoutPageInner() {
 
   async function runSearch(query: string) {
     setSearchError(null)
+    // Starting to scan/search for the next sale clears the prior receipt.
+    setCompletedSale(null)
     if (!query.trim()) {
       setSearchResults([])
       return
@@ -195,6 +214,8 @@ function CheckoutPageInner() {
   }
 
   function addToCart(hit: SearchHit) {
+    // Adding a new cart line starts the next sale — clear the prior receipt.
+    setCompletedSale(null)
     setCart((current) => {
       const existing = current.find((l) => l.variantId === hit.variant.id)
       if (existing) {
@@ -367,7 +388,7 @@ function CheckoutPageInner() {
     setIsCharging(false)
 
     if (!error && data) {
-      onChargeSuccess(data.totalAmount)
+      onChargeSuccess(data as SaleResponse)
       return
     }
 
@@ -383,8 +404,29 @@ function CheckoutPageInner() {
     setChargeError(GENERIC_CHARGE_FAILURE)
   }
 
-  function onChargeSuccess(totalAmount: string) {
-    setSuccessMessage(`Sale complete — $${totalAmount} charged.`)
+  function onChargeSuccess(sale: SaleResponse) {
+    setSuccessMessage(`Sale complete — $${sale.totalAmount} charged.`)
+
+    // Enrich the persisted sale's lines with the cart's product names for
+    // receipt display — the sale response itself only carries variantId
+    // (no product/variant name join server-side). The Total paid figure and
+    // every other money field on the receipt still come directly from
+    // `sale`, never recomputed (Pitfall 2).
+    const cartByVariantId = new Map(cart.map((l) => [l.variantId, l]))
+    setCompletedSale({
+      id: sale.id,
+      createdAt: sale.createdAt,
+      subtotal: sale.subtotal,
+      discountAmount: sale.discountAmount,
+      taxAmount: sale.taxAmount,
+      totalAmount: sale.totalAmount,
+      lines: sale.lines.map((line) => ({
+        ...line,
+        name: cartByVariantId.get(line.variantId)?.name,
+      })),
+    })
+    setBusinessName(sale.businessName ?? businessName)
+
     setCart([])
     setCartDiscountMode('none')
     setCartDiscountValue('')
@@ -406,7 +448,7 @@ function CheckoutPageInner() {
     })
     if (!error && data) {
       setShowApprovalModal(false)
-      onChargeSuccess(data.totalAmount)
+      onChargeSuccess(data as SaleResponse)
       return
     }
     setShowApprovalModal(false)
@@ -434,6 +476,12 @@ function CheckoutPageInner() {
         <Alert className="mb-4">
           <AlertDescription>{successMessage}</AlertDescription>
         </Alert>
+      )}
+
+      {completedSale && (
+        <div className="mb-6">
+          <Receipt sale={completedSale} businessName={businessName} />
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_420px]">
