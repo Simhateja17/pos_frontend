@@ -1,3 +1,5 @@
+import "./globals.css";
+
 export const metadata = {
   title: "Couture POS — India's Most Complete Retail Suite",
 };
