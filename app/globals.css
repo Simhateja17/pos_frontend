@@ -648,3 +648,48 @@ tbody tr{transition:background .15s,transform .15s var(--ease)}
     @apply font-sans;
   }
 }
+
+/* Phase 2 — thermal label print layout (D-07). Screen-only preview is 2x
+   the physical size (see labels page, plan 08); this block governs the
+   actual browser print output only. */
+.label {
+  width: 2in;
+  height: 1in;
+  padding: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.label-name {
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+  font-size: 9pt; /* print-only exception per UI-SPEC — Sora not guaranteed crisp at thermal-print resolution */
+}
+.label-price {
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+  font-size: 11pt;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .label-sheet,
+  .label-sheet * {
+    visibility: visible;
+  }
+  .label-sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .label {
+    page-break-after: always;
+  }
+  @page {
+    size: 2in 1in;
+    margin: 0;
+  }
+}
