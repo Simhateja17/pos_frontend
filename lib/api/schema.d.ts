@@ -303,10 +303,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List the caller's tenant's products with variants and current stock. */
+        /** @description List the caller's tenant's products with variants and current stock. Optional `search` filters to an exact-sku or partial-name match (CHECK-01/CHECK-02). */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    search?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -694,6 +696,436 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Look up prior sales by receipt number or customer search (D-09). Each returned sale includes its lines and payments. */
+        get: {
+            parameters: {
+                query?: {
+                    receiptNumber?: string;
+                    customerSearch?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matching sales */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sale"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Complete a checkout sale — server recomputes totals, enforces payment-sum, gates above-threshold discounts behind manager+ approval (D-05), writes sale+lines+payments+stock movements atomically. Response includes the sale's payments array. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSaleRequest"];
+                };
+            };
+            responses: {
+                /** @description Sale completed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sale"];
+                    };
+                };
+                /** @description Invalid request, variant not found, or payment sum mismatch */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Discount exceeds the tenant's manager-approval threshold and the acting role is not manager+ */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Target shift is already closed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sales/{saleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a single sale with its line items and payments. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    saleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sale */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sale"];
+                    };
+                };
+                /** @description Sale not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Process a partial or full return/refund against a prior sale (CHECK-07, D-09 through D-12). Writes a positive-delta return stock movement and refund payment row(s) against the original payment method — server-validated against the original sale's actual payment methods (D-10). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateReturnRequest"];
+                };
+            };
+            responses: {
+                /** @description Return processed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid request, over-return, refund-sum mismatch, or refund method not used on the original sale */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sale or line item not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Target shift is already closed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Search customers by phone, email, or name (CUST-01, D-09). */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matching customers */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Customer"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sales/{saleId}/resend-receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Resend a receipt email for a completed sale (CHECK-06) — resolves a real target email and reports the actual send outcome. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    saleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResendReceiptRequest"];
+                };
+            };
+            responses: {
+                /** @description Receipt sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResendReceiptResponse"];
+                    };
+                };
+                /** @description No email address available */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sale not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Email delivery failed */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Open a shift with a starting cash count (D-14). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["OpenShiftRequest"];
+                };
+            };
+            responses: {
+                /** @description Shift opened */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Shift"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shifts/{shiftId}/x-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Live, non-resetting shift snapshot (D-15, CASH-02). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shiftId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description X report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["XReport"];
+                    };
+                };
+                /** @description Shift not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shifts/{shiftId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Close a shift (Z report) — counted cash, variance, locks the shift (D-15/D-16). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shiftId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CloseShiftRequest"];
+                };
+            };
+            responses: {
+                /** @description Shift closed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZReport"];
+                    };
+                };
+                /** @description Shift not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Shift already closed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -848,6 +1280,151 @@ export interface components {
         PinSwitchRequest: {
             staffId: string;
             pin: string;
+        };
+        Sale: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            clientSaleId: string;
+            /** Format: uuid */
+            shiftId: string | null;
+            /** Format: uuid */
+            customerId: string | null;
+            subtotal: string;
+            discountAmount: string;
+            taxAmount: string;
+            totalAmount: string;
+            status: string;
+            /** Format: uuid */
+            createdBy: string | null;
+            createdAt: string;
+            lines: components["schemas"]["SaleLineItem"][];
+            payments: components["schemas"]["Payment"][];
+        };
+        SaleLineItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            variantId: string;
+            quantity: number;
+            unitPrice: string;
+            discountPercent: string | null;
+            discountAmount: string;
+            isTaxable: boolean;
+            lineTotal: string;
+        };
+        Payment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            saleId: string;
+            /** @enum {string} */
+            method: "cash" | "card" | "check";
+            /** @enum {string} */
+            direction: "payment" | "refund";
+            amount: string;
+            referenceCode: string | null;
+            /** Format: uuid */
+            createdBy: string | null;
+            createdAt: string;
+        };
+        CreateSaleRequest: {
+            /** Format: uuid */
+            clientSaleId: string;
+            /** Format: uuid */
+            shiftId: string;
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                quantity: number;
+                discountPercent?: string;
+                discountAmount?: string;
+            }[];
+            cartDiscountPercent?: string;
+            cartDiscountAmount?: string;
+            payments: components["schemas"]["PaymentInput"][];
+            customer?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string;
+                phone?: string;
+                /** Format: email */
+                email?: string;
+            };
+            /** Format: email */
+            receiptEmail?: string;
+        };
+        PaymentInput: {
+            /** @enum {string} */
+            method: "cash" | "card" | "check";
+            amount: string;
+            referenceCode?: string;
+        };
+        CreateReturnRequest: {
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            shiftId: string;
+            lines: {
+                /** Format: uuid */
+                saleLineItemId: string;
+                quantity: number;
+            }[];
+            refundPayments: {
+                /** @enum {string} */
+                method: "cash" | "card" | "check";
+                amount: string;
+                referenceCode?: string;
+            }[];
+        };
+        Customer: {
+            /** Format: uuid */
+            id: string;
+            name: string | null;
+            phone: string | null;
+            email: string | null;
+            createdAt: string;
+        };
+        ResendReceiptResponse: {
+            ok: boolean;
+            /** Format: email */
+            email: string;
+        };
+        ResendReceiptRequest: {
+            /** Format: email */
+            email?: string;
+        };
+        Shift: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            staffId: string;
+            startingCash: string;
+            openedAt: string;
+            countedCash: string | null;
+            variance: string | null;
+            closedAt: string | null;
+        };
+        OpenShiftRequest: {
+            startingCash: string;
+        };
+        XReport: {
+            /** Format: uuid */
+            shiftId: string;
+            expectedCash: string;
+            cashSalesTotal: string;
+            cardSalesTotal: string;
+            checkSalesTotal: string;
+            refundsTotal: string;
+            saleCount: number;
+        };
+        ZReport: components["schemas"]["XReport"] & {
+            countedCash: string;
+            variance: string;
+            closedAt: string;
+        };
+        CloseShiftRequest: {
+            countedCash: string;
         };
     };
     responses: never;
