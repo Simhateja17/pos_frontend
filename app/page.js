@@ -97,9 +97,14 @@ function featBadges(b3, b4) {
 }
 
 export default function LandingPage() {
-  // Full page load so the POS app's DOM-injecting script boots fresh every time
+  const goLogin = () => {
+    window.location.href = "/login";
+  };
+  const goSignup = () => {
+    window.location.href = "/signup";
+  };
   const goApp = () => {
-    window.location.href = "/app";
+    window.location.href = "/app/dashboard";
   };
 
   useEffect(() => {
@@ -195,8 +200,8 @@ export default function LandingPage() {
           <a href="#pricing">Pricing</a>
         </div>
         <div className="nav-ctas">
-          <button className="btn-outline" onClick={goApp}>Log in</button>
-          <button className="btn-primary" onClick={goApp}>Start free trial</button>
+          <button className="btn-outline" onClick={goLogin}>Log in</button>
+          <button className="btn-primary" onClick={goSignup}>Start free trial</button>
         </div>
       </nav>
 

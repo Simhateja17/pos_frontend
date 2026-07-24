@@ -39,10 +39,7 @@ export default function LoginPage() {
       return
     }
 
-    // Real post-login destination (owner/manager dashboard) lands in a later
-    // phase (Phase 7). Redirect to the app root as a placeholder authenticated
-    // route for now.
-    router.push('/')
+    router.push('/app/dashboard')
   }
 
   async function handleForgotPassword() {

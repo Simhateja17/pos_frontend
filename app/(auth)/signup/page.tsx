@@ -112,8 +112,7 @@ export default function SignupPage() {
       })
     }
 
-    // Real post-signup destination (owner dashboard) lands in a later phase.
-    router.push('/')
+    router.push('/store-type')
   }
 
   return (
