@@ -296,6 +296,301 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the caller's tenant's products with variants and current stock. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of products */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Create a product with one or more variants (D-01/D-02). SKU auto-generated per variant unless supplied. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProductRequest"];
+                };
+            };
+            responses: {
+                /** @description Product created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description SKU collision */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a single product with its variants and current stock. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Product */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description Product not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{productId}/variants/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edit a variant. Price/reorderThreshold always editable; size/color/material blocked once stock has moved (D-04). */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateVariantRequest"];
+                };
+            };
+            responses: {
+                /** @description Variant updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Variant"];
+                    };
+                };
+                /** @description Variant not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Variant identity is locked */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/stock-movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read-only movement history for a variant. */
+        get: {
+            parameters: {
+                query: {
+                    variantId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Movement history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockMovement"][];
+                    };
+                };
+                /** @description variantId is required */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** @description Record a stock movement (receive/adjustment/transfer). Adjustment requires manager or owner role (D-13). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateStockMovementRequest"];
+                };
+            };
+            responses: {
+                /** @description Movement recorded */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockMovement"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions (adjustment requires manager+) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stock-movements/low-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Variants at or below their reorder threshold (INV-03). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Low-stock variants */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LowStockVariant"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/set-pin": {
         parameters: {
             query?: never;
@@ -458,6 +753,86 @@ export interface components {
         UpdateMemberRoleRequest: {
             /** @enum {string} */
             role: "owner" | "manager" | "cashier";
+        };
+        Product: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            category: string | null;
+            createdAt: string;
+            variants: components["schemas"]["Variant"][];
+        };
+        Variant: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            productId: string;
+            sku: string;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+            price: string;
+            reorderThreshold: number;
+            identityLocked: boolean;
+            currentStock: number;
+            createdAt: string;
+        };
+        CreateProductRequest: {
+            name: string;
+            category?: string;
+            variants: {
+                sku?: string;
+                size?: string;
+                color?: string;
+                material?: string;
+                price: number;
+                reorderThreshold?: number;
+            }[];
+        };
+        UpdateVariantRequest: {
+            size?: string;
+            color?: string;
+            material?: string;
+            price?: number;
+            reorderThreshold?: number;
+        };
+        StockMovement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            variantId: string;
+            /** @enum {string} */
+            movementType: "sale" | "receive" | "adjustment" | "return" | "transfer";
+            quantityDelta: number;
+            /** @enum {string|null} */
+            reasonCode: "damage" | "shrinkage_theft" | "count_correction" | "other" | null;
+            reasonNote: string | null;
+            /** Format: uuid */
+            createdBy: string | null;
+            createdAt: string;
+        };
+        CreateStockMovementRequest: {
+            /** Format: uuid */
+            variantId: string;
+            /** @enum {string} */
+            movementType: "receive" | "adjustment" | "transfer";
+            quantityDelta: number;
+            /** @enum {string} */
+            reasonCode?: "damage" | "shrinkage_theft" | "count_correction" | "other";
+            reasonNote?: string;
+        };
+        LowStockVariant: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            sku: string;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+            quantity: number;
+            reorderThreshold: number;
         };
         SetPinRequest: {
             pin: string;
