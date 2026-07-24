@@ -4,6 +4,187 @@
  */
 
 export interface paths {
+    "/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the authenticated tenant's server-owned onboarding draft and completion state. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Persisted onboarding state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OnboardingState"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/onboarding/steps/{step}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Save one validated onboarding step for the authenticated tenant. Owner-only. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    step: components["schemas"]["OnboardingStepNumber"];
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["OnboardingStepRequest"];
+                };
+            };
+            responses: {
+                /** @description Onboarding step saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OnboardingState"];
+                    };
+                };
+                /** @description Invalid step or step payload */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Earlier steps are incomplete or onboarding is already complete */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Complete onboarding only after all eight persisted steps pass server validation. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CompleteOnboardingRequest"];
+                };
+            };
+            responses: {
+                /** @description Onboarding completed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OnboardingCompletionResponse"];
+                    };
+                };
+                /** @description Invalid completion request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description One or more required onboarding steps are incomplete */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/signup": {
         parameters: {
             query?: never;
@@ -1130,6 +1311,180 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        OnboardingState: {
+            data: components["schemas"]["OnboardingData"];
+            currentStep: number;
+            completed: boolean;
+            /** Format: date-time */
+            completedAt: string | null;
+        };
+        OnboardingData: {
+            1?: components["schemas"]["OnboardingBusinessIdentityStep"];
+            2?: components["schemas"]["OnboardingGstComplianceStep"];
+            3?: components["schemas"]["OnboardingStoreSetupStep"];
+            4?: components["schemas"]["OnboardingBillingInvoiceStep"];
+            5?: components["schemas"]["OnboardingPaymentMethodsStep"];
+            6?: components["schemas"]["OnboardingProductCatalogStep"];
+            7?: components["schemas"]["OnboardingHardwareDevicesStep"];
+            8?: components["schemas"]["OnboardingTeamAccessStep"];
+        };
+        OnboardingBusinessIdentityStep: {
+            /** @enum {string} */
+            storeCategory: "fashion" | "beauty" | "electronics" | "footwear" | "jewellery" | "books" | "pharmacy" | "grocery" | "multi";
+            /** @enum {string} */
+            trialPlan: "starter" | "growth" | "enterprise";
+            /** @enum {string} */
+            billingCycle: "monthly" | "annual";
+            legalName: string;
+            tradeName?: string;
+            /** @enum {string} */
+            businessStructure: "pvtltd" | "llp" | "partnership" | "proprietorship" | "public" | "huf" | "trust";
+            yearEstablished: number;
+            registrationNumber?: string;
+            /** @enum {string} */
+            natureOfBusiness: "retailer" | "wholesaler" | "both" | "mfr_retail" | "service";
+            /** @enum {string} */
+            storeCount: "1" | "2" | "3" | "4" | "5" | "6-10" | "11-20" | "20+";
+        };
+        OnboardingGstComplianceStep: {
+            /** @enum {string} */
+            gstStatus: "regular" | "composition" | "unregistered";
+            gstin?: string;
+            pan?: string;
+            placeOfSupply: string;
+            fssai?: string;
+            drugLicense?: string;
+            msmeRegistration?: string;
+            shopEstablishmentLicense?: string;
+            eInvoiceEnabled: boolean;
+            eWayBillEnabled: boolean;
+        };
+        OnboardingStoreSetupStep: {
+            storeName: string;
+            addressLine1: string;
+            addressLine2?: string;
+            postalCode: string;
+            city: string;
+            state: string;
+            /** @enum {string} */
+            storeType: "mall_kiosk" | "mall_shop" | "high_street" | "standalone" | "airport" | "outlet";
+            /** @enum {string} */
+            storeClassification: "flagship" | "branch" | "franchise" | "popup";
+            carpetAreaSqFt?: number;
+            storeCode?: string;
+            openingTime: string;
+            managerName?: string;
+            managerPhone?: string;
+        };
+        OnboardingBillingInvoiceStep: {
+            invoicePrefix: string;
+            invoiceStartNumber: number;
+            /** @enum {string} */
+            paymentTermsDays: "0" | "7" | "15" | "30" | "45" | "60";
+            /** @enum {string} */
+            gstPricingMode: "exclusive" | "inclusive";
+            /** @enum {string} */
+            defaultGstSlab: "0" | "5" | "12" | "18" | "28";
+            /** @enum {string} */
+            rounding: "nearest1" | "nearest50p" | "none";
+            /** @enum {string} */
+            financialYearStart: "april" | "jan";
+            printHsn: boolean;
+            printDuplicateCopy: boolean;
+            invoiceQrEnabled: boolean;
+            invoiceFooter?: string;
+        };
+        OnboardingPaymentMethodsStep: {
+            cashEnabled: boolean;
+            maxCashPerTransaction?: number;
+            upiEnabled: boolean;
+            /** @enum {string} */
+            upiPartner?: "razorpay" | "phonepe" | "bharatpe" | "paytm" | "pinelabs_upi" | "googlepay";
+            soundBoxEnabled: boolean;
+            cardEnabled: boolean;
+            /** @enum {string} */
+            cardProvider?: "pinelabs" | "mosambee" | "mswipe" | "hdfc" | "payu" | "plural";
+            contactlessEnabled: boolean;
+            emiEnabled: boolean;
+            giftCardEnabled: boolean;
+            storeCreditEnabled: boolean;
+            maxStoreCredit?: number;
+            splitPaymentEnabled: boolean;
+            advancePaymentEnabled: boolean;
+        };
+        OnboardingProductCatalogStep: {
+            /** @enum {string} */
+            skuCount: "under100" | "100-500" | "500-2000" | "2000-10000" | "10000plus";
+            /** @enum {string} */
+            importMethod: "csv" | "barcode" | "tally" | "manual";
+            /** @enum {string} */
+            unitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "box" | "pack" | "set" | "pair";
+            /** @enum {string} */
+            barcodeFormat: "ean13" | "code128" | "qr" | "upca" | "internal";
+            hsnAutoLookup: boolean;
+            mrpRequired: boolean;
+            variantTracking: boolean;
+            batchTracking: boolean;
+            expiryTracking: boolean;
+            serialTracking: boolean;
+            serviceItemsEnabled: boolean;
+            /** @enum {string} */
+            negativeStockPolicy: "block" | "warn" | "allow";
+        };
+        OnboardingHardwareDevicesStep: {
+            /** @enum {string} */
+            billingCounters: "1" | "2" | "3" | "4" | "5" | "5plus";
+            /** @enum {string} */
+            printerConnection: "cloud" | "lan" | "bluetooth" | "none";
+            /** @enum {string} */
+            paperWidthMm?: "58" | "80";
+            /** @enum {string} */
+            scannerConnection: "usb" | "bluetooth" | "rf" | "none";
+            /** @enum {string} */
+            cashDrawerMode: "auto" | "manual" | "none";
+            /** @enum {string} */
+            cardTerminalType: "pinelabs" | "mosambee" | "order" | "none";
+            customerDisplayEnabled: boolean;
+            weighingScaleEnabled: boolean;
+            labelPrinterEnabled: boolean;
+            kitchenDisplayEnabled: boolean;
+        };
+        OnboardingTeamAccessStep: {
+            approvalRules: {
+                discountEnabled: boolean;
+                discountThresholdPercent: number;
+                refundEnabled: boolean;
+                voidEnabled: boolean;
+                settingsEnabled: boolean;
+            };
+            firstStaff?: {
+                name: string;
+                phone?: string;
+                /** Format: email */
+                email?: string;
+                /** @enum {string} */
+                accessLevel: "cashier" | "senior_cashier" | "floor_staff" | "manager";
+                /** @enum {string} */
+                defaultShift: "morning" | "mid" | "evening" | "full";
+            };
+            openingFloatPerCounter: number;
+            endOfDayReminder: string;
+            /** @enum {string} */
+            autoClockOutHours: "8" | "10" | "12";
+        };
+        OnboardingStepNumber: number;
+        OnboardingStepRequest: components["schemas"]["OnboardingBusinessIdentityStep"] | components["schemas"]["OnboardingGstComplianceStep"] | components["schemas"]["OnboardingStoreSetupStep"] | components["schemas"]["OnboardingBillingInvoiceStep"] | components["schemas"]["OnboardingPaymentMethodsStep"] | components["schemas"]["OnboardingProductCatalogStep"] | components["schemas"]["OnboardingHardwareDevicesStep"] | components["schemas"]["OnboardingTeamAccessStep"];
+        OnboardingCompletionResponse: components["schemas"]["OnboardingState"] & {
+            summary: {
+                businessName: string;
+                storeName: string;
+                storeCategory: string;
+                trialPlan: string;
+                billingCounters: string;
+                gstStatus: string;
+            };
+        };
+        CompleteOnboardingRequest: Record<string, never>;
         AuthResponse: {
             user: {
                 /** Format: uuid */
