@@ -693,3 +693,43 @@ tbody tr{transition:background .15s,transform .15s var(--ease)}
     margin: 0;
   }
 }
+
+/* Phase 3 — receipt print layout (CHECK-06). Off-screen (sr-only on screen),
+   formatted for an 80mm thermal roll, following the exact same off-screen
+   print-container convention as the label-sheet block above. Print typography
+   is a deliberate exception to the app's 4-size UI type scale per UI-SPEC:
+   item/line rows 9pt/400, section labels 9pt/700, Total paid figure 13pt/700. */
+.receipt-print {
+  width: 80mm;
+  font-family: Inter, sans-serif;
+}
+.receipt-line {
+  font-size: 9pt;
+  font-weight: 400;
+}
+.receipt-bold {
+  font-weight: 700;
+}
+.receipt-total {
+  font-size: 13pt;
+  font-weight: 700;
+  margin-top: 4px;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}

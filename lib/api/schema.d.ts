@@ -1300,6 +1300,7 @@ export interface components {
             createdAt: string;
             lines: components["schemas"]["SaleLineItem"][];
             payments: components["schemas"]["Payment"][];
+            businessName?: string | null;
         };
         SaleLineItem: {
             /** Format: uuid */
