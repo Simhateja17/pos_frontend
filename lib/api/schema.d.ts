@@ -54,6 +54,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read bounded, authenticated tenant dashboard facts. Metrics without persisted source data are explicitly unavailable. */
+        get: {
+            parameters: {
+                query?: {
+                    range?: components["schemas"]["DashboardRange"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tenant dashboard read model */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Dashboard"];
+                    };
+                };
+                /** @description Invalid dashboard range */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/onboarding": {
         parameters: {
             query?: never;
@@ -1527,6 +1579,87 @@ export interface components {
                 completed: boolean;
             };
         };
+        Dashboard: {
+            /** @enum {string} */
+            range: "7d" | "14d" | "30d";
+            period: {
+                /** Format: date-time */
+                startsAt: string;
+                /** Format: date-time */
+                endsAt: string;
+            };
+            sales: {
+                totalAmount: string;
+                billCount: number;
+                averageBillAmount: string;
+                grossMargin: components["schemas"]["UnavailableDashboardMetric"];
+            };
+            cashDrawer: {
+                /** @enum {string} */
+                status: "open";
+                /** Format: uuid */
+                shiftId: string;
+                openingCash: string;
+                /** Format: date-time */
+                openedAt: string;
+            } | {
+                /** @enum {string} */
+                status: "no_open_shift";
+            };
+            lowStock: {
+                count: number;
+                items: components["schemas"]["DashboardLowStockItem"][];
+            };
+            settlement: components["schemas"]["UnavailableDashboardMetric"];
+            trend: {
+                revenue: {
+                    /** Format: date */
+                    date: string;
+                    amount: string;
+                }[];
+                profit: components["schemas"]["UnavailableDashboardMetric"];
+            };
+            actionable: {
+                items: components["schemas"]["DashboardActionableItem"][];
+            };
+        };
+        UnavailableDashboardMetric: {
+            /** @enum {string} */
+            status: "unavailable";
+            reason: string;
+        };
+        DashboardLowStockItem: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            sku: string;
+            quantity: number;
+            reorderThreshold: number;
+        };
+        DashboardActionableItem: {
+            /** @enum {string} */
+            type: "low_stock";
+            /** Format: uuid */
+            variantId: string;
+            productName: string;
+            sku: string;
+            quantity: number;
+            reorderThreshold: number;
+        } | {
+            /** @enum {string} */
+            type: "open_shift";
+            /** Format: uuid */
+            shiftId: string;
+            /** Format: date-time */
+            openedAt: string;
+        };
+        /**
+         * @default 7d
+         * @enum {string}
+         */
+        DashboardRange: "7d" | "14d" | "30d";
         OnboardingState: {
             data: components["schemas"]["OnboardingData"];
             currentStep: number;
