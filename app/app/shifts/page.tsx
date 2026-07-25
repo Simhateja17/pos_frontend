@@ -1,2 +1,3 @@
-export { default } from '@/app/shifts/page'
+import { ShiftsView } from '@/components/shifts/shifts-view'
 
+export default function IndiaShiftsPage() { return <ShiftsView /> }

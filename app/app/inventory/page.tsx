@@ -1,2 +1,3 @@
-export { default } from '@/app/inventory/page'
+import { InventoryView } from '@/components/inventory/inventory-view'
 
+export default function IndiaInventoryPage() { return <InventoryView /> }
