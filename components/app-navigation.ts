@@ -16,7 +16,6 @@ export type AppNavItem = {
   label: string
   href: string
   icon: LucideIcon
-  badge?: string
 }
 
 export type AppNavGroup = {
@@ -36,11 +35,11 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'Sales',
     items: [
       { label: 'Billing', href: '/app/billing', icon: ShoppingBag },
-      { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList, badge: '342' },
+      { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList },
       { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw },
       { label: 'Register & Shifts', href: '/app/shifts', icon: WalletCards },
-      { label: 'Sales Channels', href: '/app/sales-channels', icon: ClipboardList, badge: 'new' },
-      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: ClipboardList, badge: 'new' },
+      { label: 'Sales Channels', href: '/app/sales-channels', icon: ClipboardList },
+      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: ClipboardList },
     ],
   },
   {
@@ -57,7 +56,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Customers', href: '/app/customers', icon: Users },
       { label: 'Team & Access', href: '/app/settings/members', icon: Settings },
-      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: Users, badge: 'new' },
+      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: Users },
     ],
   },
   {
@@ -65,8 +64,8 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Payments', href: '/app/payments', icon: BadgeIndianRupee },
       { label: 'Expenses', href: '/app/expenses', icon: BadgeIndianRupee },
-      { label: 'Receivables', href: '/app/receivables', icon: BadgeIndianRupee, badge: 'new' },
-      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BadgeIndianRupee, badge: 'new' },
+      { label: 'Receivables', href: '/app/receivables', icon: BadgeIndianRupee },
+      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BadgeIndianRupee },
     ],
   },
   {
@@ -74,17 +73,16 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Reports', href: '/app/reports', icon: ClipboardList },
       { label: 'Analytics', href: '/app/analytics', icon: LayoutDashboard },
-      { label: 'AI Copilot', href: '/app/copilot', icon: LayoutDashboard, badge: 'new' },
+      { label: 'AI Copilot', href: '/app/copilot', icon: LayoutDashboard },
     ],
   },
   {
     label: 'System',
     items: [
       { label: 'Onboarding', href: '/onboarding/1', icon: Settings },
-      { label: 'Offline & Sync', href: '/app/offline-sync', icon: Settings, badge: 'new' },
-      { label: 'Hardware & Devices', href: '/app/hardware', icon: Settings, badge: 'new' },
-      { label: 'Customer Display', href: '/app/customer-display', icon: Settings, badge: 'new' },
-      { label: 'Notifications', href: '/app/notifications', icon: Settings, badge: 'new' },
+      { label: 'Offline & Sync', href: '/app/offline-sync', icon: Settings },
+      { label: 'Hardware & Devices', href: '/app/hardware', icon: Settings },
+      { label: 'Customer Display', href: '/app/customer-display', icon: Settings },
       { label: 'Settings', href: '/app/settings', icon: Settings },
     ],
   },

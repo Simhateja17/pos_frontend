@@ -1,10 +1,16 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import Image from 'next/image'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bell, ChevronDown, Menu, Search, X } from 'lucide-react'
 import { APP_NAVIGATION } from '@/components/app-navigation'
+import {
+  AuthenticatedRequestError,
+  getAuthenticatedAppContext,
+  type AppContext,
+} from '@/lib/api/authenticated-client'
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== '/app/dashboard' && pathname.startsWith(`${href}/`))
@@ -13,6 +19,63 @@ function isActive(pathname: string, href: string) {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [context, setContext] = useState<AppContext | null>(null)
+  const [contextError, setContextError] = useState<AuthenticatedRequestError | null>(null)
+  const [isContextLoading, setIsContextLoading] = useState(true)
+  const drawerRef = useRef<HTMLElement>(null)
+
+  const loadContext = useCallback(async () => {
+    setContext(null)
+    setContextError(null)
+    setIsContextLoading(true)
+
+    try {
+      setContext(await getAuthenticatedAppContext())
+    } catch (error) {
+      setContextError(
+        error instanceof AuthenticatedRequestError
+          ? error
+          : new AuthenticatedRequestError('unavailable', 'Store context is unavailable right now. Please retry.'),
+      )
+    } finally {
+      setIsContextLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (pathname !== '/app') void loadContext()
+  }, [loadContext, pathname])
+
+  useEffect(() => {
+    if (!mobileOpen) return
+
+    const drawer = drawerRef.current
+    const focusable = drawer?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )
+    const first = focusable?.[0]
+    const last = focusable?.[focusable.length - 1]
+    first?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMobileOpen(false)
+        return
+      }
+      if (event.key !== 'Tab' || !first || !last) return
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mobileOpen])
 
   if (pathname === '/app') return children
 
@@ -30,13 +93,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       )}
       <aside
+        ref={drawerRef}
+        aria-label="India application navigation"
+        aria-modal={mobileOpen ? true : undefined}
+        role={mobileOpen ? 'dialog' : undefined}
         className={`fixed inset-y-0 left-0 z-50 flex w-[320px] flex-col border-r border-[#e5e7eb] bg-white transition-transform lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex h-[84px] items-center gap-3 border-b border-[#eef0f3] px-6">
-          <div className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2c67c9] to-[#6d9cff] text-xl font-black text-white shadow-lg shadow-blue-200">
-            C
+          <div className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2c67c9] to-[#6d9cff] shadow-lg shadow-blue-200">
+            <Image src="/logo.png" alt="Couture POS" width={38} height={38} className="size-[38px] object-contain" priority />
           </div>
           <div className="min-w-0">
             <strong className="block truncate font-heading text-xl">Couture POS</strong>
@@ -77,11 +144,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                       )}
                       <Icon className="size-[19px]" strokeWidth={1.8} />
                       <span>{item.label}</span>
-                      {item.badge && (
-                        <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                          {item.badge}
-                        </span>
-                      )}
                     </Link>
                   )
                 })}
@@ -90,8 +152,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="border-t border-[#eef0f3] p-5 text-xs text-slate-400">
-          <p>Progress auto-saved.</p>
-          <p className="mt-1">Online · Sync active</p>
+          <p>{isContextLoading ? 'Loading store context…' : context ? 'Store context connected' : 'Store context unavailable'}</p>
+          {contextError && <p className="mt-1 text-amber-600">Retry from the top bar.</p>}
         </div>
       </aside>
 
@@ -117,26 +179,40 @@ export function AppShell({ children }: { children: ReactNode }) {
               ⌘K
             </kbd>
           </label>
-          <button className="hidden h-12 items-center gap-2 rounded-xl bg-[#2b62bd] px-4 text-sm font-semibold text-white md:flex">
-            Mumbai · Bandra <ChevronDown className="size-4" />
+          <button
+            className="hidden h-12 items-center gap-2 rounded-xl bg-[#2b62bd] px-4 text-sm font-semibold text-white md:flex"
+            disabled={!context || isContextLoading}
+            aria-label={context ? `Current store: ${context.tenant.businessName}` : 'Store context unavailable'}
+          >
+            {isContextLoading ? 'Loading store…' : context?.tenant.businessName ?? 'Store unavailable'}
+            {context?.tenant.locality ? ` · ${context.tenant.locality}` : ''} <ChevronDown className="size-4" />
           </button>
           <button className="relative grid size-12 shrink-0 place-items-center rounded-xl border bg-white">
             <Bell className="size-5" />
             <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-white" />
           </button>
-          <div className="hidden items-center gap-3 2xl:flex">
+          <div className="hidden items-center gap-3 2xl:flex" aria-live="polite">
             <div className="grid size-12 place-items-center rounded-full bg-[#4b7ddb] font-bold text-white">
-              PM
+              {context?.staff.name?.trim().slice(0, 1).toUpperCase() ?? '—'}
             </div>
             <div className="leading-tight">
-              <strong className="block text-sm">Pooja Menon</strong>
-              <span className="text-xs text-slate-500">Store Manager · Bandra</span>
+              <strong className="block text-sm">{isContextLoading ? 'Loading staff…' : context?.staff.name ?? 'Staff unavailable'}</strong>
+              <span className="text-xs text-slate-500">
+                {context?.staff.role ?? (contextError ? 'Retry to load access' : 'Loading access…')}
+              </span>
             </div>
           </div>
         </header>
+        {contextError && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 md:px-6" role="alert">
+            <span>{contextError.message}</span>
+            <button className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-semibold" onClick={() => void loadContext()}>
+              Retry context
+            </button>
+          </div>
+        )}
         <div className="min-w-0">{children}</div>
       </div>
     </div>
   )
 }
-
