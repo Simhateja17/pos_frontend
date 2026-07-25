@@ -4,16 +4,10 @@ import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import Link from 'next/link'
+import { ScanLine, ShoppingCart } from 'lucide-react'
+import { Card, CardHead, CardPad, DataTable, PageHead, SectionLabel } from '@/components/couture/ui'
+import { EmptyState } from '@/components/couture/states'
 import { CartLineRow, type CartLine } from '@/components/checkout/cart-line-row'
 import {
   PaymentMethodGrid,
@@ -22,6 +16,9 @@ import {
 } from '@/components/checkout/payment-method-grid'
 import { ManagerApprovalModal } from '@/components/checkout/manager-approval-modal'
 import { Receipt, type ReceiptSale } from '@/components/checkout/receipt'
+import { useConnectivity } from '@/lib/offline/connectivity'
+import { enqueueSale, countPending } from '@/lib/offline/queue'
+import { startSyncEngine } from '@/lib/offline/sync'
 
 type Variant = {
   id: string
@@ -88,6 +85,13 @@ function money(n: number): string {
   return n.toFixed(2)
 }
 
+const inrFormat = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
+
+/** Display-only currency formatting. Server figures remain authoritative. */
+function inr(n: number | string): string {
+  return inrFormat.format(Number(n))
+}
+
 interface PendingSaleBody {
   clientSaleId: string
   shiftId: string
@@ -118,6 +122,18 @@ function CheckoutPageInner() {
 
   // Cart
   const [cart, setCart] = useState<CartLine[]>([])
+
+  /**
+   * OFFLINE-01 — the idempotency key for THIS bill, minted once when the bill
+   * begins and held until it is charged or explicitly cleared.
+   *
+   * This must not be generated at submit time. If it were, a double-click or a
+   * user-initiated retry after a timeout would mint a second id, the server
+   * would see two distinct sales, and migration 0018's unique index could not
+   * detect the duplicate — the whole guarantee would be defeated by the client.
+   * Reset only in onChargeSuccess() and handleClearCart().
+   */
+  const [cartSaleId, setCartSaleId] = useState<string>(() => crypto.randomUUID())
   const [cartDiscountMode, setCartDiscountMode] = useState<'none' | 'percent' | 'amount'>('none')
   const [cartDiscountValue, setCartDiscountValue] = useState('')
 
@@ -151,6 +167,26 @@ function CheckoutPageInner() {
   // new sale (typing in the scan field or adding a new cart line clears it).
   const [completedSale, setCompletedSale] = useState<ReceiptSale | null>(null)
   const [businessName, setBusinessName] = useState('')
+
+  // OFFLINE-01 — connectivity + outbox state.
+  const { isOnline } = useConnectivity()
+  const [queuedCount, setQueuedCount] = useState(0)
+  const [queuedMessage, setQueuedMessage] = useState<string | null>(null)
+
+  const refreshQueueCount = useCallback(async () => {
+    try {
+      setQueuedCount(await countPending())
+    } catch {
+      // IndexedDB unavailable (private mode). Offline queuing is degraded, and
+      // the Charge button stays disabled while offline rather than pretending.
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshQueueCount()
+    const stop = startSyncEngine(() => void refreshQueueCount())
+    return stop
+  }, [refreshQueueCount])
 
   // D-12: pre-attach an existing customer id from the query param on mount.
   useEffect(() => {
@@ -261,6 +297,9 @@ function CheckoutPageInner() {
       setCart([])
       setCartDiscountMode('none')
       setCartDiscountValue('')
+      // Abandoning this bill starts a new one — a later, unrelated bill must
+      // not reuse the discarded bill's idempotency key.
+      setCartSaleId(crypto.randomUUID())
     }
   }
 
@@ -365,7 +404,10 @@ function CheckoutPageInner() {
     }
 
     const body: PendingSaleBody = {
-      clientSaleId: crypto.randomUUID(),
+      // Stable for the life of this bill — see cartSaleId's declaration. A
+      // retry of the same bill MUST reuse this id so the server recognises it
+      // as a replay rather than a second sale.
+      clientSaleId: cartSaleId,
       shiftId,
       lines: cart.map((l) => ({
         variantId: l.variantId,
@@ -383,6 +425,36 @@ function CheckoutPageInner() {
     }
 
     setPendingSaleBody(body)
+
+    // OFFLINE-01 — when the server is unreachable the sale is queued locally
+    // instead of failing at the counter. The same clientSaleId is replayed on
+    // sync, so the server records it exactly once (migration 0018).
+    if (!isOnline) {
+      try {
+        await enqueueSale({
+          clientSaleId: cartSaleId,
+          body,
+          estimatedTotal: preChargeEstimate.toFixed(2),
+        })
+        await refreshQueueCount()
+        setQueuedMessage(
+          `Sale queued offline — ${inr(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
+        )
+        setCart([])
+        setCartDiscountMode('none')
+        setCartDiscountValue('')
+        setCartSaleId(crypto.randomUUID())
+        setTenderRows([])
+        setTenderMethods([])
+        return
+      } catch {
+        setChargeError(
+          'This device cannot store offline sales, so the sale was not taken. Restore the connection before charging.',
+        )
+        return
+      }
+    }
+
     setIsCharging(true)
     const { data, error, response } = await submitSale(body)
     setIsCharging(false)
@@ -430,6 +502,8 @@ function CheckoutPageInner() {
     setCart([])
     setCartDiscountMode('none')
     setCartDiscountValue('')
+    // This bill is committed; the next bill needs its own idempotency key.
+    setCartSaleId(crypto.randomUUID())
     setCustomer(null)
     setIsReturningCustomer(false)
     setTenderMethods([])
@@ -456,127 +530,173 @@ function CheckoutPageInner() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl bg-background p-4 md:p-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Billing</p>
-          <h1
-            style={{ fontFamily: 'Sora, sans-serif', fontSize: '28px', fontWeight: 700, lineHeight: 1.2 }}
-          >
-            New bill
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Scan products, collect tender, then let the server confirm the sale.</p>
-        </div>
-        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800">
-          Offline billing unavailable
-        </span>
-      </div>
+    <>
+      <PageHead
+        title="Billing"
+        sub={shiftId ? 'Scan products, collect tender, then let the server confirm the sale.' : 'No open shift for this terminal'}
+        actions={
+          isOnline ? (
+            <span className="badge b-green">
+              <span className="dot-g" /> Online
+            </span>
+          ) : (
+            <span className="badge b-amber">
+              <span className="dot-a" /> Offline — sales are queued
+            </span>
+          )
+        }
+      />
+
+      {!isOnline && (
+        <Card style={{ marginBottom: 16, borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
+          <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span className="flag improve">OFFLINE</span>
+            <span style={{ fontSize: 13, color: '#8a6410' }}>
+              No connection to the server. Sales are recorded on this device and sync automatically when the
+              connection returns. Tax and the final total are confirmed by the server at sync.
+            </span>
+          </CardPad>
+        </Card>
+      )}
+
+      {queuedCount > 0 && (
+        <Card style={{ marginBottom: 16 }}>
+          <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span className="badge b-blue">{queuedCount} queued</span>
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+              {queuedCount === 1 ? 'A sale is' : 'Sales are'} waiting to sync.
+            </span>
+            <Link className="btn btn-sm" href="/app/offline-sync" style={{ marginLeft: 'auto' }}>
+              Review queue
+            </Link>
+          </CardPad>
+        </Card>
+      )}
+
+      {queuedMessage && (
+        <Card style={{ marginBottom: 16, borderColor: '#BBE9D4', background: 'var(--success-soft)' }}>
+          <CardPad style={{ fontSize: 13, color: '#0f8f63' }}>{queuedMessage}</CardPad>
+        </Card>
+      )}
 
       {!shiftId && (
-        <Alert className="mb-4">
-          <AlertDescription>
-            No open shift for this terminal. Open a shift before taking a sale.
-          </AlertDescription>
-        </Alert>
+        <Card style={{ marginBottom: 16, borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
+          <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span className="flag improve">ACTION</span>
+            <span style={{ fontSize: 13, color: '#8a6410' }}>
+              No open shift for this terminal. Open a shift before taking a sale.
+            </span>
+            <Link className="btn btn-sm" href="/app/shifts" style={{ marginLeft: 'auto' }}>
+              Open register
+            </Link>
+          </CardPad>
+        </Card>
       )}
 
       {successMessage && (
-        <Alert className="mb-4">
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
+        <Card style={{ marginBottom: 16, borderColor: '#BBE9D4', background: 'var(--success-soft)' }}>
+          <CardPad style={{ fontSize: 13, color: '#0f8f63' }}>{successMessage}</CardPad>
+        </Card>
       )}
 
       {completedSale && (
-        <div className="mb-6">
+        <div style={{ marginBottom: 16 }}>
           <Receipt sale={completedSale} businessName={businessName} />
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-        {/* Cart column */}
-        <div className="min-w-0">
-          <Input
-            value={scanQuery}
-            onChange={(e) => {
-              setScanQuery(e.target.value)
-              runSearch(e.target.value)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                runSearch(scanQuery)
-              }
-            }}
-            placeholder={SCAN_PLACEHOLDER}
-            className="mb-2"
-            style={{ minHeight: 44 }}
-          />
+      {loadError && (
+        <Card style={{ marginBottom: 16, borderColor: '#F6D4D4', background: 'var(--danger-soft)' }}>
+          <CardPad style={{ fontSize: 13, color: '#cf3030' }}>{loadError}</CardPad>
+        </Card>
+      )}
 
-          {searchError && (
-            <Alert variant="destructive" className="mb-2">
-              <AlertDescription>{searchError}</AlertDescription>
-            </Alert>
-          )}
-
-          {searchResults.length > 0 && (
-            <div className="mb-4 flex flex-col gap-1 rounded-md border p-2" style={{ borderColor: '#E2E8F0' }}>
-              {searchResults.map((hit) => (
-                <div key={hit.variant.id} className="flex items-center justify-between">
-                  <span className="text-sm">
-                    {hit.productName} — {variantAttributes(hit.variant)} · {hit.variant.sku}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => addToCart(hit)}
-                    style={{ minHeight: 44 }}
-                  >
-                    + Add
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mb-2 flex items-center justify-between">
-            <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: '20px', fontWeight: 700 }}>
-              Cart
-            </h2>
-            {cart.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearCart}
-                className="text-sm"
-                style={{ color: '#DC2626' }}
-              >
-                Clear cart
+      <div className="split-2" style={{ gridTemplateColumns: '1fr 420px' }}>
+        {/* ---------------- Cart column ---------------- */}
+        <div style={{ minWidth: 0 }}>
+          <Card className="card-pad" style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div className="search" style={{ maxWidth: 'none', flex: 1 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M21 21l-4.3-4.3" />
+                </svg>
+                <input
+                  value={scanQuery}
+                  aria-label={SCAN_PLACEHOLDER}
+                  onChange={(e) => {
+                    setScanQuery(e.target.value)
+                    runSearch(e.target.value)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      runSearch(scanQuery)
+                    }
+                  }}
+                  placeholder={SCAN_PLACEHOLDER}
+                />
+              </div>
+              <button className="btn" type="button" onClick={() => runSearch(scanQuery)}>
+                <ScanLine size={15} /> Scan
               </button>
-            )}
-          </div>
-
-          {cart.length === 0 ? (
-            <div className="rounded-md border p-8 text-center" style={{ borderColor: '#E2E8F0' }}>
-              <p style={{ fontFamily: 'Sora, sans-serif', fontSize: '20px', fontWeight: 700 }}>
-                {CART_EMPTY_HEADING}
-              </p>
-              <p className="mt-2 text-sm" style={{ color: '#64748B' }}>
-                {CART_EMPTY_BODY}
-              </p>
             </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border" style={{ borderColor: '#E2E8F0' }}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Discount</TableHead>
-                  <TableHead>Line total</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+
+            {searchError && (
+              <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--danger)' }} role="alert">
+                {searchError}
+              </div>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="res-box" style={{ marginTop: 10 }}>
+                {searchResults.map((hit) => (
+                  <div
+                    key={hit.variant.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '9px 4px',
+                      borderBottom: '1px solid var(--border-soft)',
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div className="t-strong">{hit.productName}</div>
+                      <div className="t-sub t-mono">
+                        {hit.variant.sku} · {variantAttributes(hit.variant)}
+                      </div>
+                    </div>
+                    <button className="btn btn-sm" type="button" onClick={() => addToCart(hit)}>
+                      + Add
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <CardHead
+              title={`Cart · ${cart.length} item${cart.length === 1 ? '' : 's'}`}
+              right={
+                cart.length > 0 ? (
+                  <button className="btn btn-sm" type="button" onClick={handleClearCart} style={{ color: 'var(--danger)' }}>
+                    Clear
+                  </button>
+                ) : null
+              }
+            />
+
+            {cart.length === 0 ? (
+              <EmptyState
+                icon={<ShoppingCart size={24} strokeWidth={1.8} />}
+                title={CART_EMPTY_HEADING}
+                body={CART_EMPTY_BODY}
+              />
+            ) : (
+              <DataTable cols={['Item', 'Qty', 'Price', 'Discount', 'Total', '']} minWidth={720}>
                 {cart.map((line) => (
                   <CartLineRow
                     key={line.variantId}
@@ -587,245 +707,199 @@ function CheckoutPageInner() {
                     disabled={isCharging}
                   />
                 ))}
-              </TableBody>
-            </Table>
-            </div>
-          )}
-
-          <div className="mt-4">
-            {cartDiscountMode === 'none' ? (
-              <button
-                type="button"
-                onClick={() => setCartDiscountMode('percent')}
-                className="text-sm"
-                style={{ color: '#0058BA' }}
-              >
-                Discount entire sale
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <select
-                  value={cartDiscountMode}
-                  onChange={(e) => setCartDiscountMode(e.target.value as 'percent' | 'amount')}
-                  className="rounded-md border p-2"
-                  style={{ minHeight: 44 }}
-                >
-                  <option value="percent">%</option>
-                  <option value="amount">$</option>
-                </select>
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={cartDiscountValue}
-                  onChange={(e) => setCartDiscountValue(e.target.value)}
-                  style={{ maxWidth: 120, minHeight: 44 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCartDiscountMode('none')
-                    setCartDiscountValue('')
-                  }}
-                  className="text-sm"
-                  style={{ color: '#64748B' }}
-                >
-                  Remove
-                </button>
-              </div>
+              </DataTable>
             )}
-          </div>
+
+            <CardPad style={{ borderTop: '1px solid var(--border-soft)' }}>
+              <SectionLabel>Whole-bill discount</SectionLabel>
+              {cartDiscountMode === 'none' ? (
+                <button className="btn btn-sm btn-ghost" type="button" onClick={() => setCartDiscountMode('percent')}>
+                  Discount entire sale
+                </button>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <select
+                    className="fld-select"
+                    aria-label="Discount type"
+                    value={cartDiscountMode}
+                    onChange={(e) => setCartDiscountMode(e.target.value as 'percent' | 'amount')}
+                  >
+                    <option value="percent">%</option>
+                    <option value="amount">₹</option>
+                  </select>
+                  <input
+                    className="fld-input num"
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    aria-label="Discount value"
+                    value={cartDiscountValue}
+                    onChange={(e) => setCartDiscountValue(e.target.value)}
+                    style={{ maxWidth: 120 }}
+                  />
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    type="button"
+                    onClick={() => {
+                      setCartDiscountMode('none')
+                      setCartDiscountValue('')
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </CardPad>
+          </Card>
         </div>
 
-        {/* Summary column */}
-        <aside className="flex flex-col gap-5 lg:sticky lg:top-4 lg:self-start">
-          {/* Customer panel */}
-          <div className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
-            <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: '20px', fontWeight: 700 }} className="mb-2">
-              Customer
-            </h2>
+        {/* ---------------- Summary column ---------------- */}
+        <div>
+          <Card className="card-pad" style={{ marginBottom: 16 }}>
+            <SectionLabel style={{ margin: 0 }}>Customer</SectionLabel>
             {customer ? (
-              <div>
-                <p style={{ fontWeight: 700 }}>
-                  {isReturningCustomer ? 'Returning customer' : customer.name ?? 'Customer attached'}
-                </p>
-                {customer.phone && <p className="text-sm" style={{ color: '#64748B' }}>{customer.phone}</p>}
-                {customer.email && <p className="text-sm" style={{ color: '#64748B' }}>{customer.email}</p>}
-                <button
-                  type="button"
-                  onClick={clearCustomer}
-                  className="mt-2 text-sm"
-                  style={{ color: '#0058BA' }}
-                >
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 12 }}>
+                  <div className="tb-ava" style={{ width: 42, height: 42 }}>
+                    {(customer.name ?? 'C').trim().slice(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="t-strong" style={{ fontSize: 15 }}>
+                      {isReturningCustomer ? 'Returning customer' : (customer.name ?? 'Customer attached')}
+                    </div>
+                    <div className="t-sub">{customer.phone ?? customer.email ?? 'No contact on file'}</div>
+                  </div>
+                </div>
+                <button className="btn btn-sm" type="button" onClick={clearCustomer} style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}>
                   Remove customer
                 </button>
-              </div>
+              </>
             ) : (
               <>
-                <p className="mb-2 text-sm" style={{ color: '#64748B' }}>
-                  Walk-in customer
-                </p>
-                <Input
+                <div className="t-sub" style={{ marginTop: 6 }}>Walk-in customer</div>
+                <input
+                  className="fld-input"
+                  style={{ width: '100%', marginTop: 8, height: 38 }}
                   value={customerSearchQuery}
+                  aria-label="Search customers"
                   onChange={(e) => runCustomerSearch(e.target.value)}
                   placeholder="Search by phone, email, or name…"
-                  style={{ minHeight: 44 }}
                 />
                 {customerSearchResults.length > 0 && (
-                  <div className="mt-2 flex flex-col gap-1">
+                  <div className="res-box" style={{ marginTop: 8 }}>
                     {customerSearchResults.map((c) => (
                       <button
                         key={c.id}
                         type="button"
                         onClick={() => selectCustomer(c)}
-                        className="rounded-md border p-2 text-left text-sm"
-                        style={{ borderColor: '#E2E8F0', minHeight: 44 }}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '8px 4px',
+                          background: 'none',
+                          border: 0,
+                          borderBottom: '1px solid var(--border-soft)',
+                          cursor: 'pointer',
+                          fontSize: 13,
+                        }}
                       >
-                        {c.name ?? 'Unnamed'} — {c.phone ?? c.email ?? ''}
+                        <span className="t-strong">{c.name ?? 'Unnamed'}</span>
+                        <span className="t-sub"> · {c.phone ?? c.email ?? ''}</span>
                       </button>
                     ))}
                   </div>
                 )}
                 {!showNewCustomerForm ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowNewCustomerForm(true)}
-                    className="mt-2 text-sm"
-                    style={{ color: '#0058BA' }}
-                  >
-                    New customer
+                  <button className="btn btn-sm btn-ghost" type="button" onClick={() => setShowNewCustomerForm(true)} style={{ marginTop: 8 }}>
+                    + New customer
                   </button>
                 ) : (
-                  <div className="mt-2 flex flex-col gap-2">
-                    <Input
-                      value={newCustomerName}
-                      onChange={(e) => setNewCustomerName(e.target.value)}
-                      placeholder="Name"
-                      style={{ minHeight: 44 }}
-                    />
-                    <Input
-                      value={newCustomerPhone}
-                      onChange={(e) => setNewCustomerPhone(e.target.value)}
-                      placeholder="Phone"
-                      style={{ minHeight: 44 }}
-                    />
-                    <Input
-                      value={newCustomerEmail}
-                      onChange={(e) => setNewCustomerEmail(e.target.value)}
-                      placeholder="Email"
-                      style={{ minHeight: 44 }}
-                    />
+                  <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                    <input className="fld-input" style={{ height: 38 }} value={newCustomerName} aria-label="Customer name" onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Name" />
+                    <input className="fld-input" style={{ height: 38 }} value={newCustomerPhone} aria-label="Customer phone" onChange={(e) => setNewCustomerPhone(e.target.value)} placeholder="Phone" />
+                    <input className="fld-input" style={{ height: 38 }} value={newCustomerEmail} aria-label="Customer email" onChange={(e) => setNewCustomerEmail(e.target.value)} placeholder="Email" />
                   </div>
                 )}
               </>
             )}
-          </div>
+          </Card>
 
-          {/* Payment */}
-          <PaymentMethodGrid
-            selected={tenderMethods}
-            onToggle={toggleTenderMethod}
-            rows={tenderRows}
-            onRowChange={handleTenderRowChange}
-            onAddRow={handleAddTenderRow}
-            onRemoveRow={handleRemoveTenderRow}
-            disabled={isCharging}
-          />
+          <Card className="card-pad">
+            <SectionLabel>Bill summary</SectionLabel>
 
-          {/* Bill summary */}
-          <div className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-heading text-lg font-semibold">Bill summary</h2>
-              <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">Pre-charge estimate</span>
+            <div className="sum-row">
+              <span>Subtotal</span>
+              <span className="num">{inr(subtotal)}</span>
             </div>
-            <div className="flex justify-between py-1">
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: '#64748B',
-                }}
-              >
-                Subtotal
-              </span>
-              <span>₹{money(subtotal)}</span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: '#64748B',
-                }}
-              >
-                Discount
-              </span>
-              <span>₹{money(cartDiscount)}</span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: '#64748B',
-                }}
-              >
-                Tax and final total
-              </span>
-              <span>Confirmed by server</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between border-t pt-2" style={{ borderColor: '#E2E8F0' }}>
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: '#64748B',
-                }}
-              >
-                Current cart estimate
-              </span>
-              <span
-                style={{
-                  fontFamily: 'Sora, sans-serif',
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  lineHeight: 1.2,
-                  color: '#0058BA',
-                }}
-              >
-                ₹{money(preChargeEstimate)}
+            <div className="sum-row">
+              <span>Discount</span>
+              <span className="num" style={{ color: Number(cartDiscount) > 0 ? 'var(--success)' : undefined }}>
+                {Number(cartDiscount) > 0 ? `−${inr(cartDiscount)}` : inr(cartDiscount)}
               </span>
             </div>
-            <p className="mt-3 text-xs" style={{ color: '#64748B' }}>
-              {TAX_DISCLOSURE}
-            </p>
-          </div>
+            <div className="sum-row">
+              <span>Tax and final total</span>
+              <span className="t-sub">Confirmed by server</span>
+            </div>
 
-          {chargeError && (
-            <Alert variant="destructive">
-              <AlertDescription>{chargeError}</AlertDescription>
-            </Alert>
-          )}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                padding: '12px 0 4px',
+                borderTop: '1px solid var(--border-soft)',
+                marginTop: 6,
+              }}
+            >
+              <b style={{ fontSize: 15 }}>Current cart estimate</b>
+              <b className="num" style={{ fontSize: 22, color: 'var(--brand-1)' }}>
+                {inr(preChargeEstimate)}
+              </b>
+            </div>
 
-          <Button
-            type="button"
-            onClick={handleCharge}
-            disabled={isCharging || cart.length === 0 || !shiftId}
-            aria-busy={isCharging}
-            style={{ backgroundColor: '#0058BA', color: '#FFFFFF', minHeight: 48 }}
-          >
-            {isCharging ? 'Charging sale…' : 'Charge sale'}
-          </Button>
-          <p className="text-xs text-muted-foreground">This checkout requires a live connection; no sale is queued or recorded until the server confirms it.</p>
-        </aside>
+            <p style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)', lineHeight: 1.5 }}>{TAX_DISCLOSURE}</p>
+
+            <SectionLabel style={{ marginTop: 14 }}>
+              Payment method{' '}
+              <span style={{ color: 'var(--muted-2)', fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>tap to select</span>
+            </SectionLabel>
+
+            <PaymentMethodGrid
+              selected={tenderMethods}
+              onToggle={toggleTenderMethod}
+              rows={tenderRows}
+              onRowChange={handleTenderRowChange}
+              onAddRow={handleAddTenderRow}
+              onRemoveRow={handleRemoveTenderRow}
+              disabled={isCharging}
+            />
+
+            {chargeError && (
+              <div role="alert" style={{ marginTop: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--danger-soft)', color: '#cf3030', fontSize: 12.5 }}>
+                {chargeError}
+              </div>
+            )}
+
+            <button
+              className="btn btn-grad"
+              type="button"
+              onClick={handleCharge}
+              disabled={isCharging || cart.length === 0 || !shiftId}
+              aria-busy={isCharging}
+              style={{ width: '100%', height: 46, marginTop: 12, justifyContent: 'center', fontSize: 15 }}
+            >
+              {isCharging ? 'Charging sale…' : isOnline ? `Charge ${inr(preChargeEstimate)}` : `Queue ${inr(preChargeEstimate)} offline`}
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>
+              {isOnline
+                ? 'Live connection · the server confirms the final total before the sale is recorded'
+                : 'Queued on this device · the server confirms the final total when the connection returns'}
+            </div>
+          </Card>
+        </div>
       </div>
 
       <ManagerApprovalModal
@@ -833,13 +907,7 @@ function CheckoutPageInner() {
         onApproved={handleApproved}
         onCancel={() => setShowApprovalModal(false)}
       />
-
-      {loadError && (
-        <Alert variant="destructive" className="mt-4">
-          <AlertDescription>{loadError}</AlertDescription>
-        </Alert>
-      )}
-    </div>
+    </>
   )
 }
 
