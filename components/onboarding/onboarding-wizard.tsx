@@ -1,234 +1,54 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { apiClient } from '@/lib/api/client'
+import { supabase } from '@/lib/supabase/client'
+import type { components } from '@/lib/api/schema'
 
-type Field = {
-  key: string
-  label: string
-  placeholder: string
-  type?: 'text' | 'number' | 'email'
-}
+type Values = Record<string, string | boolean>
+type Option = readonly [string, string]
+type Field = { key: string; label: string; kind?: 'text' | 'number' | 'time' | 'email' | 'textarea' | 'toggle'; options?: readonly Option[]; required?: boolean; hint?: string }
+type StepDefinition = { tag: string; title: string; description: string; note: string; fields: readonly Field[] }
 
-type Step = {
-  title: string
-  description: string
-  note: string
-  fields: Field[]
-}
+const DRAFT_PREFIX = 'couture.india.onboarding.unsent.'
+const categoryOptions = [['fashion', 'Fashion & Apparel'], ['beauty', 'Beauty & Wellness'], ['electronics', 'Electronics & Gadgets'], ['footwear', 'Footwear'], ['jewellery', 'Jewellery'], ['books', 'Books & Stationery'], ['pharmacy', 'Pharmacy & Healthcare'], ['grocery', 'Grocery & FMCG'], ['multi', 'Multi-brand / Other']] as const
+const yesNo = (key: string, label: string, defaultValue = false): Field => ({ key, label, kind: 'toggle', hint: defaultValue ? 'Enabled by default' : undefined })
 
-export const ONBOARDING_STEPS: Step[] = [
-  {
-    title: 'Tell us about your business.',
-    description: 'Enter details exactly as registered with the Government of India — these appear on invoices and compliance documents.',
-    note: 'Use the legal name shown on your GST Registration Certificate or Certificate of Incorporation.',
-    fields: [
-      { key: 'legalName', label: 'Legal business name *', placeholder: 'As on GST / Certificate of Incorporation' },
-      { key: 'brandName', label: 'Trade / brand name', placeholder: 'Name shown to customers on receipt & display' },
-      { key: 'businessStructure', label: 'Business structure', placeholder: 'Private Limited (Pvt Ltd)' },
-      { key: 'yearEstablished', label: 'Year established', placeholder: '2023', type: 'number' },
-      { key: 'cin', label: 'CIN (Company Identification Number)', placeholder: 'e.g. U52100MH2018PTC000001' },
-      { key: 'storeCount', label: 'Number of stores', placeholder: '1 store' },
-    ],
-  },
-  {
-    title: 'Configure GST & compliance.',
-    description: 'Set the registration and tax details used for GST-native invoicing and reporting.',
-    note: 'You can save a draft now and verify the GSTIN before issuing the first live invoice.',
-    fields: [
-      { key: 'gstin', label: 'GSTIN *', placeholder: '27ABCDE1234F1Z5' },
-      { key: 'pan', label: 'Business PAN *', placeholder: 'ABCDE1234F' },
-      { key: 'stateCode', label: 'GST state / jurisdiction', placeholder: 'Maharashtra · 27' },
-      { key: 'gstMode', label: 'Pricing mode', placeholder: 'Exclusive (GST separate)' },
-      { key: 'defaultSlab', label: 'Default GST slab', placeholder: '18%' },
-    ],
-  },
-  {
-    title: 'Set up your first store.',
-    description: 'Add the location, counter structure, invoice identity, and daily operating hours.',
-    note: 'This becomes the default store selected in the product header.',
-    fields: [
-      { key: 'storeName', label: 'Store name *', placeholder: 'Bandra Flagship' },
-      { key: 'address', label: 'Store address *', placeholder: 'Linking Road, Bandra West' },
-      { key: 'city', label: 'City *', placeholder: 'Mumbai' },
-      { key: 'postalCode', label: 'PIN code *', placeholder: '400050' },
-      { key: 'counters', label: 'Billing counters', placeholder: '2' },
-      { key: 'timezone', label: 'Timezone', placeholder: 'Asia/Kolkata' },
-    ],
-  },
-  {
-    title: 'Configure billing & invoices.',
-    description: 'Choose invoice numbering, pricing behavior, and receipt information for every counter.',
-    note: 'Migrating from another system? Continue your existing invoice sequence here.',
-    fields: [
-      { key: 'invoicePrefix', label: 'Invoice prefix', placeholder: 'INV' },
-      { key: 'nextInvoice', label: 'Next invoice number', placeholder: '24851', type: 'number' },
-      { key: 'rounding', label: 'Round-off rule', placeholder: 'Nearest ₹1' },
-      { key: 'receiptFooter', label: 'Receipt footer', placeholder: 'Thank you for shopping with us' },
-    ],
-  },
-  {
-    title: 'Choose payment methods.',
-    description: 'Enable the tender types your cashier can select during billing.',
-    note: 'Gateway and terminal integrations can be connected later without changing the billing workflow.',
-    fields: [
-      { key: 'upiProvider', label: 'UPI provider', placeholder: 'Razorpay / PhonePe / BharatPe' },
-      { key: 'upiVpa', label: 'UPI VPA', placeholder: 'store@bank' },
-      { key: 'cardTerminal', label: 'Card terminal', placeholder: 'External terminal' },
-      { key: 'cashDrawer', label: 'Cash drawer', placeholder: 'Enabled' },
-    ],
-  },
-  {
-    title: 'Bring in your product catalog.',
-    description: 'Import products and variants now, or begin with a sample catalog and replace it later.',
-    note: 'Size, colour, material, SKU, HSN, price, and opening stock are supported.',
-    fields: [
-      { key: 'catalogSource', label: 'Catalog source', placeholder: 'Upload CSV / Start fresh' },
-      { key: 'skuCount', label: 'Approximate SKU count', placeholder: '500', type: 'number' },
-      { key: 'barcodeFormat', label: 'Barcode format', placeholder: 'EAN-13' },
-      { key: 'openingStock', label: 'Opening stock method', placeholder: 'Import from spreadsheet' },
-    ],
-  },
-  {
-    title: 'Connect hardware & devices.',
-    description: 'Prepare scanners, receipt printers, customer displays, and cash drawers for each counter.',
-    note: 'Hardware pairing can be tested again from Settings after setup.',
-    fields: [
-      { key: 'printer', label: 'Receipt printer', placeholder: '80mm thermal printer' },
-      { key: 'scanner', label: 'Barcode scanner', placeholder: 'USB / Bluetooth scanner' },
-      { key: 'display', label: 'Customer display', placeholder: 'Optional' },
-      { key: 'deviceCount', label: 'POS devices', placeholder: '2', type: 'number' },
-    ],
-  },
-  {
-    title: 'Invite your team.',
-    description: 'Create staff access for owners, managers, and cashiers with role-based permissions.',
-    note: 'You can continue alone and invite more staff from Team & Access later.',
-    fields: [
-      { key: 'managerEmail', label: 'Manager email', placeholder: 'manager@yourstore.com', type: 'email' },
-      { key: 'cashierCount', label: 'Cashier accounts', placeholder: '4', type: 'number' },
-      { key: 'approvalThreshold', label: 'Manager approval threshold', placeholder: 'Discount above 10%' },
-      { key: 'pinPolicy', label: 'Cashier PIN policy', placeholder: '4-digit PIN' },
-    ],
-  },
+export const ONBOARDING_STEPS: readonly StepDefinition[] = [
+  { tag: 'Business Identity', title: 'Tell us about your business.', description: 'Enter details exactly as registered with the Government of India — these appear on every invoice, tax filing, and compliance document.', note: 'Use the legal name shown on your GST Registration Certificate or Certificate of Incorporation / Partnership Deed.', fields: [
+    { key: 'legalName', label: 'Legal business name', required: true }, { key: 'tradeName', label: 'Trade / brand name' }, { key: 'businessStructure', label: 'Business structure', required: true, options: [['pvtltd', 'Private Limited (Pvt Ltd)'], ['llp', 'LLP — Limited Liability Partnership'], ['partnership', 'Partnership Firm'], ['proprietorship', 'Sole Proprietorship'], ['public', 'Public Limited Company'], ['huf', 'HUF'], ['trust', 'Trust / Section 8 / NGO']] }, { key: 'yearEstablished', label: 'Year established', kind: 'number', required: true }, { key: 'registrationNumber', label: 'CIN / LLPIN', hint: 'Required for Private Limited and LLP businesses.' }, { key: 'natureOfBusiness', label: 'Nature of business', required: true, options: [['retailer', 'Retailer — direct to consumer'], ['wholesaler', 'Wholesaler — B2B only'], ['both', 'Both retail & wholesale'], ['mfr_retail', 'Manufacturer-retailer'], ['service', 'Service + retail']] }, { key: 'storeCount', label: 'Number of stores', required: true, options: [['1', '1 store'], ['2', '2 stores'], ['3', '3 stores'], ['4', '4 stores'], ['5', '5 stores'], ['6-10', '6–10 stores'], ['11-20', '11–20 stores'], ['20+', 'More than 20 stores']] },
+  ] },
+  { tag: 'GST & Legal Compliance', title: 'Tax registration & compliance.', description: 'Your GST registration type determines invoice format, filing schedule and inter-state rules.', note: 'You can save a draft now and verify GST details before issuing the first live invoice.', fields: [
+    { key: 'gstStatus', label: 'GST registration type', required: true, options: [['regular', 'Regular taxpayer'], ['composition', 'Composition scheme'], ['unregistered', 'Unregistered — below threshold']] }, { key: 'gstin', label: 'GSTIN (15 characters)' }, { key: 'pan', label: 'PAN (10 characters)' }, { key: 'placeOfSupply', label: 'Primary state of supply', required: true }, { key: 'fssai', label: 'FSSAI license number' }, { key: 'drugLicense', label: 'Drug license number' }, { key: 'msmeRegistration', label: 'MSME / Udyam registration' }, { key: 'shopEstablishmentLicense', label: 'Shop & Establishment license' }, yesNo('eInvoiceEnabled', 'E-invoice (IRN) mandatory'), yesNo('eWayBillEnabled', 'E-way bill for inter-state movement'),
+  ] },
+  { tag: 'Store Setup', title: 'Configure your store location.', description: 'These details appear on receipt headers, GST invoice address and multi-store reports.', note: 'This becomes the default store selected in the product header.', fields: [
+    { key: 'storeName', label: 'Store display name', required: true }, { key: 'addressLine1', label: 'Address line 1', required: true }, { key: 'addressLine2', label: 'Address line 2' }, { key: 'postalCode', label: 'PIN code', required: true }, { key: 'city', label: 'City', required: true }, { key: 'state', label: 'State', required: true }, { key: 'storeType', label: 'Store type', required: true, options: [['mall_kiosk', 'Mall kiosk'], ['mall_shop', 'Mall shop'], ['high_street', 'High street'], ['standalone', 'Standalone'], ['airport', 'Airport'], ['outlet', 'Outlet']] }, { key: 'storeClassification', label: 'Store category', required: true, options: [['flagship', 'Flagship'], ['branch', 'Branch'], ['franchise', 'Franchise'], ['popup', 'Pop-up']] }, { key: 'carpetAreaSqFt', label: 'Carpet area (sq ft)', kind: 'number' }, { key: 'storeCode', label: 'Store code' }, { key: 'openingTime', label: 'Opening time', kind: 'time', required: true }, { key: 'managerName', label: 'Store manager name' }, { key: 'managerPhone', label: 'Manager mobile' },
+  ] },
+  { tag: 'Billing & Invoice Setup', title: 'Configure invoicing.', description: 'Your invoice series, GST pricing mode and round-off rule apply to every transaction.', note: 'Migrating from another system? Enter your next invoice number to continue seamlessly.', fields: [
+    { key: 'invoicePrefix', label: 'Invoice series prefix', required: true }, { key: 'invoiceStartNumber', label: 'Start from number', kind: 'number', required: true }, { key: 'paymentTermsDays', label: 'Payment terms', required: true, options: [['0', 'Immediate — due on issue'], ['7', 'Net 7 days'], ['15', 'Net 15 days'], ['30', 'Net 30 days'], ['45', 'Net 45 days'], ['60', 'Net 60 days']] }, { key: 'gstPricingMode', label: 'GST pricing mode', required: true, options: [['exclusive', 'Exclusive — GST shown separately'], ['inclusive', 'Inclusive — MRP includes GST']] }, { key: 'defaultGstSlab', label: 'Default GST slab', required: true, options: [['0', 'Exempt 0%'], ['5', '5%'], ['12', '12%'], ['18', '18%'], ['28', '28%']] }, { key: 'rounding', label: 'Invoice round-off', required: true, options: [['nearest1', 'Nearest ₹1'], ['nearest50p', 'Nearest 50 paise'], ['none', 'No rounding']] }, { key: 'financialYearStart', label: 'Financial year', required: true, options: [['april', 'April (Indian FY)'], ['jan', 'January (Calendar year)']] }, yesNo('printHsn', 'Print HSN/SAC code on invoice', true), yesNo('printDuplicateCopy', 'Print duplicate copy'), yesNo('invoiceQrEnabled', 'QR code on invoice'), { key: 'invoiceFooter', label: 'Invoice footer message', kind: 'textarea' },
+  ] },
+  { tag: 'Payment Methods', title: 'How do your customers pay?', description: 'Enable the tender types your cashier can select during billing.', note: 'Gateway and terminal integrations can be connected later without changing billing workflow.', fields: [yesNo('cashEnabled', 'Accept cash payments', true), { key: 'maxCashPerTransaction', label: 'Max cash per transaction (₹)', kind: 'number' }, yesNo('upiEnabled', 'Accept UPI payments', true), { key: 'upiPartner', label: 'UPI partner', options: [['razorpay', 'Razorpay'], ['phonepe', 'PhonePe Biz'], ['bharatpe', 'BharatPe'], ['paytm', 'Paytm Biz'], ['pinelabs_upi', 'Pine Labs UPI'], ['googlepay', 'Google Pay Biz']] }, yesNo('soundBoxEnabled', 'UPI Sound Box / smart speaker'), yesNo('cardEnabled', 'Accept card payments', true), { key: 'cardProvider', label: 'Card terminal provider', options: [['pinelabs', 'Pine Labs'], ['mosambee', 'Mosambee'], ['mswipe', 'Mswipe'], ['hdfc', 'HDFC SmartHub'], ['payu', 'PayU'], ['plural', 'Plural']] }, yesNo('contactlessEnabled', 'Enable contactless / NFC tap-to-pay', true), yesNo('emiEnabled', 'EMI financing'), yesNo('giftCardEnabled', 'Gift cards & vouchers'), yesNo('storeCreditEnabled', 'Store credit / customer wallet'), { key: 'maxStoreCredit', label: 'Max store credit per customer (₹)', kind: 'number' }, yesNo('splitPaymentEnabled', 'Split payment — multiple modes in one bill', true), yesNo('advancePaymentEnabled', 'Advance / booking deposits') ] },
+  { tag: 'Product Catalog', title: 'Set up your catalog.', description: 'Define product structure, barcode format and stock tracking rules.', note: 'Import happens after setup; this configures the defaults for every SKU.', fields: [{ key: 'skuCount', label: 'Approximate SKU count', required: true, options: [['under100', '< 100'], ['100-500', '100–500'], ['500-2000', '500–2,000'], ['2000-10000', '2,000–10,000'], ['10000plus', '10,000+']] }, { key: 'importMethod', label: 'Import method', required: true, options: [['csv', 'CSV / Excel file upload'], ['barcode', 'Barcode scan import'], ['tally', 'Import from Tally / ERP'], ['manual', 'Manual / AI catalog builder']] }, { key: 'unitOfMeasure', label: 'Default unit of measure', required: true, options: [['piece', 'Piece'], ['kg', 'Kg'], ['gram', 'Gram'], ['litre', 'Litre'], ['ml', 'Ml'], ['metre', 'Metre'], ['box', 'Box'], ['pack', 'Pack'], ['set', 'Set'], ['pair', 'Pair']] }, { key: 'barcodeFormat', label: 'Barcode format', required: true, options: [['ean13', 'EAN-13'], ['code128', 'Code-128'], ['qr', 'QR code'], ['upca', 'UPC-A'], ['internal', 'Internal auto-generate']] }, yesNo('hsnAutoLookup', 'HSN / SAC auto-lookup', true), yesNo('mrpRequired', 'MRP mandatory on all products', true), yesNo('variantTracking', 'Size & colour variant tracking', true), yesNo('batchTracking', 'Batch / Lot number tracking'), yesNo('expiryTracking', 'Expiry date tracking'), yesNo('serialTracking', 'Serial number tracking'), yesNo('serviceItemsEnabled', 'Service items (non-inventory)'), { key: 'negativeStockPolicy', label: 'Negative stock', required: true, options: [['block', 'Block sale — recommended'], ['warn', 'Warn but allow'], ['allow', 'Allow silently']] }] },
+  { tag: 'Hardware & Devices', title: 'Set up your devices.', description: 'Prepare scanners, receipt printers, customer displays and cash drawers for each counter.', note: 'Hardware pairing is deferred until after setup where no live pairing contract exists.', fields: [{ key: 'billingCounters', label: 'Billing counters', required: true, options: [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['5plus', '5+']] }, { key: 'printerConnection', label: 'Receipt printer', required: true, options: [['cloud', 'Cloud print — WiFi'], ['lan', 'LAN / Ethernet'], ['bluetooth', 'Bluetooth'], ['none', 'No printer — digital receipts only']] }, { key: 'paperWidthMm', label: 'Paper width', options: [['58', '58 mm compact'], ['80', '80 mm standard']] }, { key: 'scannerConnection', label: 'Barcode scanner', required: true, options: [['usb', 'USB plug-and-play'], ['bluetooth', 'Bluetooth'], ['rf', 'Wireless RF'], ['none', 'No scanner']] }, { key: 'cashDrawerMode', label: 'Cash drawer', required: true, options: [['auto', 'Auto-open on payment'], ['manual', 'Manual'], ['none', 'No cash drawer']] }, { key: 'cardTerminalType', label: 'Card terminal', required: true, options: [['pinelabs', 'Pine Labs'], ['mosambee', 'Mosambee / Mswipe'], ['order', 'Order later'], ['none', 'No card terminal']] }, yesNo('customerDisplayEnabled', 'Customer-facing display'), yesNo('weighingScaleEnabled', 'Weighing / counting scale'), yesNo('labelPrinterEnabled', 'Label / price tag printer'), yesNo('kitchenDisplayEnabled', 'Kitchen Display System (KDS)')] },
+  { tag: 'Team & Access Control', title: 'Secure your store & build your team.', description: 'Set protected-action rules and add the first staff member who will help run the store.', note: 'PINs and hardware credentials are deliberately not collected by this API.', fields: [yesNo('discountEnabled', 'Require approval for discounts', true), { key: 'discountThresholdPercent', label: 'Discount approval threshold (%)', kind: 'number', required: true }, yesNo('refundEnabled', 'Require approval for refunds', true), yesNo('voidEnabled', 'Require approval for voids', true), yesNo('settingsEnabled', 'Require approval for settings', true), { key: 'staffName', label: 'First staff full name' }, { key: 'staffPhone', label: 'First staff mobile' }, { key: 'staffEmail', label: 'First staff email', kind: 'email' }, { key: 'accessLevel', label: 'First staff role', options: [['cashier', 'Cashier'], ['senior_cashier', 'Senior Cashier'], ['floor_staff', 'Floor staff'], ['manager', 'Store Manager']] }, { key: 'defaultShift', label: 'Default shift', options: [['morning', 'Morning'], ['mid', 'Mid-day'], ['evening', 'Evening'], ['full', 'Full day']] }, { key: 'openingFloatPerCounter', label: 'Opening float per counter (₹)', kind: 'number', required: true }, { key: 'endOfDayReminder', label: 'End-of-day reminder', kind: 'time', required: true }, { key: 'autoClockOutHours', label: 'Auto clock-out after', required: true, options: [['8', '8 hours'], ['10', '10 hours'], ['12', '12 hours']] }] },
 ]
 
-const DRAFT_KEY = 'couture.onboarding.draft'
+function emptyValues(step: number): Values { return Object.fromEntries(ONBOARDING_STEPS[step - 1].fields.filter((field) => field.kind === 'toggle').map((field) => [field.key, ['cashEnabled', 'upiEnabled', 'cardEnabled', 'printHsn', 'contactlessEnabled', 'splitPaymentEnabled', 'hsnAutoLookup', 'mrpRequired', 'variantTracking', 'discountEnabled', 'refundEnabled', 'voidEnabled', 'settingsEnabled'].includes(field.key)])) }
+function serverValues(state: components['schemas']['OnboardingState'], step: number): Values { return { ...emptyValues(step), ...(state.data[step as keyof typeof state.data] as Values | undefined) } }
+async function headers() { const { data: { session } } = await supabase.auth.getSession(); if (!session?.access_token) throw new Error('Your session has expired. Sign in again to continue.'); return { Authorization: `Bearer ${session.access_token}` } }
 
 export function OnboardingWizard({ step }: { step: number }) {
-  const router = useRouter()
-  const current = ONBOARDING_STEPS[step - 1]
-  const [draft, setDraft] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    try {
-      setDraft(JSON.parse(window.localStorage.getItem(DRAFT_KEY) ?? '{}'))
-    } catch {
-      setDraft({})
-    }
-  }, [])
-
-  function update(key: string, value: string) {
-    setDraft((existing) => ({ ...existing, [key]: value }))
-  }
-
-  function persist(nextDraft = draft) {
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(nextDraft))
-    window.localStorage.setItem('couture.onboarding.currentStep', String(step))
-  }
-
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    persist()
-    router.push(step < ONBOARDING_STEPS.length ? `/onboarding/${step + 1}` : '/onboarding/complete')
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f4f5f8] text-[#111827] lg:grid lg:grid-cols-[380px_minmax(0,1fr)]">
-      <aside className="bg-gradient-to-b from-[#07172f] to-[#102d67] p-7 text-white lg:min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="grid size-12 place-items-center rounded-xl border border-white/20 bg-white/10 font-black">C</div>
-          <strong className="font-heading text-xl">Couture POS</strong>
-        </div>
-        <p className="mt-10 text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-          Setup · {Math.round((step / ONBOARDING_STEPS.length) * 100)}% complete
-        </p>
-        <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full rounded-full bg-[#68a0ff]" style={{ width: `${(step / ONBOARDING_STEPS.length) * 100}%` }} />
-        </div>
-        <ol className="mt-7 hidden space-y-2 lg:block">
-          {ONBOARDING_STEPS.map((item, index) => {
-            const number = index + 1
-            return (
-              <li key={item.title}>
-                <button
-                  className={`flex w-full items-center gap-3 rounded-xl p-3 text-left ${
-                    number === step ? 'bg-white/10' : 'text-white/60'
-                  }`}
-                  onClick={() => {
-                    persist()
-                    router.push(`/onboarding/${number}`)
-                  }}
-                >
-                  <span className={`grid size-9 place-items-center rounded-full text-sm font-bold ${number <= step ? 'bg-[#2864c6] text-white' : 'bg-white/10'}`}>
-                    {String(number).padStart(2, '0')}
-                  </span>
-                  <span>
-                    <small className="block text-[10px] font-bold uppercase tracking-wider">Step {String(number).padStart(2, '0')}</small>
-                    <strong className="block text-sm">{item.title.replace(/[.]$/, '')}</strong>
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ol>
-      </aside>
-
-      <main className="p-5 md:p-10 lg:p-14">
-        <form className="mx-auto max-w-5xl" onSubmit={submit}>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#2864c6]">
-            Step {String(step).padStart(2, '0')} · {current.title.replace(/[.]$/, '')}
-          </p>
-          <h1 className="mt-3 font-heading text-4xl font-bold tracking-tight">{current.title}</h1>
-          <p className="mt-3 max-w-3xl text-lg leading-7 text-slate-500">{current.description}</p>
-          <div className="mt-7 rounded-xl border border-blue-200 bg-[#eaf2ff] p-4 text-sm text-[#174c9e]">
-            ℹ️ {current.note}
-          </div>
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
-            {current.fields.map((field, index) => (
-              <div key={field.key} className={index < 2 ? 'md:col-span-2' : ''}>
-                <Label htmlFor={field.key} className="mb-2 block text-sm font-semibold normal-case tracking-normal">
-                  {field.label}
-                </Label>
-                <Input
-                  id={field.key}
-                  type={field.type ?? 'text'}
-                  value={draft[field.key] ?? ''}
-                  placeholder={field.placeholder}
-                  onChange={(event) => update(field.key, event.target.value)}
-                  className="h-14 rounded-xl bg-white px-5 text-base"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-12 flex items-center justify-between border-t pt-6">
-            <Button type="button" variant="outline" onClick={() => {
-              persist()
-              router.push(step === 1 ? '/plans' : `/onboarding/${step - 1}`)
-            }}>
-              ← {step === 1 ? 'Plans' : 'Back'}
-            </Button>
-            <span className="hidden text-sm text-slate-400 md:block">{Math.round((step / ONBOARDING_STEPS.length) * 100)}% complete</span>
-            <Button type="submit" className="min-w-36">
-              {step === ONBOARDING_STEPS.length ? 'Finish setup' : 'Continue →'}
-            </Button>
-          </div>
-        </form>
-      </main>
-    </div>
-  )
+  const router = useRouter(); const current = ONBOARDING_STEPS[step - 1]
+  const [values, setValues] = useState<Values>(() => emptyValues(step)); const [state, setState] = useState<components['schemas']['OnboardingState'] | null>(null); const [status, setStatus] = useState<'loading' | 'saved' | 'saving' | 'error'>('loading'); const [error, setError] = useState(''); const [retry, setRetry] = useState(0)
+  const percent = useMemo(() => Math.round(((state?.currentStep ?? 0) / 8) * 100), [state])
+  useEffect(() => { let active = true; (async () => { setStatus('loading'); try { const { data, error: apiError } = await apiClient.GET('/onboarding', { headers: await headers() }); if (apiError || !data) throw new Error('We could not load your saved setup.'); if (!active) return; if (!data.completed && step > data.currentStep + 1) { router.replace(`/onboarding/${Math.max(1, data.currentStep + 1)}`); return } setState(data); const saved = serverValues(data, step); const raw = window.sessionStorage.getItem(`${DRAFT_PREFIX}${step}`); setValues(raw ? { ...saved, ...JSON.parse(raw) } : saved); setStatus('saved') } catch (cause) { if (active) { setError(cause instanceof Error ? cause.message : 'We could not load your saved setup.'); setStatus('error') } } })(); return () => { active = false } }, [step, retry, router])
+  function update(key: string, value: string | boolean) { const next = { ...values, [key]: value }; setValues(next); window.sessionStorage.setItem(`${DRAFT_PREFIX}${step}`, JSON.stringify(next)) }
+  function payload() { const base = { ...values }; if (step === 1) { const selection = JSON.parse(window.sessionStorage.getItem(`${DRAFT_PREFIX}selection`) ?? '{}'); Object.assign(base, selection) } if (step === 8) { const firstStaff = base.staffName ? { name: base.staffName, phone: base.staffPhone || undefined, email: base.staffEmail || undefined, accessLevel: base.accessLevel || 'cashier', defaultShift: base.defaultShift || 'full' } : undefined; return { approvalRules: { discountEnabled: Boolean(base.discountEnabled), discountThresholdPercent: Number(base.discountThresholdPercent), refundEnabled: Boolean(base.refundEnabled), voidEnabled: Boolean(base.voidEnabled), settingsEnabled: Boolean(base.settingsEnabled) }, firstStaff, openingFloatPerCounter: Number(base.openingFloatPerCounter), endOfDayReminder: base.endOfDayReminder, autoClockOutHours: base.autoClockOutHours } } return Object.fromEntries(Object.entries(base).map(([key, value]) => [key, ['yearEstablished', 'carpetAreaSqFt', 'invoiceStartNumber', 'maxCashPerTransaction', 'maxStoreCredit'].includes(key) && value !== '' ? Number(value) : value])) }
+  async function submit(event: FormEvent) { event.preventDefault(); const missing = current.fields.find((field) => field.required && (values[field.key] === '' || values[field.key] === undefined)); if (missing) { setError(`${missing.label} is required.`); return } setStatus('saving'); setError(''); try { const { data, error: apiError, response } = await apiClient.PUT('/onboarding/steps/{step}', { params: { path: { step } }, headers: await headers(), body: payload() as components['schemas']['OnboardingStepRequest'] }); if (apiError || !data) throw new Error(response.status === 409 ? 'Complete each earlier step before continuing.' : 'Couldn’t save changes. Retry saving.'); window.sessionStorage.removeItem(`${DRAFT_PREFIX}${step}`); if (step === 1) window.sessionStorage.removeItem(`${DRAFT_PREFIX}selection`); setState(data); setStatus('saved'); router.push(step === 8 ? '/onboarding/complete' : `/onboarding/${Math.min(step + 1, data.currentStep + 1)}`) } catch (cause) { setError(cause instanceof Error ? cause.message : 'Couldn’t save changes. Retry saving.'); setStatus('error') } }
+  const completeThrough = state?.currentStep ?? 0
+  return <div className="min-h-screen bg-[#f5f6f7] text-[#0f1729] lg:grid lg:grid-cols-[380px_minmax(0,1fr)]"><aside className="bg-gradient-to-b from-[#030912] to-[#06337A] p-7 text-white lg:min-h-screen"><div className="flex items-center gap-3"><div className="grid size-12 place-items-center rounded-xl border border-white/20 bg-white/10 font-black">C</div><strong className="font-heading text-xl">Couture POS</strong></div><p className="mt-10 text-xs font-bold uppercase tracking-[.14em] text-white/45">Setup · {percent}% complete</p><div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#68a0ff]" style={{ width: `${percent}%` }} /></div><ol className="mt-7 hidden space-y-2 lg:block">{ONBOARDING_STEPS.map((item, index) => { const number = index + 1; const allowed = number <= Math.max(1, completeThrough + 1); return <li key={item.tag}><button disabled={!allowed} onClick={() => router.push(`/onboarding/${number}`)} className={`flex w-full items-center gap-3 rounded-xl p-3 text-left disabled:cursor-not-allowed ${number === step ? 'bg-white/10' : 'text-white/60'}`}><span className={`grid size-9 place-items-center rounded-full text-sm font-bold ${number <= completeThrough ? 'bg-[#10B981]' : number === step ? 'bg-[#2864c6]' : 'bg-white/10'}`}>{String(number).padStart(2, '0')}</span><span><small className="block text-[10px] font-bold uppercase tracking-wider">Step {String(number).padStart(2, '0')}</small><strong className="block text-sm">{item.tag}</strong></span></button></li> })}</ol></aside><main className="p-5 md:p-10 lg:p-14"><form className="mx-auto max-w-5xl" onSubmit={submit}><p className="text-xs font-bold uppercase tracking-[.14em] text-[#0058BA]">Step {String(step).padStart(2, '0')} · {current.tag}</p><h1 className="mt-3 font-heading text-4xl font-bold tracking-tight">{current.title}</h1><p className="mt-3 max-w-3xl text-lg leading-7 text-[#667085]">{current.description}</p><div className="mt-7 rounded-xl border border-blue-200 bg-[#eaf1fb] p-4 text-sm text-[#174c9e]">{current.note}</div>{status === 'loading' ? <div className="mt-8 animate-pulse rounded-xl border bg-white p-10 text-slate-500">Loading your saved setup…</div> : <><div className="mt-4 text-sm" aria-live="polite">{status === 'saving' ? 'Saving…' : status === 'saved' ? <span className="text-emerald-700">Saved</span> : <span className="text-red-700">Couldn’t save changes</span>}</div>{error && <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error} {status === 'error' && <button type="button" className="ml-2 underline" onClick={() => setRetry((count) => count + 1)}>Retry saving</button>}</div>}<div className="mt-8 grid gap-6 md:grid-cols-2">{current.fields.map((field) => <div key={field.key} className={field.kind === 'toggle' || field.kind === 'textarea' ? 'md:col-span-2' : ''}>{field.kind === 'toggle' ? <label className="flex items-center justify-between rounded-xl border bg-white p-4"><span><strong className="block text-sm">{field.label}</strong>{field.hint && <small className="text-slate-500">{field.hint}</small>}</span><input type="checkbox" checked={Boolean(values[field.key])} onChange={(event) => update(field.key, event.target.checked)} className="size-5 accent-[#0058BA]" /></label> : <><Label htmlFor={field.key} className="mb-2 block">{field.label}{field.required ? ' *' : ''}</Label>{field.options ? <select id={field.key} required={field.required} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} className="h-12 w-full rounded-xl border border-[#e6e8eb] bg-white px-3"><option value="">Select an option</option>{field.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : field.kind === 'textarea' ? <textarea id={field.key} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} className="min-h-24 w-full rounded-xl border border-[#e6e8eb] p-3" /> : <Input id={field.key} required={field.required} type={field.kind ?? 'text'} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} className="h-12 rounded-xl" />}</>}</div>)}</div><div className="mt-12 flex items-center justify-between border-t pt-6"><Button type="button" variant="outline" onClick={() => router.push(step === 1 ? '/plans' : `/onboarding/${step - 1}`)}>← {step === 1 ? 'Plans' : 'Back'}</Button><span className="hidden text-sm text-slate-400 md:block">{percent}% complete</span><Button type="submit" disabled={status === 'saving'} className="min-w-44">{status === 'saving' ? 'Saving…' : step === 8 ? 'Finish setup' : 'Continue →'}</Button></div></>}</form></main></div>
 }
-
