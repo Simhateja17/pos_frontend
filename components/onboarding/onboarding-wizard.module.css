@@ -309,3 +309,18 @@
     display: none;
   }
 }
+
+.optionalToggle {
+  margin-top: 22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #174c9e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.optionalToggle:hover {
+  text-decoration: underline;
+}

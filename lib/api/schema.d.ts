@@ -228,7 +228,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Complete onboarding only after all eight persisted steps pass server validation. Owner-only. */
+        /** @description Complete onboarding once the required steps (business identity, tax profile) pass server validation. Owner-only. */
         post: {
             parameters: {
                 query?: never;
@@ -2132,6 +2132,9 @@ export interface components {
             completed: boolean;
             /** Format: date-time */
             completedAt: string | null;
+            requiredSteps: number[];
+            requiredStepsComplete: boolean;
+            pendingSteps: number[];
         };
         OnboardingData: {
             1?: components["schemas"]["OnboardingBusinessIdentityStep"];
@@ -2153,13 +2156,13 @@ export interface components {
             legalName: string;
             tradeName?: string;
             /** @enum {string} */
-            businessStructure: "pvtltd" | "llp" | "partnership" | "proprietorship" | "public" | "huf" | "trust";
-            yearEstablished: number;
+            businessStructure?: "pvtltd" | "llp" | "partnership" | "proprietorship" | "public" | "huf" | "trust";
+            yearEstablished?: number;
             registrationNumber?: string;
             /** @enum {string} */
-            natureOfBusiness: "retailer" | "wholesaler" | "both" | "mfr_retail" | "service";
+            natureOfBusiness?: "retailer" | "wholesaler" | "both" | "mfr_retail" | "service";
             /** @enum {string} */
-            storeCount: "1" | "2" | "3" | "4" | "5" | "6-10" | "11-20" | "20+";
+            storeCount?: "1" | "2" | "3" | "4" | "5" | "6-10" | "11-20" | "20+";
         };
         OnboardingGstComplianceStep: {
             /** @enum {string} */
@@ -2171,7 +2174,9 @@ export interface components {
             drugLicense?: string;
             msmeRegistration?: string;
             shopEstablishmentLicense?: string;
+            /** @default false */
             eInvoiceEnabled: boolean;
+            /** @default false */
             eWayBillEnabled: boolean;
         };
         OnboardingStoreSetupStep: {
@@ -2292,10 +2297,10 @@ export interface components {
         OnboardingCompletionResponse: components["schemas"]["OnboardingState"] & {
             summary: {
                 businessName: string;
-                storeName: string;
+                storeName: string | null;
                 storeCategory: string;
                 trialPlan: string;
-                billingCounters: string;
+                billingCounters: string | null;
                 gstStatus: string;
             };
         };

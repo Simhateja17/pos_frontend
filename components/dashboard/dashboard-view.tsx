@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Boxes, PackageOpen, RotateCcw, Zap } from 'lucide-react'
 import { type Dashboard, type DashboardRange, getAuthenticatedDashboard } from '@/lib/api/authenticated-client'
 import { Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2, type KpiItem } from '@/components/couture/ui'
+import { SetupPrompt } from '@/components/onboarding/setup-prompt'
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 
 const RANGES = [
@@ -175,6 +176,8 @@ function DashboardContent({
 
         <ActionCenter dashboard={dashboard} />
       </Split2>
+
+      <SetupPrompt />
     </>
   )
 }
