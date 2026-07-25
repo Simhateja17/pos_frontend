@@ -2013,6 +2013,445 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/import/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Parse a catalog or sales CSV server-side and stage it for review. Writes nothing to the ledger. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UploadImportRequest"];
+                };
+            };
+            responses: {
+                /** @description File parsed and staged */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportBatch"];
+                    };
+                };
+                /** @description The file could not be parsed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description This exact file has already been imported */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description File exceeds the size limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/import/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List recent imports for the authenticated tenant. Owner-only. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Import history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportBatchList"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/import/batches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read one staged or committed import, including its parsed preview. Owner-only. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Import batch */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportBatch"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such import */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/import/batches/{id}/mapping-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description ONBOARD-03: suggest source-column to target-field mappings. The suggestion is never persisted and never applied without owner confirmation. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Suggested mapping */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportMappingSuggestion"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such import */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description That import has already been applied */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The stored file can no longer be parsed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/import/batches/{id}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply the owner-confirmed mapping in one transaction. Imported sales are marked source=import and populate daily_sales_rollup. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CommitImportRequest"];
+                };
+            };
+            responses: {
+                /** @description Import applied */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportCommitResult"];
+                    };
+                };
+                /** @description The confirmed mapping is not usable */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such import */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description That import has already been applied */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the reports this store can run. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Available reports */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportCatalog"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description REPORT-01: run one report over a business-date range in the tenant timezone. Manager or owner. */
+        get: {
+            parameters: {
+                query: {
+                    kind: components["schemas"]["ReportKind"];
+                    from?: string;
+                    to?: string;
+                    includeImported?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Report table */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportTable"];
+                    };
+                };
+                /** @description Unknown report or invalid range */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Manager or owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2787,6 +3226,138 @@ export interface components {
             /** @enum {string} */
             kind: "insufficient_history" | "no_velocity" | "sufficient_stock" | "no_supplier";
             historyDays: number | null;
+        };
+        ImportBatch: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["ImportKind"];
+            fileName: string;
+            fileHash: string;
+            /** @enum {string} */
+            status: "pending" | "committed" | "failed";
+            rowCount: number;
+            columns: components["schemas"]["ImportColumnPreview"][];
+            sampleRows: {
+                [key: string]: string;
+            }[];
+            delimiter: string;
+            encoding: string;
+            blankRowsSkipped: number;
+            raggedRows: number;
+            targetFields: components["schemas"]["ImportTargetField"][];
+            /** Format: date-time */
+            committedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            summary?: unknown;
+        };
+        /** @enum {string} */
+        ImportKind: "catalog" | "sales";
+        ImportColumnPreview: {
+            name: string;
+            samples: string[];
+            nonEmptyCount: number;
+        };
+        ImportTargetField: {
+            field: string;
+            label: string;
+            required: boolean;
+            /** @enum {string} */
+            type: "text" | "number" | "date";
+            hint: string;
+        };
+        UploadImportRequest: {
+            kind: components["schemas"]["ImportKind"];
+            fileName: string;
+            contentBase64: string;
+        };
+        ImportBatchList: {
+            batches: components["schemas"]["ImportBatch"][];
+        };
+        ImportMappingSuggestion: {
+            mappings: components["schemas"]["ImportColumnMapping"][];
+            /** @enum {string} */
+            source: "claude" | "heuristic";
+            note: string | null;
+        };
+        ImportColumnMapping: {
+            column: string;
+            target: string | null;
+            confidence: components["schemas"]["ImportMappingConfidence"];
+            reason: string;
+        };
+        /** @enum {string} */
+        ImportMappingConfidence: "high" | "medium" | "low";
+        ImportCommitResult: {
+            batch: components["schemas"]["ImportBatch"];
+            result: {
+                rowsRead: number;
+                rowsSkipped: number;
+                productsCreated: number;
+                variantsCreated: number;
+                variantsUpdated: number;
+                salesCreated: number;
+                saleLinesCreated: number;
+                openingStockMovements: number;
+                dateRange: {
+                    from: string;
+                    to: string;
+                } | null;
+                issues: {
+                    row: number;
+                    reason: string;
+                }[];
+            };
+        };
+        CommitImportRequest: {
+            mappings: {
+                column: string;
+                target: string | null;
+            }[];
+        };
+        ReportCatalog: {
+            reports: {
+                kind: components["schemas"]["ReportKind"];
+                title: string;
+                description: string;
+                /** @enum {string} */
+                group: "sales" | "stock" | "staff";
+            }[];
+        };
+        /** @enum {string} */
+        ReportKind: "sales-by-day" | "sales-by-product" | "sales-by-category" | "sales-by-staff" | "stock-valuation" | "stock-movements" | "staff-exceptions";
+        ReportTable: {
+            id: string;
+            title: string;
+            description: string;
+            columns: components["schemas"]["ReportColumn"][];
+            rows: {
+                [key: string]: string | number | null;
+            }[];
+            totals: {
+                [key: string]: string | number | null;
+            } | null;
+            range: {
+                from: string;
+                to: string;
+            };
+            /** Format: date-time */
+            generatedAt: string;
+            unavailable: {
+                what: string;
+                reason: string;
+            }[];
+        };
+        ReportColumn: {
+            key: string;
+            label: string;
+            /**
+             * @default left
+             * @enum {string}
+             */
+            align: "left" | "right";
+            /** @default false */
+            money: boolean;
         };
     };
     responses: never;

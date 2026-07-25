@@ -5,6 +5,7 @@ import { Download } from 'lucide-react'
 import { type PaymentRead, getAuthenticatedPayments } from '@/lib/api/authenticated-client'
 import { Card, CardHead, DataTable, KpiRow, PageHead, Tabs, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
+import { downloadCsv } from '@/lib/csv'
 import { Pagination } from './orders-view'
 
 const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
@@ -65,7 +66,27 @@ export function PaymentsView() {
         title="Payments & Settlement"
         sub="Tender mix, settlements and reconciliation"
         actions={
-          <button className="btn" disabled title="Exports are not available yet">
+          <button
+            className="btn"
+            type="button"
+            disabled={!data || data.items.length === 0}
+            title={data?.items.length ? 'Download the payments shown below' : 'There is nothing to export yet'}
+            onClick={() =>
+              data &&
+              downloadCsv(
+                `payments-${new Date().toISOString().slice(0, 10)}.csv`,
+                ['Payment ID', 'Sale ID', 'Method', 'Direction', 'Created at', 'Amount'],
+                data.items.map((payment) => [
+                  payment.id,
+                  payment.saleId,
+                  payment.method,
+                  payment.direction,
+                  payment.createdAt,
+                  payment.amount,
+                ]),
+              )
+            }
+          >
             <Download size={15} /> Export
           </button>
         }

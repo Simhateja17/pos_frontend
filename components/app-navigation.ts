@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   Sparkles,
   Truck,
+  Upload,
   Usb,
   UserCog,
   Users,
@@ -98,6 +99,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'System',
     items: [
       { label: 'Onboarding', href: '/onboarding/1', icon: Rocket },
+      { label: 'Import Data', href: '/app/import', icon: Upload },
       { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw, badge: 'new' },
       { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb, badge: 'new' },
       { label: 'Customer Display', href: '/app/customer-display', icon: Monitor, badge: 'new' },

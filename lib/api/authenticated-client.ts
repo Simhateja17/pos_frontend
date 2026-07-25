@@ -21,6 +21,19 @@ export type PurchaseOrderStatus = components['schemas']['PurchaseOrderStatus']
 export type CreatePurchaseOrderRequest = components['schemas']['CreatePurchaseOrderRequest']
 export type ReceivePurchaseOrderRequest = components['schemas']['ReceivePurchaseOrderRequest']
 export type ReceiptResult = components['schemas']['ReceiptResult']
+export type ImportBatch = components['schemas']['ImportBatch']
+export type ImportBatchList = components['schemas']['ImportBatchList']
+export type ImportKind = components['schemas']['ImportKind']
+export type ImportColumnMapping = components['schemas']['ImportColumnMapping']
+export type ImportMappingSuggestion = components['schemas']['ImportMappingSuggestion']
+export type ImportTargetField = components['schemas']['ImportTargetField']
+export type UploadImportRequest = components['schemas']['UploadImportRequest']
+export type CommitImportRequest = components['schemas']['CommitImportRequest']
+export type ImportCommitResult = components['schemas']['ImportCommitResult']
+export type ReportTable = components['schemas']['ReportTable']
+export type ReportKind = components['schemas']['ReportKind']
+export type ReportCatalog = components['schemas']['ReportCatalog']
+export type ReportQuery = NonNullable<paths['/reports']['get']['parameters']['query']>
 export type SaleRecordQuery = NonNullable<paths['/sales/records']['get']['parameters']['query']>
 export type CustomerRecordQuery = NonNullable<paths['/customers/records']['get']['parameters']['query']>
 export type PaymentRecordQuery = NonNullable<paths['/sales/payments']['get']['parameters']['query']>
@@ -232,5 +245,56 @@ export function receiveAuthenticatedPurchaseOrder(
         headers: await authorizationHeader(),
       }),
     'That goods receipt could not be recorded. Please retry.',
+  )
+}
+
+export function uploadAuthenticatedImport(body: UploadImportRequest): Promise<ImportBatch> {
+  return authenticatedRead(
+    async () => apiClient.POST('/import/uploads', { body, headers: await authorizationHeader() }),
+    'That file could not be read. Check it is a CSV export and retry.',
+  )
+}
+
+export function getAuthenticatedImportBatches(): Promise<ImportBatchList> {
+  return authenticatedRead(
+    async () => apiClient.GET('/import/batches', { headers: await authorizationHeader() }),
+    'Your import history is unavailable right now. Please retry.',
+  )
+}
+
+export function suggestAuthenticatedImportMapping(id: string): Promise<ImportMappingSuggestion> {
+  return authenticatedRead(
+    async () =>
+      apiClient.POST('/import/batches/{id}/mapping-suggestion', {
+        params: { path: { id } },
+        headers: await authorizationHeader(),
+      }),
+    'A suggested mapping is unavailable right now. Map the columns yourself, or retry.',
+  )
+}
+
+export function commitAuthenticatedImport(id: string, body: CommitImportRequest): Promise<ImportCommitResult> {
+  return authenticatedRead(
+    async () =>
+      apiClient.POST('/import/batches/{id}/commit', {
+        params: { path: { id } },
+        body,
+        headers: await authorizationHeader(),
+      }),
+    'That import could not be applied. Nothing was changed — please retry.',
+  )
+}
+
+export function getAuthenticatedReportCatalog(): Promise<ReportCatalog> {
+  return authenticatedRead(
+    async () => apiClient.GET('/reports/catalog', { headers: await authorizationHeader() }),
+    'The list of reports is unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedReport(query: ReportQuery): Promise<ReportTable> {
+  return authenticatedRead(
+    async () => apiClient.GET('/reports', { params: { query }, headers: await authorizationHeader() }),
+    'That report could not be run. Please retry.',
   )
 }

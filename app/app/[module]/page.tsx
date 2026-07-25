@@ -9,7 +9,6 @@ const MODULE_LABELS: Record<string, { title: string; sub: string }> = {
   expenses: { title: 'Expenses', sub: 'Store spend and petty cash' },
   receivables: { title: 'Receivables', sub: 'Credit customers and outstanding dues' },
   'credit-notes': { title: 'Credit / Debit Notes', sub: 'Post-invoice adjustments' },
-  reports: { title: 'Reports', sub: 'Operational and financial reporting' },
   analytics: { title: 'Analytics', sub: 'Trends and performance insight' },
   copilot: { title: 'AI Copilot', sub: 'Assisted retail operations' },
   'offline-sync': { title: 'Offline & Sync', sub: 'Resilience and queued writes' },

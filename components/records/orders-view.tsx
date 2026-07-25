@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { type SaleList, getAuthenticatedSales } from '@/lib/api/authenticated-client'
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, Tabs, type BadgeTone, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
+import { downloadCsv } from '@/lib/csv'
 
 const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 const timeOnly = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })
@@ -91,7 +92,31 @@ export function OrdersView() {
         sub="Invoice and held-bill history"
         actions={
           <>
-            <button className="btn" disabled title="Exports are not available yet">
+            <button
+              className="btn"
+              type="button"
+              disabled={!data || data.items.length === 0}
+              title={data?.items.length ? 'Download the sales shown below' : 'There is nothing to export yet'}
+              onClick={() =>
+                data &&
+                downloadCsv(
+                  `sales-${range}-${new Date().toISOString().slice(0, 10)}.csv`,
+                  ['Invoice', 'Sale ID', 'Customer', 'Created at', 'Payment methods', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total'],
+                  data.items.map((sale) => [
+                    sale.id.slice(0, 8).toUpperCase(),
+                    sale.id,
+                    sale.customerId ? 'Customer linked' : 'Walk-in',
+                    sale.createdAt,
+                    sale.payments.map((payment) => payment.method).join(' / '),
+                    sale.status,
+                    sale.subtotal,
+                    sale.discountAmount,
+                    sale.taxAmount,
+                    sale.totalAmount,
+                  ]),
+                )
+              }
+            >
               <Download size={15} /> Export
             </button>
             <Link className="btn btn-pri" href="/app/billing">
