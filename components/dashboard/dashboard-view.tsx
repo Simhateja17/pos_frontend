@@ -134,7 +134,11 @@ function DashboardContent({
       meta: dashboard.lowStock.count > 0 ? 'At or below reorder point' : 'All stock levels reported healthy',
     },
     {
-      label: 'UPI Settlement',
+      // DASH-01 keeps this tile despite it never carrying a figure in V1: an
+      // owner migrating from a POS that showed settlement needs to know we
+      // deliberately do not, rather than wonder where it went. It states why
+      // rather than showing a zero.
+      label: 'Settlement',
       value: <UnavailableValue reason={dashboard.settlement.reason} />,
       meta: dashboard.settlement.reason,
     },

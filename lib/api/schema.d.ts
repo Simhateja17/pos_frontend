@@ -2452,6 +2452,256 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/email/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description COMMS-01: every email send attempt and its outcome. Manager or owner. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Email send log */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmailLog"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Manager or owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/email/suppressions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Addresses this store no longer emails, and why. Manager or owner. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Suppression list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmailSuppressionList"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Manager or owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** @description Stop emailing an address. An unsubscribe suppresses offers only; a bounce or complaint suppresses everything. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateEmailSuppressionRequest"];
+                };
+            };
+            responses: {
+                /** @description Address suppressed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid address or reason */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** @description Allow a suppressed address again. Owner-only. */
+        delete: {
+            parameters: {
+                query: {
+                    email: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Address allowed again */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No address given */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description That address is not suppressed */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/email/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Record a delivery, bounce or complaint from the email provider. A bounce or complaint also suppresses the address. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EmailDeliveryEvent"];
+                };
+            };
+            responses: {
+                /** @description Event applied */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unreadable event */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3358,6 +3608,65 @@ export interface components {
             align: "left" | "right";
             /** @default false */
             money: boolean;
+        };
+        EmailLog: {
+            entries: components["schemas"]["EmailLogEntry"][];
+            counts: {
+                sent: number;
+                delivered: number;
+                failed: number;
+                bounced: number;
+                suppressed: number;
+            };
+            providerConfigured: boolean;
+        };
+        EmailLogEntry: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["EmailKind"];
+            recipient: string;
+            subject: string;
+            /** @enum {string} */
+            status: "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed" | "suppressed";
+            errorMessage: string | null;
+            /** Format: uuid */
+            saleId: string | null;
+            attempts: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastAttemptAt: string | null;
+        };
+        /** @enum {string} */
+        EmailKind: "receipt" | "invoice" | "offer";
+        EmailSuppressionList: {
+            suppressions: components["schemas"]["EmailSuppression"][];
+        };
+        EmailSuppression: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            /** @enum {string} */
+            reason: "unsubscribed" | "bounced" | "complained";
+            detail: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreateEmailSuppressionRequest: {
+            /** Format: email */
+            email: string;
+            /** @enum {string} */
+            reason: "unsubscribed" | "bounced" | "complained";
+            detail?: string;
+        };
+        EmailDeliveryEvent: {
+            /** @enum {string} */
+            type: "delivered" | "bounced" | "complained";
+            /** Format: email */
+            recipient: string;
+            providerMessageId?: string;
+            /** Format: uuid */
+            logId?: string;
         };
     };
     responses: never;

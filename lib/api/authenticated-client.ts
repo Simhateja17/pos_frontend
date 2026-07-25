@@ -34,6 +34,10 @@ export type ReportTable = components['schemas']['ReportTable']
 export type ReportKind = components['schemas']['ReportKind']
 export type ReportCatalog = components['schemas']['ReportCatalog']
 export type ReportQuery = NonNullable<paths['/reports']['get']['parameters']['query']>
+export type EmailLog = components['schemas']['EmailLog']
+export type EmailLogEntry = components['schemas']['EmailLogEntry']
+export type EmailSuppressionList = components['schemas']['EmailSuppressionList']
+export type CreateEmailSuppressionRequest = components['schemas']['CreateEmailSuppressionRequest']
 export type SaleRecordQuery = NonNullable<paths['/sales/records']['get']['parameters']['query']>
 export type CustomerRecordQuery = NonNullable<paths['/customers/records']['get']['parameters']['query']>
 export type PaymentRecordQuery = NonNullable<paths['/sales/payments']['get']['parameters']['query']>
@@ -296,5 +300,37 @@ export function getAuthenticatedReport(query: ReportQuery): Promise<ReportTable>
   return authenticatedRead(
     async () => apiClient.GET('/reports', { params: { query }, headers: await authorizationHeader() }),
     'That report could not be run. Please retry.',
+  )
+}
+
+export function getAuthenticatedEmailLog(): Promise<EmailLog> {
+  return authenticatedRead(
+    async () => apiClient.GET('/email/log', { headers: await authorizationHeader() }),
+    'The email send log is unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedEmailSuppressions(): Promise<EmailSuppressionList> {
+  return authenticatedRead(
+    async () => apiClient.GET('/email/suppressions', { headers: await authorizationHeader() }),
+    'The suppression list is unavailable right now. Please retry.',
+  )
+}
+
+export function createAuthenticatedEmailSuppression(body: CreateEmailSuppressionRequest): Promise<unknown> {
+  return authenticatedRead(
+    async () => apiClient.POST('/email/suppressions', { body, headers: await authorizationHeader() }),
+    'That address could not be suppressed. Please retry.',
+  )
+}
+
+export function removeAuthenticatedEmailSuppression(email: string): Promise<unknown> {
+  return authenticatedRead(
+    async () =>
+      apiClient.DELETE('/email/suppressions', {
+        params: { query: { email } },
+        headers: await authorizationHeader(),
+      }),
+    'That address could not be allowed again. Please retry.',
   )
 }
