@@ -26,6 +26,8 @@ const METHOD_LABEL: Record<string, string> = {
   forecast: 'Forecast',
 }
 
+const METHOD_TONE: Record<string, BadgeTone> = { heuristic: 'grey', forecast: 'green' }
+
 const SKIPPED_LABEL: Record<ReorderSkipped['kind'], string> = {
   insufficient_history: 'Not enough sales history yet',
   no_velocity: 'No sales in the last 30 days',
@@ -268,7 +270,7 @@ export function ReorderSuggestions() {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <Badge tone="blue">{METHOD_LABEL[s.method] ?? s.method}</Badge>
+                    <Badge tone={METHOD_TONE[s.method] ?? 'blue'}>{s.method === 'forecast' ? '✦ Forecast' : METHOD_LABEL[s.method] ?? s.method}</Badge>
                     <Badge tone={CONFIDENCE_TONE[s.confidence] ?? 'grey'}>
                       {s.confidence} confidence
                     </Badge>
