@@ -67,7 +67,15 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
   }
 
   return (
-    <div className="rounded-md border p-4" style={{ borderColor: '#E2E8F0' }}>
+    <section aria-label="Completed sale receipt" className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#047857]">Sale confirmed</p>
+          <h2 className="font-heading text-xl font-semibold">Receipt #{sale.id.slice(0, 8)}</h2>
+          <p className="text-sm text-muted-foreground">₹{sale.totalAmount} recorded by the server.</p>
+        </div>
+        <span className="rounded-full bg-[#E8F7F0] px-3 py-1 text-sm font-semibold text-[#047857]">Completed</span>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" onClick={() => printFn()} style={{ minHeight: 44 }}>
           Print receipt
@@ -89,10 +97,13 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         </Button>
       </div>
       {emailStatus && (
-        <p className="mt-2 text-sm" style={{ color: '#64748B' }}>
+        <p className="mt-2 text-sm" aria-live="polite" style={{ color: '#64748B' }}>
           {emailStatus}
         </p>
       )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        WhatsApp receipt delivery is unavailable for this store. Print or email the confirmed receipt instead.
+      </p>
 
       {/* Off-screen, natural-scale, 80mm-print-ready container — same sr-only
           pattern as Phase 2's label-sheet container (frontend/app/inventory/labels/page.tsx).
@@ -115,6 +126,6 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           <div className="receipt-total">Total paid: ${sale.totalAmount}</div>
         </div>
       </div>
-    </div>
+    </section>
   )
 }

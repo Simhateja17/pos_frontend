@@ -69,7 +69,7 @@ const CART_EMPTY_BODY = 'Scan a barcode or search a product above to start a sal
 const CLEAR_CART_CONFIRM = (n: number) =>
   `Clear cart: Remove all ${n} items from this sale? This can't be undone.`
 const TAX_DISCLOSURE =
-  'Tax computed at the rate configured for this store — not a compliance or nexus determination.'
+  'This is a pre-charge estimate from the current cart. The server validates price, discounts, tax, stock, tender, and the final total when you charge.'
 const GENERIC_CHARGE_FAILURE =
   'Something went wrong completing this sale. Nothing was charged — try again.'
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
@@ -174,7 +174,7 @@ function CheckoutPageInner() {
   // Client-side total is display-only UX feedback — the server (computeCheckout)
   // is the sole source of truth for the actual charged amount; tax estimate here
   // is a simple flat display placeholder, never sent to the server.
-  const totalDisplay = discountedSubtotal
+  const preChargeEstimate = discountedSubtotal
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
 
@@ -354,12 +354,12 @@ function CheckoutPageInner() {
     if (cart.length === 0) return
 
     // Step 7: client-side payment-sum pre-check, defense-in-depth mirror of PAY-02.
-    const total = totalDisplay
+    const total = preChargeEstimate
     const diff = paymentSum - total
     if (Math.abs(diff) > 0.001) {
       const direction = diff > 0 ? 'over' : 'under'
       setChargeError(
-        `Payments must add up to the exact total ($${money(total)}). Currently $${money(paymentSum)} — $${money(Math.abs(diff))} ${direction}.`,
+        `Tender entries must match the current cart estimate (₹${money(total)}). Currently ₹${money(paymentSum)} — ₹${money(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
       )
       return
     }
@@ -405,7 +405,7 @@ function CheckoutPageInner() {
   }
 
   function onChargeSuccess(sale: SaleResponse) {
-    setSuccessMessage(`Sale complete — $${sale.totalAmount} charged.`)
+    setSuccessMessage(`Sale complete — ₹${sale.totalAmount} charged and recorded by the server.`)
 
     // Enrich the persisted sale's lines with the cart's product names for
     // receipt display — the sale response itself only carries variantId
@@ -456,13 +456,21 @@ function CheckoutPageInner() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-8">
-      <h1
-        style={{ fontFamily: 'Sora, sans-serif', fontSize: '28px', fontWeight: 700, lineHeight: 1.2 }}
-        className="mb-6"
-      >
-        Checkout
-      </h1>
+    <div className="mx-auto max-w-7xl bg-background p-4 md:p-8">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Billing</p>
+          <h1
+            style={{ fontFamily: 'Sora, sans-serif', fontSize: '28px', fontWeight: 700, lineHeight: 1.2 }}
+          >
+            New bill
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Scan products, collect tender, then let the server confirm the sale.</p>
+        </div>
+        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800">
+          Offline billing unavailable
+        </span>
+      </div>
 
       {!shiftId && (
         <Alert className="mb-4">
@@ -484,9 +492,9 @@ function CheckoutPageInner() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_420px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
         {/* Cart column */}
-        <div>
+        <div className="min-w-0">
           <Input
             value={scanQuery}
             onChange={(e) => {
@@ -556,6 +564,7 @@ function CheckoutPageInner() {
               </p>
             </div>
           ) : (
+            <div className="overflow-x-auto rounded-xl border" style={{ borderColor: '#E2E8F0' }}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -575,10 +584,12 @@ function CheckoutPageInner() {
                     onQuantityChange={handleQuantityChange}
                     onDiscountChange={handleDiscountChange}
                     onRemove={handleRemove}
+                    disabled={isCharging}
                   />
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
 
           <div className="mt-4">
@@ -627,9 +638,9 @@ function CheckoutPageInner() {
         </div>
 
         {/* Summary column */}
-        <div className="flex flex-col gap-6">
+        <aside className="flex flex-col gap-5 lg:sticky lg:top-4 lg:self-start">
           {/* Customer panel */}
-          <div className="rounded-md border p-4" style={{ borderColor: '#E2E8F0' }}>
+          <div className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
             <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: '20px', fontWeight: 700 }} className="mb-2">
               Customer
             </h2>
@@ -718,10 +729,15 @@ function CheckoutPageInner() {
             onRowChange={handleTenderRowChange}
             onAddRow={handleAddTenderRow}
             onRemoveRow={handleRemoveTenderRow}
+            disabled={isCharging}
           />
 
           {/* Bill summary */}
-          <div className="rounded-md border p-4" style={{ borderColor: '#E2E8F0' }}>
+          <div className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-heading text-lg font-semibold">Bill summary</h2>
+              <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">Pre-charge estimate</span>
+            </div>
             <div className="flex justify-between py-1">
               <span
                 style={{
@@ -734,7 +750,7 @@ function CheckoutPageInner() {
               >
                 Subtotal
               </span>
-              <span>${money(subtotal)}</span>
+              <span>₹{money(subtotal)}</span>
             </div>
             <div className="flex justify-between py-1">
               <span
@@ -748,7 +764,7 @@ function CheckoutPageInner() {
               >
                 Discount
               </span>
-              <span>${money(cartDiscount)}</span>
+              <span>₹{money(cartDiscount)}</span>
             </div>
             <div className="flex justify-between py-1">
               <span
@@ -760,9 +776,9 @@ function CheckoutPageInner() {
                   color: '#64748B',
                 }}
               >
-                Sales tax
+                Tax and final total
               </span>
-              <span>Calculated at charge</span>
+              <span>Confirmed by server</span>
             </div>
             <div className="mt-2 flex items-center justify-between border-t pt-2" style={{ borderColor: '#E2E8F0' }}>
               <span
@@ -774,7 +790,7 @@ function CheckoutPageInner() {
                   color: '#64748B',
                 }}
               >
-                Total due
+                Current cart estimate
               </span>
               <span
                 style={{
@@ -785,7 +801,7 @@ function CheckoutPageInner() {
                   color: '#0058BA',
                 }}
               >
-                ${money(totalDisplay)}
+                ₹{money(preChargeEstimate)}
               </span>
             </div>
             <p className="mt-3 text-xs" style={{ color: '#64748B' }}>
@@ -803,11 +819,13 @@ function CheckoutPageInner() {
             type="button"
             onClick={handleCharge}
             disabled={isCharging || cart.length === 0 || !shiftId}
-            style={{ backgroundColor: '#0058BA', color: '#FFFFFF', minHeight: 44 }}
+            aria-busy={isCharging}
+            style={{ backgroundColor: '#0058BA', color: '#FFFFFF', minHeight: 48 }}
           >
-            {`Charge $${money(totalDisplay)}`}
+            {isCharging ? 'Charging sale…' : 'Charge sale'}
           </Button>
-        </div>
+          <p className="text-xs text-muted-foreground">This checkout requires a live connection; no sale is queued or recorded until the server confirms it.</p>
+        </aside>
       </div>
 
       <ManagerApprovalModal

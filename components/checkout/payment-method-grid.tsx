@@ -26,6 +26,7 @@ export function PaymentMethodGrid({
   onRowChange,
   onAddRow,
   onRemoveRow,
+  disabled = false,
 }: {
   selected: TenderMethod[]
   onToggle: (method: TenderMethod) => void
@@ -33,6 +34,7 @@ export function PaymentMethodGrid({
   onRowChange: (index: number, row: TenderRow) => void
   onAddRow: () => void
   onRemoveRow: (index: number) => void
+  disabled?: boolean
 }) {
   const availableMethodsForNewRow = ALL_METHODS.filter(
     (m) => !rows.some((r) => r.method === m),
@@ -59,6 +61,7 @@ export function PaymentMethodGrid({
               key={method}
               type="button"
               onClick={() => onToggle(method)}
+              disabled={disabled}
               className="rounded-md border"
               style={{
                 minHeight: 44,
@@ -87,6 +90,7 @@ export function PaymentMethodGrid({
                 type="button"
                 aria-label={`Remove ${METHOD_LABELS[row.method]} payment row`}
                 onClick={() => onRemoveRow(index)}
+                disabled={disabled}
                 style={{ minHeight: 44, minWidth: 44, color: '#64748B' }}
               >
                 ✕
@@ -97,6 +101,7 @@ export function PaymentMethodGrid({
               min={0}
               step={0.01}
               value={row.amount}
+              disabled={disabled}
               onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
               placeholder="$0.00"
               style={{ minHeight: 44 }}
@@ -116,6 +121,7 @@ export function PaymentMethodGrid({
                 </label>
                 <Input
                   value={row.referenceCode ?? ''}
+                  disabled={disabled}
                   onChange={(e) =>
                     onRowChange(index, { ...row, referenceCode: e.target.value })
                   }
@@ -132,6 +138,7 @@ export function PaymentMethodGrid({
             type="button"
             variant="outline"
             onClick={onAddRow}
+            disabled={disabled}
             style={{ minHeight: 44 }}
           >
             Add another payment method

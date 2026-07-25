@@ -25,11 +25,13 @@ export function CartLineRow({
   onQuantityChange,
   onDiscountChange,
   onRemove,
+  disabled = false,
 }: {
   line: CartLine
   onQuantityChange: (variantId: string, quantity: number) => void
   onDiscountChange: (variantId: string, discountAmount: string) => void
   onRemove: (variantId: string) => void
+  disabled?: boolean
 }) {
   const [showDiscountInput, setShowDiscountInput] = useState(
     Number(line.discountAmount || '0') > 0,
@@ -51,6 +53,7 @@ export function CartLineRow({
             type="button"
             aria-label={`Decrease quantity for ${line.name}`}
             onClick={() => onQuantityChange(line.variantId, Math.max(1, line.quantity - 1))}
+            disabled={disabled}
             className="rounded-md border"
             style={{ minHeight: 44, minWidth: 44, borderColor: '#E2E8F0' }}
           >
@@ -61,6 +64,7 @@ export function CartLineRow({
             min={1}
             step={1}
             value={line.quantity}
+            disabled={disabled}
             onChange={(e) => {
               const next = Number(e.target.value)
               onQuantityChange(line.variantId, Number.isFinite(next) && next > 0 ? next : 1)
@@ -72,6 +76,7 @@ export function CartLineRow({
             type="button"
             aria-label={`Increase quantity for ${line.name}`}
             onClick={() => onQuantityChange(line.variantId, line.quantity + 1)}
+            disabled={disabled}
             className="rounded-md border"
             style={{ minHeight: 44, minWidth: 44, borderColor: '#E2E8F0' }}
           >
@@ -87,6 +92,7 @@ export function CartLineRow({
             min={0}
             step={0.01}
             value={line.discountAmount}
+            disabled={disabled}
             onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
             className="text-right"
             style={{ maxWidth: 96, minHeight: 44 }}
@@ -95,6 +101,7 @@ export function CartLineRow({
           <button
             type="button"
             onClick={() => setShowDiscountInput(true)}
+            disabled={disabled}
             className="text-sm"
             style={{ color: '#0058BA' }}
           >
@@ -109,6 +116,7 @@ export function CartLineRow({
           variant="ghost"
           aria-label={`Remove ${line.name} from cart`}
           onClick={() => onRemove(line.variantId)}
+          disabled={disabled}
           style={{ minHeight: 44, minWidth: 44, color: '#64748B' }}
         >
           ✕

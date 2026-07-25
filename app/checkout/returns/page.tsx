@@ -32,6 +32,11 @@ type Sale = {
   }[]
 }
 
+type ReturnResponse = {
+  saleId: string
+  refundTotal: string
+}
+
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
 const NO_MATCH =
   'No matching sale found. Check the receipt number or try searching by customer instead.'
@@ -69,6 +74,7 @@ function ReturnsPageInner() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successAmount, setSuccessAmount] = useState<string | null>(null)
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
 
   const selectedLines = useMemo(
     () =>
@@ -89,6 +95,7 @@ function ReturnsPageInner() {
   function selectSale(selected: Sale) {
     setSale(selected)
     setSuccessAmount(null)
+    setIsConfirmationOpen(false)
     setError(null)
     setQuantities(Object.fromEntries(selected.lines.map((line) => [line.id, 0])))
   }
@@ -136,8 +143,14 @@ function ReturnsPageInner() {
     })
   }
 
-  async function processRefund(event: FormEvent) {
+  function requestRefund(event: FormEvent) {
     event.preventDefault()
+    if (!sale || !shiftId || selectedLines.length === 0 || originalPayments.length === 0) return
+    setError(null)
+    setIsConfirmationOpen(true)
+  }
+
+  async function processRefund() {
     if (!sale || !shiftId || selectedLines.length === 0 || originalPayments.length === 0) return
     setIsSubmitting(true)
     setError(null)
@@ -159,14 +172,20 @@ function ReturnsPageInner() {
       setError(await responseError(result.response, 'Could not process this refund.'))
       return
     }
-    setSuccessAmount(money(refundTotal))
+    const response = (await result.response?.clone().json()) as ReturnResponse | undefined
+    if (!response?.refundTotal) {
+      setError('The refund was accepted, but its confirmed amount could not be read. Check the sale before retrying.')
+      return
+    }
+    setSuccessAmount(response.refundTotal)
+    setIsConfirmationOpen(false)
   }
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl bg-background p-6 md:p-10">
       <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Returns & exchanges</p>
-        <h1 className="font-heading text-3xl font-semibold">Find the original sale</h1>
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Returns</p>
+        <h1 className="font-heading text-3xl font-semibold">Find the original bill</h1>
         <p className="mt-2 text-muted-foreground">
           Locate the receipt, choose only the items being returned, and refund the original tender.
         </p>
@@ -188,7 +207,7 @@ function ReturnsPageInner() {
         </Alert>
       )}
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Sale lookup</CardTitle>
           <CardDescription>Search by receipt number or by the customer attached to the sale.</CardDescription>
@@ -257,8 +276,8 @@ function ReturnsPageInner() {
       </Card>
 
       {sale && (
-        <form onSubmit={processRefund}>
-          <Card className="mt-6">
+        <form onSubmit={requestRefund}>
+          <Card className="mt-6 shadow-sm">
             <CardHeader>
               <CardTitle>Select items to return</CardTitle>
               <CardDescription>Receipt {sale.id}</CardDescription>
@@ -271,7 +290,7 @@ function ReturnsPageInner() {
                     <TableHead>Item</TableHead>
                     <TableHead>Original qty</TableHead>
                     <TableHead className="w-28">Return qty</TableHead>
-                    <TableHead className="text-right">Refund</TableHead>
+                    <TableHead className="text-right">Estimated refund</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,12 +333,12 @@ function ReturnsPageInner() {
 
               <div className="mt-6 rounded-xl border bg-muted/30 p-5">
                 <p className="text-sm text-muted-foreground">
-                  Refunded to the original payment method: {originalMethods.join(', ') || 'unavailable'}.
+                  Refund tender: {originalMethods.join(', ') || 'unavailable'}. The server validates the original sale, return entitlement, and final refund before anything is recorded.
                 </p>
                 <div className="mt-3 flex items-end justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Refund amount
+                      Selected-line estimate
                     </p>
                     <p className="font-heading text-3xl font-bold text-[#DC2626]">₹{money(refundTotal)}</p>
                   </div>
@@ -332,7 +351,7 @@ function ReturnsPageInner() {
                       Boolean(successAmount)
                     }
                   >
-                    {isSubmitting ? 'Processing…' : 'Process refund'}
+                    {isSubmitting ? 'Processing…' : 'Review refund'}
                   </Button>
                 </div>
               </div>
@@ -344,7 +363,7 @@ function ReturnsPageInner() {
       {successAmount && sale && (
         <Alert className="mt-6 border-[#10B981] bg-[#E8F7F0]">
           <AlertDescription>
-            <p className="font-semibold text-[#047857]">Refund of ₹{successAmount} recorded.</p>
+            <p className="font-semibold text-[#047857]">Refund of ₹{successAmount} recorded by the server.</p>
             <p className="mt-1">Return processed. Start a new sale to complete the exchange.</p>
             <Button
               className="mt-4"
@@ -356,6 +375,25 @@ function ReturnsPageInner() {
             </Button>
           </AlertDescription>
         </Alert>
+      )}
+
+      {isConfirmationOpen && sale && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="refund-confirmation-title">
+          <Card className="w-full max-w-lg shadow-xl">
+            <CardHeader>
+              <CardTitle id="refund-confirmation-title">Confirm refund request</CardTitle>
+              <CardDescription>
+                Refund ₹{money(refundTotal)} for invoice {sale.id}? This sends the selected {selectedLines.length} line{selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender ({originalMethods.join(', ')}), and returns approved units to stock.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap justify-end gap-3">
+              <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setIsConfirmationOpen(false)}>Keep return open</Button>
+              <Button type="button" disabled={isSubmitting} aria-busy={isSubmitting} onClick={() => void processRefund()}>
+                {isSubmitting ? 'Processing refund…' : 'Confirm refund request'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </main>
   )
