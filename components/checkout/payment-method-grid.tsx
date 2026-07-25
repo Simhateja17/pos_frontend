@@ -103,7 +103,7 @@ export function PaymentMethodGrid({
               value={row.amount}
               disabled={disabled}
               onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
-              placeholder="$0.00"
+              placeholder="₹0.00"
               style={{ minHeight: 44 }}
             />
             {row.method === 'card' && (
