@@ -1,10 +1,45 @@
 import type { ReactNode } from 'react'
 import { Check } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import styles from './india-auth.module.css'
 
 type AuthShellProps = {
   mode: 'signup' | 'login'
   children: ReactNode
+}
+
+type BackendSession = {
+  accessToken: string
+  refreshToken: string
+}
+
+/**
+ * Installs only the backend-minted Supabase session and proves that it can
+ * resolve the current India store context before callers navigate. Keeping the
+ * token handling here prevents login and signup from drifting into different
+ * authentication paths.
+ */
+export async function establishIndiaSession(session: BackendSession) {
+  const { error } = await supabase.auth.setSession({
+    access_token: session.accessToken,
+    refresh_token: session.refreshToken,
+  })
+
+  if (error) {
+    return { ok: false as const, message: 'We could not start your secure session. Please try again.' }
+  }
+
+  try {
+    await getAuthenticatedAppContext()
+    return { ok: true as const }
+  } catch {
+    // Do not leave a partially usable session around when its tenant context
+    // cannot be verified. The underlying error can contain transport details,
+    // so the UI intentionally receives only safe copy.
+    await supabase.auth.signOut()
+    return { ok: false as const, message: 'We could not open your store context. Please try again.' }
+  }
 }
 
 const content = {

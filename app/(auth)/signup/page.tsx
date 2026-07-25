@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
-import { IndiaAuthShell } from '@/components/auth/india-auth-shell'
+import { establishIndiaSession, IndiaAuthShell } from '@/components/auth/india-auth-shell'
 import styles from '@/components/auth/india-auth.module.css'
 
 type AccountFields = {
@@ -49,11 +48,13 @@ export default function SignupPage() {
     taxId: '',
   })
   const [error, setError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   function handleAccountSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setEmailError(null)
     if (!agreed) {
       setError('Please accept the Terms of Service and Privacy Policy to continue.')
       return
@@ -68,45 +69,58 @@ export default function SignupPage() {
   async function handleBusinessSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setEmailError(null)
     setIsSubmitting(true)
 
-    const { data, error: signupError } = await apiClient.POST('/auth/signup', {
-      body: {
-        ownerName: account.ownerName,
-        businessName: business.businessName,
-        email: account.email,
-        password: account.password,
-        addressLine1: business.addressLine1,
-        addressLine2: business.addressLine2 || undefined,
-        city: business.city,
-        state: business.state,
-        postalCode: business.postalCode,
-        country: 'IN',
-        taxId: business.taxId || undefined,
-      },
-    })
-
-    setIsSubmitting(false)
-
-    if (signupError) {
-      const message = (signupError as { error?: string }).error
-      setError(
-        message === DUPLICATE_EMAIL_ERROR
-          ? DUPLICATE_EMAIL_ERROR
-          : "We couldn't create your account. Check the details and try again.",
-      )
-      return
-    }
-
-    if (data?.session) {
-      await supabase.auth.setSession({
-        access_token: data.session.accessToken,
-        refresh_token: data.session.refreshToken,
+    try {
+      const { data, error: signupError } = await apiClient.POST('/auth/signup', {
+        body: {
+          ownerName: account.ownerName,
+          businessName: business.businessName,
+          email: account.email,
+          password: account.password,
+          addressLine1: business.addressLine1,
+          addressLine2: business.addressLine2 || undefined,
+          city: business.city,
+          state: business.state,
+          postalCode: business.postalCode,
+          country: 'IN',
+          taxId: business.taxId || undefined,
+        },
       })
-    }
 
-    localStorage.removeItem('couture.signup.draft')
-    router.push('/store-type')
+      if (signupError) {
+        const message = (signupError as { error?: string }).error
+        if (message === DUPLICATE_EMAIL_ERROR) {
+          setEmailError(DUPLICATE_EMAIL_ERROR)
+        } else {
+          setError(
+            message === 'Invalid request'
+              ? 'Check the required business details and try again.'
+              : "We couldn't create your account right now. Please try again.",
+          )
+        }
+        return
+      }
+
+      if (!data?.session) {
+        setError("We couldn't create your account right now. Please try again.")
+        return
+      }
+
+      const sessionResult = await establishIndiaSession(data.session)
+      if (!sessionResult.ok) {
+        setError(sessionResult.message)
+        return
+      }
+
+      localStorage.removeItem('couture.signup.draft')
+      router.push('/store-type')
+    } catch {
+      setError("We couldn't create your account right now. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -149,14 +163,17 @@ export default function SignupPage() {
             <label className={styles.field}>
               <span className={styles.label}>Email address</span>
               <input
-                className={styles.input}
                 type="email"
                 placeholder="owner@yourstore.com"
                 autoComplete="email"
                 required
                 value={account.email}
+                className={`${styles.input} ${emailError ? styles.inputError : ''}`}
+                aria-invalid={Boolean(emailError)}
+                aria-describedby={emailError ? 'signup-email-error' : undefined}
                 onChange={(event) => setAccount((current) => ({ ...current, email: event.target.value }))}
               />
+              {emailError && <span className={styles.fieldError} id="signup-email-error">{emailError}</span>}
             </label>
             <label className={styles.field}>
               <span className={styles.label}>Password<span className={styles.required}>*</span></span>
@@ -200,6 +217,7 @@ export default function SignupPage() {
           <h1 className={styles.heading}>Complete your business profile.</h1>
           <p className={styles.subheading}>These details appear on your invoices and tax records.</p>
           {error && <div className={styles.alert} role="alert">{error}</div>}
+          {emailError && <div className={styles.fieldError} role="alert">Email address: {emailError}</div>}
           <form onSubmit={handleBusinessSubmit}>
             <label className={styles.field}>
               <span className={styles.label}>Business name<span className={styles.required}>*</span></span>

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
-import { BrandMark, IndiaAuthShell } from '@/components/auth/india-auth-shell'
+import { apiClient } from '@/lib/api/client'
+import { BrandMark, establishIndiaSession, IndiaAuthShell } from '@/components/auth/india-auth-shell'
 import styles from '@/components/auth/india-auth.module.css'
 
 export default function LoginPage() {
@@ -15,25 +16,49 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setEmailError(null)
     setResetMessage(null)
     setIsSubmitting(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-    setIsSubmitting(false)
-    if (signInError) {
-      setError('Invalid email or password')
-      return
+    try {
+      const { data, error: loginError, response } = await apiClient.POST('/auth/login', {
+        body: { email, password },
+      })
+
+      if (loginError || !data?.session) {
+        if (response.status === 400) {
+          setEmailError('Enter a valid email address and password.')
+        } else if (response.status === 401) {
+          setError('Invalid email or password.')
+        } else {
+          setError('Sign-in is unavailable right now. Please try again.')
+        }
+        return
+      }
+
+      const sessionResult = await establishIndiaSession(data.session)
+      if (!sessionResult.ok) {
+        setError(sessionResult.message)
+        return
+      }
+
+      router.push('/app/dashboard')
+    } catch {
+      setError('Sign-in is unavailable right now. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-    router.push('/app/dashboard')
   }
 
   async function handleForgotPassword() {
     setError(null)
+    setEmailError(null)
     setResetMessage(null)
     if (!email) {
       setError('Enter your email above first, then click “Forgot password?”')
@@ -73,16 +98,17 @@ export default function LoginPage() {
     <IndiaAuthShell mode="login">
       <h1 className={styles.heading}>Good to have you back.</h1>
       <p className={styles.subheading}>Enter your store credentials to continue.</p>
-      <div className={styles.tabs} aria-label="Sign-in method">
-        <button className={styles.tab} type="button" onClick={() => setError('Mobile sign-in is not enabled yet. Please use your email address.')}>Mobile number</button>
-        <button className={`${styles.tab} ${styles.tabActive}`} type="button">Email address</button>
+      <div className={styles.tabs} role="tablist" aria-label="Sign-in method">
+        <button className={styles.tab} role="tab" aria-selected={false} type="button" onClick={() => setError('Mobile sign-in is not enabled yet. Please use your email address.')}>Mobile number</button>
+        <button className={`${styles.tab} ${styles.tabActive}`} role="tab" aria-selected type="button">Email address</button>
       </div>
       {error && <div className={styles.alert} role="alert">{error}</div>}
       {resetMessage && <div className={`${styles.alert} ${styles.success}`} role="status">{resetMessage}</div>}
       <form onSubmit={handleSubmit}>
         <label className={styles.field}>
           <span className={styles.label}>Email address<span className={styles.required}>*</span></span>
-          <input className={styles.input} type="email" placeholder="owner@yourstore.com" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
+          <input className={`${styles.input} ${emailError ? styles.inputError : ''}`} type="email" placeholder="owner@yourstore.com" autoComplete="email" required aria-invalid={Boolean(emailError)} aria-describedby={emailError ? 'login-email-error' : undefined} value={email} onChange={(event) => setEmail(event.target.value)} />
+          {emailError && <span className={styles.fieldError} id="login-email-error">{emailError}</span>}
         </label>
         <label className={styles.field}>
           <span className={styles.label}>Password<span className={styles.required}>*</span></span>
