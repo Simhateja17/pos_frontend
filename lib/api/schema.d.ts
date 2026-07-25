@@ -1556,6 +1556,463 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/suppliers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the caller's tenant's suppliers, active first. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of suppliers */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Create a supplier. leadTimeDays is a direct input to the reorder heuristic (Phase 5 Task 5) and is required. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSupplierRequest"];
+                };
+            };
+            responses: {
+                /** @description Supplier created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Supplier"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/suppliers/{supplierId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a single supplier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Supplier */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Supplier"];
+                    };
+                };
+                /** @description Supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edit a supplier, or deactivate/reactivate via isActive. There is no delete — past purchase orders keep referencing this row. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSupplierRequest"];
+                };
+            };
+            responses: {
+                /** @description Supplier updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Supplier"];
+                    };
+                };
+                /** @description Supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/purchase-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the caller's tenant's purchase orders, newest first. Optional `status` filter. */
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Purchase orders */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PurchaseOrderList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Raise a draft purchase order against a supplier (PUR-02). */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreatePurchaseOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description Purchase order created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PurchaseOrder"];
+                    };
+                };
+                /** @description Invalid request or unknown variant */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/purchase-orders/{poId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get a single purchase order with its lines. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    poId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Purchase order */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PurchaseOrder"];
+                    };
+                };
+                /** @description Purchase order not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Send or cancel a purchase order, or edit expected date/notes. partial/received are derived by the receipt trigger and cannot be set here. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    poId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePurchaseOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description Purchase order updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PurchaseOrder"];
+                    };
+                };
+                /** @description Purchase order not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Purchase order is already received or cancelled */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/purchase-orders/{poId}/receive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Record a goods receipt. Partial receipt is the normal case. Idempotent on (tenant, clientReceiptId) — a replay returns the original receipt and changes nothing. Over-receipt is allowed but reported in overReceived. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    poId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReceivePurchaseOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description Receipt was already recorded (replay) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReceiptResult"];
+                    };
+                };
+                /** @description Receipt recorded */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReceiptResult"];
+                    };
+                };
+                /** @description Invalid request or lines not on this purchase order */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Purchase order not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Purchase order is draft or cancelled, or this receipt was already recorded */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reorder/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Current rule-based reorder suggestions (ML-01). Does not generate on read — refreshing shows the same numbers. Each suggestion carries the structured data basis that produced it (ML-03). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reorder suggestions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReorderSuggestionList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reorder/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Recompute rule-based reorder suggestions for this tenant, replacing the previous run. Manager or owner only. This is velocity x lead time arithmetic, not a forecast. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Suggestions regenerated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReorderSuggestionList"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1592,7 +2049,7 @@ export interface components {
                 totalAmount: string;
                 billCount: number;
                 averageBillAmount: string;
-                grossMargin: components["schemas"]["UnavailableDashboardMetric"];
+                grossMargin: components["schemas"]["DashboardGrossMargin"];
             };
             cashDrawer: {
                 /** @enum {string} */
@@ -1623,6 +2080,15 @@ export interface components {
                 items: components["schemas"]["DashboardActionableItem"][];
             };
         };
+        DashboardGrossMargin: {
+            /** @enum {string} */
+            status: "available";
+            amount: string;
+            percent: string;
+            costOfGoodsSold: string;
+            costedRevenue: string;
+            uncostedRevenue: string;
+        } | components["schemas"]["UnavailableDashboardMetric"];
         UnavailableDashboardMetric: {
             /** @enum {string} */
             status: "unavailable";
@@ -2153,6 +2619,169 @@ export interface components {
         };
         CloseShiftRequest: {
             countedCash: string;
+        };
+        SupplierList: components["schemas"]["Supplier"][];
+        Supplier: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            contactName: string | null;
+            email: string | null;
+            phone: string | null;
+            address: string | null;
+            leadTimeDays: number;
+            minOrderValue: string | null;
+            paymentTerms: string | null;
+            isActive: boolean;
+            createdAt: string;
+        };
+        CreateSupplierRequest: {
+            name: string;
+            contactName?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            address?: string;
+            leadTimeDays: number;
+            minOrderValue?: number;
+            paymentTerms?: string;
+        };
+        UpdateSupplierRequest: {
+            name?: string;
+            contactName?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            address?: string;
+            leadTimeDays?: number;
+            minOrderValue?: number;
+            paymentTerms?: string;
+            isActive?: boolean;
+        };
+        PurchaseOrderList: components["schemas"]["PurchaseOrder"][];
+        PurchaseOrder: {
+            /** Format: uuid */
+            id: string;
+            poNumber: string;
+            /** Format: uuid */
+            supplierId: string;
+            supplierName: string;
+            status: components["schemas"]["PurchaseOrderStatus"];
+            expectedDate: string | null;
+            notes: string | null;
+            totalCost: string;
+            lines: components["schemas"]["PurchaseOrderLine"][];
+            createdAt: string;
+        };
+        /** @enum {string} */
+        PurchaseOrderStatus: "draft" | "sent" | "partial" | "received" | "cancelled";
+        PurchaseOrderLine: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            variantId: string;
+            sku: string;
+            productName: string;
+            quantityOrdered: number;
+            quantityReceived: number;
+            unitCost: string;
+            lineTotal: string;
+        };
+        CreatePurchaseOrderRequest: {
+            /** Format: uuid */
+            supplierId: string;
+            /** Format: date */
+            expectedDate?: string;
+            notes?: string;
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                quantityOrdered: number;
+                unitCost: number;
+            }[];
+        };
+        UpdatePurchaseOrderRequest: {
+            /** @enum {string} */
+            status?: "sent" | "cancelled";
+            /** Format: date */
+            expectedDate?: string;
+            notes?: string;
+        };
+        ReceiptResult: {
+            /** Format: uuid */
+            receiptId: string;
+            replayed: boolean;
+            overReceived: {
+                /** Format: uuid */
+                purchaseOrderLineId: string;
+                sku: string;
+                quantityOrdered: number;
+                quantityReceived: number;
+            }[];
+            purchaseOrder: components["schemas"]["PurchaseOrder"];
+        };
+        ReceivePurchaseOrderRequest: {
+            /** Format: uuid */
+            clientReceiptId: string;
+            note?: string;
+            lines: {
+                /** Format: uuid */
+                purchaseOrderLineId: string;
+                quantityReceived: number;
+                unitCost?: number;
+            }[];
+        };
+        ReorderSuggestionList: {
+            generatedAt: string | null;
+            items: components["schemas"]["ReorderSuggestion"][];
+            skipped: components["schemas"]["ReorderSkipped"][];
+        };
+        ReorderSuggestion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            variantId: string;
+            sku: string;
+            productName: string;
+            /** Format: uuid */
+            supplierId: string | null;
+            supplierName: string | null;
+            suggestedQuantity: number;
+            /** @enum {string} */
+            method: "heuristic" | "forecast";
+            /** @enum {string} */
+            confidence: "low" | "medium" | "high";
+            reason: components["schemas"]["ReorderReason"];
+            generatedAt: string;
+        };
+        ReorderReason: {
+            formula: string;
+            windowDays: number;
+            historyDays: number;
+            unitsSoldInWindow: number;
+            returnsInWindow: number;
+            netUnitsInWindow: number;
+            dailyVelocity: number;
+            leadTimeDays: number;
+            leadTimeDemand: number;
+            safetyDays: number;
+            safetyStock: number;
+            reorderPoint: number;
+            reviewPeriodDays: number;
+            reviewPeriodDemand: number;
+            currentStock: number;
+            onOrder: number;
+            rawSuggestion: number;
+            supplierName: string | null;
+        };
+        ReorderSkipped: {
+            /** Format: uuid */
+            variantId: string;
+            sku: string;
+            productName: string;
+            /** @enum {string} */
+            kind: "insufficient_history" | "no_velocity" | "sufficient_stock" | "no_supplier";
+            historyDays: number | null;
         };
     };
     responses: never;

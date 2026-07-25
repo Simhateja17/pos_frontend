@@ -1,5 +1,23 @@
-import Link from 'next/link'
-import { ArrowRight, Construction, LayoutDashboard, LifeBuoy } from 'lucide-react'
+import { UnavailableModulePage } from '@/components/couture/states'
+
+/** Human labels for routes announced in navigation but not yet backed by an API. */
+const MODULE_LABELS: Record<string, { title: string; sub: string }> = {
+  'feature-map': { title: 'Feature Map', sub: 'Product capability overview' },
+  'sales-channels': { title: 'Sales Channels', sub: 'Omnichannel orders and stock sync' },
+  'delivery-challan': { title: 'Delivery Challan', sub: 'Goods dispatched before invoicing' },
+  'whatsapp-connect': { title: 'WhatsApp Connect', sub: 'Customer messaging and campaigns' },
+  expenses: { title: 'Expenses', sub: 'Store spend and petty cash' },
+  receivables: { title: 'Receivables', sub: 'Credit customers and outstanding dues' },
+  'credit-notes': { title: 'Credit / Debit Notes', sub: 'Post-invoice adjustments' },
+  reports: { title: 'Reports', sub: 'Operational and financial reporting' },
+  analytics: { title: 'Analytics', sub: 'Trends and performance insight' },
+  copilot: { title: 'AI Copilot', sub: 'Assisted retail operations' },
+  'offline-sync': { title: 'Offline & Sync', sub: 'Resilience and queued writes' },
+  hardware: { title: 'Hardware & Devices', sub: 'Terminals, printers and scanners' },
+  'customer-display': { title: 'Customer Display', sub: 'Second-screen checkout view' },
+  notifications: { title: 'Notifications', sub: 'Alerts and delivery preferences' },
+  settings: { title: 'Settings', sub: 'Store configuration' },
+}
 
 function titleFromSlug(slug: string) {
   return slug
@@ -9,30 +27,9 @@ function titleFromSlug(slug: string) {
     .join(' ')
 }
 
-export default function UnavailableModulePage({ params }: { params: { module: string } }) {
-  const title = titleFromSlug(params.module) || 'This module'
+export default function ModulePage({ params }: { params: { module: string } }) {
+  const known = MODULE_LABELS[params.module]
+  const title = known?.title ?? titleFromSlug(params.module) ?? 'This module'
 
-  return (
-    <main className="grid min-h-[calc(100vh-84px)] place-items-center p-5 md:p-8">
-      <section className="w-full max-w-3xl rounded-3xl border bg-white p-8 shadow-sm md:p-12">
-        <div className="grid size-14 place-items-center rounded-2xl bg-[#edf4ff] text-[#2864c6]">
-          <LayoutDashboard className="size-7" />
-        </div>
-        <p className="mt-7 text-xs font-bold uppercase tracking-[0.14em] text-[#2864c6]">India application</p>
-        <h1 className="mt-3 font-heading text-4xl font-bold">{title} is not enabled</h1>
-        <p className="mt-4 max-w-2xl text-lg leading-7 text-slate-500">{title} is not available yet. This route is reserved for a future India application phase, so it cannot show store data, preview rows, or operational actions.</p>
-        <div className="mt-8 grid gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:grid-cols-[auto_1fr]">
-          <Construction className="size-6 text-amber-700" />
-          <div>
-            <strong className="block text-amber-900">No operational data is being simulated</strong>
-            <p className="mt-1 text-sm text-amber-800">Choose an available area from the navigation or contact your store administrator for rollout guidance. This message is deliberate: the application will not substitute sample store information.</p>
-          </div>
-        </div>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/app/dashboard" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#2864c6] px-5 font-semibold text-white">Back to Dashboard <ArrowRight className="size-4" /></Link>
-          <Link href="/app/settings/members" className="inline-flex h-11 items-center gap-2 rounded-xl border px-5 font-semibold text-slate-700"><LifeBuoy className="size-4" />Store access support</Link>
-        </div>
-      </section>
-    </main>
-  )
+  return <UnavailableModulePage title={title} sub={known?.sub} capability={title} />
 }

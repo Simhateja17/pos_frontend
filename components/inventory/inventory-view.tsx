@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Barcode, Boxes, Plus } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
+import { Card, CardHead, DataTable, KpiRow, PageHead, type KpiItem } from '@/components/couture/ui'
+import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
+import { ReorderSuggestions } from './reorder-suggestions'
 
 type LowStockVariant = {
   variantId: string
@@ -43,39 +45,95 @@ export function InventoryView() {
     setLowStock(data)
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const critical = lowStock.filter((item) => item.quantity === 0).length
+
+  const metrics: KpiItem[] = [
+    { label: 'Low Stock', value: loading ? '—' : String(lowStock.length), meta: 'At or below reorder threshold' },
+    { label: 'Out of Stock', value: loading ? '—' : String(critical), meta: critical > 0 ? 'Needs immediate reorder' : 'None currently' },
+    { label: 'Total SKUs', value: <UnavailableValue />, meta: 'No catalog aggregate endpoint' },
+    { label: 'Inventory Value', value: <UnavailableValue />, meta: 'Cost basis is not persisted' },
+  ]
 
   return (
-    <main className="mx-auto max-w-6xl p-5 md:p-8">
-      <header className="mb-7 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#0058ba]">Stock & catalog</p>
-          <h1 className="mt-2 font-heading text-3xl font-bold text-[#0f1729]">Inventory</h1>
-          <p className="mt-2 text-sm text-slate-500">Review current stock and continue to the live catalog, labels, and movement workflows.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild variant="outline"><Link href="/inventory/labels">Print labels</Link></Button>
-          <Button asChild className="bg-[#0058ba] hover:bg-[#064b9f]"><Link href="/inventory/catalog">Add product</Link></Button>
-        </div>
-      </header>
+    <>
+      <PageHead
+        title="Inventory"
+        sub="Stock levels, variants and reorder exceptions"
+        actions={
+          <>
+            <Link className="btn" href="/inventory/labels">
+              <Barcode size={15} /> Print labels
+            </Link>
+            <Link className="btn btn-pri" href="/inventory/catalog">
+              <Plus size={15} /> Add product
+            </Link>
+          </>
+        }
+      />
 
-      {error && <Alert variant="destructive" className="mb-5"><AlertDescription>{error}</AlertDescription><Button type="button" variant="outline" onClick={() => void load()} className="mt-3">Retry loading inventory</Button></Alert>}
-      {loading && <div className="grid gap-4 md:grid-cols-2"><div className="h-40 animate-pulse rounded-2xl bg-slate-200" /><div className="h-40 animate-pulse rounded-2xl bg-slate-200" /></div>}
-      {!loading && !error && (
-        <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
-            <div><h2 className="font-heading text-xl font-bold">Low-stock exceptions</h2><p className="mt-1 text-sm text-slate-500">Server-calculated variants at or below their reorder threshold.</p></div>
-            <Button asChild variant="outline"><Link href="/inventory/catalog">Open catalog</Link></Button>
-          </div>
-          {lowStock.length === 0 ? (
-            <div className="p-8 text-center"><h3 className="font-heading text-lg font-bold">All stock levels are healthy</h3><p className="mt-2 text-sm text-slate-500">Your catalog has no current low-stock exceptions.</p></div>
-          ) : (
-            <div className="divide-y">
-              {lowStock.map((item) => <div key={item.variantId} className="grid gap-2 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"><div><strong className="block">{item.productName}</strong><span className="text-sm text-slate-500">{item.sku}{item.size ? ` · ${item.size}` : ''}{item.color ? ` · ${item.color}` : ''}</span></div><span className="text-sm text-slate-500">Reorder at {item.reorderThreshold}</span><strong className="text-amber-700">{item.quantity} in stock</strong></div>)}
-            </div>
-          )}
-        </section>
-      )}
-    </main>
+      {loading ? <KpiSkeleton cols={4} /> : <KpiRow items={metrics} cols={4} />}
+
+      <ReorderSuggestions />
+
+      <Card>
+        <CardHead
+          title="Low-stock exceptions"
+          sub="Server-calculated variants at or below their reorder threshold"
+          right={
+            <Link className="btn btn-sm" href="/inventory/catalog">
+              Open catalog
+            </Link>
+          }
+        />
+
+        {loading && <LoadingState label="Loading inventory" />}
+        {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
+        {!loading && !error && lowStock.length === 0 && (
+          <EmptyState
+            icon={<Boxes size={24} strokeWidth={1.8} />}
+            title="All stock levels are healthy"
+            body="No variant is at or below its reorder threshold right now."
+            action={
+              <Link className="btn btn-pri" href="/inventory/catalog">
+                Open catalog
+              </Link>
+            }
+          />
+        )}
+
+        {!loading && !error && lowStock.length > 0 && (
+          <DataTable
+            cols={['SKU', 'Product', 'Variant', { label: 'Available', align: 'right' }, { label: 'Reorder at', align: 'right' }, 'Status']}
+            minWidth={760}
+          >
+            {lowStock.map((item) => {
+              const out = item.quantity === 0
+              return (
+                <tr key={item.variantId}>
+                  <td className="t-mono t-strong">{item.sku}</td>
+                  <td>{item.productName}</td>
+                  <td className="t-sub">
+                    {[item.size, item.color, item.material].filter(Boolean).join(' · ') || '—'}
+                  </td>
+                  <td className="num t-strong" style={{ textAlign: 'right' }}>
+                    {item.quantity}
+                  </td>
+                  <td className="num" style={{ textAlign: 'right', color: 'var(--muted)' }}>
+                    {item.reorderThreshold}
+                  </td>
+                  <td>
+                    <span className={`badge ${out ? 'b-red' : 'b-amber'}`}>{out ? 'Out of stock' : 'Low stock'}</span>
+                  </td>
+                </tr>
+              )
+            })}
+          </DataTable>
+        )}
+      </Card>
+    </>
   )
 }
