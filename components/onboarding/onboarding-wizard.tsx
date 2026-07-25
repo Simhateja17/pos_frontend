@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
 import type { components } from '@/lib/api/schema'
+import styles from './onboarding-wizard.module.css'
 
 type Values = Record<string, string | boolean>
 type Option = readonly [string, string]
@@ -50,5 +51,99 @@ export function OnboardingWizard({ step }: { step: number }) {
   function payload() { const base = { ...values }; if (step === 1) { const selection = JSON.parse(window.sessionStorage.getItem(`${DRAFT_PREFIX}selection`) ?? '{}'); Object.assign(base, selection) } if (step === 8) { const firstStaff = base.staffName ? { name: base.staffName, phone: base.staffPhone || undefined, email: base.staffEmail || undefined, accessLevel: base.accessLevel || 'cashier', defaultShift: base.defaultShift || 'full' } : undefined; return { approvalRules: { discountEnabled: Boolean(base.discountEnabled), discountThresholdPercent: Number(base.discountThresholdPercent), refundEnabled: Boolean(base.refundEnabled), voidEnabled: Boolean(base.voidEnabled), settingsEnabled: Boolean(base.settingsEnabled) }, firstStaff, openingFloatPerCounter: Number(base.openingFloatPerCounter), endOfDayReminder: base.endOfDayReminder, autoClockOutHours: base.autoClockOutHours } } return Object.fromEntries(Object.entries(base).map(([key, value]) => [key, ['yearEstablished', 'carpetAreaSqFt', 'invoiceStartNumber', 'maxCashPerTransaction', 'maxStoreCredit'].includes(key) && value !== '' ? Number(value) : value])) }
   async function submit(event: FormEvent) { event.preventDefault(); const missing = current.fields.find((field) => field.required && (values[field.key] === '' || values[field.key] === undefined)); if (missing) { setError(`${missing.label} is required.`); return } setStatus('saving'); setError(''); try { const { data, error: apiError, response } = await apiClient.PUT('/onboarding/steps/{step}', { params: { path: { step } }, headers: await headers(), body: payload() as components['schemas']['OnboardingStepRequest'] }); if (apiError || !data) throw new Error(response.status === 409 ? 'Complete each earlier step before continuing.' : 'Couldn’t save changes. Retry saving.'); window.sessionStorage.removeItem(`${DRAFT_PREFIX}${step}`); if (step === 1) window.sessionStorage.removeItem(`${DRAFT_PREFIX}selection`); setState(data); setStatus('saved'); router.push(step === 8 ? '/onboarding/complete' : `/onboarding/${Math.min(step + 1, data.currentStep + 1)}`) } catch (cause) { setError(cause instanceof Error ? cause.message : 'Couldn’t save changes. Retry saving.'); setStatus('error') } }
   const completeThrough = state?.currentStep ?? 0
-  return <div className="min-h-screen bg-[#f5f6f7] text-[#0f1729] lg:grid lg:grid-cols-[380px_minmax(0,1fr)]"><aside className="bg-gradient-to-b from-[#030912] to-[#06337A] p-7 text-white lg:min-h-screen"><div className="flex items-center gap-3"><div className="grid size-12 place-items-center rounded-xl border border-white/20 bg-white/10 font-black">C</div><strong className="font-heading text-xl">Couture POS</strong></div><p className="mt-10 text-xs font-bold uppercase tracking-[.14em] text-white/45">Setup · {percent}% complete</p><div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#68a0ff]" style={{ width: `${percent}%` }} /></div><ol className="mt-7 hidden space-y-2 lg:block">{ONBOARDING_STEPS.map((item, index) => { const number = index + 1; const allowed = number <= Math.max(1, completeThrough + 1); return <li key={item.tag}><button disabled={!allowed} onClick={() => router.push(`/onboarding/${number}`)} className={`flex w-full items-center gap-3 rounded-xl p-3 text-left disabled:cursor-not-allowed ${number === step ? 'bg-white/10' : 'text-white/60'}`}><span className={`grid size-9 place-items-center rounded-full text-sm font-bold ${number <= completeThrough ? 'bg-[#10B981]' : number === step ? 'bg-[#2864c6]' : 'bg-white/10'}`}>{String(number).padStart(2, '0')}</span><span><small className="block text-[10px] font-bold uppercase tracking-wider">Step {String(number).padStart(2, '0')}</small><strong className="block text-sm">{item.tag}</strong></span></button></li> })}</ol></aside><main className="p-5 md:p-10 lg:p-14"><form className="mx-auto max-w-5xl" onSubmit={submit}><p className="text-xs font-bold uppercase tracking-[.14em] text-[#0058BA]">Step {String(step).padStart(2, '0')} · {current.tag}</p><h1 className="mt-3 font-heading text-4xl font-bold tracking-tight">{current.title}</h1><p className="mt-3 max-w-3xl text-lg leading-7 text-[#667085]">{current.description}</p><div className="mt-7 rounded-xl border border-blue-200 bg-[#eaf1fb] p-4 text-sm text-[#174c9e]">{current.note}</div>{status === 'loading' ? <div className="mt-8 animate-pulse rounded-xl border bg-white p-10 text-slate-500">Loading your saved setup…</div> : <><div className="mt-4 text-sm" aria-live="polite">{status === 'saving' ? 'Saving…' : status === 'saved' ? <span className="text-emerald-700">Saved</span> : <span className="text-red-700">Couldn’t save changes</span>}</div>{error && <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error} {status === 'error' && <button type="button" className="ml-2 underline" onClick={() => setRetry((count) => count + 1)}>Retry saving</button>}</div>}<div className="mt-8 grid gap-6 md:grid-cols-2">{current.fields.map((field) => <div key={field.key} className={field.kind === 'toggle' || field.kind === 'textarea' ? 'md:col-span-2' : ''}>{field.kind === 'toggle' ? <label className="flex items-center justify-between rounded-xl border bg-white p-4"><span><strong className="block text-sm">{field.label}</strong>{field.hint && <small className="text-slate-500">{field.hint}</small>}</span><input type="checkbox" checked={Boolean(values[field.key])} onChange={(event) => update(field.key, event.target.checked)} className="size-5 accent-[#0058BA]" /></label> : <><Label htmlFor={field.key} className="mb-2 block">{field.label}{field.required ? ' *' : ''}</Label>{field.options ? <select id={field.key} required={field.required} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} className="h-12 w-full rounded-xl border border-[#e6e8eb] bg-white px-3"><option value="">Select an option</option>{field.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : field.kind === 'textarea' ? <textarea id={field.key} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} className="min-h-24 w-full rounded-xl border border-[#e6e8eb] p-3" /> : <Input id={field.key} required={field.required} type={field.kind ?? 'text'} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} className="h-12 rounded-xl" />}</>}</div>)}</div><div className="mt-12 flex items-center justify-between border-t pt-6"><Button type="button" variant="outline" onClick={() => router.push(step === 1 ? '/plans' : `/onboarding/${step - 1}`)}>← {step === 1 ? 'Plans' : 'Back'}</Button><span className="hidden text-sm text-slate-400 md:block">{percent}% complete</span><Button type="submit" disabled={status === 'saving'} className="min-w-44">{status === 'saving' ? 'Saving…' : step === 8 ? 'Finish setup' : 'Continue →'}</Button></div></>}</form></main></div>
+  return (
+    <div className={styles.page}>
+      <aside className={styles.sidebar}>
+        <div className={styles.brand}>
+          <div className={styles.brandMark}>C</div>
+          <strong>Couture POS</strong>
+        </div>
+        <p className={styles.progressLabel}>Setup · {percent}% complete</p>
+        <div className={styles.progressTrack}>
+          <div className={styles.progressValue} style={{ width: `${percent}%` }} />
+        </div>
+        <ol className={styles.steps}>
+          {ONBOARDING_STEPS.map((item, index) => {
+            const number = index + 1
+            const allowed = number <= Math.max(1, completeThrough + 1)
+            const numberClass = number <= completeThrough
+              ? styles.stepNumberDone
+              : number === step ? styles.stepNumberCurrent : ''
+            return (
+              <li key={item.tag}>
+                <button
+                  disabled={!allowed}
+                  onClick={() => router.push(`/onboarding/${number}`)}
+                  className={`${styles.stepButton} ${number === step ? styles.stepActive : ''}`}
+                >
+                  <span className={`${styles.stepNumber} ${numberClass}`}>{String(number).padStart(2, '0')}</span>
+                  <span className={styles.stepMeta}>
+                    <small>Step {String(number).padStart(2, '0')}</small>
+                    <strong>{item.tag}</strong>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      </aside>
+      <main className={styles.content}>
+        <form className={styles.form} onSubmit={submit}>
+          <p className={styles.eyebrow}>Step {String(step).padStart(2, '0')} · {current.tag}</p>
+          <h1 className={styles.title}>{current.title}</h1>
+          <p className={styles.description}>{current.description}</p>
+          <div className={styles.note}>{current.note}</div>
+          {status === 'loading' ? (
+            <div className={styles.loading}>Loading your saved setup…</div>
+          ) : (
+            <>
+              <div className={styles.status} aria-live="polite">
+                {status === 'saving' ? 'Saving…' : status === 'saved' ? <span className={styles.saved}>Saved</span> : <span>Couldn’t save changes</span>}
+              </div>
+              {error && (
+                <div className={styles.error}>
+                  {error}
+                  {status === 'error' && <button type="button" onClick={() => setRetry((count) => count + 1)}> Retry saving</button>}
+                </div>
+              )}
+              <div className={styles.fields}>
+                {current.fields.map((field) => (
+                  <div key={field.key} className={`${styles.field} ${field.kind === 'toggle' || field.kind === 'textarea' ? styles.wideField : ''}`}>
+                    {field.kind === 'toggle' ? (
+                      <label className={styles.toggleField}>
+                        <span>
+                          <strong>{field.label}</strong>
+                          {field.hint && <small>{field.hint}</small>}
+                        </span>
+                        <input type="checkbox" checked={Boolean(values[field.key])} onChange={(event) => update(field.key, event.target.checked)} />
+                      </label>
+                    ) : (
+                      <>
+                        <Label htmlFor={field.key}>{field.label}{field.required ? ' *' : ''}</Label>
+                        {field.options ? (
+                          <select id={field.key} required={field.required} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)}>
+                            <option value="">Select an option</option>
+                            {field.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                          </select>
+                        ) : field.kind === 'textarea' ? (
+                          <textarea id={field.key} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} />
+                        ) : (
+                          <Input id={field.key} required={field.required} type={field.kind ?? 'text'} value={String(values[field.key] ?? '')} onChange={(event) => update(field.key, event.target.value)} />
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className={styles.actions}>
+                <Button type="button" variant="outline" onClick={() => router.push(step === 1 ? '/plans' : `/onboarding/${step - 1}`)}>← {step === 1 ? 'Plans' : 'Back'}</Button>
+                <span className={styles.completion}>{percent}% complete</span>
+                <Button type="submit" disabled={status === 'saving'}>{status === 'saving' ? 'Saving…' : step === 8 ? 'Finish setup' : 'Continue →'}</Button>
+              </div>
+            </>
+          )}
+        </form>
+      </main>
+    </div>
+  )
 }

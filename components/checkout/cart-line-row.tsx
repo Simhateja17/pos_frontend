@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 
 export interface CartLine {
   variantId: string
@@ -15,11 +13,17 @@ export interface CartLine {
   isTaxable: boolean
 }
 
-function lineTotal(line: CartLine): string {
-  const total = Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0')
-  return total.toFixed(2)
+const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
+
+function lineTotal(line: CartLine): number {
+  return Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0')
 }
 
+/**
+ * Cart row in the approved billing layout: item + SKU stack, stepper control,
+ * price, discount, line total. Emits a plain <tr> so it sits inside the
+ * design-system table styling from globals.css.
+ */
 export function CartLineRow({
   line,
   onQuantityChange,
@@ -33,94 +37,87 @@ export function CartLineRow({
   onRemove: (variantId: string) => void
   disabled?: boolean
 }) {
-  const [showDiscountInput, setShowDiscountInput] = useState(
-    Number(line.discountAmount || '0') > 0,
-  )
+  const [showDiscountInput, setShowDiscountInput] = useState(Number(line.discountAmount || '0') > 0)
+  const discount = Number(line.discountAmount || '0')
 
   return (
-    <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
-      <td style={{ padding: '8px 4px' }}>
-        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: 400 }}>
-          {line.name}
-        </div>
-        <div className="text-sm" style={{ color: '#64748B' }}>
-          {line.attributes} · SKU {line.sku}
+    <tr>
+      <td>
+        <div className="t-strong">{line.name}</div>
+        <div className="t-sub t-mono">
+          {line.sku}
+          {line.attributes && line.attributes !== '—' ? ` · ${line.attributes}` : ''}
+          {discount > 0 ? (
+            <>
+              {' · '}
+              <span className="badge b-amber" style={{ fontSize: 9, padding: '1px 5px' }}>
+                −{money.format(discount)}
+              </span>
+            </>
+          ) : null}
         </div>
       </td>
-      <td style={{ padding: '8px 4px' }}>
-        <div className="flex items-center gap-1">
+
+      <td>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 8, padding: '2px 6px' }}>
           <button
             type="button"
+            className="qstep"
             aria-label={`Decrease quantity for ${line.name}`}
             onClick={() => onQuantityChange(line.variantId, Math.max(1, line.quantity - 1))}
             disabled={disabled}
-            className="rounded-md border"
-            style={{ minHeight: 44, minWidth: 44, borderColor: '#E2E8F0' }}
           >
             −
           </button>
-          <Input
-            type="number"
-            min={1}
-            step={1}
-            value={line.quantity}
-            disabled={disabled}
-            onChange={(e) => {
-              const next = Number(e.target.value)
-              onQuantityChange(line.variantId, Number.isFinite(next) && next > 0 ? next : 1)
-            }}
-            className="text-center"
-            style={{ maxWidth: 64, minHeight: 44 }}
-          />
+          <b className="num" aria-live="polite">
+            {line.quantity}
+          </b>
           <button
             type="button"
+            className="qstep"
             aria-label={`Increase quantity for ${line.name}`}
             onClick={() => onQuantityChange(line.variantId, line.quantity + 1)}
             disabled={disabled}
-            className="rounded-md border"
-            style={{ minHeight: 44, minWidth: 44, borderColor: '#E2E8F0' }}
           >
             +
           </button>
         </div>
       </td>
-      <td style={{ padding: '8px 4px' }}>{line.unitPrice}</td>
-      <td style={{ padding: '8px 4px' }}>
+
+      <td className="num">{money.format(Number(line.unitPrice))}</td>
+
+      <td>
         {showDiscountInput ? (
-          <Input
+          <input
             type="number"
             min={0}
             step={0.01}
             value={line.discountAmount}
             disabled={disabled}
+            aria-label={`Discount for ${line.name}`}
             onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
-            className="text-right"
-            style={{ maxWidth: 96, minHeight: 44 }}
+            className="fld-input num"
+            style={{ maxWidth: 92, textAlign: 'right' }}
           />
         ) : (
-          <button
-            type="button"
-            onClick={() => setShowDiscountInput(true)}
-            disabled={disabled}
-            className="text-sm"
-            style={{ color: '#0058BA' }}
-          >
+          <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowDiscountInput(true)} disabled={disabled}>
             Add discount
           </button>
         )}
       </td>
-      <td style={{ padding: '8px 4px', fontWeight: 700 }}>{lineTotal(line)}</td>
-      <td style={{ padding: '8px 4px' }}>
-        <Button
+
+      <td className="num t-strong">{money.format(lineTotal(line))}</td>
+
+      <td style={{ textAlign: 'right' }}>
+        <button
           type="button"
-          variant="ghost"
           aria-label={`Remove ${line.name} from cart`}
           onClick={() => onRemove(line.variantId)}
           disabled={disabled}
-          style={{ minHeight: 44, minWidth: 44, color: '#64748B' }}
+          style={{ color: 'var(--muted-2)', background: 'none', border: 0, cursor: 'pointer', padding: 6, lineHeight: 1 }}
         >
           ✕
-        </Button>
+        </button>
       </td>
     </tr>
   )

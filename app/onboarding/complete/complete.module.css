@@ -1,0 +1,101 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  overflow: hidden;
+  padding: 40px 20px;
+  background:
+    radial-gradient(circle at 8% 8%, transparent 0 220px, rgba(255,255,255,.07) 221px 222px, transparent 223px),
+    radial-gradient(circle at 95% 95%, transparent 0 300px, rgba(255,255,255,.06) 301px 302px, transparent 303px),
+    linear-gradient(135deg, #030912, #06337a 52%, #2f63bf);
+  color: white;
+  text-align: center;
+}
+
+.canvas {
+  width: min(100%, 700px);
+}
+
+.check {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto;
+  place-items: center;
+  border: 2px solid rgba(52, 211, 153, 0.45);
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.1);
+  color: #6ee7b7;
+  font-size: 34px;
+}
+
+.title {
+  margin-top: 28px;
+  font-family: var(--display);
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 16px;
+}
+
+.summary {
+  margin-top: 28px;
+  padding: 10px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  text-align: left;
+  backdrop-filter: blur(8px);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row span {
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.launch {
+  display: flex;
+  width: 100%;
+  height: 54px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 28px;
+  border-radius: 12px;
+  background: white;
+  color: #0058ba;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.review {
+  display: inline-block;
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.retry {
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+}

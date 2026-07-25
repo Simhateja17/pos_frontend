@@ -1,0 +1,268 @@
+.selectionPage {
+  min-height: 100vh;
+  background: #f5f6f7;
+  color: #0f1729;
+  padding: 48px 24px 64px;
+}
+
+.selectionCanvas {
+  width: min(100%, 980px);
+  margin: 0 auto;
+}
+
+.selectionBrand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.selectionLogo {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--brand-grad);
+  color: white;
+  font-weight: 800;
+}
+
+.selectionHeader {
+  text-align: center;
+}
+
+.selectionHeader h1 {
+  font-family: var(--display);
+  font-size: clamp(30px, 3vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.selectionHeader p {
+  margin-top: 10px;
+  color: #667085;
+  font-size: 15px;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.categoryCard {
+  min-height: 142px;
+  padding: 22px 16px;
+  border: 1px solid #e6e8eb;
+  border-radius: 14px;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  color: #0f1729;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.categoryCard:hover {
+  border-color: #b9cce9;
+  transform: translateY(-1px);
+}
+
+.categoryCardSelected {
+  border: 2px solid #0058ba;
+  background: #eaf1fb;
+}
+
+.categoryEmoji {
+  display: block;
+  font-size: 27px;
+  line-height: 1;
+}
+
+.categoryName {
+  display: block;
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.categoryDescription {
+  display: block;
+  margin-top: 3px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.primaryAction {
+  display: flex;
+  width: min(100%, 380px);
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto 0;
+  border: 0;
+  border-radius: 11px;
+  background: var(--brand-grad);
+  box-shadow: 0 3px 10px rgba(0, 88, 186, 0.24);
+  color: white;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.backButton {
+  display: block;
+  margin: 0 auto;
+  border: 0;
+  background: transparent;
+  color: #667085;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.billingToggle {
+  display: flex;
+  width: fit-content;
+  margin: 24px auto 0;
+  padding: 4px;
+  border-radius: 999px;
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.billingToggle button {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #667085;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.billingToggle .toggleActive {
+  background: #0058ba;
+  color: white;
+}
+
+.planGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 30px;
+  align-items: stretch;
+}
+
+.planCard {
+  position: relative;
+  min-height: 365px;
+  padding: 28px 26px;
+  border: 1px solid #e6e8eb;
+  border-radius: 16px;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  color: #0f1729;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planCardSelected {
+  border: 2px solid #0058ba;
+  background: #eef3fb;
+}
+
+.popular {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  padding: 6px 18px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #0058ba;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.planName {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.planPrice {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.planPrice strong {
+  font-family: var(--display);
+  font-size: 35px;
+  letter-spacing: -0.04em;
+}
+
+.planPrice span,
+.planScope {
+  color: #667085;
+}
+
+.planScope {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.featureList {
+  margin-top: 24px;
+  list-style: none;
+}
+
+.featureList li {
+  padding: 5px 0;
+  font-size: 12.5px;
+}
+
+.featureList li::before {
+  content: "✓";
+  margin-right: 7px;
+  color: #0058ba;
+  font-weight: 800;
+}
+
+.message {
+  margin-top: 14px;
+  color: #a15c00;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .selectionPage {
+    padding: 32px 16px 48px;
+  }
+
+  .categoryGrid,
+  .planGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .planCard {
+    min-height: auto;
+  }
+}

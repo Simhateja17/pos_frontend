@@ -1,19 +1,25 @@
 'use client'
 
-import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, ChevronDown, Menu, Search, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { APP_NAVIGATION } from '@/components/app-navigation'
 import {
   AuthenticatedRequestError,
   getAuthenticatedAppContext,
   type AppContext,
 } from '@/lib/api/authenticated-client'
+import styles from '@/components/app-shell.module.css'
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== '/app/dashboard' && pathname.startsWith(`${href}/`))
+}
+
+function initials(name?: string | null) {
+  if (!name?.trim()) return '—'
+  const parts = name.trim().split(/\s+/)
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '—'
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -80,138 +86,157 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (pathname === '/app') return children
 
   const current =
-    APP_NAVIGATION.flatMap((group) => group.items).find((item) => isActive(pathname, item.href))
-      ?.label ?? 'Couture POS'
+    APP_NAVIGATION.flatMap((group) => group.items).find((item) => isActive(pathname, item.href))?.label ??
+    'Couture POS'
+
+  const storeFull = context
+    ? [context.tenant.businessName, context.tenant.locality].filter(Boolean).join(' · ')
+    : isContextLoading
+      ? 'Loading store…'
+      : 'Store unavailable'
+
+  /**
+   * The pill mirrors the design's compact "Mumbai · Bandra" store chip, so it
+   * prefers locality. businessName is tenant free-text and is often a full
+   * sentence — it stays in the title/tooltip rather than the chip.
+   */
+  const storeLabel = context?.tenant.locality?.trim() || context?.tenant.businessName || storeFull
 
   return (
-    <div className="min-h-screen bg-[#f4f6f9] text-[#111827]">
+    <div className="app">
       {mobileOpen && (
-        <button
-          className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden"
-          aria-label="Close navigation"
-          onClick={() => setMobileOpen(false)}
-        />
+        <button className={styles.scrim} aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
       )}
+
       <aside
         ref={drawerRef}
         aria-label="India application navigation"
         aria-modal={mobileOpen ? true : undefined}
         role={mobileOpen ? 'dialog' : undefined}
-        className={`fixed inset-y-0 left-0 z-50 flex w-[320px] flex-col border-r border-[#e5e7eb] bg-white transition-transform lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`sidebar ${styles.sidebar} ${mobileOpen ? styles.drawerOpen : styles.drawerClosed}`}
       >
-        <div className="flex h-[84px] items-center gap-3 border-b border-[#eef0f3] px-6">
-          <div className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-[#2c67c9] to-[#6d9cff] shadow-lg shadow-blue-200">
-            <Image src="/logo.png" alt="Couture POS" width={38} height={38} className="size-[38px] object-contain" priority />
+        <div className="sb-brand">
+          <div className="sb-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <rect x="3" y="3" width="7.4" height="7.4" rx="2.4" />
+              <rect x="13.6" y="3" width="7.4" height="7.4" rx="2.4" />
+              <rect x="3" y="13.6" width="7.4" height="7.4" rx="2.4" />
+              <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.4" />
+            </svg>
           </div>
-          <div className="min-w-0">
-            <strong className="block truncate font-heading text-xl">Couture POS</strong>
-            <span className="text-sm text-slate-500">Retail operations suite</span>
+          <div>
+            <h1>Couture POS</h1>
+            <p>Retail operations suite</p>
           </div>
-          <button
-            className="ml-auto rounded-lg p-2 text-slate-500 lg:hidden"
-            aria-label="Close navigation"
-            onClick={() => setMobileOpen(false)}
-          >
-            <X className="size-5" />
+          <button className={styles.closeDrawer} aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
+            <X size={18} />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-5">
+        <nav className="sb-nav">
           {APP_NAVIGATION.map((group) => (
-            <div key={group.label} className="mb-6">
-              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                {group.label}
-              </p>
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const active = isActive(pathname, item.href)
-                  const Icon = item.icon
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition ${
-                        active
-                          ? 'bg-[#eef4ff] text-[#245ebf]'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
-                      }`}
-                    >
-                      {active && (
-                        <span className="absolute -left-4 h-7 w-1 rounded-r-full bg-[#2b65c5]" />
-                      )}
-                      <Icon className="size-[19px]" strokeWidth={1.8} />
-                      <span>{item.label}</span>
-                    </Link>
-                  )
-                })}
-              </div>
+            <div key={group.label}>
+              <div className="sb-group">{group.label}</div>
+              {group.items.map((item) => {
+                const active = isActive(pathname, item.href)
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    onClick={() => setMobileOpen(false)}
+                    className={`nav-item ${active ? 'active' : ''}`}
+                  >
+                    <Icon strokeWidth={1.85} />
+                    <span>{item.label}</span>
+                    {item.badge ? <span className={`ni-badge ${item.badge}`}>{item.badge}</span> : null}
+                  </Link>
+                )
+              })}
             </div>
           ))}
         </nav>
-        <div className="border-t border-[#eef0f3] p-5 text-xs text-slate-400">
-          <p>{isContextLoading ? 'Loading store context…' : context ? 'Store context connected' : 'Store context unavailable'}</p>
-          {contextError && <p className="mt-1 text-amber-600">Retry from the top bar.</p>}
+
+        <div className="sb-foot">
+          <div className="sys-pill">
+            <b>
+              <span className="dot" style={contextError ? { background: 'var(--danger)', boxShadow: '0 0 0 3px var(--danger-soft)' } : undefined} />
+              {isContextLoading ? 'Connecting…' : contextError ? 'Store context unavailable' : 'Store context connected'}
+            </b>
+            <p>{contextError ? 'Retry from the notice above' : storeFull}</p>
+          </div>
         </div>
       </aside>
 
-      <div className="lg:pl-[320px]">
-        <header className="sticky top-0 z-30 flex min-h-[84px] items-center gap-4 border-b border-[#e5e7eb] bg-white/95 px-4 backdrop-blur md:px-6">
-          <button
-            className="rounded-xl border p-2.5 text-slate-600 lg:hidden"
-            aria-label="Open navigation"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="size-5" />
+      <div className="main">
+        <header className={`topbar ${styles.topbar}`}>
+          <button className={styles.mobileMenu} aria-label="Open navigation" onClick={() => setMobileOpen(true)}>
+            <Menu size={18} />
           </button>
-          <div className="hidden min-w-fit text-sm text-slate-500 xl:block">
-            Couture POS / <strong className="text-slate-900">{current}</strong>
+
+          <div className={`crumb ${styles.crumb}`}>
+            Couture POS / <b>{current}</b>
           </div>
-          <label className="relative flex h-12 min-w-0 flex-1 items-center rounded-xl border border-[#dfe3ea] bg-white shadow-sm">
-            <Search className="ml-4 size-5 shrink-0 text-slate-400" />
+
+          <div className="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
             <input
-              className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-400"
-              placeholder="Search orders, products, customers, suppliers… or type a command"
+              placeholder="Search orders, products, customers, suppliers…  or type a command"
+              aria-label="Search"
             />
-            <kbd className="mr-3 hidden rounded-md border bg-slate-50 px-2 py-1 text-xs text-slate-400 md:block">
-              ⌘K
-            </kbd>
-          </label>
-          <button
-            className="hidden h-12 items-center gap-2 rounded-xl bg-[#2b62bd] px-4 text-sm font-semibold text-white md:flex"
-            disabled={!context || isContextLoading}
-            aria-label={context ? `Current store: ${context.tenant.businessName}` : 'Store context unavailable'}
-          >
-            {isContextLoading ? 'Loading store…' : context?.tenant.businessName ?? 'Store unavailable'}
-            {context?.tenant.locality ? ` · ${context.tenant.locality}` : ''} <ChevronDown className="size-4" />
-          </button>
-          <button className="relative grid size-12 shrink-0 place-items-center rounded-xl border bg-white">
-            <Bell className="size-5" />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-          <div className="hidden items-center gap-3 2xl:flex" aria-live="polite">
-            <div className="grid size-12 place-items-center rounded-full bg-[#4b7ddb] font-bold text-white">
-              {context?.staff.name?.trim().slice(0, 1).toUpperCase() ?? '—'}
-            </div>
-            <div className="leading-tight">
-              <strong className="block text-sm">{isContextLoading ? 'Loading staff…' : context?.staff.name ?? 'Staff unavailable'}</strong>
-              <span className="text-xs text-slate-500">
-                {context?.staff.role ?? (contextError ? 'Retry to load access' : 'Loading access…')}
-              </span>
+            <span className="kbd">⌘K</span>
+          </div>
+
+          <div className={`store-switch ${styles.storeSwitch}`}>
+            <span className="store-pill active" title={storeFull}>
+              {storeLabel}
+            </span>
+          </div>
+
+          <Link className="tb-icon" href="/app/notifications" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9.2a6 6 0 0 1 12 0c0 4.8 2 6 2 6H4s2-1.2 2-6z" />
+              <path d="M10.3 19a1.9 1.9 0 0 0 3.4 0" />
+            </svg>
+          </Link>
+
+          <div className={`tb-user ${styles.user}`} aria-live="polite">
+            <div className="tb-ava">{initials(context?.staff.name)}</div>
+            <div>
+              <div className="nm">{isContextLoading ? 'Loading staff…' : (context?.staff.name ?? 'Staff unavailable')}</div>
+              <div className="rl">{context?.staff.role ?? (contextError ? 'Retry to load access' : 'Loading access…')}</div>
             </div>
           </div>
         </header>
+
         {contextError && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 md:px-6" role="alert">
+          <div
+            role="alert"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '12px 26px',
+              borderBottom: '1px solid #F6D4D4',
+              background: 'var(--danger-soft)',
+              color: '#8f2323',
+              fontSize: 13,
+            }}
+          >
             <span>{contextError.message}</span>
-            <button className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-semibold" onClick={() => void loadContext()}>
+            <button className="btn btn-sm" onClick={() => void loadContext()}>
               Retry context
             </button>
           </div>
         )}
-        <div className="min-w-0">{children}</div>
+
+        <main className={`content ${styles.content}`}>{children}</main>
       </div>
     </div>
   )

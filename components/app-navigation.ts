@@ -1,14 +1,29 @@
 import {
   BadgeIndianRupee,
+  BarChart3,
+  Bell,
+  BookText,
   Boxes,
   ClipboardList,
+  Grid2X2,
   LayoutDashboard,
-  PackageSearch,
+  MessageCircle,
+  Monitor,
+  Radio,
+  ReceiptText,
+  RefreshCw,
+  Rocket,
   RotateCcw,
   Settings,
   ShoppingBag,
+  Sparkles,
+  Truck,
+  Usb,
+  UserCog,
   Users,
+  Wallet,
   WalletCards,
+  Warehouse,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -16,6 +31,12 @@ export type AppNavItem = {
   label: string
   href: string
   icon: LucideIcon
+  /**
+   * Product-capability label from the approved design (not store data).
+   * Marks modules that are announced but have no Phase 1-3 backend contract —
+   * those routes render the explicit unavailable state.
+   */
+  badge?: 'new'
 }
 
 export type AppNavGroup = {
@@ -26,63 +47,61 @@ export type AppNavGroup = {
 export const APP_NAVIGATION: AppNavGroup[] = [
   {
     label: 'Overview',
-    items: [
-      { label: 'Feature Map', href: '/app/feature-map', icon: LayoutDashboard },
-      { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
-    ],
+    items: [{ label: 'Feature Map', href: '/app/feature-map', icon: Grid2X2 }],
   },
   {
     label: 'Sales',
     items: [
+      { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
       { label: 'Billing', href: '/app/billing', icon: ShoppingBag },
       { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList },
+      { label: 'Register', href: '/app/shifts', icon: WalletCards },
       { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw },
-      { label: 'Register & Shifts', href: '/app/shifts', icon: WalletCards },
-      { label: 'Sales Channels', href: '/app/sales-channels', icon: ClipboardList },
-      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: ClipboardList },
+      { label: 'Sales Channels', href: '/app/sales-channels', icon: Radio, badge: 'new' },
+      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: Truck, badge: 'new' },
     ],
   },
   {
     label: 'Stock & Catalog',
     items: [
       { label: 'Inventory', href: '/app/inventory', icon: Boxes },
-      { label: 'Catalog', href: '/app/inventory/catalog', icon: PackageSearch },
-      { label: 'Purchases', href: '/app/purchases', icon: ClipboardList },
-      { label: 'Suppliers', href: '/app/suppliers', icon: Users },
+      { label: 'Purchases', href: '/app/purchases', icon: Warehouse },
+      { label: 'Suppliers', href: '/app/suppliers', icon: Truck },
     ],
   },
   {
     label: 'Customers & Team',
     items: [
       { label: 'Customers', href: '/app/customers', icon: Users },
-      { label: 'Team & Access', href: '/app/settings/members', icon: Settings },
-      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: Users },
+      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: MessageCircle, badge: 'new' },
+      { label: 'Staff', href: '/app/settings/members', icon: UserCog },
     ],
   },
   {
     label: 'Money',
     items: [
       { label: 'Payments', href: '/app/payments', icon: BadgeIndianRupee },
-      { label: 'Expenses', href: '/app/expenses', icon: BadgeIndianRupee },
-      { label: 'Receivables', href: '/app/receivables', icon: BadgeIndianRupee },
-      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BadgeIndianRupee },
+      { label: 'Expenses', href: '/app/expenses', icon: Wallet },
+      { label: 'Receivables', href: '/app/receivables', icon: ReceiptText, badge: 'new' },
+      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BookText, badge: 'new' },
     ],
   },
   {
     label: 'Insights',
     items: [
       { label: 'Reports', href: '/app/reports', icon: ClipboardList },
-      { label: 'Analytics', href: '/app/analytics', icon: LayoutDashboard },
-      { label: 'AI Copilot', href: '/app/copilot', icon: LayoutDashboard },
+      { label: 'Analytics', href: '/app/analytics', icon: BarChart3 },
+      { label: 'AI Copilot', href: '/app/copilot', icon: Sparkles, badge: 'new' },
     ],
   },
   {
     label: 'System',
     items: [
-      { label: 'Onboarding', href: '/onboarding/1', icon: Settings },
-      { label: 'Offline & Sync', href: '/app/offline-sync', icon: Settings },
-      { label: 'Hardware & Devices', href: '/app/hardware', icon: Settings },
-      { label: 'Customer Display', href: '/app/customer-display', icon: Settings },
+      { label: 'Onboarding', href: '/onboarding/1', icon: Rocket },
+      { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw, badge: 'new' },
+      { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb, badge: 'new' },
+      { label: 'Customer Display', href: '/app/customer-display', icon: Monitor, badge: 'new' },
+      { label: 'Notifications', href: '/app/notifications', icon: Bell, badge: 'new' },
       { label: 'Settings', href: '/app/settings', icon: Settings },
     ],
   },

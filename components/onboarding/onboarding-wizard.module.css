@@ -1,0 +1,311 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 280px minmax(0, 1fr);
+  background: #f5f6f7;
+  color: #0f1729;
+}
+
+.sidebar {
+  min-height: 100vh;
+  padding: 28px 20px;
+  background: linear-gradient(160deg, #030912 0%, #06337a 58%, #0058ba 100%);
+  color: white;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 800;
+}
+
+.brand strong {
+  font-family: var(--display);
+  font-size: 18px;
+}
+
+.progressLabel {
+  margin-top: 32px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.progressTrack {
+  height: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.progressValue {
+  height: 100%;
+  border-radius: inherit;
+  background: #6c9fff;
+}
+
+.steps {
+  margin-top: 22px;
+  list-style: none;
+}
+
+.stepButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stepButton:disabled {
+  cursor: not-allowed;
+}
+
+.stepActive {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.stepNumber {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stepNumberCurrent {
+  background: #2864c6;
+  color: white;
+}
+
+.stepNumberDone {
+  background: #10b981;
+  color: white;
+}
+
+.stepMeta small {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stepMeta strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.content {
+  padding: 42px 48px 64px;
+}
+
+.form {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+}
+
+.eyebrow {
+  color: #0058ba;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.description {
+  max-width: 760px;
+  margin-top: 8px;
+  color: #667085;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.note {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px solid #cbdcf5;
+  border-radius: 10px;
+  background: #eaf1fb;
+  color: #174c9e;
+  font-size: 12.5px;
+}
+
+.status {
+  min-height: 20px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.saved {
+  color: #087f5b;
+}
+
+.error {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.loading {
+  margin-top: 24px;
+  padding: 32px;
+  border: 1px solid #e6e8eb;
+  border-radius: 12px;
+  background: white;
+  color: #667085;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  margin-top: 22px;
+}
+
+.wideField {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #2b3447;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.field input:not([type="checkbox"]),
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid #e0e3e8;
+  border-radius: 10px;
+  background: white;
+  color: #0f1729;
+  font: inherit;
+}
+
+.field textarea {
+  min-height: 88px;
+  padding-top: 12px;
+}
+
+.toggleField {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e0e3e8;
+  border-radius: 10px;
+  background: white;
+}
+
+.toggleField strong {
+  display: block;
+  font-size: 12.5px;
+}
+
+.toggleField small {
+  display: block;
+  margin-top: 2px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.toggleField input {
+  width: 19px;
+  height: 19px;
+  accent-color: #0058ba;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid #e6e8eb;
+}
+
+.completion {
+  color: #98a2b3;
+  font-size: 12px;
+}
+
+@media (max-width: 860px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    min-height: auto;
+    padding: 20px;
+  }
+
+  .steps {
+    display: none;
+  }
+
+  .content {
+    padding: 28px 18px 48px;
+  }
+}
+
+@media (max-width: 620px) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .wideField {
+    grid-column: auto;
+  }
+
+  .completion {
+    display: none;
+  }
+}

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { PageHead } from '@/components/couture/ui'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -182,14 +183,11 @@ function ReturnsPageInner() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl bg-background p-6 md:p-10">
-      <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Returns</p>
-        <h1 className="font-heading text-3xl font-semibold">Find the original bill</h1>
-        <p className="mt-2 text-muted-foreground">
-          Locate the receipt, choose only the items being returned, and refund the original tender.
-        </p>
-      </div>
+    <main>
+      <PageHead
+        title="Returns & Exchange"
+        sub="Locate the receipt, choose only the items being returned, and refund the original tender."
+      />
 
       {!shiftId && (
         <Alert className="mb-6">
@@ -401,7 +399,7 @@ function ReturnsPageInner() {
 
 export default function ReturnsPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-background p-10">Loading returns…</main>}>
+    <Suspense fallback={<main>Loading returns…</main>}>
       <ReturnsPageInner />
     </Suspense>
   )

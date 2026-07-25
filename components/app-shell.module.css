@@ -1,0 +1,123 @@
+/*
+ * Mobile-only overrides for the India app shell.
+ *
+ * Desktop layout comes entirely from the approved prototype classes in
+ * globals.css (.app / .sidebar / .main / .topbar / .content). This module only
+ * adds the small-viewport drawer behaviour, which the static prototype did not
+ * need to express.
+ */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(15, 23, 41, 0.35);
+  border: 0;
+  padding: 0;
+}
+
+.closeDrawer {
+  display: none;
+}
+
+.mobileMenu {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    width: 280px;
+    background: var(--surface);
+    transition: transform 180ms var(--ease);
+  }
+
+  .drawerClosed {
+    transform: translateX(-100%);
+  }
+
+  .drawerOpen {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .closeDrawer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .mobileMenu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+
+  .crumb,
+  .storeSwitch,
+  .user {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .content {
+    padding: 18px 16px 64px;
+  }
+}
+
+@media (max-width: 1400px) {
+  .user :global(.rl) {
+    display: none;
+  }
+}
+
+/*
+ * The store pill renders tenant-supplied text. businessName is free-form and
+ * can be a full sentence, so it must be bounded and clipped — otherwise it
+ * pushes the search field and user block out of the topbar entirely.
+ */
+.storeSwitch {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.storeSwitch :global(.store-pill) {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user {
+  flex-shrink: 0;
+  max-width: 210px;
+}
+
+.user :global(.nm),
+.user :global(.rl) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
