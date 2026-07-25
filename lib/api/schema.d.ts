@@ -4,6 +4,56 @@
  */
 
 export interface paths {
+    "/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the authenticated caller and tenant display context for the application shell. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authenticated application context */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AppContext"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Tenant not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/onboarding": {
         parameters: {
             query?: never;
@@ -884,7 +934,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Look up prior sales by receipt number or customer search (D-09). Each returned sale includes its lines and payments. */
+        /** @description Look up prior sales by receipt number or customer search for returns compatibility. */
         get: {
             parameters: {
                 query?: {
@@ -905,6 +955,13 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["Sale"][];
                     };
+                };
+                /** @description A receipt number or customer search is required */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -955,6 +1012,99 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sales/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List tenant-scoped sales with bounded pagination and optional safe filters. */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    from?: string;
+                    to?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated sales */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SaleList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sales/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read tenant-scoped payment records and server-calculated collected/refunded totals. */
+        get: {
+            parameters: {
+                query?: {
+                    method?: "cash" | "card" | "check";
+                    status?: "completed" | "refunded";
+                    from?: string;
+                    to?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated payment records and authoritative totals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentRead"];
+                    };
+                };
+                /** @description Invalid payment filters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1065,6 +1215,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/customers/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List tenant-scoped customers with bounded pagination and optional safe search. */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated customers */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerList"];
+                    };
+                };
+                /** @description Invalid customer filters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/customers": {
         parameters: {
             query?: never;
@@ -1072,7 +1269,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Search customers by phone, email, or name (CUST-01, D-09). */
+        /** @description Search customers by phone, email, or name for checkout compatibility. */
         get: {
             parameters: {
                 query?: {
@@ -1311,6 +1508,25 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AppContext: {
+            staff: {
+                /** Format: uuid */
+                id: string | null;
+                name: string | null;
+                /** @enum {string} */
+                role: "owner" | "manager" | "cashier";
+            };
+            tenant: {
+                /** Format: uuid */
+                id: string;
+                businessName: string;
+                locality: string | null;
+            };
+            onboarding: {
+                step: number;
+                completed: boolean;
+            };
+        };
         OnboardingState: {
             data: components["schemas"]["OnboardingData"];
             currentStep: number;
@@ -1716,6 +1932,24 @@ export interface components {
             amount: string;
             referenceCode?: string;
         };
+        SaleList: {
+            items: components["schemas"]["Sale"][];
+            total: number;
+            nextCursor: string | null;
+        };
+        PaymentRead: {
+            items: components["schemas"]["PaymentReadItem"][];
+            total: number;
+            nextCursor: string | null;
+            summary: {
+                collectedAmount: string;
+                refundedAmount: string;
+                netAmount: string;
+            };
+        };
+        PaymentReadItem: components["schemas"]["Payment"] & {
+            saleStatus: string;
+        };
         CreateReturnRequest: {
             /** Format: uuid */
             saleId: string;
@@ -1732,6 +1966,11 @@ export interface components {
                 amount: string;
                 referenceCode?: string;
             }[];
+        };
+        CustomerList: {
+            items: components["schemas"]["Customer"][];
+            total: number;
+            nextCursor: string | null;
         };
         Customer: {
             /** Format: uuid */
