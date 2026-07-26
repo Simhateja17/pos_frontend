@@ -1,7 +1,8 @@
 "use client";
 
 import "./landing.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 /* ---- icon path sets (inner SVG markup) ---- */
 const FEAT_ICONS = {
@@ -97,6 +98,7 @@ function featBadges(b3, b4) {
 }
 
 export default function LandingPage() {
+  const [authenticated, setAuthenticated] = useState(false);
   const goLogin = () => {
     window.location.href = "/login";
   };
@@ -106,6 +108,30 @@ export default function LandingPage() {
   const goApp = () => {
     window.location.href = "/app/dashboard";
   };
+
+  useEffect(() => {
+    let active = true;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+    void fetch(`${apiBase}/auth/session`, { credentials: "include" })
+      .then((response) => response.ok ? response.json() : { authenticated: false })
+      .then((data) => {
+        if (active) setAuthenticated(Boolean(data.authenticated));
+      })
+      .catch(() => {
+        // The Supabase session is retained as a compatibility fallback while
+        // older deployments are rolled forward to the cookie endpoint.
+        void supabase.auth.getSession().then(({ data }) => {
+          if (active) setAuthenticated(Boolean(data.session));
+        });
+      });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setAuthenticated(Boolean(session));
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     // Nav shadow on scroll
@@ -200,8 +226,14 @@ export default function LandingPage() {
           <a href="#pricing">Pricing</a>
         </div>
         <div className="nav-ctas">
-          <button className="btn-outline" onClick={goLogin}>Log in</button>
-          <button className="btn-primary" onClick={goSignup}>Start free trial</button>
+          {authenticated ? (
+            <button className="btn-primary" onClick={goApp}>Back to Billing</button>
+          ) : (
+            <>
+              <button className="btn-outline" onClick={goLogin}>Log in</button>
+              <button className="btn-primary" onClick={goSignup}>Start free trial</button>
+            </>
+          )}
         </div>
       </nav>
 

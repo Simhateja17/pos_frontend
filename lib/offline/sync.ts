@@ -37,8 +37,14 @@ function backoffFor(attempts: number) {
   return Math.min(BASE_BACKOFF_MS * 2 ** Math.max(0, attempts - 1), MAX_BACKOFF_MS)
 }
 
-function apiBase() {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? ''
+/**
+ * Same variable lib/api/client.ts uses for POST /sales — deliberately not a
+ * second env var. NEXT_PUBLIC_API_BASE_URL never existed anywhere else in this
+ * codebase; a queued sale would previously have POSTed to the frontend's own
+ * origin (relative URL, no host) and silently 404ed.
+ */
+function apiUrl() {
+  return process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
 }
 
 async function postSale(entry: QueuedSale): Promise<Response> {
@@ -48,7 +54,7 @@ async function postSale(entry: QueuedSale): Promise<Response> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    return await fetch(`${apiBase()}/sales`, {
+    return await fetch(`${apiUrl()}/sales`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

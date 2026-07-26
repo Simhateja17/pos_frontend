@@ -10,12 +10,19 @@
 
 import { useEffect, useState } from 'react'
 
-const HEALTH_PATH = '/health'
 const POLL_INTERVAL_MS = 15_000
 const PROBE_TIMEOUT_MS = 4_000
 
-function apiBase() {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? ''
+/**
+ * GET /health lives at the API root, not under /api (see backend/src/server.ts:
+ * app.get('/health', ...) is registered before app.use('/api', routes)). This
+ * derives the root from NEXT_PUBLIC_API_URL — the same variable
+ * lib/api/client.ts uses — by stripping a trailing /api rather than
+ * introducing a second env var that would need to be kept in sync with it.
+ */
+function healthUrl() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
+  return `${apiUrl.replace(/\/api\/?$/, '')}/health`
 }
 
 /** Single reachability probe. Never throws. */
@@ -24,7 +31,7 @@ export async function probeReachable(): Promise<boolean> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS)
-    const res = await fetch(`${apiBase()}${HEALTH_PATH}`, {
+    const res = await fetch(healthUrl(), {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal,
