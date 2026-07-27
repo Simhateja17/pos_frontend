@@ -6,12 +6,11 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
-import { BrandMark, establishIndiaSession, IndiaAuthShell } from '@/components/auth/india-auth-shell'
+import { establishIndiaSession, IndiaAuthShell } from '@/components/auth/india-auth-shell'
 import styles from '@/components/auth/india-auth.module.css'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [showForm, setShowForm] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,28 +69,6 @@ export default function LoginPage() {
       return
     }
     setResetMessage('Check your email for a password reset link.')
-  }
-
-  if (!showForm) {
-    return (
-      <main className={styles.splash}>
-        <div className={styles.rings} aria-hidden="true" />
-        <div className={styles.splashContent}>
-          <BrandMark splash />
-          <div className={styles.splashBadge}>✦ India&apos;s most complete retail suite</div>
-          <h1 className={styles.splashHeading}>Retail, reimagined.<br />For every Indian store.</h1>
-          <p className={styles.splashDescription}>GST-native · AI-powered · Offline-first<br />From first bill to GSTR-1 — one POS.</p>
-          <div className={styles.splashActions}>
-            <Link className={styles.splashPrimary} href="/signup">Create your store account →</Link>
-            <button className={styles.splashSecondary} type="button" onClick={() => setShowForm(true)}>Sign in to existing account</button>
-          </div>
-          <div className={styles.splashProof}>
-            <span>✓ 14-day free trial</span><span>✓ No credit card</span><span>✓ GST-compliant</span>
-          </div>
-        </div>
-        <p className={styles.copyright}>© 2026 Couture Retail Technologies Pvt Ltd</p>
-      </main>
-    )
   }
 
   return (

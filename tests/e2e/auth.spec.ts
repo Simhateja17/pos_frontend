@@ -2,7 +2,6 @@ import { expect, test } from '@playwright/test'
 
 async function openLogin(page: import('@playwright/test').Page) {
   await page.goto('/login')
-  await page.getByRole('button', { name: 'Sign in to existing account' }).click()
   await expect(page.getByRole('heading', { name: 'Good to have you back.' })).toBeVisible()
 }
 
@@ -16,15 +15,13 @@ async function completeAccountStep(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Create account & continue' }).click()
 }
 
-test('keeps the approved India splash-to-login transition and captures desktop evidence', async ({ page }, testInfo) => {
+test('lands straight on the India login form and captures desktop evidence', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/login')
 
-  await expect(page.getByText("India's most complete retail suite")).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Retail, reimagined/i })).toBeVisible()
-  await page.screenshot({ path: testInfo.outputPath('india-login-splash-1440.png'), fullPage: true })
+  await expect(page.getByRole('heading', { name: 'Good to have you back.' })).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('india-login-form-1440.png'), fullPage: true })
 
-  await page.getByRole('button', { name: 'Sign in to existing account' }).click()
   await expect(page.getByRole('tablist', { name: 'Sign-in method' })).toBeVisible()
   await expect(page.getByLabel(/^Email address/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()

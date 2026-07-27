@@ -246,7 +246,7 @@ export default function LandingPage() {
         <p className="hero-sub">Billing, inventory, staff, loyalty, analytics and compliance — unified in one beautiful POS built for the modern Indian retailer.</p>
         <div className="hero-actions">
           <button className="btn-hero btn-hero-pri" onClick={goApp}>
-            <svg style={{ width: 18, height: 18, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round", verticalAlign: -3, marginRight: 8 }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
+            <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
             Explore prototype
           </button>
           <button className="btn-hero btn-hero-sec">Watch 2-min demo</button>
@@ -510,7 +510,7 @@ export default function LandingPage() {
         <p className="animate-in">Join 2,400+ retailers already running on Couture POS. Start free, no card required.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goApp}>
-            <svg style={{ width: 18, height: 18, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round", verticalAlign: -3, marginRight: 8 }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
+            <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
             Start free trial
           </button>
           <button className="btn-cta-g" onClick={goApp}>Explore prototype →</button>

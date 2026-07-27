@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
+import { Bell, Menu, X } from 'lucide-react'
 import { APP_NAVIGATION } from '@/components/app-navigation'
 import {
   AuthenticatedRequestError,
@@ -191,24 +191,24 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="kbd">⌘K</span>
           </div>
 
-          <div className={`store-switch ${styles.storeSwitch}`}>
-            <span className="store-pill active" title={storeFull}>
-              {storeLabel}
-            </span>
-          </div>
+          {/* Pinned to the right edge so the cluster does not shift with the breadcrumb width. */}
+          <div className={styles.topbarActions}>
+            <div className={`store-switch ${styles.storeSwitch}`}>
+              <span className="store-pill active" title={storeFull}>
+                {storeLabel}
+              </span>
+            </div>
 
-          <Link className="tb-icon" href="/app/notifications" aria-label="Notifications">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9.2a6 6 0 0 1 12 0c0 4.8 2 6 2 6H4s2-1.2 2-6z" />
-              <path d="M10.3 19a1.9 1.9 0 0 0 3.4 0" />
-            </svg>
-          </Link>
+            <Link className="tb-icon" href="/app/notifications" aria-label="Notifications">
+              <Bell size={18} strokeWidth={1.85} />
+            </Link>
 
-          <div className={`tb-user ${styles.user}`} aria-live="polite">
-            <div className="tb-ava">{initials(context?.staff.name)}</div>
-            <div>
-              <div className="nm">{isContextLoading ? 'Loading staff…' : (context?.staff.name ?? 'Staff unavailable')}</div>
-              <div className="rl">{context?.staff.role ?? (contextError ? 'Retry to load access' : 'Loading access…')}</div>
+            <div className={`tb-user ${styles.user}`} aria-live="polite">
+              <div className="tb-ava">{initials(context?.staff.name)}</div>
+              <div>
+                <div className="nm">{isContextLoading ? 'Loading staff…' : (context?.staff.name ?? 'Staff unavailable')}</div>
+                <div className="rl">{context?.staff.role ?? (contextError ? 'Retry to load access' : 'Loading access…')}</div>
+              </div>
             </div>
           </div>
         </header>

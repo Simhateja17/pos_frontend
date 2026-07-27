@@ -125,7 +125,12 @@ function DashboardContent({
     },
     {
       label: 'Cash Drawer',
-      value: drawer.status === 'open' ? money(drawer.openingCash) : 'No open shift',
+      value:
+        drawer.status === 'open' ? (
+          money(drawer.openingCash)
+        ) : (
+          <UnavailableValue reason="Open a register before taking sales" text="No open shift" />
+        ),
       meta: drawer.status === 'open' ? `Opened ${dateLabel(drawer.openedAt)}` : 'Open a register before taking sales',
     },
     {

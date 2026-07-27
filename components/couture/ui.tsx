@@ -32,7 +32,11 @@ export type KpiItem = {
   label: string
   value: ReactNode
   meta?: ReactNode
-  /** First card renders in the brand-tinted "lead" treatment unless disabled. */
+  /**
+   * Opt in to the brand-tinted "lead" treatment. Off by default: a whole row of
+   * tiles reads as one set of figures, and tinting the first one purely because
+   * it is first made the row look inconsistent rather than emphasised.
+   */
   lead?: boolean
   flag?: FlagKind
 }
@@ -40,8 +44,8 @@ export type KpiItem = {
 export function KpiRow({ items, cols }: { items: KpiItem[]; cols?: number }) {
   return (
     <div className="kpi-row" style={{ gridTemplateColumns: `repeat(${cols ?? items.length},1fr)` }}>
-      {items.map((k, i) => (
-        <div key={k.label} className={`kpi ${(k.lead ?? i === 0) ? 'lead' : ''}`}>
+      {items.map((k) => (
+        <div key={k.label} className={`kpi ${k.lead ? 'lead' : ''}`}>
           <div className="kl">
             {k.label}
             {k.flag ? <Flag kind={k.flag} /> : null}

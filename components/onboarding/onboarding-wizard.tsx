@@ -47,13 +47,20 @@ async function headers() { const { data: { session } } = await supabase.auth.get
 
 export function OnboardingWizard({ step }: { step: number }) {
   const router = useRouter(); const current = ONBOARDING_STEPS[step - 1]
-  const [values, setValues] = useState<Values>(() => emptyValues(step)); const [state, setState] = useState<components['schemas']['OnboardingState'] | null>(null); const [status, setStatus] = useState<'loading' | 'saved' | 'saving' | 'error'>('loading'); const [error, setError] = useState(''); const [retry, setRetry] = useState(0)
+  const [values, setValues] = useState<Values>(() => emptyValues(step)); const [state, setState] = useState<components['schemas']['OnboardingState'] | null>(null); const [status, setStatus] = useState<'loading' | 'saved' | 'saving' | 'error'>('loading'); const [error, setError] = useState(''); const [retryAction, setRetryAction] = useState<'load' | 'save' | null>(null); const [retry, setRetry] = useState(0)
   const [showOptional, setShowOptional] = useState(false)
   const percent = useMemo(() => Math.round((Math.min(state?.currentStep ?? 0, REQUIRED_STEP_COUNT) / REQUIRED_STEP_COUNT) * 100), [state])
-  useEffect(() => { let active = true; (async () => { setStatus('loading'); try { const { data, error: apiError } = await apiClient.GET('/onboarding', { headers: await headers() }); if (apiError || !data) throw new Error('We could not load your saved setup.'); if (!active) return; const blocked = ONBOARDING_STEPS[step - 1].deferred ? !data.requiredStepsComplete : step > data.currentStep + 1; if (blocked) { router.replace(`/onboarding/${Math.max(1, Math.min(data.currentStep + 1, REQUIRED_STEP_COUNT))}`); return } setState(data); const saved = serverValues(data, step); const raw = window.sessionStorage.getItem(`${DRAFT_PREFIX}${step}`); setValues(raw ? { ...saved, ...JSON.parse(raw) } : saved); setStatus('saved') } catch (cause) { if (active) { setError(cause instanceof Error ? cause.message : 'We could not load your saved setup.'); setStatus('error') } } })(); return () => { active = false } }, [step, retry, router])
+  useEffect(() => { let active = true; (async () => { setStatus('loading'); try { const { data, error: apiError } = await apiClient.GET('/onboarding', { headers: await headers() }); if (apiError || !data) throw new Error('We could not load your saved setup.'); if (!active) return; const blocked = ONBOARDING_STEPS[step - 1].deferred ? !data.requiredStepsComplete : step > data.currentStep + 1; if (blocked) { router.replace(`/onboarding/${Math.max(1, Math.min(data.currentStep + 1, REQUIRED_STEP_COUNT))}`); return } setState(data); const saved = serverValues(data, step); const raw = window.sessionStorage.getItem(`${DRAFT_PREFIX}${step}`); setValues(raw ? { ...saved, ...JSON.parse(raw) } : saved); setError(''); setRetryAction(null); setStatus('saved') } catch (cause) { if (active) { setError(cause instanceof Error ? cause.message : 'We could not load your saved setup.'); setRetryAction('load'); setStatus('error') } } })(); return () => { active = false } }, [step, retry, router])
   function update(key: string, value: string | boolean) { const next = { ...values, [key]: value }; setValues(next); window.sessionStorage.setItem(`${DRAFT_PREFIX}${step}`, JSON.stringify(next)) }
   function payload() { const base = { ...values }; if (step === 1) { const selection = JSON.parse(window.sessionStorage.getItem(`${DRAFT_PREFIX}selection`) ?? '{}'); Object.assign(base, selection) } if (step === 8) { const firstStaff = base.staffName ? { name: base.staffName, phone: base.staffPhone || undefined, email: base.staffEmail || undefined, accessLevel: base.accessLevel || 'cashier', defaultShift: base.defaultShift || 'full' } : undefined; return { approvalRules: { discountEnabled: Boolean(base.discountEnabled), discountThresholdPercent: Number(base.discountThresholdPercent), refundEnabled: Boolean(base.refundEnabled), voidEnabled: Boolean(base.voidEnabled), settingsEnabled: Boolean(base.settingsEnabled) }, firstStaff, openingFloatPerCounter: Number(base.openingFloatPerCounter), endOfDayReminder: base.endOfDayReminder, autoClockOutHours: base.autoClockOutHours } } return Object.fromEntries(Object.entries(base).map(([key, value]) => [key, ['yearEstablished', 'carpetAreaSqFt', 'invoiceStartNumber', 'maxCashPerTransaction', 'maxStoreCredit'].includes(key) && value !== '' ? Number(value) : value])) }
-  async function submit(event: FormEvent) { event.preventDefault(); const missing = current.fields.find((field) => field.required && (values[field.key] === '' || values[field.key] === undefined)); if (missing) { setError(`${missing.label} is required.`); return } setStatus('saving'); setError(''); try { const { data, error: apiError, response } = await apiClient.PUT('/onboarding/steps/{step}', { params: { path: { step } }, headers: await headers(), body: payload() as components['schemas']['OnboardingStepRequest'] }); if (apiError || !data) throw new Error(response.status === 409 ? 'Complete each earlier step before continuing.' : 'Couldn’t save changes. Retry saving.'); window.sessionStorage.removeItem(`${DRAFT_PREFIX}${step}`); if (step === 1) window.sessionStorage.removeItem(`${DRAFT_PREFIX}selection`); setState(data); setStatus('saved'); router.push(current.deferred ? '/app/dashboard' : step === REQUIRED_STEP_COUNT ? '/onboarding/complete' : `/onboarding/${step + 1}`) } catch (cause) { setError(cause instanceof Error ? cause.message : 'Couldn’t save changes. Retry saving.'); setStatus('error') } }
+  /** ONBOARD-01 — a failed save keeps one message in one place; the retry affordance is the button beside it. */
+  function saveFailure(httpStatus: number): { message: string; retryable: boolean } {
+    if (httpStatus === 400) return { message: 'Some details didn’t pass validation. Check the values above and save again.', retryable: false }
+    if (httpStatus === 403) return { message: 'Only the account owner can complete setup.', retryable: false }
+    if (httpStatus === 409) return { message: 'Complete each earlier step before continuing.', retryable: false }
+    return { message: 'Couldn’t save changes.', retryable: true }
+  }
+  async function submit(event?: FormEvent) { event?.preventDefault(); const missing = current.fields.find((field) => field.required && (values[field.key] === '' || values[field.key] === undefined)); if (missing) { setError(`${missing.label} is required.`); setRetryAction(null); return } setStatus('saving'); setError(''); setRetryAction(null); try { const { data, error: apiError, response } = await apiClient.PUT('/onboarding/steps/{step}', { params: { path: { step } }, headers: await headers(), body: payload() as components['schemas']['OnboardingStepRequest'] }); if (apiError || !data) { const failure = saveFailure(response.status); setError(failure.message); setRetryAction(failure.retryable ? 'save' : null); setStatus('error'); return } window.sessionStorage.removeItem(`${DRAFT_PREFIX}${step}`); if (step === 1) window.sessionStorage.removeItem(`${DRAFT_PREFIX}selection`); setState(data); setStatus('saved'); router.push(current.deferred ? '/app/dashboard' : step === REQUIRED_STEP_COUNT ? '/onboarding/complete' : `/onboarding/${step + 1}`) } catch (cause) { setError(cause instanceof Error ? cause.message : 'Couldn’t save changes.'); setRetryAction('save'); setStatus('error') } }
   const primaryFields = current.fields.filter((field) => !field.secondary)
   const secondaryFields = current.fields.filter((field) => field.secondary)
   function renderField(field: Field) {
@@ -138,12 +145,16 @@ export function OnboardingWizard({ step }: { step: number }) {
           ) : (
             <>
               <div className={styles.status} aria-live="polite">
-                {status === 'saving' ? 'Saving…' : status === 'saved' ? <span className={styles.saved}>Saved</span> : <span>Couldn’t save changes</span>}
+                {status === 'saving' ? 'Saving…' : status === 'saved' ? <span className={styles.saved}>Saved</span> : null}
               </div>
               {error && (
-                <div className={styles.error}>
-                  {error}
-                  {status === 'error' && <button type="button" onClick={() => setRetry((count) => count + 1)}> Retry saving</button>}
+                <div className={styles.error} role="alert">
+                  <span>{error}</span>
+                  {retryAction && (
+                    <button type="button" className={styles.retry} onClick={retryAction === 'load' ? () => setRetry((count) => count + 1) : () => { void submit() }}>
+                      {retryAction === 'load' ? 'Try again' : 'Retry saving'}
+                    </button>
+                  )}
                 </div>
               )}
               <div className={styles.fields}>{primaryFields.map(renderField)}</div>

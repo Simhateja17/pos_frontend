@@ -140,12 +140,14 @@
 
   /* ---------- Buttons ---------- */
   .btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);white-space:nowrap;transition:all .12s}
-  .btn:hover{background:#F8F9FA;border-color:#D7DadE}
+  /* neutral hover only for neutral buttons — the blue variants keep their own
+     fill (a plain .btn:hover here would wipe .btn-grad's background-image) */
+  .btn:hover:not(.btn-pri):not(.btn-grad){background:#F8F9FA;border-color:#D7DadE}
   .btn svg{width:15px;height:15px}
   .btn-pri{background:var(--brand-1);border-color:var(--brand-1);color:#fff;box-shadow:0 1px 2px rgba(0,88,186,.25)}
   .btn-pri:hover{background:#0050A8;border-color:#0050A8}
   .btn-grad{background:var(--brand-grad);border:none;color:#fff;box-shadow:0 2px 8px rgba(0,88,186,.28)}
-  .btn-grad:hover{filter:brightness(1.04)}
+  .btn-grad:hover{filter:brightness(1.07) saturate(1.06);box-shadow:0 6px 18px rgba(0,88,186,.42)}
   .btn-sm{height:32px;padding:0 11px;font-size:12.5px;border-radius:8px}
   .btn-ghost{background:transparent;border-color:transparent;color:var(--brand-1)}
   .btn-ghost:hover{background:var(--brand-soft)}
@@ -316,7 +318,9 @@
   .fld-input:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px var(--brand-soft)}
   /* Payment method chooser grid from the approved billing screen. */
   .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .pay-grid .btn{height:54px;flex-direction:column;gap:3px;font-size:12px}
+  /* column layout means the base .btn's align/justify swap axes — set both so the
+     icon + label block sits dead centre, not top-aligned */
+  .pay-grid .btn{height:54px;flex-direction:column;justify-content:center;align-items:center;gap:3px;font-size:12px;padding:0 8px;line-height:1}
   .sum-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
   .sum-row > span:first-child{color:var(--muted)}
 

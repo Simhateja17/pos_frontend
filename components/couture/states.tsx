@@ -123,10 +123,10 @@ export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
  * Value shown for a metric the server explicitly reports as unavailable.
  * Deliberately quiet — an unavailable metric must not read as a real figure.
  */
-export function UnavailableValue({ reason }: { reason?: string }) {
+export function UnavailableValue({ reason, text = 'Not tracked yet' }: { reason?: string; text?: string }) {
   return (
     <span title={reason} style={{ fontFamily: 'var(--display)', fontSize: 15, fontWeight: 600, color: 'var(--muted-2)' }}>
-      Not tracked yet
+      {text}
     </span>
   )
 }

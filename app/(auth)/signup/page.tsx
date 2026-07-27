@@ -145,7 +145,7 @@ export default function SignupPage() {
             <label className={styles.field}>
               <span className={styles.label}>Mobile number<span className={styles.required}>*</span></span>
               <span className={styles.phoneRow}>
-                <span className={styles.countryCode} aria-hidden="true">🇮🇳 +91⌄</span>
+                <span className={styles.countryCode} aria-hidden="true">🇮🇳 +91</span>
                 <input
                   className={`${styles.input} ${styles.phoneInput}`}
                   type="tel"

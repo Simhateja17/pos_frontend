@@ -46,7 +46,9 @@ nav.scrolled{box-shadow:0 2px 24px rgba(0,0,0,.08)}
 .hero-h1 em{font-style:normal;color:var(--brand-1)}
 .hero-sub{z-index:2;font-size:clamp(16px,2vw,20px);color:var(--muted);max-width:600px;line-height:1.65;margin-top:22px;position:relative;animation:fadeUp .8s var(--ease) .3s}
 .hero-actions{z-index:2;display:flex;gap:14px;margin-top:36px;align-items:center;flex-wrap:wrap;justify-content:center;position:relative;animation:fadeUp .8s var(--ease) .4s}
-.btn-hero{height:52px;padding:0 28px;border-radius:14px;font-family:var(--display);font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;border:none;position:relative;overflow:hidden}
+/* inline-flex + nowrap keeps the icon on the same row as the label — as a plain
+   block button the text wrapped and pushed the icon onto its own line */
+.btn-hero{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;white-space:nowrap;height:52px;padding:0 28px;border-radius:14px;font-family:var(--display);font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;border:none;position:relative;overflow:hidden}
 .btn-hero-pri{background:linear-gradient(120deg,var(--brand-dark),var(--brand-1) 50%,var(--brand-2));background-size:220%;animation:gradShift 6s ease infinite;color:#fff;box-shadow:0 8px 28px rgba(0,88,186,.4)}
 .btn-hero-pri:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,88,186,.5)}
 .btn-hero-sec{background:transparent;border:2px solid var(--border);color:var(--ink-2)}
@@ -175,9 +177,9 @@ section{padding:80px 5vw}
 .cta-section h2{font-family:var(--display);font-size:clamp(30px,5vw,56px);font-weight:800;letter-spacing:-.04em;line-height:1.05;position:relative}
 .cta-section p{font-size:18px;color:rgba(255,255,255,.8);max-width:540px;margin:16px auto 36px;line-height:1.6;position:relative}
 .cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
-.btn-cta-w{height:52px;padding:0 28px;border-radius:14px;background:#fff;color:var(--brand-1);font-family:var(--display);font-weight:700;font-size:16px;border:none;cursor:pointer;transition:all .2s}
+.btn-cta-w{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;white-space:nowrap;height:52px;padding:0 28px;border-radius:14px;background:#fff;color:var(--brand-1);font-family:var(--display);font-weight:700;font-size:16px;border:none;cursor:pointer;transition:all .2s}
 .btn-cta-w:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
-.btn-cta-g{height:52px;padding:0 28px;border-radius:14px;background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.35);font-family:var(--display);font-weight:700;font-size:16px;cursor:pointer;transition:all .2s}
+.btn-cta-g{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;white-space:nowrap;height:52px;padding:0 28px;border-radius:14px;background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.35);font-family:var(--display);font-weight:700;font-size:16px;cursor:pointer;transition:all .2s}
 .btn-cta-g:hover{background:rgba(255,255,255,.22);transform:translateY(-2px)}
 .cta-note{font-size:13px;color:rgba(255,255,255,.6);margin-top:20px;position:relative}
 

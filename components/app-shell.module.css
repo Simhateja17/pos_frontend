@@ -82,6 +82,10 @@
     gap: 10px;
   }
 
+  .topbarActions {
+    gap: 10px;
+  }
+
   .content {
     padding: 18px 16px 64px;
   }
@@ -91,6 +95,21 @@
   .user :global(.rl) {
     display: none;
   }
+}
+
+/*
+ * The topbar packs its items from the left, so the store pill / notifications /
+ * user block used to slide horizontally as the breadcrumb ("Dashboard" vs
+ * "Purchase Orders & GRN") changed width. Anchoring the cluster to the right
+ * edge keeps it fixed on every route.
+ */
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 /*

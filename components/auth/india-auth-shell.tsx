@@ -65,9 +65,9 @@ const content = {
   },
 }
 
-export function BrandMark({ splash = false }: { splash?: boolean }) {
+export function BrandMark() {
   return (
-    <div className={`${styles.mark} ${splash ? styles.splashMark : ''}`}>
+    <div className={styles.mark}>
       <span className={styles.markBox}>
         {/* The legacy prototype uses this exact shipped brand asset. */}
         <img src="/logo.png" alt="" />
