@@ -3040,6 +3040,8 @@ export interface components {
             /** Format: uuid */
             productId: string;
             sku: string;
+            barcode: string | null;
+            unitOfMeasure: components["schemas"]["UnitOfMeasure"];
             size: string | null;
             color: string | null;
             material: string | null;
@@ -3049,11 +3051,15 @@ export interface components {
             currentStock: number;
             createdAt: string;
         };
+        /** @enum {string} */
+        UnitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "box" | "pack" | "set" | "pair";
         CreateProductRequest: {
             name: string;
             category?: string;
             variants: {
                 sku?: string;
+                barcode?: string;
+                unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
                 size?: string;
                 color?: string;
                 material?: string;
@@ -3065,6 +3071,8 @@ export interface components {
             size?: string;
             color?: string;
             material?: string;
+            barcode?: string | null;
+            unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
             price?: number;
             reorderThreshold?: number;
         };
@@ -3105,6 +3113,7 @@ export interface components {
             material: string | null;
             quantity: number;
             reorderThreshold: number;
+            unitOfMeasure: string;
         };
         SetPinRequest: {
             pin: string;

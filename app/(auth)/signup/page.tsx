@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { establishIndiaSession, IndiaAuthShell } from '@/components/auth/india-auth-shell'
+import { IndiaStateCombobox } from '@/components/auth/india-state-combobox'
 import styles from '@/components/auth/india-auth.module.css'
 
 type AccountFields = {
@@ -85,6 +86,12 @@ export default function SignupPage() {
     event.preventDefault()
     setError(null)
     setEmailError(null)
+
+    if (!business.state) {
+      setError('Select your state or Union Territory from the list to continue.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -261,10 +268,18 @@ export default function SignupPage() {
                 <span className={styles.label}>City<span className={styles.required}>*</span></span>
                 <input className={styles.input} required value={business.city} onChange={(event) => setBusiness((current) => ({ ...current, city: event.target.value }))} />
               </label>
-              <label className={styles.field}>
-                <span className={styles.label}>State<span className={styles.required}>*</span></span>
-                <input className={styles.input} required value={business.state} onChange={(event) => setBusiness((current) => ({ ...current, state: event.target.value }))} />
-              </label>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="signup-state">State<span className={styles.required}>*</span></label>
+                <IndiaStateCombobox
+                  id="signup-state"
+                  required
+                  value={business.state}
+                  onChange={(state) => {
+                    setBusiness((current) => ({ ...current, state }))
+                    setError(null)
+                  }}
+                />
+              </div>
             </div>
             <div className={styles.actions}>
               <label className={styles.field}>
