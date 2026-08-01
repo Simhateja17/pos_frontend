@@ -1768,6 +1768,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Store settings — business identity, GST fields, tax rate and discount threshold. Readable by any staff role. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Store settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreSettings"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Update store settings. Owner-only. Legal name/GSTIN/PAN are not amended with the government by this call — see UI copy. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateStoreSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description Store settings updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreSettings"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Only the owner can change store settings */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
     "/suppliers": {
         parameters: {
             query?: never;
@@ -3536,6 +3610,40 @@ export interface components {
         };
         /** @enum {string} */
         BusinessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other";
+        StoreSettings: {
+            businessName: string;
+            tradeName: string | null;
+            addressLine1: string;
+            addressLine2: string | null;
+            city: string;
+            state: string;
+            postalCode: string;
+            /** @enum {string|null} */
+            gstStatus: "regular" | "composition" | "unregistered" | null;
+            gstin: string | null;
+            pan: string | null;
+            placeOfSupply: string | null;
+            /** @enum {string|null} */
+            businessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
+            combinedTaxRatePercent: string;
+            discountThresholdPercent: string;
+        };
+        UpdateStoreSettingsRequest: {
+            businessName?: string;
+            tradeName?: string | null;
+            addressLine1?: string;
+            addressLine2?: string | null;
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            /** @enum {string|null} */
+            gstStatus?: "regular" | "composition" | "unregistered" | null;
+            gstin?: string | null;
+            pan?: string | null;
+            placeOfSupply?: string | null;
+            combinedTaxRatePercent?: number;
+            discountThresholdPercent?: number;
+        };
         SupplierList: components["schemas"]["Supplier"][];
         Supplier: {
             /** Format: uuid */

@@ -15,7 +15,6 @@ const MODULE_LABELS: Record<string, { title: string; sub: string }> = {
   hardware: { title: 'Hardware & Devices', sub: 'Terminals, printers and scanners' },
   'customer-display': { title: 'Customer Display', sub: 'Second-screen checkout view' },
   notifications: { title: 'Notifications', sub: 'Alerts and delivery preferences' },
-  settings: { title: 'Settings', sub: 'Store configuration' },
 }
 
 function titleFromSlug(slug: string) {
