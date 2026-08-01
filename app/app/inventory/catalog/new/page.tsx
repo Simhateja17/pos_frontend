@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
 import { Card, CardHead, CardPad, Fld, PageHead } from '@/components/couture/ui'
 import { UNITS, allowsFractionalQuantity, unitSuffix, type Unit } from '@/lib/units'
+import { CategorySelect, type CategoryOption } from '@/components/inventory/category-select'
 
 type VariantFormRow = {
   barcode: string
@@ -41,7 +42,8 @@ export default function NewProductPage() {
   const router = useRouter()
 
   const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState<{ categoryId?: string; categoryName?: string }>({})
+  const [categories, setCategories] = useState<CategoryOption[]>([])
   const [rows, setRows] = useState<VariantFormRow[]>([{ ...EMPTY_VARIANT_ROW }])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -49,6 +51,11 @@ export default function NewProductPage() {
   /** Barcodes already in this tenant's catalog, so a duplicate is caught before submit. */
   const [knownBarcodes, setKnownBarcodes] = useState<Map<string, string>>(new Map())
   const firstBarcodeRef = useRef<HTMLInputElement>(null)
+
+  const loadCategories = useCallback(async () => {
+    const { data } = await apiClient.GET('/categories', { headers: await authHeader() })
+    if (data) setCategories(data.map((c) => ({ id: c.id, name: c.name })))
+  }, [])
 
   const loadKnownBarcodes = useCallback(async () => {
     const { data } = await apiClient.GET('/products', { headers: await authHeader() })
@@ -64,11 +71,12 @@ export default function NewProductPage() {
 
   useEffect(() => {
     void loadKnownBarcodes()
+    void loadCategories()
     // A hardware scanner types like a keyboard, so landing with the first
     // barcode field focused makes "scan the item to start" work with no
     // instructions and no extra click.
     firstBarcodeRef.current?.focus()
-  }, [loadKnownBarcodes])
+  }, [loadKnownBarcodes, loadCategories])
 
   function setRow(index: number, field: keyof VariantFormRow, value: string) {
     setRows((current) => current.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
@@ -129,7 +137,8 @@ export default function NewProductPage() {
     const { error: requestError } = await apiClient.POST('/products', {
       body: {
         name: name.trim(),
-        category: category.trim() || undefined,
+        categoryId: category.categoryId,
+        categoryName: category.categoryName,
         variants: rows.map((row) => ({
           sku: row.sku.trim() || undefined,
           barcode: row.barcode.trim() || undefined,
@@ -197,11 +206,11 @@ export default function NewProductPage() {
                 />
               </Fld>
               <Fld id="product-category" label="Category">
-                <input
+                <CategorySelect
                   id="product-category"
+                  categories={categories}
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g. Staples"
+                  onChange={setCategory}
                 />
               </Fld>
             </div>

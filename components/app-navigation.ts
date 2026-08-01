@@ -4,6 +4,7 @@ import {
   Bell,
   BookText,
   Boxes,
+  FolderTree,
   ClipboardList,
   Grid2X2,
   LayoutDashboard,
@@ -67,6 +68,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'Stock & Catalog',
     items: [
       { label: 'Inventory', href: '/app/inventory', icon: Boxes },
+      { label: 'Categories', href: '/app/inventory/categories', icon: FolderTree },
       { label: 'Purchases', href: '/app/purchases', icon: Warehouse },
       { label: 'Suppliers', href: '/app/suppliers', icon: Truck },
     ],
