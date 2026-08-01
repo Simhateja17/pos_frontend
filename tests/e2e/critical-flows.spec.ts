@@ -17,10 +17,10 @@ test.describe('India release critical flows (user-owned browser specification)',
   })
 
   test('onboarding resumes persisted progress and completion shows server-confirmed facts', async ({ authenticatedPage: page }, testInfo) => {
-    await page.goto('/onboarding/1')
-    await expect(page.getByText(/step 01|business identity/i).first()).toBeVisible()
+    await page.goto('/plans')
+    await expect(page.getByText(/choose your plan/i).first()).toBeVisible()
     await page.reload()
-    await expect(page.getByText(/saved|business identity|step 01/i).first()).toBeVisible()
+    await expect(page.getByText(/choose your plan/i).first()).toBeVisible()
     await testInfo.attach('critical-onboarding-desktop', {
       body: await page.screenshot({ fullPage: true }),
       contentType: 'image/png',

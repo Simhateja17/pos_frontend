@@ -44,10 +44,11 @@ test.describe('India and US route isolation (user-owned browser specification)',
   })
 
   test('India onboarding and US onboarding use separate route families and stored state', async ({ authenticatedPage }) => {
-    await authenticatedPage.goto('/onboarding/1')
-    await expect(authenticatedPage).toHaveURL(/\/onboarding\/1$/)
-    await expect(authenticatedPage.getByText(/business identity|tell us about your business/i).first()).toBeVisible()
+    // India's wizard is retired; /onboarding now redirects into the app.
+    await authenticatedPage.goto('/onboarding')
+    await expect(authenticatedPage).toHaveURL(/\/app\/dashboard/)
 
+    // The US surface keeps its own untouched onboarding route family.
     await authenticatedPage.goto('/us/onboarding/1')
     await expect(authenticatedPage).toHaveURL(/\/us\/onboarding\/1$/)
     await expect(authenticatedPage.getByLabel('India application navigation')).toHaveCount(0)

@@ -7,6 +7,7 @@ import { type Dashboard, type DashboardRange, getAuthenticatedDashboard } from '
 import { Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2, type KpiItem } from '@/components/couture/ui'
 import { SetupPrompt } from '@/components/onboarding/setup-prompt'
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
+import { fullDate, money, shortDate } from '@/lib/region'
 
 const RANGES = [
   { label: '7D', value: '7d' },
@@ -14,16 +15,7 @@ const RANGES = [
   { label: '30D', value: '30d' },
 ] as const
 
-const currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
-const dayMonth = new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
-
-function money(value: string) {
-  return currency.format(Number(value))
-}
-
-function dateLabel(value: string) {
-  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(value))
-}
+const dateLabel = shortDate
 
 export function DashboardView() {
   const [range, setRange] = useState<DashboardRange>('7d')
@@ -53,7 +45,7 @@ export function DashboardView() {
     <>
       <PageHead
         title="Dashboard"
-        sub={`Today · ${dayMonth.format(new Date())}`}
+        sub={`Today · ${fullDate(new Date())}`}
         actions={
           <Link className="btn btn-grad" href="/app/shifts">
             <Zap size={15} /> Open Register
@@ -264,7 +256,7 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
           </text>
         )
       })}
-      <title>{`Peak ${currency.format(max)}`}</title>
+      <title>{`Peak ${money(max)}`}</title>
     </svg>
   )
 }

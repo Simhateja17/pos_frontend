@@ -9,7 +9,7 @@ const plans = [{ id:'starter', name:'Starter', monthly:'₹999', annual:'₹799'
 export default function PlansPage() {
   const router = useRouter()
   const [annual, setAnnual] = useState(true)
-  const [selected, setSelected] = useState('growth')
+  const [selected, setSelected] = useState<'starter' | 'growth' | 'enterprise'>('growth')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -27,14 +27,31 @@ export default function PlansPage() {
     })().catch(() => setMessage('Your saved plan will be loaded when the connection is available.'))
   }, [])
 
-  function beginTrial() {
+  /**
+   * Records the chosen tier and goes straight to the app. Nothing is charged —
+   * no billing gateway is integrated — and no tier gates any feature yet, so
+   * this must not block the owner from reaching a working till.
+   */
+  async function beginTrial() {
+    const billingCycle = annual ? 'annual' : 'monthly'
     const saved = JSON.parse(sessionStorage.getItem(DRAFT) ?? '{}')
-    if (!saved.storeCategory) {
-      router.push('/store-type')
-      return
+    sessionStorage.setItem(DRAFT, JSON.stringify({ ...saved, trialPlan: selected, billingCycle }))
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        await apiClient.PUT('/onboarding/steps/{step}', {
+          params: { path: { step: 1 } },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: { trialPlan: selected, billingCycle },
+        })
+      }
+    } catch {
+      // The selection is already in sessionStorage; a failed save must not
+      // strand the owner on the pricing page.
     }
-    sessionStorage.setItem(DRAFT, JSON.stringify({ ...saved, trialPlan: selected, billingCycle: annual ? 'annual' : 'monthly' }))
-    router.push('/onboarding/1')
+
+    router.push('/app/dashboard')
   }
 
   return (

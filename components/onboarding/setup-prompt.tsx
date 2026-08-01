@@ -6,15 +6,18 @@ import { ListChecks } from 'lucide-react'
 import { Card, CardHead, CardPad, ListRow } from '@/components/couture/ui'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
-import { ONBOARDING_STEPS } from '@/components/onboarding/onboarding-wizard'
+import { SETUP_TASKS, setupTaskForStep, type SetupTask } from '@/components/onboarding/setup-tasks'
 
 /**
- * ONBOARD-01 — the setup steps that do not block a working till are finished
- * from here, inside the app, instead of gating the wizard. Renders nothing
- * until the server confirms there is something outstanding.
+ * ONBOARD-01 — the index of setup work still outstanding.
+ *
+ * This replaces the old "finish later" wizard links. Each row now points at the
+ * screen that actually owns the data rather than a standalone form, and a task
+ * is only listed when its screen exists. Renders nothing until the server
+ * confirms there is something outstanding.
  */
 export function SetupPrompt() {
-  const [pending, setPending] = useState<number[] | null>(null)
+  const [tasks, setTasks] = useState<SetupTask[] | null>(null)
 
   useEffect(() => {
     let active = true
@@ -25,7 +28,14 @@ export function SetupPrompt() {
         const { data } = await apiClient.GET('/onboarding', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         })
-        if (active && data?.requiredStepsComplete) setPending(data.pendingSteps)
+        if (!active || !data) return
+        // pendingSteps still includes steps whose screen does not exist yet;
+        // those are filtered out rather than shown as work the owner can't do.
+        setTasks(
+          data.pendingSteps
+            .map(setupTaskForStep)
+            .filter((task): task is SetupTask => task !== undefined),
+        )
       } catch {
         // A failed lookup means we say nothing rather than guess at setup state.
       }
@@ -35,25 +45,29 @@ export function SetupPrompt() {
     }
   }, [])
 
-  if (!pending || pending.length === 0) return null
+  if (!tasks || tasks.length === 0) return null
 
   return (
     <Card>
       <CardHead
-        title="Finish setup"
-        sub="Optional steps you skipped — the till works without them"
-        right={<span className="badge b-blue">{pending.length} left</span>}
+        title="Finish setting up"
+        sub="Your till already works — these make it more useful"
+        right={
+          <span className="badge b-blue">
+            {tasks.length} of {SETUP_TASKS.length}
+          </span>
+        }
       />
       <CardPad style={{ paddingTop: 4 }}>
-        {pending.map((step) => (
+        {tasks.map((task) => (
           <ListRow
-            key={step}
+            key={task.step}
             icon={<ListChecks size={17} strokeWidth={1.85} />}
-            title={ONBOARDING_STEPS[step - 1].tag}
-            sub={ONBOARDING_STEPS[step - 1].description}
+            title={task.title}
+            sub={task.description}
             action={
-              <Link className="btn btn-sm btn-ghost" href={`/onboarding/${step}`}>
-                Finish
+              <Link className="btn btn-sm btn-ghost" href={task.href}>
+                Set up
               </Link>
             }
           />

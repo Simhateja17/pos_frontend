@@ -15,14 +15,26 @@ type AccountFields = {
   password: string
 }
 
+/**
+ * Signup is the only place business identity is captured. Onboarding used to
+ * ask for all of this a second time on separate "Business Identity" and
+ * "GST & Legal Compliance" screens; those are gone.
+ *
+ * The GST fields are optional and only revealed once a GSTIN is entered —
+ * registration is not mandatory below the ₹40L (goods) / ₹20L (services)
+ * turnover threshold, so an unregistered retailer is never asked for them.
+ */
 type BusinessFields = {
   businessName: string
+  tradeName: string
   addressLine1: string
   addressLine2: string
   city: string
   state: string
   postalCode: string
   taxId: string
+  gstStatus: '' | 'regular' | 'composition' | 'unregistered'
+  pan: string
 }
 
 const DUPLICATE_EMAIL_ERROR = 'An account already exists with this email. Log in instead'
@@ -40,12 +52,15 @@ export default function SignupPage() {
   })
   const [business, setBusiness] = useState<BusinessFields>({
     businessName: '',
+    tradeName: '',
     addressLine1: '',
     addressLine2: '',
-    city: 'Mumbai',
-    state: 'Maharashtra',
+    city: '',
+    state: '',
     postalCode: '',
     taxId: '',
+    gstStatus: '',
+    pan: '',
   })
   const [error, setError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -77,6 +92,7 @@ export default function SignupPage() {
         body: {
           ownerName: account.ownerName,
           businessName: business.businessName,
+          tradeName: business.tradeName || undefined,
           email: account.email,
           password: account.password,
           addressLine1: business.addressLine1,
@@ -86,6 +102,11 @@ export default function SignupPage() {
           postalCode: business.postalCode,
           country: 'IN',
           taxId: business.taxId || undefined,
+          gstStatus: business.gstStatus || undefined,
+          pan: business.pan || undefined,
+          // Derived from the address rather than asked again — for a
+          // single-location retailer the place of supply is the store's state.
+          placeOfSupply: business.taxId.trim() ? business.state : undefined,
         },
       })
 
@@ -115,7 +136,7 @@ export default function SignupPage() {
       }
 
       localStorage.removeItem('couture.signup.draft')
-      router.push('/store-type')
+      router.push('/plans')
     } catch {
       setError("We couldn't create your account right now. Please try again.")
     } finally {
@@ -224,6 +245,10 @@ export default function SignupPage() {
               <input className={styles.input} placeholder="Your registered business name" required value={business.businessName} onChange={(event) => setBusiness((current) => ({ ...current, businessName: event.target.value }))} />
             </label>
             <label className={styles.field}>
+              <span className={styles.label}>Trade / brand name</span>
+              <input className={styles.input} placeholder="Only if different from the registered name" value={business.tradeName} onChange={(event) => setBusiness((current) => ({ ...current, tradeName: event.target.value }))} />
+            </label>
+            <label className={styles.field}>
               <span className={styles.label}>Business address<span className={styles.required}>*</span></span>
               <input className={styles.input} placeholder="Address line 1" required value={business.addressLine1} onChange={(event) => setBusiness((current) => ({ ...current, addressLine1: event.target.value }))} />
             </label>
@@ -248,9 +273,31 @@ export default function SignupPage() {
               </label>
               <label className={styles.field}>
                 <span className={styles.label}>GSTIN</span>
-                <input className={styles.input} placeholder="Optional" value={business.taxId} onChange={(event) => setBusiness((current) => ({ ...current, taxId: event.target.value }))} />
+                <input className={styles.input} placeholder="Leave blank if not registered" maxLength={15} value={business.taxId} onChange={(event) => setBusiness((current) => ({ ...current, taxId: event.target.value }))} />
               </label>
             </div>
+            {/*
+              Shown only once a GSTIN is entered. A business below the
+              registration threshold has no GST type, PAN-on-file or place of
+              supply to give, so it is never asked.
+            */}
+            {business.taxId.trim() !== '' && (
+              <div className={styles.actions}>
+                <label className={styles.field}>
+                  <span className={styles.label}>GST registration type</span>
+                  <select className={styles.input} value={business.gstStatus} onChange={(event) => setBusiness((current) => ({ ...current, gstStatus: event.target.value as BusinessFields['gstStatus'] }))}>
+                    <option value="">Select if known</option>
+                    <option value="regular">Regular</option>
+                    <option value="composition">Composition</option>
+                    <option value="unregistered">Unregistered</option>
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.label}>PAN</span>
+                  <input className={styles.input} placeholder="Optional" maxLength={10} value={business.pan} onChange={(event) => setBusiness((current) => ({ ...current, pan: event.target.value }))} />
+                </label>
+              </div>
+            )}
             <div className={styles.actions}>
               <button className={styles.secondary} type="button" onClick={() => setStep('account')}>← Back</button>
               <button className={styles.primary} type="submit" disabled={isSubmitting}>

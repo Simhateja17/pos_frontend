@@ -2826,8 +2826,7 @@ export interface components {
             pendingSteps: number[];
         };
         OnboardingData: {
-            1?: components["schemas"]["OnboardingBusinessIdentityStep"];
-            2?: components["schemas"]["OnboardingGstComplianceStep"];
+            1?: components["schemas"]["OnboardingPlanSelectionStep"];
             3?: components["schemas"]["OnboardingStoreSetupStep"];
             4?: components["schemas"]["OnboardingBillingInvoiceStep"];
             5?: components["schemas"]["OnboardingPaymentMethodsStep"];
@@ -2835,38 +2834,11 @@ export interface components {
             7?: components["schemas"]["OnboardingHardwareDevicesStep"];
             8?: components["schemas"]["OnboardingTeamAccessStep"];
         };
-        OnboardingBusinessIdentityStep: {
-            /** @enum {string} */
-            storeCategory: "fashion" | "beauty" | "electronics" | "footwear" | "jewellery" | "books" | "pharmacy" | "grocery" | "multi";
+        OnboardingPlanSelectionStep: {
             /** @enum {string} */
             trialPlan: "starter" | "growth" | "enterprise";
             /** @enum {string} */
             billingCycle: "monthly" | "annual";
-            legalName: string;
-            tradeName?: string;
-            /** @enum {string} */
-            businessStructure?: "pvtltd" | "llp" | "partnership" | "proprietorship" | "public" | "huf" | "trust";
-            yearEstablished?: number;
-            registrationNumber?: string;
-            /** @enum {string} */
-            natureOfBusiness?: "retailer" | "wholesaler" | "both" | "mfr_retail" | "service";
-            /** @enum {string} */
-            storeCount?: "1" | "2" | "3" | "4" | "5" | "6-10" | "11-20" | "20+";
-        };
-        OnboardingGstComplianceStep: {
-            /** @enum {string} */
-            gstStatus: "regular" | "composition" | "unregistered";
-            gstin?: string;
-            pan?: string;
-            placeOfSupply: string;
-            fssai?: string;
-            drugLicense?: string;
-            msmeRegistration?: string;
-            shopEstablishmentLicense?: string;
-            /** @default false */
-            eInvoiceEnabled: boolean;
-            /** @default false */
-            eWayBillEnabled: boolean;
         };
         OnboardingStoreSetupStep: {
             storeName: string;
@@ -2982,15 +2954,14 @@ export interface components {
             autoClockOutHours: "8" | "10" | "12";
         };
         OnboardingStepNumber: number;
-        OnboardingStepRequest: components["schemas"]["OnboardingBusinessIdentityStep"] | components["schemas"]["OnboardingGstComplianceStep"] | components["schemas"]["OnboardingStoreSetupStep"] | components["schemas"]["OnboardingBillingInvoiceStep"] | components["schemas"]["OnboardingPaymentMethodsStep"] | components["schemas"]["OnboardingProductCatalogStep"] | components["schemas"]["OnboardingHardwareDevicesStep"] | components["schemas"]["OnboardingTeamAccessStep"];
+        OnboardingStepRequest: components["schemas"]["OnboardingPlanSelectionStep"] | components["schemas"]["OnboardingStoreSetupStep"] | components["schemas"]["OnboardingBillingInvoiceStep"] | components["schemas"]["OnboardingPaymentMethodsStep"] | components["schemas"]["OnboardingProductCatalogStep"] | components["schemas"]["OnboardingHardwareDevicesStep"] | components["schemas"]["OnboardingTeamAccessStep"];
         OnboardingCompletionResponse: components["schemas"]["OnboardingState"] & {
             summary: {
                 businessName: string;
                 storeName: string | null;
-                storeCategory: string;
                 trialPlan: string;
                 billingCounters: string | null;
-                gstStatus: string;
+                gstStatus: string | null;
             };
         };
         CompleteOnboardingRequest: Record<string, never>;
@@ -3016,14 +2987,19 @@ export interface components {
             password: string;
             ownerName: string;
             businessName: string;
+            tradeName?: string;
             addressLine1: string;
             addressLine2?: string;
             city: string;
             state: string;
             postalCode: string;
-            /** @default US */
+            /** @default IN */
             country: string;
             taxId?: string;
+            /** @enum {string} */
+            gstStatus?: "regular" | "composition" | "unregistered";
+            pan?: string;
+            placeOfSupply?: string;
         };
         LoginRequest: {
             /** Format: email */
