@@ -51,7 +51,9 @@ export default function PlansPage() {
       // strand the owner on the pricing page.
     }
 
-    router.push('/app/dashboard')
+    // Business type comes after the plan so the very first screens stay about
+    // the account, and this one is skippable.
+    router.push('/store-type')
   }
 
   return (

@@ -106,7 +106,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
       </p>
 
       {/* Off-screen, natural-scale, 80mm-print-ready container — same sr-only
-          pattern as Phase 2's label-sheet container (frontend/app/inventory/labels/page.tsx).
+          pattern as Phase 2's label-sheet container (frontend/app/app/inventory/labels/page.tsx).
           Kept in the DOM at all times so contentRef always has content to print. */}
       <div className="sr-only">
         <div ref={contentRef} className="receipt-print">

@@ -65,10 +65,10 @@ export function InventoryView() {
         sub="Stock levels, variants and reorder exceptions"
         actions={
           <>
-            <Link className="btn" href="/inventory/labels">
+            <Link className="btn" href="/app/inventory/labels">
               <Barcode size={15} /> Print labels
             </Link>
-            <Link className="btn btn-pri" href="/inventory/catalog">
+            <Link className="btn btn-pri" href="/app/inventory/catalog">
               <Plus size={15} /> Add product
             </Link>
           </>
@@ -84,7 +84,7 @@ export function InventoryView() {
           title="Low-stock exceptions"
           sub="Server-calculated variants at or below their reorder threshold"
           right={
-            <Link className="btn btn-sm" href="/inventory/catalog">
+            <Link className="btn btn-sm" href="/app/inventory/catalog">
               Open catalog
             </Link>
           }
@@ -98,7 +98,7 @@ export function InventoryView() {
             title="All stock levels are healthy"
             body="No variant is at or below its reorder threshold right now."
             action={
-              <Link className="btn btn-pri" href="/inventory/catalog">
+              <Link className="btn btn-pri" href="/app/inventory/catalog">
                 Open catalog
               </Link>
             }

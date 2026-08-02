@@ -24,6 +24,8 @@ type Variant = {
   id: string
   productId: string
   sku: string
+  barcode: string | null
+  unitOfMeasure: string
   size: string | null
   color: string | null
   material: string | null
@@ -241,7 +243,10 @@ function CheckoutPageInner() {
 
     // CHECK-01: an exact-sku match adds directly to the cart without requiring
     // the cashier to click a result row.
-    const exactSkuMatch = hits.filter((h) => h.variant.sku === query.trim())
+    // An exact SKU *or* manufacturer barcode adds straight to the cart — a
+    // supermarket cashier scans the maker's EAN, not our own printed SKU.
+    const trimmed = query.trim()
+    const exactSkuMatch = hits.filter((h) => h.variant.sku === trimmed || h.variant.barcode === trimmed)
     if (exactSkuMatch.length === 1) {
       addToCart(exactSkuMatch[0])
       setScanQuery('')
@@ -267,6 +272,7 @@ function CheckoutPageInner() {
           name: hit.productName,
           attributes: variantAttributes(hit.variant),
           unitPrice: hit.variant.price,
+          unitOfMeasure: hit.variant.unitOfMeasure,
           quantity: 1,
           discountAmount: '0.00',
           isTaxable: true,

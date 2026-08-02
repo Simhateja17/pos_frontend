@@ -3,6 +3,7 @@ import { apiClient } from './client'
 import { supabase } from '@/lib/supabase/client'
 
 export type AppContext = components['schemas']['AppContext']
+export type NotificationList = components['schemas']['NotificationList']
 export type Dashboard = components['schemas']['Dashboard']
 export type DashboardRange = components['schemas']['DashboardRange']
 export type SaleList = components['schemas']['SaleList']
@@ -63,6 +64,40 @@ async function authorizationHeader() {
   }
 
   return { Authorization: `Bearer ${session.access_token}` }
+}
+
+export async function getAuthenticatedNotifications(): Promise<NotificationList> {
+  try {
+    const { data, error, response } = await apiClient.GET('/notifications', {
+      headers: await authorizationHeader(),
+    })
+
+    if (response.status === 401) {
+      throw new AuthenticatedRequestError('unauthenticated', 'Your session has expired. Sign in again to continue.')
+    }
+
+    if (error || !data) {
+      throw new AuthenticatedRequestError('unavailable', 'Notifications are unavailable right now. Please retry.')
+    }
+
+    return data
+  } catch (error) {
+    if (error instanceof AuthenticatedRequestError) throw error
+
+    throw new AuthenticatedRequestError(
+      'network',
+      'We could not reach notifications. Check your connection and retry.',
+    )
+  }
+}
+
+/** Marks every currently-unread notification read. Fails silently — a failed mark-read must not block viewing the list. */
+export async function markAuthenticatedNotificationsRead(): Promise<void> {
+  try {
+    await apiClient.POST('/notifications/read', { headers: await authorizationHeader() })
+  } catch {
+    // best-effort only
+  }
 }
 
 export async function getAuthenticatedAppContext(): Promise<AppContext> {

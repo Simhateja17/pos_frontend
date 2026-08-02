@@ -1556,6 +1556,366 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The tenant's category list, with how many products sit in each. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Categories */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Create a category. Names are unique per tenant case-insensitively, so "Dairy" and "dairy" cannot both exist. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCategoryRequest"];
+                };
+            };
+            responses: {
+                /** @description Category created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description A category with that name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/categories/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Delete a category. Products in it are NOT deleted — they become uncategorised. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    categoryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Category deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            deleted: boolean;
+                            productsUncategorised: number;
+                        };
+                    };
+                };
+                /** @description Category not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** @description Rename or reorder a category. A rename applies to every product in it at once. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    categoryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateCategoryRequest"];
+                };
+            };
+            responses: {
+                /** @description Category updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"];
+                    };
+                };
+                /** @description Category not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description A category with that name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/categories/seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Seed a starter category list for a business type. Additive and idempotent — existing names are skipped, never replaced. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SeedCategoriesRequest"];
+                };
+            };
+            responses: {
+                /** @description Categories seeded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            created: number;
+                            categories: components["schemas"]["Category"][];
+                        };
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Notifications for this tenant, newest first, with the unread count. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notifications */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotificationList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mark every currently-unread notification read. No per-item read state in V1. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Marked read */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Store settings — business identity, GST fields, tax rate and discount threshold. Readable by any staff role. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Store settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreSettings"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Update store settings. Owner-only. Legal name/GSTIN/PAN are not amended with the government by this call — see UI copy. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateStoreSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description Store settings updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreSettings"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Only the owner can change store settings */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
     "/suppliers": {
         parameters: {
             query?: never;
@@ -3030,6 +3390,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            /** Format: uuid */
+            categoryId: string | null;
             category: string | null;
             createdAt: string;
             variants: components["schemas"]["Variant"][];
@@ -3040,6 +3402,8 @@ export interface components {
             /** Format: uuid */
             productId: string;
             sku: string;
+            barcode: string | null;
+            unitOfMeasure: components["schemas"]["UnitOfMeasure"];
             size: string | null;
             color: string | null;
             material: string | null;
@@ -3049,11 +3413,17 @@ export interface components {
             currentStock: number;
             createdAt: string;
         };
+        /** @enum {string} */
+        UnitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "box" | "pack" | "set" | "pair";
         CreateProductRequest: {
             name: string;
-            category?: string;
+            /** Format: uuid */
+            categoryId?: string;
+            categoryName?: string;
             variants: {
                 sku?: string;
+                barcode?: string;
+                unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
                 size?: string;
                 color?: string;
                 material?: string;
@@ -3065,6 +3435,8 @@ export interface components {
             size?: string;
             color?: string;
             material?: string;
+            barcode?: string | null;
+            unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
             price?: number;
             reorderThreshold?: number;
         };
@@ -3105,6 +3477,7 @@ export interface components {
             material: string | null;
             quantity: number;
             reorderThreshold: number;
+            unitOfMeasure: string;
         };
         SetPinRequest: {
             pin: string;
@@ -3289,6 +3662,76 @@ export interface components {
         };
         CloseShiftRequest: {
             countedCash: string;
+        };
+        Category: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            sortOrder: number;
+            productCount: number;
+            createdAt: string;
+        };
+        CreateCategoryRequest: {
+            name: string;
+            sortOrder?: number;
+        };
+        UpdateCategoryRequest: {
+            name?: string;
+            sortOrder?: number;
+        };
+        SeedCategoriesRequest: {
+            businessType: components["schemas"]["BusinessType"];
+        };
+        /** @enum {string} */
+        BusinessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other";
+        NotificationList: {
+            notifications: components["schemas"]["Notification"][];
+            unreadCount: number;
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "business_type_unset" | "po_received" | "staff_activated" | "stock_low";
+            title: string;
+            body: string;
+            link: string | null;
+            read: boolean;
+            createdAt: string;
+        };
+        StoreSettings: {
+            businessName: string;
+            tradeName: string | null;
+            addressLine1: string;
+            addressLine2: string | null;
+            city: string;
+            state: string;
+            postalCode: string;
+            /** @enum {string|null} */
+            gstStatus: "regular" | "composition" | "unregistered" | null;
+            gstin: string | null;
+            pan: string | null;
+            placeOfSupply: string | null;
+            /** @enum {string|null} */
+            businessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
+            combinedTaxRatePercent: string;
+            discountThresholdPercent: string;
+        };
+        UpdateStoreSettingsRequest: {
+            businessName?: string;
+            tradeName?: string | null;
+            addressLine1?: string;
+            addressLine2?: string | null;
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            /** @enum {string|null} */
+            gstStatus?: "regular" | "composition" | "unregistered" | null;
+            gstin?: string | null;
+            pan?: string | null;
+            placeOfSupply?: string | null;
+            combinedTaxRatePercent?: number;
+            discountThresholdPercent?: number;
         };
         SupplierList: components["schemas"]["Supplier"][];
         Supplier: {

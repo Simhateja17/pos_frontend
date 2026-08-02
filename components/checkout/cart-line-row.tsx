@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { allowsFractionalQuantity, unitSuffix } from '@/lib/units'
 
 export interface CartLine {
   variantId: string
@@ -8,6 +9,8 @@ export interface CartLine {
   name: string
   attributes: string // "Size / Color / Material" joined, "—" if none
   unitPrice: string
+  /** Drives whether this line is weighed (typed) or counted (stepped). */
+  unitOfMeasure: string
   quantity: number
   discountAmount: string // "0.00" if none, always a concrete string per D-07/Open Question #2's resolution
   isTaxable: boolean
@@ -59,32 +62,57 @@ export function CartLineRow({
       </td>
 
       <td>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 8, padding: '2px 6px' }}>
-          <button
-            type="button"
-            className="qstep"
-            aria-label={`Decrease quantity for ${line.name}`}
-            onClick={() => onQuantityChange(line.variantId, Math.max(1, line.quantity - 1))}
-            disabled={disabled}
-          >
-            −
-          </button>
-          <b className="num" aria-live="polite">
-            {line.quantity}
-          </b>
-          <button
-            type="button"
-            className="qstep"
-            aria-label={`Increase quantity for ${line.name}`}
-            onClick={() => onQuantityChange(line.variantId, line.quantity + 1)}
-            disabled={disabled}
-          >
-            +
-          </button>
-        </div>
+        {/*
+          A weighed item (kg/litre/etc.) is typed, not stepped: a cashier
+          entering 2.5 kg of loose rice cannot get there with +/- buttons.
+          Counted items keep the stepper, which is faster for the common case.
+        */}
+        {allowsFractionalQuantity(line.unitOfMeasure) ? (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <input
+              type="number"
+              min={0}
+              step={0.001}
+              value={line.quantity}
+              disabled={disabled}
+              aria-label={`Quantity for ${line.name} in ${unitSuffix(line.unitOfMeasure)}`}
+              onChange={(e) => onQuantityChange(line.variantId, Number(e.target.value))}
+              className="fld-input num"
+              style={{ maxWidth: 84, textAlign: 'right' }}
+            />
+            <span className="t-sub">{unitSuffix(line.unitOfMeasure)}</span>
+          </div>
+        ) : (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 8, padding: '2px 6px' }}>
+            <button
+              type="button"
+              className="qstep"
+              aria-label={`Decrease quantity for ${line.name}`}
+              onClick={() => onQuantityChange(line.variantId, Math.max(1, line.quantity - 1))}
+              disabled={disabled}
+            >
+              −
+            </button>
+            <b className="num" aria-live="polite">
+              {line.quantity}
+            </b>
+            <button
+              type="button"
+              className="qstep"
+              aria-label={`Increase quantity for ${line.name}`}
+              onClick={() => onQuantityChange(line.variantId, line.quantity + 1)}
+              disabled={disabled}
+            >
+              +
+            </button>
+          </div>
+        )}
       </td>
 
-      <td className="num">{money.format(Number(line.unitPrice))}</td>
+      <td className="num">
+        {money.format(Number(line.unitPrice))}
+        {unitSuffix(line.unitOfMeasure) ? <span className="t-sub"> / {unitSuffix(line.unitOfMeasure)}</span> : null}
+      </td>
 
       <td>
         {showDiscountInput ? (
