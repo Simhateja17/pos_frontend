@@ -1,24 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { PageHead } from '@/components/couture/ui'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge, type BadgeTone, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
+import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
 
 type Role = 'owner' | 'manager' | 'cashier'
 type Member = { id: string; name: string; role: Role; isActive: boolean; createdAt: string }
 const LOAD_ERROR = "We couldn't load team members. Check your connection and try again."
-const labelStyle = { fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
 const roleLabel = (role: Role) => `${role[0].toUpperCase()}${role.slice(1)}`
+const ROLE_TONE: Record<Role, BadgeTone> = { owner: 'gold', manager: 'blue', cashier: 'grey' }
 async function authHeader() { const { data } = await supabase.auth.getSession(); return data.session?.access_token ? { Authorization: `Bearer ${data.session.access_token}` } : undefined }
 
 export function MembersView() {
@@ -71,9 +63,198 @@ export function MembersView() {
     setRemoveTarget(null); void load()
   }
 
-  return <main><PageHead title="Staff" sub="Manage real staff access. Server role checks determine which changes are allowed." actions={<button className="btn btn-pri" onClick={() => setInviteOpen(true)}>Invite team member</button>} />{loadError && <Alert variant="destructive" className="mb-5"><AlertDescription>{loadError}</AlertDescription><Button type="button" variant="outline" className="mt-3" onClick={() => void load()}>Retry loading team</Button></Alert>}{loading && <div className="h-56 animate-pulse rounded-2xl bg-slate-200" />}{!loading && !loadError && members.length === 0 && <section className="rounded-2xl border bg-white p-10 text-center shadow-sm"><h2 className="font-heading text-xl font-bold">You are the only team member</h2><p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Invite a manager or cashier when they need access to this register.</p><Button className="mt-5 bg-[#0058ba] hover:bg-[#064b9f]" onClick={() => setInviteOpen(true)}>Invite team member</Button></section>}{!loading && !loadError && members.length > 0 && <section className="overflow-hidden rounded-2xl border bg-white shadow-sm"><div className="border-b px-5 py-4"><h2 className="font-heading text-xl font-bold">Members</h2><p className="mt-1 text-sm text-slate-500">Active permissions and access actions are applied by the server.</p></div><Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{members.map((member) => <TableRow key={member.id}><TableCell><strong>{member.name}</strong></TableCell><TableCell><Badge variant={member.role === 'cashier' ? 'outline' : 'default'} className={member.role === 'cashier' ? '' : 'bg-[#0058ba]'}>{roleLabel(member.role)}</Badge></TableCell><TableCell><span className={member.isActive ? 'text-emerald-700' : 'text-slate-500'}>{member.isActive ? 'Active' : 'Inactive'}</span></TableCell><TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm">Manage</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => { setRoleTarget(member); setPendingRole(member.role); setRoleError(null) }}>Change role</DropdownMenuItem><DropdownMenuItem className="text-red-700" onSelect={() => { setRemoveTarget(member); setRemoveError(null) }}>Remove access</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell></TableRow>)}</TableBody></Table></section>}
-    <Dialog open={inviteOpen} onOpenChange={setInviteOpen}><DialogContent><DialogHeader><DialogTitle>Invite team member</DialogTitle></DialogHeader><form onSubmit={invite} className="space-y-4">{inviteError && <Alert variant="destructive"><AlertDescription>{inviteError}</AlertDescription></Alert>}<div><Label htmlFor="invite-name" style={labelStyle}>Name</Label><Input id="invite-name" required value={inviteName} onChange={(event) => setInviteName(event.target.value)} /></div><div><Label htmlFor="invite-email" style={labelStyle}>Email</Label><Input id="invite-email" required type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} /></div><div><Label style={labelStyle}>Role</Label><Select value={inviteRole} onValueChange={(value) => setInviteRole(value as 'manager' | 'cashier')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manager">Manager</SelectItem><SelectItem value="cashier">Cashier</SelectItem></SelectContent></Select></div><DialogFooter><Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button><Button type="submit" className="bg-[#0058ba] hover:bg-[#064b9f]" disabled={inviting}>{inviting ? 'Sending invitation…' : 'Invite team member'}</Button></DialogFooter></form></DialogContent></Dialog>
-    <Dialog open={roleTarget !== null} onOpenChange={(open) => !open && setRoleTarget(null)}><DialogContent><DialogHeader><DialogTitle>Change role</DialogTitle></DialogHeader>{roleTarget && <div className="space-y-4">{roleError && <Alert variant="destructive"><AlertDescription>{roleError}</AlertDescription></Alert>}<div><Label style={labelStyle}>New role</Label><Select value={pendingRole} onValueChange={(value) => setPendingRole(value as Role)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">Owner</SelectItem><SelectItem value="manager">Manager</SelectItem><SelectItem value="cashier">Cashier</SelectItem></SelectContent></Select></div><p className="text-sm text-slate-600">Change {roleTarget.name} from {roleLabel(roleTarget.role)} to {roleLabel(pendingRole)}? Their access will change immediately after the server confirms it.</p><DialogFooter><Button variant="outline" onClick={() => setRoleTarget(null)}>Keep current role</Button><Button disabled={changingRole} className="bg-[#0058ba] hover:bg-[#064b9f]" onClick={() => void changeRole()}>{changingRole ? 'Changing role…' : 'Change role'}</Button></DialogFooter></div>}</DialogContent></Dialog>
-    <Dialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}><DialogContent><DialogHeader><DialogTitle>Remove access</DialogTitle></DialogHeader>{removeTarget && <div className="space-y-4">{removeError && <Alert variant="destructive"><AlertDescription>{removeError}</AlertDescription></Alert>}<p className="text-sm text-slate-600">Remove {removeTarget.name} from this store? They will lose access immediately. Reinstating access requires a new invitation.</p><DialogFooter><Button variant="outline" onClick={() => setRemoveTarget(null)}>Keep member</Button><Button variant="destructive" disabled={removing} onClick={() => void remove()}>{removing ? 'Removing access…' : 'Remove access'}</Button></DialogFooter></div>}</DialogContent></Dialog>
-  </main>
+  return (
+    <>
+      <PageHead
+        title="Staff"
+        sub="Manage real staff access. Server role checks determine which changes are allowed."
+        actions={
+          <button className="btn btn-pri" type="button" onClick={() => setInviteOpen(true)}>
+            Invite team member
+          </button>
+        }
+      />
+
+      {loadError && (
+        <Card>
+          <CardPad>
+            <ErrorState message={loadError} onRetry={() => void load()} />
+          </CardPad>
+        </Card>
+      )}
+
+      {loading && !loadError && (
+        <Card>
+          <LoadingState label="Loading team members" rows={4} />
+        </Card>
+      )}
+
+      {!loading && !loadError && members.length === 0 && (
+        <Card>
+          <CardPad>
+            <EmptyState
+              title="You are the only team member"
+              body="Invite a manager or cashier when they need access to this register."
+              action={
+                <button className="btn btn-pri" type="button" onClick={() => setInviteOpen(true)}>
+                  Invite team member
+                </button>
+              }
+            />
+          </CardPad>
+        </Card>
+      )}
+
+      {!loading && !loadError && members.length > 0 && (
+        <Card>
+          <CardHead title="Members" sub="Active permissions and access actions are applied by the server." />
+          <CardPad style={{ paddingTop: 4 }}>
+            <DataTable cols={['Name', 'Role', 'Status', { label: 'Actions', align: 'right' }]}>
+              {members.map((member) => (
+                <tr key={member.id}>
+                  <td>
+                    <strong>{member.name}</strong>
+                  </td>
+                  <td>
+                    <Badge tone={ROLE_TONE[member.role]}>{roleLabel(member.role)}</Badge>
+                  </td>
+                  <td>
+                    <Badge tone={member.isActive ? 'green' : 'grey'} dot={member.isActive ? 'g' : undefined}>
+                      {member.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                      <button
+                        className="btn btn-sm"
+                        type="button"
+                        onClick={() => { setRoleTarget(member); setPendingRole(member.role); setRoleError(null) }}
+                      >
+                        Change role
+                      </button>
+                      <button
+                        className="btn btn-sm btn-ghost"
+                        type="button"
+                        onClick={() => { setRemoveTarget(member); setRemoveError(null) }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </DataTable>
+          </CardPad>
+        </Card>
+      )}
+
+      {inviteOpen && (
+        <Modal
+          title="Invite team member"
+          onClose={() => setInviteOpen(false)}
+          footer={
+            <>
+              <button className="btn" type="button" onClick={() => setInviteOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-pri" type="submit" form="invite-form" disabled={inviting}>
+                {inviting ? 'Sending invitation…' : 'Invite team member'}
+              </button>
+            </>
+          }
+        >
+          <form id="invite-form" onSubmit={invite}>
+            {inviteError && (
+              <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>
+                {inviteError}
+              </div>
+            )}
+            <Fld id="invite-name" label="Name">
+              <input id="invite-name" required value={inviteName} onChange={(event) => setInviteName(event.target.value)} />
+            </Fld>
+            <Fld id="invite-email" label="Email">
+              <input
+                id="invite-email"
+                required
+                type="email"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+              />
+            </Fld>
+            <Fld id="invite-role" label="Role">
+              <select
+                id="invite-role"
+                value={inviteRole}
+                onChange={(event) => setInviteRole(event.target.value as 'manager' | 'cashier')}
+              >
+                <option value="manager">Manager</option>
+                <option value="cashier">Cashier</option>
+              </select>
+            </Fld>
+          </form>
+        </Modal>
+      )}
+
+      {roleTarget && (
+        <Modal
+          title="Change role"
+          onClose={() => setRoleTarget(null)}
+          footer={
+            <>
+              <button className="btn" type="button" onClick={() => setRoleTarget(null)}>
+                Keep current role
+              </button>
+              <button className="btn btn-pri" type="button" disabled={changingRole} onClick={() => void changeRole()}>
+                {changingRole ? 'Changing role…' : 'Change role'}
+              </button>
+            </>
+          }
+        >
+          {roleError && (
+            <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>
+              {roleError}
+            </div>
+          )}
+          <Fld id="pending-role" label="New role">
+            <select id="pending-role" value={pendingRole} onChange={(event) => setPendingRole(event.target.value as Role)}>
+              <option value="owner">Owner</option>
+              <option value="manager">Manager</option>
+              <option value="cashier">Cashier</option>
+            </select>
+          </Fld>
+          <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+            Change {roleTarget.name} from {roleLabel(roleTarget.role)} to {roleLabel(pendingRole)}? Their access will
+            change immediately after the server confirms it.
+          </p>
+        </Modal>
+      )}
+
+      {removeTarget && (
+        <Modal
+          title="Remove access"
+          onClose={() => setRemoveTarget(null)}
+          footer={
+            <>
+              <button className="btn" type="button" onClick={() => setRemoveTarget(null)}>
+                Keep member
+              </button>
+              <button className="btn btn-pri" type="button" disabled={removing} onClick={() => void remove()}>
+                {removing ? 'Removing access…' : 'Remove access'}
+              </button>
+            </>
+          }
+        >
+          {removeError && (
+            <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>
+              {removeError}
+            </div>
+          )}
+          <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+            Remove {removeTarget.name} from this store? They will lose access immediately. Reinstating access requires a
+            new invitation.
+          </p>
+        </Modal>
+      )}
+    </>
+  )
 }

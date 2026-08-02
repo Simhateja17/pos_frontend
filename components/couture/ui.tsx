@@ -41,9 +41,16 @@ export type KpiItem = {
   flag?: FlagKind
 }
 
+/**
+ * The column count is published as the `--kpi-cols` custom property rather than
+ * as an inline `grid-template-columns`. An inline declaration is unbeatable by
+ * a stylesheet rule, so the desktop column count would survive every mobile
+ * breakpoint; a custom property lets the media queries in globals.css repack
+ * the row to whatever fits the viewport.
+ */
 export function KpiRow({ items, cols }: { items: KpiItem[]; cols?: number }) {
   return (
-    <div className="kpi-row" style={{ gridTemplateColumns: `repeat(${cols ?? items.length},1fr)` }}>
+    <div className="kpi-row" style={{ '--kpi-cols': cols ?? items.length } as CSSProperties}>
       {items.map((k) => (
         <div key={k.label} className={`kpi ${k.lead ? 'lead' : ''}`}>
           <div className="kl">

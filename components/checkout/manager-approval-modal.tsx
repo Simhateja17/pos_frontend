@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Fld, Modal } from '@/components/couture/ui'
 
 type ManagerStaff = { id: string; name: string; role: 'owner' | 'manager' | 'cashier'; isActive: boolean }
 
@@ -63,49 +62,52 @@ export function ManagerApprovalModal({
   if (!open) return null
 
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="rounded-md bg-white p-6" style={{ maxWidth: 360, backgroundColor: '#FFFFFF' }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: 400 }}>
-          This discount needs manager approval. Ask a manager or owner to enter their PIN to continue.
-        </p>
-        <select
-          value={selectedStaffId ?? ''}
-          onChange={(e) => setSelectedStaffId(e.target.value || null)}
-          className="mt-4 w-full rounded-md border p-2"
-          style={{ minHeight: 44 }}
-        >
+    <Modal
+      title="Manager approval required"
+      onClose={onCancel}
+      footer={
+        <>
+          <button className="btn" type="button" onClick={onCancel}>
+            Cancel
+          </button>
+          <button
+            className="btn btn-pri"
+            type="button"
+            onClick={() => void submit()}
+            disabled={!selectedStaffId || pin.length !== 4 || isSubmitting}
+          >
+            {isSubmitting ? 'Approving…' : 'Approve'}
+          </button>
+        </>
+      }
+    >
+      <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 14 }}>
+        This discount needs manager approval. Ask a manager or owner to enter their PIN to continue.
+      </p>
+      <Fld id="approval-staff" label="Manager or owner">
+        <select id="approval-staff" value={selectedStaffId ?? ''} onChange={(e) => setSelectedStaffId(e.target.value || null)}>
           <option value="">Select manager or owner…</option>
           {staff.map((m) => (
             <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </select>
-        <Input
+      </Fld>
+      <Fld id="approval-pin" label="4-digit PIN">
+        <input
+          id="approval-pin"
           type="password"
           inputMode="numeric"
           maxLength={4}
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
           placeholder="4-digit PIN"
-          className="mt-2"
-          style={{ minHeight: 44 }}
         />
-        {error && (
-          <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>{error}</p>
-        )}
-        <div className="mt-4 flex gap-2">
-          <Button
-            type="button"
-            onClick={submit}
-            disabled={!selectedStaffId || pin.length !== 4 || isSubmitting}
-            style={{ backgroundColor: '#0058BA', color: '#FFFFFF', minHeight: 44 }}
-          >
-            Approve
-          </Button>
-          <Button type="button" variant="outline" onClick={onCancel} style={{ minHeight: 44 }}>
-            Cancel
-          </Button>
+      </Fld>
+      {error && (
+        <div role="alert" style={{ fontSize: 13, color: 'var(--danger)' }}>
+          {error}
         </div>
-      </div>
-    </div>
+      )}
+    </Modal>
   )
 }

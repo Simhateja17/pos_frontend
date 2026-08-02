@@ -108,12 +108,12 @@ export default function OfflineSyncPage() {
       <KpiRow items={metrics} cols={4} />
 
       {note && (
-        <Card style={{ marginBottom: 16 }}>
+        <Card>
           <CardPad style={{ fontSize: 13, color: 'var(--muted)' }}>{note}</CardPad>
         </Card>
       )}
 
-      <Card style={{ marginBottom: 18 }}>
+      <Card>
         <CardHead title="Queued sales" sub="Recorded on this device, not yet confirmed by the server" />
         {pending.length === 0 ? (
           <EmptyState title="Nothing queued" body="Sales taken while offline appear here until the server confirms them." />
@@ -138,7 +138,7 @@ export default function OfflineSyncPage() {
       </Card>
 
       {dead.length > 0 && (
-        <Card style={{ marginBottom: 18, borderColor: '#F6D4D4' }}>
+        <Card style={{ borderColor: '#F6D4D4' }}>
           <CardHead
             title="Needs a decision"
             sub="The server rejected these. They are kept, never discarded automatically."

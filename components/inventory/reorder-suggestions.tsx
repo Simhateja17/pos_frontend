@@ -184,7 +184,7 @@ export function ReorderSuggestions() {
   const skipped = data?.skipped ?? []
 
   return (
-    <Card style={{ marginBottom: 18 }}>
+    <Card>
       <CardHead
         title="Reorder suggestions"
         sub={

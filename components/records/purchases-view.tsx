@@ -254,7 +254,7 @@ export function PurchasesView() {
       />
 
       {receiptNotice && (
-        <Card style={{ marginBottom: 18 }}>
+        <Card>
           <div style={{ padding: '13px 16px', fontSize: 13, color: 'var(--ink-2)' }} role="status">
             {receiptNotice}
           </div>
