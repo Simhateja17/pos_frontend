@@ -14,7 +14,6 @@ const MODULE_LABELS: Record<string, { title: string; sub: string }> = {
   'offline-sync': { title: 'Offline & Sync', sub: 'Resilience and queued writes' },
   hardware: { title: 'Hardware & Devices', sub: 'Terminals, printers and scanners' },
   'customer-display': { title: 'Customer Display', sub: 'Second-screen checkout view' },
-  notifications: { title: 'Notifications', sub: 'Alerts and delivery preferences' },
 }
 
 function titleFromSlug(slug: string) {

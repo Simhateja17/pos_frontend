@@ -106,7 +106,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb, badge: 'new' },
       { label: 'Customer Display', href: '/app/customer-display', icon: Monitor, badge: 'new' },
       { label: 'Email', href: '/app/email', icon: Mail },
-      { label: 'Notifications', href: '/app/notifications', icon: Bell, badge: 'new' },
+      { label: 'Notifications', href: '/app/notifications', icon: Bell },
       { label: 'Settings', href: '/app/settings', icon: Settings },
     ],
   },

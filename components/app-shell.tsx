@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 import { APP_NAVIGATION } from '@/components/app-navigation'
 import {
   AuthenticatedRequestError,
@@ -199,9 +200,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             </div>
 
-            <Link className="tb-icon" href="/app/notifications" aria-label="Notifications">
-              <Bell size={18} strokeWidth={1.85} />
-            </Link>
+            <NotificationBell />
 
             <div className={`tb-user ${styles.user}`} aria-live="polite">
               <div className="tb-ava">{initials(context?.staff.name)}</div>
