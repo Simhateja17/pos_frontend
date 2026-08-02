@@ -12,6 +12,9 @@ export type PaymentRead = components['schemas']['PaymentRead']
 export type Supplier = components['schemas']['Supplier']
 export type CreateSupplierRequest = components['schemas']['CreateSupplierRequest']
 export type UpdateSupplierRequest = components['schemas']['UpdateSupplierRequest']
+export type SupplierProduct = components['schemas']['SupplierProduct']
+export type CreateSupplierProductRequest = components['schemas']['CreateSupplierProductRequest']
+export type UpdateSupplierProductRequest = components['schemas']['UpdateSupplierProductRequest']
 export type ReorderSuggestion = components['schemas']['ReorderSuggestion']
 export type ReorderSuggestionList = components['schemas']['ReorderSuggestionList']
 export type ReorderSkipped = components['schemas']['ReorderSkipped']
@@ -63,7 +66,15 @@ async function authorizationHeader() {
     throw new AuthenticatedRequestError('unauthenticated', 'Your session has expired. Sign in again to continue.')
   }
 
-  return { Authorization: `Bearer ${session.access_token}` }
+  const headers: Record<string, string> = { Authorization: `Bearer ${session.access_token}` }
+
+  // On a shared till the PIN-switched cashier is the acting identity; the
+  // shell's /context call must read as them, not the logged-in device owner.
+  const operatorToken =
+    typeof window !== 'undefined' ? window.sessionStorage.getItem('operatorToken') : null
+  if (operatorToken) headers['X-Operator-Token'] = operatorToken
+
+  return headers
 }
 
 export async function getAuthenticatedNotifications(): Promise<NotificationList> {
@@ -220,6 +231,57 @@ export function updateAuthenticatedSupplier(supplierId: string, body: UpdateSupp
       }),
     'That supplier could not be updated. Please retry.',
   )
+}
+
+export function getAuthenticatedSupplierProducts(variantId: string): Promise<SupplierProduct[]> {
+  return authenticatedRead(
+    async () =>
+      apiClient.GET('/variants/{variantId}/supplier-products', {
+        params: { path: { variantId } },
+        headers: await authorizationHeader(),
+      }),
+    'Suppliers for this product are unavailable right now. Please retry.',
+  )
+}
+
+export function createAuthenticatedSupplierProduct(
+  variantId: string,
+  body: CreateSupplierProductRequest,
+): Promise<SupplierProduct> {
+  return authenticatedRead(
+    async () =>
+      apiClient.POST('/variants/{variantId}/supplier-products', {
+        params: { path: { variantId } },
+        body,
+        headers: await authorizationHeader(),
+      }),
+    'That supplier could not be linked to this product. Please retry.',
+  )
+}
+
+export function updateAuthenticatedSupplierProduct(
+  variantId: string,
+  supplierProductId: string,
+  body: UpdateSupplierProductRequest,
+): Promise<SupplierProduct> {
+  return authenticatedRead(
+    async () =>
+      apiClient.PATCH('/variants/{variantId}/supplier-products/{supplierProductId}', {
+        params: { path: { variantId, supplierProductId } },
+        body,
+        headers: await authorizationHeader(),
+      }),
+    'That supplier link could not be updated. Please retry.',
+  )
+}
+
+export async function deleteAuthenticatedSupplierProduct(variantId: string, supplierProductId: string): Promise<void> {
+  const headers = await authorizationHeader()
+  const { error } = await apiClient.DELETE('/variants/{variantId}/supplier-products/{supplierProductId}', {
+    params: { path: { variantId, supplierProductId } },
+    headers,
+  })
+  if (error) throw new Error('That supplier link could not be removed. Please retry.')
 }
 
 export function getAuthenticatedReorderSuggestions(): Promise<ReorderSuggestionList> {

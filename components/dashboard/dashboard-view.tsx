@@ -1,12 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Boxes, PackageOpen, RotateCcw, Zap } from 'lucide-react'
-import { type Dashboard, type DashboardRange, getAuthenticatedDashboard } from '@/lib/api/authenticated-client'
-import { Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2, type KpiItem } from '@/components/couture/ui'
+import { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { Boxes, PackageOpen, RotateCcw, Sparkle, Zap } from 'lucide-react'
+import {
+  type Dashboard,
+  type DashboardRange,
+  type ReorderSuggestionList,
+  getAuthenticatedDashboard,
+  getAuthenticatedProducts,
+  getAuthenticatedReorderSuggestions,
+} from '@/lib/api/authenticated-client'
+import { Badge, Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2, type KpiItem } from '@/components/couture/ui'
 import { SetupPrompt } from '@/components/onboarding/setup-prompt'
-import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
+import { EmptyState, ErrorState, InlineLoader, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { fullDate, money, shortDate } from '@/lib/region'
 
 const RANGES = [
@@ -20,12 +27,17 @@ const dateLabel = shortDate
 export function DashboardView() {
   const [range, setRange] = useState<DashboardRange>('7d')
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
+  const [hasCatalog, setHasCatalog] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadDashboard = useCallback(async (nextRange: DashboardRange) => {
-    setDashboard(null)
-    setIsLoading(true)
+  // Only the very first load blanks the page. A range switch keeps the
+  // current figures on screen and shows an inline indicator instead — the
+  // whole dashboard used to skeleton out on every range click.
+  const loadDashboard = useCallback(async (nextRange: DashboardRange, isFirstLoad: boolean) => {
+    if (isFirstLoad) setIsLoading(true)
+    else setIsRefreshing(true)
     setError(null)
 
     try {
@@ -34,12 +46,20 @@ export function DashboardView() {
       setError(loadError instanceof Error ? loadError.message : 'We couldn’t load current store data.')
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
   }, [])
 
   useEffect(() => {
-    void loadDashboard(range)
-  }, [loadDashboard, range])
+    void getAuthenticatedProducts()
+      .then((products) => setHasCatalog(products.length > 0))
+      .catch(() => setHasCatalog(null))
+  }, [])
+
+  useEffect(() => {
+    void loadDashboard(range, dashboard === null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range])
 
   return (
     <>
@@ -47,15 +67,21 @@ export function DashboardView() {
         title="Dashboard"
         sub={`Today · ${fullDate(new Date())}`}
         actions={
-          <Link className="btn btn-grad" href="/app/shifts">
-            <Zap size={15} /> Open Register
-          </Link>
+          hasCatalog === false ? (
+            <Link className="btn btn-grad" href="/app/inventory/catalog/new">
+              <Zap size={15} /> Add Product
+            </Link>
+          ) : (
+            <Link className="btn btn-grad" href="/app/shifts">
+              <Zap size={15} /> Open Register
+            </Link>
+          )
         }
       />
 
       {error && (
         <Card>
-          <ErrorState message={error} onRetry={() => void loadDashboard(range)} />
+          <ErrorState message={error} onRetry={() => void loadDashboard(range, dashboard === null)} />
         </Card>
       )}
 
@@ -68,7 +94,15 @@ export function DashboardView() {
         </>
       )}
 
-      {!isLoading && !error && dashboard && <DashboardContent dashboard={dashboard} range={range} onRange={setRange} />}
+      {!isLoading && !error && dashboard && (
+        <DashboardContent
+          dashboard={dashboard}
+          range={range}
+          onRange={setRange}
+          isRefreshing={isRefreshing}
+          hasCatalog={hasCatalog}
+        />
+      )}
     </>
   )
 }
@@ -77,10 +111,14 @@ function DashboardContent({
   dashboard,
   range,
   onRange,
+  isRefreshing,
+  hasCatalog,
 }: {
   dashboard: Dashboard
   range: DashboardRange
   onRange: (value: DashboardRange) => void
+  isRefreshing: boolean
+  hasCatalog: boolean | null
 }) {
   const hasActivity = dashboard.sales.billCount > 0
   const drawer = dashboard.cashDrawer
@@ -90,11 +128,13 @@ function DashboardContent({
       label: 'Sales',
       value: money(dashboard.sales.totalAmount),
       meta: `${dashboard.sales.billCount} completed bill${dashboard.sales.billCount === 1 ? '' : 's'}`,
+      href: '/app/reports',
     },
     {
       label: 'Avg Bill Value',
       value: money(dashboard.sales.averageBillAmount),
       meta: hasActivity ? `Across ${dashboard.sales.billCount} completed bills` : 'No completed bills in this period',
+      href: '/app/reports',
     },
     {
       // Available since Phase 5: goods receipt now persists a moving-average
@@ -124,11 +164,13 @@ function DashboardContent({
           <UnavailableValue reason="Open a register before taking sales" text="No open shift" />
         ),
       meta: drawer.status === 'open' ? `Opened ${dateLabel(drawer.openedAt)}` : 'Open a register before taking sales',
+      href: '/app/shifts',
     },
     {
       label: 'Low Stock',
       value: String(dashboard.lowStock.count),
       meta: dashboard.lowStock.count > 0 ? 'At or below reorder point' : 'All stock levels reported healthy',
+      href: '/app/inventory',
     },
     {
       // DASH-01 keeps this tile despite it never carrying a figure in V1: an
@@ -150,20 +192,38 @@ function DashboardContent({
           <CardHead
             title="Sales trend"
             sub={`Last ${range.replace('d', '')} days · completed revenue`}
-            right={<Seg items={RANGES} active={range} onSelect={onRange} ariaLabel="Dashboard date range" />}
+            right={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {isRefreshing && <InlineLoader label="Updating" />}
+                <Seg items={RANGES} active={range} onSelect={onRange} ariaLabel="Dashboard date range" />
+              </div>
+            }
           />
           <CardPad>
             {dashboard.trend.revenue.length === 0 ? (
-              <EmptyState
-                icon={<PackageOpen size={24} strokeWidth={1.8} />}
-                title="Your store is ready for its first sale"
-                body="Open the register to begin. The revenue trend appears here once real transactions are recorded."
-                action={
-                  <Link className="btn btn-pri" href="/app/shifts">
-                    Open register
-                  </Link>
-                }
-              />
+              hasCatalog === false ? (
+                <EmptyState
+                  icon={<PackageOpen size={24} strokeWidth={1.8} />}
+                  title="Add your first products to get started"
+                  body="A store needs a catalog before it can sell anything. Add products, then open the register to make your first sale."
+                  action={
+                    <Link className="btn btn-pri" href="/app/inventory/catalog/new">
+                      Add products
+                    </Link>
+                  }
+                />
+              ) : (
+                <EmptyState
+                  icon={<PackageOpen size={24} strokeWidth={1.8} />}
+                  title="Your store is ready for its first sale"
+                  body="Open the register to begin. The revenue trend appears here once real transactions are recorded."
+                  action={
+                    <Link className="btn btn-pri" href="/app/shifts">
+                      Open register
+                    </Link>
+                  }
+                />
+              )
             ) : (
               <RevenueChart points={dashboard.trend.revenue} />
             )}
@@ -177,6 +237,8 @@ function DashboardContent({
 
         <ActionCenter dashboard={dashboard} />
       </Split2>
+
+      <ReorderSummaryCard />
 
       <SetupPrompt />
     </>
@@ -220,44 +282,102 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
 
   const w = 640
   const h = 175
+  const [hover, setHover] = useState<number | null>(null)
+
+  const onMove = useCallback(
+    (event: MouseEvent<SVGSVGElement>) => {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const fraction = (event.clientX - rect.left) / rect.width
+      const index = Math.round(fraction * (points.length - 1))
+      setHover(Math.min(Math.max(index, 0), points.length - 1))
+    },
+    [points.length],
+  )
+
+  const active = hover !== null ? dots[hover] : null
+  const activePoint = hover !== null ? points[hover] : null
 
   return (
-    <svg viewBox={`0 0 ${w} ${h + 24}`} preserveAspectRatio="none" style={{ width: '100%', height: 210, overflow: 'visible' }} role="img" aria-label="Completed revenue trend">
-      <defs>
-        <linearGradient id="dash-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#0058BA" stopOpacity=".22" />
-          <stop offset=".6" stopColor="#6C9FFF" stopOpacity=".08" />
-          <stop offset="1" stopColor="#6C9FFF" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="dash-line" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#0058BA" />
-          <stop offset="1" stopColor="#6C9FFF" />
-        </linearGradient>
-      </defs>
+    <div style={{ position: 'relative' }}>
+      <svg
+        viewBox={`0 0 ${w} ${h + 24}`}
+        preserveAspectRatio="none"
+        style={{ width: '100%', height: 210, overflow: 'visible' }}
+        role="img"
+        aria-label="Completed revenue trend"
+        onMouseMove={onMove}
+        onMouseLeave={() => setHover(null)}
+      >
+        <defs>
+          <linearGradient id="dash-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#0058BA" stopOpacity=".22" />
+            <stop offset=".6" stopColor="#6C9FFF" stopOpacity=".08" />
+            <stop offset="1" stopColor="#6C9FFF" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="dash-line" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#0058BA" />
+            <stop offset="1" stopColor="#6C9FFF" />
+          </linearGradient>
+        </defs>
 
-      {[0.18, 0.42, 0.66, 0.9].map((f) => (
-        <line key={f} x1="0" y1={(f * h).toFixed(0)} x2={w} y2={(f * h).toFixed(0)} stroke="#EEF0F2" strokeWidth="1" strokeDasharray="2 6" />
-      ))}
+        {[0.18, 0.42, 0.66, 0.9].map((f) => (
+          <line key={f} x1="0" y1={(f * h).toFixed(0)} x2={w} y2={(f * h).toFixed(0)} stroke="#EEF0F2" strokeWidth="1" strokeDasharray="2 6" />
+        ))}
 
-      {area && <path d={area} fill="url(#dash-area)" />}
-      {line && <path d={line} fill="none" stroke="url(#dash-line)" strokeWidth="2.6" strokeLinecap="round" />}
+        {area && <path d={area} fill="url(#dash-area)" />}
+        {line && <path d={line} fill="none" stroke="url(#dash-line)" strokeWidth="2.6" strokeLinecap="round" />}
 
-      {dots.map((c, i) => (
-        <circle key={i} cx={c[0].toFixed(1)} cy={c[1].toFixed(1)} r={i === dots.length - 1 ? 5 : 3.2} fill={i === dots.length - 1 ? '#0058BA' : '#fff'} stroke={i === dots.length - 1 ? '#fff' : '#0058BA'} strokeWidth={i === dots.length - 1 ? 2.5 : 2} />
-      ))}
+        {active && (
+          <line x1={active[0]} y1={0} x2={active[0]} y2={h} stroke="#0058BA" strokeWidth="1" strokeDasharray="3 4" opacity={0.4} />
+        )}
 
-      {points.map((p, i) => {
-        const stride = Math.ceil(points.length / 8)
-        if (i % stride !== 0 && i !== points.length - 1) return null
-        const x = points.length > 1 ? i * (w / (points.length - 1)) : w / 2
-        return (
-          <text key={p.date} x={x} y={h + 18} fontSize="11" fill="#98A2B3" textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}>
-            {dateLabel(p.date)}
-          </text>
-        )
-      })}
-      <title>{`Peak ${money(max)}`}</title>
-    </svg>
+        {dots.map((c, i) => (
+          <circle
+            key={i}
+            cx={c[0].toFixed(1)}
+            cy={c[1].toFixed(1)}
+            r={i === hover ? 5.5 : i === dots.length - 1 ? 5 : 3.2}
+            fill={i === hover || i === dots.length - 1 ? '#0058BA' : '#fff'}
+            stroke={i === hover || i === dots.length - 1 ? '#fff' : '#0058BA'}
+            strokeWidth={i === hover || i === dots.length - 1 ? 2.5 : 2}
+          />
+        ))}
+
+        {points.map((p, i) => {
+          const stride = Math.ceil(points.length / 8)
+          if (i % stride !== 0 && i !== points.length - 1) return null
+          const x = points.length > 1 ? i * (w / (points.length - 1)) : w / 2
+          return (
+            <text key={p.date} x={x} y={h + 18} fontSize="11" fill="#98A2B3" textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}>
+              {dateLabel(p.date)}
+            </text>
+          )
+        })}
+        <title>{`Peak ${money(max)}`}</title>
+      </svg>
+
+      {active && activePoint && (
+        <div
+          style={{
+            position: 'absolute',
+            left: `${(active[0] / w) * 100}%`,
+            top: Math.max(active[1] - 46, 0),
+            transform: `translateX(${active[0] < w / 2 ? '4px' : 'calc(-100% - 4px)'})`,
+            background: 'var(--ink)',
+            color: '#fff',
+            borderRadius: 8,
+            padding: '6px 10px',
+            fontSize: 12,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            boxShadow: 'var(--shadow-lg)',
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>{money(activePoint.amount)}</div>
+          <div style={{ opacity: 0.75, fontSize: 11 }}>{fullDate(new Date(activePoint.date))}</div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -311,6 +431,66 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
           )}
         </CardPad>
       )}
+    </Card>
+  )
+}
+
+/**
+ * Compact surface for the ML wedge on the dashboard itself — the full
+ * interactive table (recalculate, select, draft PO) stays on the Inventory
+ * screen so there's one place suggestions are actually actioned from.
+ */
+function ReorderSummaryCard() {
+  const [data, setData] = useState<ReorderSuggestionList | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    getAuthenticatedReorderSuggestions()
+      .then((result) => {
+        if (!cancelled) setData(result)
+      })
+      .catch(() => {
+        if (!cancelled) setData(null)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (loading) return null
+
+  const items = data?.items ?? []
+  if (items.length === 0) return null
+
+  const top = items.slice(0, 4)
+
+  return (
+    <Card style={{ marginTop: 18 }}>
+      <CardHead
+        title="Reorder suggestions"
+        sub="Rule-based — worked out from sales rate and supplier lead time"
+        right={
+          <Link className="btn btn-sm btn-pri" href="/app/inventory">
+            <Sparkle size={14} /> Review all ({items.length})
+          </Link>
+        }
+      />
+      <CardPad style={{ paddingTop: 4 }}>
+        {top.map((s) => (
+          <ListRow
+            key={s.id}
+            tone="blue"
+            icon={<Boxes size={17} strokeWidth={1.85} />}
+            title={`${s.productName} — reorder ${s.suggestedQuantity} units`}
+            sub={`${s.sku} · ${s.reason.currentStock} in stock`}
+            action={<Badge tone={s.confidence === 'high' ? 'green' : s.confidence === 'medium' ? 'amber' : 'grey'}>{s.confidence} confidence</Badge>}
+          />
+        ))}
+      </CardPad>
     </Card>
   )
 }

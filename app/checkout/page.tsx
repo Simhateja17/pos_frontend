@@ -2,8 +2,9 @@
 
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
+import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import Link from 'next/link'
 import { ScanLine, ShoppingCart } from 'lucide-react'
 import { Card, CardHead, CardPad, DataTable, PageHead, SectionLabel } from '@/components/couture/ui'
@@ -73,12 +74,6 @@ const GENERIC_CHARGE_FAILURE =
   'Something went wrong completing this sale. Nothing was charged — try again.'
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 function variantAttributes(v: Variant): string {
   return [v.size, v.color, v.material].filter(Boolean).join(' / ') || '—'
 }
@@ -110,12 +105,50 @@ interface PendingSaleBody {
   receiptEmail?: string
 }
 
+type OpenShiftEntry = {
+  id: string
+  staffId: string
+  closedAt: string | null
+  terminalName: string | null
+}
+
 function CheckoutPageInner() {
   const searchParams = useSearchParams()
-  const shiftId = searchParams.get('shiftId')
   const customerIdParam = searchParams.get('customerId')
 
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  /**
+   * Which shift this bill charges against is derived from the server, not a
+   * URL param — nothing ever populated one, so Billing always read as "no
+   * open shift" even with a shift open on the register. Mirrors the same
+   * staffId-matching pattern shifts-view.tsx uses: the acting staff member's
+   * own open shift, wherever they opened it, not a cached/URL-carried id.
+   */
+  const [openShiftsForStaff, setOpenShiftsForStaff] = useState<OpenShiftEntry[]>([])
+  const activeShift =
+    openShiftsForStaff.length === 1 ? openShiftsForStaff[0] : null
+  const hasMultipleOpenShifts = openShiftsForStaff.length > 1
+  const shiftId = activeShift?.id ?? null
+
+  const loadActiveShift = useCallback(async () => {
+    try {
+      const [context, shiftsResult] = await Promise.all([
+        getAuthenticatedAppContext(),
+        apiClient.GET('/shifts', { headers: await authHeaders() }),
+      ])
+      const mine = context.staff.id
+      const shifts = (shiftsResult.data as OpenShiftEntry[] | undefined) ?? []
+      setOpenShiftsForStaff(shifts.filter((s) => s.closedAt === null && s.staffId === mine))
+    } catch {
+      // The banner already covers "no shift" — a failed lookup reads the
+      // same way (Charge stays disabled) rather than a separate error state.
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadActiveShift()
+  }, [loadActiveShift])
 
   // Scan / search
   const [scanQuery, setScanQuery] = useState('')
@@ -157,6 +190,7 @@ function CheckoutPageInner() {
   // Payment
   const [tenderMethods, setTenderMethods] = useState<TenderMethod[]>([])
   const [tenderRows, setTenderRows] = useState<TenderRow[]>([])
+  const [splitEnabled, setSplitEnabled] = useState(false)
 
   // Charge
   const [chargeError, setChargeError] = useState<string | null>(null)
@@ -224,7 +258,7 @@ function CheckoutPageInner() {
       setSearchResults([])
       return
     }
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data, error } = await apiClient.GET('/products', {
       params: { query: { search: query } },
       headers,
@@ -315,7 +349,7 @@ function CheckoutPageInner() {
       setCustomerSearchResults([])
       return
     }
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data } = await apiClient.GET('/customers', {
       params: { query: { search: query } },
       headers,
@@ -336,6 +370,18 @@ function CheckoutPageInner() {
   }
 
   function toggleTenderMethod(method: TenderMethod) {
+    // Off split mode, one tap picks exactly one method — tapping the same
+    // tile again clears it, tapping a different tile replaces it. This is
+    // what keeps a single payment down to one tile + one input, instead of
+    // both piling up looking like duplicate entries.
+    if (!splitEnabled) {
+      setTenderMethods((current) => (current.includes(method) ? [] : [method]))
+      setTenderRows((rows) =>
+        rows.some((r) => r.method === method) ? [] : [{ method, amount: '' }],
+      )
+      return
+    }
+
     setTenderMethods((current) => {
       if (current.includes(method)) {
         setTenderRows((rows) => rows.filter((r) => r.method !== method))
@@ -344,6 +390,14 @@ function CheckoutPageInner() {
       setTenderRows((rows) => [...rows, { method, amount: '' }])
       return [...current, method]
     })
+  }
+
+  function handleToggleSplit(enabled: boolean) {
+    setSplitEnabled(enabled)
+    // Switching modes with a selection in place is ambiguous (which method
+    // survives?) — clearing it is simpler and safer than guessing.
+    setTenderMethods([])
+    setTenderRows([])
   }
 
   function handleTenderRowChange(index: number, row: TenderRow) {
@@ -369,7 +423,7 @@ function CheckoutPageInner() {
   }
 
   async function submitSale(body: PendingSaleBody, extraHeaders?: Record<string, string>) {
-    const headers = await authHeader()
+    const headers = await authHeaders()
     return apiClient.POST('/sales', {
       body,
       headers: { ...(headers ?? {}), ...(extraHeaders ?? {}) },
@@ -393,7 +447,11 @@ function CheckoutPageInner() {
     setSuccessMessage(null)
 
     if (!shiftId) {
-      setChargeError('No open shift. Open a shift before taking a sale.')
+      setChargeError(
+        hasMultipleOpenShifts
+          ? 'You have shifts open on more than one counter. Close the extra one before taking a sale.'
+          : 'No open shift. Open a shift before taking a sale.',
+      )
       return
     }
     if (cart.length === 0) return
@@ -452,6 +510,7 @@ function CheckoutPageInner() {
         setCartSaleId(crypto.randomUUID())
         setTenderRows([])
         setTenderMethods([])
+        setSplitEnabled(false)
         return
       } catch {
         setChargeError(
@@ -514,6 +573,7 @@ function CheckoutPageInner() {
     setIsReturningCustomer(false)
     setTenderMethods([])
     setTenderRows([])
+    setSplitEnabled(false)
     setPendingSaleBody(null)
     setChargeError(null)
   }
@@ -539,7 +599,13 @@ function CheckoutPageInner() {
     <>
       <PageHead
         title="Billing"
-        sub={shiftId ? 'Scan products, collect tender, then let the server confirm the sale.' : 'No open shift for this terminal'}
+        sub={
+          shiftId
+            ? 'Scan products, collect tender, then let the server confirm the sale.'
+            : hasMultipleOpenShifts
+              ? 'You have more than one shift open'
+              : 'No open shift for this terminal'
+        }
         actions={
           isOnline ? (
             <span className="badge b-green">
@@ -590,10 +656,12 @@ function CheckoutPageInner() {
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span className="flag improve">ACTION</span>
             <span style={{ fontSize: 13, color: '#8a6410' }}>
-              No open shift for this terminal. Open a shift before taking a sale.
+              {hasMultipleOpenShifts
+                ? 'You have shifts open on more than one counter. Close the extra one before taking a sale.'
+                : 'No open shift for this terminal. Open a shift before taking a sale.'}
             </span>
             <Link className="btn btn-sm" href="/app/shifts" style={{ marginLeft: 'auto' }}>
-              Open register
+              {hasMultipleOpenShifts ? 'Manage shifts' : 'Open register'}
             </Link>
           </CardPad>
         </Card>
@@ -879,6 +947,8 @@ function CheckoutPageInner() {
               onRowChange={handleTenderRowChange}
               onAddRow={handleAddTenderRow}
               onRemoveRow={handleRemoveTenderRow}
+              splitEnabled={splitEnabled}
+              onToggleSplit={handleToggleSplit}
               disabled={isCharging}
             />
 

@@ -4,9 +4,18 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
-import { Badge, Card, CardPad, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
-import { ErrorState, LoadingState } from '@/components/couture/states'
+import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
+import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { UNITS, allowsFractionalQuantity, unitSuffix } from '@/lib/units'
+import {
+  type Supplier,
+  type SupplierProduct,
+  getAuthenticatedSuppliers,
+  getAuthenticatedSupplierProducts,
+  createAuthenticatedSupplierProduct,
+  updateAuthenticatedSupplierProduct,
+  deleteAuthenticatedSupplierProduct,
+} from '@/lib/api/authenticated-client'
 
 type Variant = {
   id: string
@@ -44,12 +53,16 @@ type StockMovement = {
 }
 
 type ReasonCode = 'damage' | 'shrinkage_theft' | 'count_correction' | 'other'
-type DetailTab = 'variants' | 'history'
+type DetailTab = 'variants' | 'history' | 'suppliers'
 
 const DETAIL_TABS: readonly { label: string; value: DetailTab }[] = [
   { label: 'Variants', value: 'variants' },
   { label: 'Stock history', value: 'history' },
+  { label: 'Suppliers', value: 'suppliers' },
 ]
+
+const SUPPLIER_LINK_EMPTY_STATE =
+  'No suppliers linked to this product yet. Add one so its lead time feeds the reorder suggestion for this item.'
 
 const IDENTITY_LOCK_NOTICE =
   "Size, color, and material can't be changed once stock has moved for this variant. Price and reorder threshold can still be edited anytime."
@@ -118,6 +131,21 @@ export default function VariantDetailPage() {
   const [transferError, setTransferError] = useState<string | null>(null)
   const [isTransferring, setIsTransferring] = useState(false)
 
+  const [supplierProducts, setSupplierProducts] = useState<SupplierProduct[] | null>(null)
+  const [suppliers, setSuppliers] = useState<Supplier[] | null>(null)
+  const [supplierLinkError, setSupplierLinkError] = useState<string | null>(null)
+
+  const [linkFormOpen, setLinkFormOpen] = useState(false)
+  const [editingLink, setEditingLink] = useState<SupplierProduct | null>(null)
+  const [linkSupplierId, setLinkSupplierId] = useState('')
+  const [linkLeadTimeDays, setLinkLeadTimeDays] = useState('7')
+  const [linkUnitCost, setLinkUnitCost] = useState('')
+  const [linkSupplierSku, setLinkSupplierSku] = useState('')
+  const [linkMinOrderQty, setLinkMinOrderQty] = useState('')
+  const [linkIsPrimary, setLinkIsPrimary] = useState(false)
+  const [linkFormError, setLinkFormError] = useState<string | null>(null)
+  const [isSavingLink, setIsSavingLink] = useState(false)
+
   const loadVariant = useCallback(async () => {
     setIsLoading(true)
     setLoadError(null)
@@ -166,10 +194,96 @@ export default function VariantDetailPage() {
     setHistory(data)
   }, [variantId])
 
+  const loadSupplierLinks = useCallback(async () => {
+    setSupplierLinkError(null)
+    try {
+      const [links, allSuppliers] = await Promise.all([
+        getAuthenticatedSupplierProducts(variantId),
+        getAuthenticatedSuppliers(),
+      ])
+      setSupplierProducts(links)
+      setSuppliers(allSuppliers)
+    } catch (cause) {
+      setSupplierLinkError(cause instanceof Error ? cause.message : 'Suppliers for this product are unavailable right now.')
+    }
+  }, [variantId])
+
   useEffect(() => {
     loadVariant()
     loadHistory()
-  }, [loadVariant, loadHistory])
+    void loadSupplierLinks()
+  }, [loadVariant, loadHistory, loadSupplierLinks])
+
+  function openLinkCreate() {
+    setEditingLink(null)
+    setLinkSupplierId('')
+    setLinkLeadTimeDays('7')
+    setLinkUnitCost('')
+    setLinkSupplierSku('')
+    setLinkMinOrderQty('')
+    setLinkIsPrimary((supplierProducts ?? []).length === 0)
+    setLinkFormError(null)
+    setLinkFormOpen(true)
+  }
+
+  function openLinkEdit(link: SupplierProduct) {
+    setEditingLink(link)
+    setLinkSupplierId(link.supplierId)
+    setLinkLeadTimeDays(String(link.leadTimeDays))
+    setLinkUnitCost(link.unitCost ?? '')
+    setLinkSupplierSku(link.supplierSku ?? '')
+    setLinkMinOrderQty(link.minOrderQty ? String(link.minOrderQty) : '')
+    setLinkIsPrimary(link.isPrimary)
+    setLinkFormError(null)
+    setLinkFormOpen(true)
+  }
+
+  async function handleLinkSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setLinkFormError(null)
+
+    const leadTimeDays = Number(linkLeadTimeDays)
+    if (!editingLink && !linkSupplierId) {
+      setLinkFormError('Choose a supplier.')
+      return
+    }
+    if (!Number.isInteger(leadTimeDays) || leadTimeDays < 1) {
+      setLinkFormError('Lead time must be a whole number of days, at least 1.')
+      return
+    }
+
+    const body = {
+      isPrimary: linkIsPrimary,
+      leadTimeDays,
+      unitCost: linkUnitCost.trim() ? Number(linkUnitCost) : undefined,
+      supplierSku: linkSupplierSku.trim() || undefined,
+      minOrderQty: linkMinOrderQty.trim() ? Number(linkMinOrderQty) : undefined,
+    }
+
+    setIsSavingLink(true)
+    try {
+      if (editingLink) {
+        await updateAuthenticatedSupplierProduct(variantId, editingLink.id, body)
+      } else {
+        await createAuthenticatedSupplierProduct(variantId, { ...body, supplierId: linkSupplierId })
+      }
+      setLinkFormOpen(false)
+      await loadSupplierLinks()
+    } catch (cause) {
+      setLinkFormError(cause instanceof Error ? cause.message : 'That supplier could not be saved.')
+    } finally {
+      setIsSavingLink(false)
+    }
+  }
+
+  async function handleUnlink(link: SupplierProduct) {
+    try {
+      await deleteAuthenticatedSupplierProduct(variantId, link.id)
+      await loadSupplierLinks()
+    } catch (cause) {
+      setSupplierLinkError(cause instanceof Error ? cause.message : 'That supplier link could not be removed.')
+    }
+  }
 
   async function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -467,6 +581,57 @@ export default function VariantDetailPage() {
           </CardPad>
         )}
 
+        {tab === 'suppliers' && (
+          <CardPad>
+            <CardHead
+              title="Suppliers"
+              sub={supplierProducts ? `${supplierProducts.length} linked` : 'Loading…'}
+              right={
+                <button className="btn btn-sm btn-pri" onClick={openLinkCreate}>
+                  Add supplier
+                </button>
+              }
+            />
+            {supplierLinkError && <ErrorState message={supplierLinkError} onRetry={() => void loadSupplierLinks()} />}
+            {!supplierLinkError && supplierProducts && supplierProducts.length === 0 && (
+              <EmptyState
+                icon={<Badge tone="grey">—</Badge>}
+                title="No suppliers linked"
+                body={SUPPLIER_LINK_EMPTY_STATE}
+                action={
+                  <button className="btn btn-pri" onClick={openLinkCreate}>
+                    Add supplier
+                  </button>
+                }
+              />
+            )}
+            {!supplierLinkError && supplierProducts && supplierProducts.length > 0 && (
+              <DataTable cols={['Supplier', 'Lead time', 'Cost', 'Supplier SKU', 'Min order', '', '']} minWidth={780}>
+                {supplierProducts.map((link) => (
+                  <tr key={link.id}>
+                    <td className="t-strong">{link.supplierName}</td>
+                    <td className="num">{link.leadTimeDays} days</td>
+                    <td className="num t-sub">{link.unitCost ? `₹${link.unitCost}` : '—'}</td>
+                    <td className="t-sub">{link.supplierSku ?? '—'}</td>
+                    <td className="num t-sub">{link.minOrderQty ?? '—'}</td>
+                    <td>{link.isPrimary && <Badge tone="green">Primary</Badge>}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button className="btn btn-sm" onClick={() => openLinkEdit(link)}>
+                          Edit
+                        </button>
+                        <button className="btn btn-sm" onClick={() => void handleUnlink(link)}>
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </DataTable>
+            )}
+          </CardPad>
+        )}
+
         {tab === 'history' && (
           <CardPad>
             {historyError && <ErrorState message={historyError} onRetry={() => void loadHistory()} />}
@@ -585,6 +750,93 @@ export default function VariantDetailPage() {
                 />
               </Fld>
             )}
+          </form>
+        </Modal>
+      )}
+
+      {linkFormOpen && (
+        <Modal
+          title={editingLink ? `Edit ${editingLink.supplierName}` : 'Add supplier'}
+          onClose={() => setLinkFormOpen(false)}
+          footer={
+            <>
+              <button className="btn" type="button" onClick={() => setLinkFormOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-pri" type="submit" form="supplier-link-form" disabled={isSavingLink}>
+                {isSavingLink ? 'Saving…' : editingLink ? 'Save changes' : 'Add supplier'}
+              </button>
+            </>
+          }
+        >
+          <form id="supplier-link-form" onSubmit={handleLinkSubmit}>
+            {linkFormError && (
+              <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>
+                {linkFormError}
+              </div>
+            )}
+
+            {!editingLink && (
+              <Fld id="link-supplier" label="Supplier">
+                <select id="link-supplier" value={linkSupplierId} onChange={(e) => setLinkSupplierId(e.target.value)} required>
+                  <option value="" disabled>
+                    Choose a supplier
+                  </option>
+                  {(suppliers ?? []).map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </Fld>
+            )}
+
+            <Fld id="link-lead" label="Lead time (days)">
+              <input
+                id="link-lead"
+                type="number"
+                min={1}
+                step={1}
+                value={linkLeadTimeDays}
+                onChange={(e) => setLinkLeadTimeDays(e.target.value)}
+              />
+            </Fld>
+            <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+              How many days this supplier takes to deliver this specific product. The primary supplier's lead time
+              feeds this product's reorder suggestion.
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Fld id="link-cost" label="Unit cost (₹)">
+                <input
+                  id="link-cost"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={linkUnitCost}
+                  onChange={(e) => setLinkUnitCost(e.target.value)}
+                />
+              </Fld>
+              <Fld id="link-sku" label="Supplier's SKU">
+                <input id="link-sku" value={linkSupplierSku} onChange={(e) => setLinkSupplierSku(e.target.value)} />
+              </Fld>
+            </div>
+
+            <Fld id="link-moq" label="Minimum order quantity">
+              <input
+                id="link-moq"
+                type="number"
+                min={1}
+                step={1}
+                value={linkMinOrderQty}
+                onChange={(e) => setLinkMinOrderQty(e.target.value)}
+              />
+            </Fld>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8 }}>
+              <input type="checkbox" checked={linkIsPrimary} onChange={(e) => setLinkIsPrimary(e.target.checked)} />
+              Primary supplier for this product
+            </label>
           </form>
         </Modal>
       )}

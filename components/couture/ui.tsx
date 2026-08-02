@@ -10,6 +10,7 @@
  * Rule: screens compose these. Do not hand-roll Tailwind equivalents — that is
  * what caused the visual drift from the approved design in the first place.
  */
+import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 
 /* ---------- page head ---------- */
@@ -39,21 +40,39 @@ export type KpiItem = {
    */
   lead?: boolean
   flag?: FlagKind
+  /** Optional drill-through destination. When set, the tile renders as a link. */
+  href?: string
 }
 
 export function KpiRow({ items, cols }: { items: KpiItem[]; cols?: number }) {
   return (
     <div className="kpi-row" style={{ gridTemplateColumns: `repeat(${cols ?? items.length},1fr)` }}>
-      {items.map((k) => (
-        <div key={k.label} className={`kpi ${k.lead ? 'lead' : ''}`}>
-          <div className="kl">
-            {k.label}
-            {k.flag ? <Flag kind={k.flag} /> : null}
+      {items.map((k) => {
+        const body = (
+          <>
+            <div className="kl">
+              {k.label}
+              {k.flag ? <Flag kind={k.flag} /> : null}
+            </div>
+            <div className="kv">{k.value}</div>
+            <div className="km">{k.meta ?? ''}</div>
+          </>
+        )
+        return k.href ? (
+          <Link
+            key={k.label}
+            href={k.href}
+            className={`kpi ${k.lead ? 'lead' : ''}`}
+            style={{ display: 'block', color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}
+          >
+            {body}
+          </Link>
+        ) : (
+          <div key={k.label} className={`kpi ${k.lead ? 'lead' : ''}`}>
+            {body}
           </div>
-          <div className="kv">{k.value}</div>
-          <div className="km">{k.meta ?? ''}</div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
