@@ -1422,9 +1422,29 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** @description Shift history for the tenant, newest first, with staff and counter names resolved. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Shift history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShiftHistoryEntry"][];
+                    };
+                };
+            };
+        };
         put?: never;
-        /** @description Open a shift with a starting cash count (D-14). */
+        /** @description Open a shift with a starting cash count on a named counter (D-14, 0034). One counter holds at most one open shift. */
         post: {
             parameters: {
                 query?: never;
@@ -1446,6 +1466,20 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["Shift"];
                     };
+                };
+                /** @description Counter not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description That counter already has an open shift, or is turned off */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -1554,6 +1588,174 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/terminals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The tenant's counters/tills. Readable by every role so a cashier can pick one when opening a shift. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Terminals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Terminal"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Create a counter. Names are unique per tenant case-insensitively. Requires manager or owner role. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateTerminalRequest"];
+                };
+            };
+            responses: {
+                /** @description Terminal created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Terminal"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description A counter with that name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminals/{terminalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Delete a counter that has no shift history. Counters with history must be turned off instead so their Z reports keep naming them. Requires manager or owner role. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    terminalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Terminal deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            deleted: boolean;
+                        };
+                    };
+                };
+                /** @description Counter not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Counter has shift history and cannot be deleted */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** @description Rename a counter or turn it on/off. A counter with a shift open on it cannot be turned off. Requires manager or owner role. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    terminalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTerminalRequest"];
+                };
+            };
+            responses: {
+                /** @description Terminal updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Terminal"];
+                    };
+                };
+                /** @description Counter not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Name already taken, or the counter has a shift open on it */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/categories": {
@@ -2051,6 +2253,169 @@ export interface paths {
                     };
                 };
                 /** @description Supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/variants/{variantId}/supplier-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the suppliers this variant is bought from, primary first — each with its own lead time, cost, and min order qty. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Supplier products */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierProductList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Link a supplier to this variant with a product-specific lead time. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSupplierProductRequest"];
+                };
+            };
+            responses: {
+                /** @description Supplier product created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierProduct"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Variant or supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description This supplier is already linked to this variant */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/variants/{variantId}/supplier-products/{supplierProductId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Unlink a supplier from this variant. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    variantId: string;
+                    supplierProductId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Supplier product removed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Supplier product link not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** @description Edit a supplier product link, or flip isPrimary. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    variantId: string;
+                    supplierProductId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSupplierProductRequest"];
+                };
+            };
+            responses: {
+                /** @description Supplier product updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierProduct"];
+                    };
+                };
+                /** @description Supplier product link not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -3631,11 +3996,17 @@ export interface components {
             /** Format: email */
             email?: string;
         };
+        ShiftHistoryEntry: components["schemas"]["Shift"] & {
+            staffName: string | null;
+            terminalName: string | null;
+        };
         Shift: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             staffId: string;
+            /** Format: uuid */
+            terminalId: string | null;
             startingCash: string;
             openedAt: string;
             countedCash: string | null;
@@ -3644,6 +4015,8 @@ export interface components {
         };
         OpenShiftRequest: {
             startingCash: string;
+            /** Format: uuid */
+            terminalId: string;
         };
         XReport: {
             /** Format: uuid */
@@ -3662,6 +4035,21 @@ export interface components {
         };
         CloseShiftRequest: {
             countedCash: string;
+        };
+        Terminal: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            isActive: boolean;
+            hasOpenShift: boolean;
+            createdAt: string;
+        };
+        CreateTerminalRequest: {
+            name: string;
+        };
+        UpdateTerminalRequest: {
+            name?: string;
+            isActive?: boolean;
         };
         Category: {
             /** Format: uuid */
@@ -3741,9 +4129,7 @@ export interface components {
             contactName: string | null;
             email: string | null;
             phone: string | null;
-            address: string | null;
             leadTimeDays: number;
-            minOrderValue: string | null;
             paymentTerms: string | null;
             isActive: boolean;
             createdAt: string;
@@ -3754,9 +4140,7 @@ export interface components {
             /** Format: email */
             email?: string;
             phone?: string;
-            address?: string;
             leadTimeDays: number;
-            minOrderValue?: number;
             paymentTerms?: string;
         };
         UpdateSupplierRequest: {
@@ -3765,11 +4149,41 @@ export interface components {
             /** Format: email */
             email?: string;
             phone?: string;
-            address?: string;
             leadTimeDays?: number;
-            minOrderValue?: number;
             paymentTerms?: string;
             isActive?: boolean;
+        };
+        SupplierProductList: components["schemas"]["SupplierProduct"][];
+        SupplierProduct: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            supplierId: string;
+            supplierName: string;
+            /** Format: uuid */
+            variantId: string;
+            isPrimary: boolean;
+            leadTimeDays: number;
+            unitCost: string | null;
+            supplierSku: string | null;
+            minOrderQty: number | null;
+            createdAt: string;
+        };
+        CreateSupplierProductRequest: {
+            /** Format: uuid */
+            supplierId: string;
+            isPrimary?: boolean;
+            leadTimeDays: number;
+            unitCost?: number;
+            supplierSku?: string;
+            minOrderQty?: number;
+        };
+        UpdateSupplierProductRequest: {
+            isPrimary?: boolean;
+            leadTimeDays?: number;
+            unitCost?: number;
+            supplierSku?: string;
+            minOrderQty?: number;
         };
         PurchaseOrderList: components["schemas"]["PurchaseOrder"][];
         PurchaseOrder: {

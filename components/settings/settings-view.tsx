@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { FolderTree, UserCog } from 'lucide-react'
+import { FolderTree, Monitor, UserCog } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardHead, CardPad, Fld, ListRow, PageHead } from '@/components/couture/ui'
@@ -175,7 +175,7 @@ export function SettingsView() {
       <PageHead title="Settings" sub="Store configuration" />
 
       <Card>
-        <CardHead title="Staff & Categories" sub="Managed on their own screens" />
+        <CardHead title="Staff, Counters & Categories" sub="Managed on their own screens" />
         <CardPad style={{ paddingTop: 4 }}>
           <ListRow
             icon={<UserCog size={17} strokeWidth={1.85} />}
@@ -183,6 +183,16 @@ export function SettingsView() {
             sub="Who has access, and what they can approve"
             action={
               <Link className="btn btn-sm btn-ghost" href="/app/settings/members">
+                Open
+              </Link>
+            }
+          />
+          <ListRow
+            icon={<Monitor size={17} strokeWidth={1.85} />}
+            title="Counters"
+            sub="The tills cashiers open a shift against"
+            action={
+              <Link className="btn btn-sm btn-ghost" href="/app/settings/terminals">
                 Open
               </Link>
             }

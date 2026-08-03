@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { UserMenu } from '@/components/user-menu'
 import { APP_NAVIGATION } from '@/components/app-navigation'
+import { supabase } from '@/lib/supabase/client'
 import {
   AuthenticatedRequestError,
   getAuthenticatedAppContext,
@@ -31,14 +33,9 @@ function matchedNavHref(pathname: string): string | undefined {
   return best
 }
 
-function initials(name?: string | null) {
-  if (!name?.trim()) return '—'
-  const parts = name.trim().split(/\s+/)
-  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '—'
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [context, setContext] = useState<AppContext | null>(null)
   const [contextError, setContextError] = useState<AuthenticatedRequestError | null>(null)
@@ -66,6 +63,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (pathname !== '/app') void loadContext()
   }, [loadContext, pathname])
+
+  const reauthenticate = useCallback(async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }, [router])
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -215,13 +217,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <NotificationBell />
 
-            <div className={`tb-user ${styles.user}`} aria-live="polite">
-              <div className="tb-ava">{initials(context?.staff.name)}</div>
-              <div>
-                <div className="nm">{isContextLoading ? 'Loading staff…' : (context?.staff.name ?? 'Staff unavailable')}</div>
-                <div className="rl">{context?.staff.role ?? (contextError ? 'Retry to load access' : 'Loading access…')}</div>
-              </div>
-            </div>
+            <UserMenu
+              context={context}
+              isContextLoading={isContextLoading}
+              hasError={!!contextError}
+              className={styles.user}
+            />
           </div>
         </header>
 
@@ -242,9 +243,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             }}
           >
             <span>{contextError.message}</span>
-            <button className="btn btn-sm" onClick={() => void loadContext()}>
-              Retry context
-            </button>
+            {contextError.kind === 'unauthenticated' ? (
+              <button className="btn btn-sm" onClick={() => void reauthenticate()}>
+                Sign in again
+              </button>
+            ) : (
+              <button className="btn btn-sm" onClick={() => void loadContext()}>
+                Retry context
+              </button>
+            )}
           </div>
         )}
 
