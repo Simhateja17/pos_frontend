@@ -14,10 +14,11 @@ export function ReconciliationFigure({
     <div>
       <div
         style={{
-          fontSize: '13px',
+          fontSize: '10.5px',
           fontWeight: 700,
           textTransform: 'uppercase',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.06em',
+          color: 'var(--muted)',
         }}
       >
         {label}
@@ -25,9 +26,10 @@ export function ReconciliationFigure({
       <span
         className={colorClass}
         style={{
-          fontFamily: 'Sora, sans-serif',
+          fontFamily: 'var(--mono)',
           fontSize: '28px',
           fontWeight: 700,
+          letterSpacing: '-.02em',
           lineHeight: 1.2,
         }}
       >

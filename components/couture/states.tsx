@@ -9,7 +9,7 @@
  * components make that honest state look deliberate rather than broken.
  */
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { AlertTriangle, Inbox, Loader2, PackageOpen } from 'lucide-react'
 import { Card, CardPad, PageHead } from './ui'
 
@@ -99,9 +99,10 @@ export function LoadingState({ label = 'Loading records', rows = 5 }: { label?: 
   )
 }
 
+// --kpi-cols, not an inline grid-template — see the note on KpiRow in couture/ui.tsx.
 export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
   return (
-    <div className="kpi-row" style={{ gridTemplateColumns: `repeat(${cols},1fr)` }} aria-busy="true">
+    <div className="kpi-row" style={{ '--kpi-cols': cols } as CSSProperties} aria-busy="true">
       {Array.from({ length: cols }, (_, i) => (
         <div key={i} className="kpi">
           <div

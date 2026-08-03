@@ -37,7 +37,7 @@ export default function LandingPage() {
         </header>
 
         {/* Hero */}
-        <section className="hero">
+        <section className="us-hero">
           <h1>Modern POS for US Retail</h1>
           <p>
             Sales tax automation, omnichannel sync, offline-first billing. Built

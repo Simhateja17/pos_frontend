@@ -15,8 +15,22 @@ import {
 } from '@/lib/api/authenticated-client'
 import styles from '@/components/app-shell.module.css'
 
-function isActive(pathname: string, href: string) {
-  return pathname === href || (href !== '/app/dashboard' && pathname.startsWith(`${href}/`))
+const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
+
+/**
+ * Nested nav routes (e.g. Inventory `/app/inventory` and Categories
+ * `/app/inventory/categories`) both prefix-match a Categories pathname, so
+ * picking "any prefix match" highlights both. Only the longest — i.e. most
+ * specific — matching href should be marked active.
+ */
+function matchedNavHref(pathname: string): string | undefined {
+  let best: string | undefined
+  for (const item of ALL_NAV_ITEMS) {
+    if (pathname === item.href || pathname.startsWith(`${item.href}/`)) {
+      if (!best || item.href.length > best.length) best = item.href
+    }
+  }
+  return best
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -88,9 +102,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (pathname === '/app') return children
 
-  const current =
-    APP_NAVIGATION.flatMap((group) => group.items).find((item) => isActive(pathname, item.href))?.label ??
-    'Couture POS'
+  const matchedHref = matchedNavHref(pathname)
+  const current = ALL_NAV_ITEMS.find((item) => item.href === matchedHref)?.label ?? 'Couture POS'
 
   const storeFull = context
     ? [context.tenant.businessName, context.tenant.locality].filter(Boolean).join(' · ')
@@ -141,7 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div key={group.label}>
               <div className="sb-group">{group.label}</div>
               {group.items.map((item) => {
-                const active = isActive(pathname, item.href)
+                const active = item.href === matchedHref
                 const Icon = item.icon
                 return (
                   <Link

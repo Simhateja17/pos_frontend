@@ -385,21 +385,21 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
   const items = dashboard.actionable.items
 
   return (
-    <Card>
+    <Card style={{ display: 'flex', flexDirection: 'column' }}>
       <CardHead
         title="Action Center"
         sub="Operational items that need attention"
         right={<span className="badge b-blue">{items.length} item{items.length === 1 ? '' : 's'}</span>}
       />
       {items.length === 0 ? (
-        <CardPad>
+        <CardPad style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <EmptyState
             title="Nothing needs attention"
             body="Low stock, open registers and other operational alerts appear here as soon as the store records them."
           />
         </CardPad>
       ) : (
-        <CardPad style={{ paddingTop: 4 }}>
+        <CardPad style={{ paddingTop: 4, flex: 1 }}>
           {items.map((item) =>
             item.type === 'low_stock' ? (
               <ListRow

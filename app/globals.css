@@ -144,10 +144,8 @@
      fill (a plain .btn:hover here would wipe .btn-grad's background-image) */
   .btn:hover:not(.btn-pri):not(.btn-grad){background:#F8F9FA;border-color:#D7DadE}
   .btn svg{width:15px;height:15px}
-  .btn-pri{background:var(--brand-1);border-color:var(--brand-1);color:#fff;box-shadow:0 1px 2px rgba(0,88,186,.25)}
-  .btn-pri:hover{background:#0050A8;border-color:#0050A8}
-  .btn-grad{background:var(--brand-grad);border:none;color:#fff;box-shadow:0 2px 8px rgba(0,88,186,.28)}
-  .btn-grad:hover{filter:brightness(1.07) saturate(1.06);box-shadow:0 6px 18px rgba(0,88,186,.42)}
+  .btn-pri,.btn-grad{background:var(--brand-grad);border:none;color:#fff;box-shadow:0 2px 8px rgba(0,88,186,.28)}
+  .btn-pri:hover,.btn-grad:hover{filter:brightness(1.07) saturate(1.06);box-shadow:0 6px 18px rgba(0,88,186,.42)}
   .btn-sm{height:32px;padding:0 11px;font-size:12.5px;border-radius:8px}
   .btn-ghost{background:transparent;border-color:transparent;color:var(--brand-1)}
   .btn-ghost:hover{background:var(--brand-soft)}
@@ -160,7 +158,9 @@
   .card-h .ch-sub{font-size:12px;color:var(--muted);margin-top:2px}
 
   /* KPI row */
-  .kpi-row{display:grid;gap:14px;margin-bottom:18px}
+  /* --kpi-cols is set per-instance by <KpiRow cols>; minmax(0,…) stops a long
+     currency value from widening its track and overflowing the row. */
+  .kpi-row{display:grid;gap:14px;margin-bottom:18px;grid-template-columns:repeat(var(--kpi-cols,4),minmax(0,1fr))}
   .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
   .kpi.lead{background:var(--brand-soft);border-color:#D6E4F8}
   .kpi .kl{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:6px}
@@ -214,8 +214,14 @@
 
   /* grid helpers */
   .grid{display:grid;gap:16px}
-  .split-2{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
-  @media(max-width:1080px){.split-2{grid-template-columns:1fr}}
+  .split-2{display:grid;grid-template-columns:minmax(0,1fr) var(--split-aside,360px);gap:18px;align-items:stretch;margin-bottom:18px}
+  /* descendant (not direct-child) so cards still get a gap when a page wraps
+     them in a <form> or other non-.content element, e.g. catalog/new.
+     .split-2/.gap-block are not on the left side here — they already carry
+     their own margin-bottom, so pairing them as a "+" left operand too would
+     double the gap on whatever follows them. */
+  .content :is(.card,.gap-block) + :is(.card,.split-2,.gap-block){margin-top:18px}
+  @media(max-width:1080px){.split-2{grid-template-columns:minmax(0,1fr)}}
 
   /* progress */
   .bar{height:7px;background:#EEF0F2;border-radius:20px;overflow:hidden}
@@ -336,7 +342,7 @@
 
   /* animated brand gradient — keeps every blue brand surface alive & identical */
   @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-  .sb-logo,.btn-grad{background-image:linear-gradient(120deg,#0058BA 0%,#6C9FFF 50%,#0058BA 100%);background-size:220% 220%;animation:gradShift 7s ease infinite}
+  .sb-logo,.btn-grad,.btn-pri{background-image:linear-gradient(120deg,#0058BA 0%,#6C9FFF 50%,#0058BA 100%);background-size:220% 220%;animation:gradShift 7s ease infinite}
   .sb-logo{transition:transform .3s var(--ease-spring),box-shadow .3s}
   .sb-brand:hover .sb-logo{transform:rotate(-6deg) scale(1.06);box-shadow:0 6px 18px rgba(0,88,186,.4)}
 
@@ -585,6 +591,97 @@
   #auth-layer *::-webkit-scrollbar{width:4px}
   #auth-layer *::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:2px}
 
+  /* ============================================================
+     RESPONSIVE — tablet and phone
+     ============================================================
+     The prototype these classes come from was desktop-only. Everything below
+     adapts that same design system down to a 320px viewport; no new visual
+     language, only reflow. Three steps:
+
+       <=1023px  the sidebar has become an overlay drawer (app-shell.module.css),
+                 so content spans the full width and dense grids relax.
+       <=760px   single-column: side-by-side header/toolbar pairs stack.
+       <=560px   phone: tighter padding and type, full-width controls.
+
+     Breakpoints stay max-width to match the drawer breakpoint already in
+     app-shell.module.css, so the shell and content always change together.
+     ============================================================ */
+
+  @media(max-width:1023px){
+    .content{padding:20px 18px 64px}
+    .page-head h2{font-size:23px}
+
+    /* auto-fit rather than a stepped column count: the row is fed --kpi-cols
+       values from 3 to 6 depending on the screen, and packing to a minimum
+       tile width handles them all without a breakpoint per count. */
+    .kpi-row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+
+    .spot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .search .kbd{display:none}
+    .hero{padding:24px 22px}
+    .hero h2{font-size:26px}
+    .hero-art{display:none}
+    .hero-stats{gap:22px}
+  }
+
+  @media(max-width:760px){
+    /* Page and card headers put their actions beside the title on desktop.
+       Below this width the title alone needs the row. */
+    .page-head{flex-direction:column;align-items:stretch}
+    .head-actions{flex-wrap:wrap}
+    .head-actions .btn,.head-actions > a{flex:1 1 auto;justify-content:center}
+
+    .card-h{flex-direction:column;align-items:stretch;gap:10px}
+    /* The card-h "right" slot is a flex row of filters (search + selects) built
+       inline by the screens; it must be allowed to wrap here. */
+    .card-h > div{flex-wrap:wrap;min-width:0}
+    .card-h .search{flex:1 1 180px}
+
+    .spot-grid{grid-template-columns:minmax(0,1fr)}
+    .pay-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+    /* Tables stay legible by scrolling inside their DataTable wrapper rather
+       than compressing. Screens that need a wider floor pass `minWidth`, which
+       lands inline and so overrides this default. */
+    .card table{min-width:600px}
+    thead th{padding:10px 12px}
+    tbody td{padding:11px 12px}
+
+    .note-strip{align-items:flex-start}
+    .modal-f{flex-direction:column-reverse}
+    .modal-f .btn{width:100%;justify-content:center}
+  }
+
+  @media(max-width:560px){
+    .content{padding:16px 14px 56px}
+    .page-head h2{font-size:21px}
+    .page-head .sub{font-size:13px}
+
+    .kpi{padding:13px 14px}
+    .kpi .kv{font-size:19px}
+
+    /* Full-bleed sheet-style modal: a centred 440px card wastes the screen and
+       puts its actions mid-viewport on a phone. */
+    .modal-overlay{padding:10px;align-items:flex-end}
+    .modal{width:100%;max-height:94vh}
+    .modal-b{padding:16px}
+
+    .hero{padding:20px 18px}
+    .hero h2{font-size:22px}
+    .hero-stats{gap:16px}
+    .hero-btn{flex:1 1 auto;justify-content:center}
+    .tabs{width:100%}
+    .toast{max-width:calc(100vw - 28px)}
+  }
+
+  /* Legacy prototype auth markup (app/bodyMarkup.js) — fixed 2- and 3-up grids. */
+  @media(max-width:640px){
+    #auth-layer .arow2,#auth-layer .arow3,#auth-layer .a-plan-wrap{grid-template-columns:minmax(0,1fr)}
+    #auth-layer .a-cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    /* Six 52px boxes plus gaps overflow a 320px viewport. */
+    #auth-layer .a-otp-row{gap:7px}
+    #auth-layer .a-otp-box{width:44px;height:52px;font-size:22px}
+  }
 }
 
 @layer base {

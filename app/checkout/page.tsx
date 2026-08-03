@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
@@ -620,7 +620,7 @@ function CheckoutPageInner() {
       />
 
       {!isOnline && (
-        <Card style={{ marginBottom: 16, borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
+        <Card style={{ borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span className="flag improve">OFFLINE</span>
             <span style={{ fontSize: 13, color: '#8a6410' }}>
@@ -632,7 +632,7 @@ function CheckoutPageInner() {
       )}
 
       {queuedCount > 0 && (
-        <Card style={{ marginBottom: 16 }}>
+        <Card>
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span className="badge b-blue">{queuedCount} queued</span>
             <span style={{ fontSize: 13, color: 'var(--muted)' }}>
@@ -646,13 +646,13 @@ function CheckoutPageInner() {
       )}
 
       {queuedMessage && (
-        <Card style={{ marginBottom: 16, borderColor: '#BBE9D4', background: 'var(--success-soft)' }}>
+        <Card style={{ borderColor: '#BBE9D4', background: 'var(--success-soft)' }}>
           <CardPad style={{ fontSize: 13, color: '#0f8f63' }}>{queuedMessage}</CardPad>
         </Card>
       )}
 
       {!shiftId && (
-        <Card style={{ marginBottom: 16, borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
+        <Card style={{ borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span className="flag improve">ACTION</span>
             <span style={{ fontSize: 13, color: '#8a6410' }}>
@@ -668,27 +668,30 @@ function CheckoutPageInner() {
       )}
 
       {successMessage && (
-        <Card style={{ marginBottom: 16, borderColor: '#BBE9D4', background: 'var(--success-soft)' }}>
+        <Card style={{ borderColor: '#BBE9D4', background: 'var(--success-soft)' }}>
           <CardPad style={{ fontSize: 13, color: '#0f8f63' }}>{successMessage}</CardPad>
         </Card>
       )}
 
       {completedSale && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="gap-block">
           <Receipt sale={completedSale} businessName={businessName} />
         </div>
       )}
 
       {loadError && (
-        <Card style={{ marginBottom: 16, borderColor: '#F6D4D4', background: 'var(--danger-soft)' }}>
+        <Card style={{ borderColor: '#F6D4D4', background: 'var(--danger-soft)' }}>
           <CardPad style={{ fontSize: 13, color: '#cf3030' }}>{loadError}</CardPad>
         </Card>
       )}
 
-      <div className="split-2" style={{ gridTemplateColumns: '1fr 420px' }}>
+      {/* Widened aside via the custom property, not an inline grid-template: an
+          inline template would outrank the .split-2 mobile breakpoint and keep
+          the 420px payment column alongside the cart on a phone. */}
+      <div className="split-2" style={{ '--split-aside': '420px' } as CSSProperties}>
         {/* ---------------- Cart column ---------------- */}
         <div style={{ minWidth: 0 }}>
-          <Card className="card-pad" style={{ marginBottom: 16 }}>
+          <Card className="card-pad">
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <div className="search" style={{ maxWidth: 'none', flex: 1 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -829,7 +832,7 @@ function CheckoutPageInner() {
 
         {/* ---------------- Summary column ---------------- */}
         <div>
-          <Card className="card-pad" style={{ marginBottom: 16 }}>
+          <Card className="card-pad">
             <SectionLabel style={{ margin: 0 }}>Customer</SectionLabel>
             {customer ? (
               <>

@@ -4,14 +4,8 @@ import { FormEvent, Suspense, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { PageHead } from '@/components/couture/ui'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardHead, CardPad, Checkbox, DataTable, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
+import { EmptyState } from '@/components/couture/states'
 
 type Sale = {
   id: string
@@ -37,6 +31,11 @@ type ReturnResponse = {
   saleId: string
   refundTotal: string
 }
+
+const LOOKUP_TABS = [
+  { label: 'By receipt number', value: 'receipt' as const },
+  { label: 'By customer', value: 'customer' as const },
+]
 
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
 const NO_MATCH =
@@ -65,6 +64,7 @@ function ReturnsPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const shiftId = searchParams.get('shiftId')
+  const [lookupTab, setLookupTab] = useState<'receipt' | 'customer'>('receipt')
   const [receiptNumber, setReceiptNumber] = useState('')
   const [customerSearch, setCustomerSearch] = useState('')
   const [matches, setMatches] = useState<Sale[]>([])
@@ -183,164 +183,209 @@ function ReturnsPageInner() {
   }
 
   return (
-    <main>
+    <>
       <PageHead
         title="Returns & Exchange"
         sub="Locate the receipt, choose only the items being returned, and refund the original tender."
       />
 
       {!shiftId && (
-        <Alert className="mb-6">
-          <AlertDescription className="flex items-center justify-between gap-4">
-            An open shift is required before a return can be processed.
-            <Button type="button" variant="outline" onClick={() => router.push('/shifts')}>
-              Open a shift
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            padding: '12px 16px',
+            borderRadius: 10,
+            marginBottom: 18,
+            background: 'var(--warning-soft)',
+            color: '#8f5f0c',
+            fontSize: 13,
+          }}
+        >
+          <span>An open shift is required before a return can be processed.</span>
+          <button className="btn btn-sm" type="button" onClick={() => router.push('/shifts')}>
+            Open a shift
+          </button>
+        </div>
       )}
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div
+          role="alert"
+          style={{
+            padding: '12px 16px',
+            borderRadius: 10,
+            marginBottom: 18,
+            background: 'var(--danger-soft)',
+            color: '#8f2323',
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </div>
       )}
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Sale lookup</CardTitle>
-          <CardDescription>Search by receipt number or by the customer attached to the sale.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="receipt">
-            <TabsList>
-              <TabsTrigger value="receipt">By receipt number</TabsTrigger>
-              <TabsTrigger value="customer">By customer</TabsTrigger>
-            </TabsList>
-            <TabsContent value="receipt">
-              <form
-                className="mt-4 flex gap-3"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  if (receiptNumber.trim()) void lookup({ receiptNumber: receiptNumber.trim() })
-                }}
-              >
-                <Input
-                  value={receiptNumber}
-                  onChange={(event) => setReceiptNumber(event.target.value)}
-                  placeholder="Receipt number"
-                />
-                <Button disabled={!receiptNumber.trim() || isLoading}>Search</Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="customer">
-              <form
-                className="mt-4 flex gap-3"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  if (customerSearch.trim()) void lookup({ customerSearch: customerSearch.trim() })
-                }}
-              >
-                <Input
-                  value={customerSearch}
-                  onChange={(event) => setCustomerSearch(event.target.value)}
-                  placeholder="Customer name, phone, or email"
-                />
-                <Button disabled={!customerSearch.trim() || isLoading}>Search</Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+      <Card>
+        <CardHead title="Sale lookup" sub="Search by receipt number or by the customer attached to the sale." />
+        <CardPad>
+          <Tabs items={LOOKUP_TABS} active={lookupTab} onSelect={setLookupTab} ariaLabel="Search sales by" />
+
+          {lookupTab === 'receipt' ? (
+            <form
+              style={{ display: 'flex', gap: 10, marginTop: 16 }}
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (receiptNumber.trim()) void lookup({ receiptNumber: receiptNumber.trim() })
+              }}
+            >
+              <SearchField
+                value={receiptNumber}
+                onChange={setReceiptNumber}
+                placeholder="Receipt number"
+                ariaLabel="Receipt number"
+                flex
+              />
+              <button className="btn btn-pri" type="submit" disabled={!receiptNumber.trim() || isLoading}>
+                Search
+              </button>
+            </form>
+          ) : (
+            <form
+              style={{ display: 'flex', gap: 10, marginTop: 16 }}
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (customerSearch.trim()) void lookup({ customerSearch: customerSearch.trim() })
+              }}
+            >
+              <SearchField
+                value={customerSearch}
+                onChange={setCustomerSearch}
+                placeholder="Customer name, phone, or email"
+                ariaLabel="Customer name, phone, or email"
+                flex
+              />
+              <button className="btn btn-pri" type="submit" disabled={!customerSearch.trim() || isLoading}>
+                Search
+              </button>
+            </form>
+          )}
 
           {hasSearched && !isLoading && matches.length === 0 && !error && (
-            <p className="mt-5 text-sm text-muted-foreground">{NO_MATCH}</p>
+            <p style={{ marginTop: 18, fontSize: 13, color: 'var(--muted)' }}>{NO_MATCH}</p>
           )}
           {matches.length > 1 && !sale && (
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <div
+              style={{
+                marginTop: 18,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: 10,
+              }}
+            >
               {matches.map((match) => (
                 <button
                   key={match.id}
                   type="button"
-                  className="rounded-xl border p-4 text-left transition hover:border-primary"
                   onClick={() => selectSale(match)}
+                  style={{
+                    textAlign: 'left',
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    padding: 14,
+                    background: 'var(--surface)',
+                    cursor: 'pointer',
+                    transition: 'border-color .15s',
+                  }}
                 >
-                  <span className="block font-semibold">{match.id}</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span style={{ display: 'block', fontWeight: 700, fontSize: 13 }}>{match.id}</span>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>
                     {new Date(match.createdAt).toLocaleString()} · ₹{money(match.totalAmount)}
                   </span>
                 </button>
               ))}
             </div>
           )}
-        </CardContent>
+        </CardPad>
       </Card>
 
       {sale && (
         <form onSubmit={requestRefund}>
-          <Card className="mt-6 shadow-sm">
-            <CardHeader>
-              <CardTitle>Select items to return</CardTitle>
-              <CardDescription>Receipt {sale.id}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-14">Return</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Original qty</TableHead>
-                    <TableHead className="w-28">Return qty</TableHead>
-                    <TableHead className="text-right">Estimated refund</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sale.lines.map((line) => {
-                    const quantity = quantities[line.id] ?? 0
-                    return (
-                      <TableRow key={line.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={quantity > 0}
-                            onCheckedChange={(checked) =>
-                              updateQuantity(line.id, line.quantity, checked ? 1 : 0)
+          <Card style={{ marginTop: 18 }}>
+            <CardHead title="Select items to return" sub={`Receipt ${sale.id}`} />
+            <CardPad>
+              <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', { label: 'Estimated refund', align: 'right' }]}>
+                {sale.lines.map((line) => {
+                  const quantity = quantities[line.id] ?? 0
+                  return (
+                    <tr key={line.id}>
+                      <td>
+                        <div
+                          role="checkbox"
+                          aria-checked={quantity > 0}
+                          tabIndex={0}
+                          onClick={() => updateQuantity(line.id, line.quantity, quantity > 0 ? 0 : 1)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              updateQuantity(line.id, line.quantity, quantity > 0 ? 0 : 1)
                             }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <span className="block font-medium">{line.variantId}</span>
-                          <span className="text-xs text-muted-foreground">₹{money(line.unitPrice)} each</span>
-                        </TableCell>
-                        <TableCell>{line.quantity}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min={0}
-                            max={line.quantity}
-                            value={quantity}
-                            onChange={(event) =>
-                              updateQuantity(line.id, line.quantity, Number(event.target.value))
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          ₹{money((Number(line.lineTotal) / line.quantity) * quantity)}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+                          }}
+                          style={{ cursor: 'pointer', display: 'inline-flex' }}
+                        >
+                          <Checkbox on={quantity > 0} />
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ display: 'block', fontWeight: 600, fontSize: 13 }}>{line.variantId}</span>
+                        <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>₹{money(line.unitPrice)} each</span>
+                      </td>
+                      <td>{line.quantity}</td>
+                      <td>
+                        <input
+                          className="fld-input"
+                          style={{ width: 70 }}
+                          type="number"
+                          min={0}
+                          max={line.quantity}
+                          value={quantity}
+                          onChange={(event) => updateQuantity(line.id, line.quantity, Number(event.target.value))}
+                        />
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        ₹{money((Number(line.lineTotal) / line.quantity) * quantity)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </DataTable>
 
-              <div className="mt-6 rounded-xl border bg-muted/30 p-5">
-                <p className="text-sm text-muted-foreground">
-                  Refund tender: {originalMethods.join(', ') || 'unavailable'}. The server validates the original sale, return entitlement, and final refund before anything is recorded.
+              <div
+                style={{
+                  marginTop: 18,
+                  border: '1px solid var(--border)',
+                  borderRadius: 10,
+                  padding: 16,
+                  background: 'var(--bg)',
+                }}
+              >
+                <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>
+                  Refund tender: {originalMethods.join(', ') || 'unavailable'}. The server validates the original sale,
+                  return entitlement, and final refund before anything is recorded.
                 </p>
-                <div className="mt-3 flex items-end justify-between gap-4">
+                <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--muted)' }}>
                       Selected-line estimate
-                    </p>
-                    <p className="font-heading text-3xl font-bold text-[#DC2626]">₹{money(refundTotal)}</p>
+                    </div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 26, fontWeight: 700, color: 'var(--danger)', marginTop: 4 }}>
+                      ₹{money(refundTotal)}
+                    </div>
                   </div>
-                  <Button
+                  <button
+                    className="btn btn-pri"
+                    type="submit"
                     disabled={
                       !shiftId ||
                       selectedLines.length === 0 ||
@@ -350,56 +395,70 @@ function ReturnsPageInner() {
                     }
                   >
                     {isSubmitting ? 'Processing…' : 'Review refund'}
-                  </Button>
+                  </button>
                 </div>
               </div>
-            </CardContent>
+            </CardPad>
           </Card>
         </form>
       )}
 
       {successAmount && sale && (
-        <Alert className="mt-6 border-[#10B981] bg-[#E8F7F0]">
-          <AlertDescription>
-            <p className="font-semibold text-[#047857]">Refund of ₹{successAmount} recorded by the server.</p>
-            <p className="mt-1">Return processed. Start a new sale to complete the exchange.</p>
-            <Button
-              className="mt-4"
-              onClick={() =>
-                router.push(sale.customerId ? `/checkout?customerId=${sale.customerId}` : '/checkout')
-              }
+        <Card style={{ marginTop: 18 }}>
+          <CardPad style={{ background: 'var(--success-soft)', borderRadius: 'var(--r)' }}>
+            <p style={{ fontWeight: 700, color: '#0f8f63', fontSize: 14 }}>
+              Refund of ₹{successAmount} recorded by the server.
+            </p>
+            <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
+              Return processed. Start a new sale to complete the exchange.
+            </p>
+            <button
+              className="btn btn-pri"
+              type="button"
+              style={{ marginTop: 14 }}
+              onClick={() => router.push(sale.customerId ? `/checkout?customerId=${sale.customerId}` : '/checkout')}
             >
               Start new sale
-            </Button>
-          </AlertDescription>
-        </Alert>
+            </button>
+          </CardPad>
+        </Card>
       )}
 
       {isConfirmationOpen && sale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="refund-confirmation-title">
-          <Card className="w-full max-w-lg shadow-xl">
-            <CardHeader>
-              <CardTitle id="refund-confirmation-title">Confirm refund request</CardTitle>
-              <CardDescription>
-                Refund ₹{money(refundTotal)} for invoice {sale.id}? This sends the selected {selectedLines.length} line{selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender ({originalMethods.join(', ')}), and returns approved units to stock.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap justify-end gap-3">
-              <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setIsConfirmationOpen(false)}>Keep return open</Button>
-              <Button type="button" disabled={isSubmitting} aria-busy={isSubmitting} onClick={() => void processRefund()}>
+        <Modal
+          title="Confirm refund request"
+          onClose={() => setIsConfirmationOpen(false)}
+          footer={
+            <>
+              <button className="btn" type="button" disabled={isSubmitting} onClick={() => setIsConfirmationOpen(false)}>
+                Keep return open
+              </button>
+              <button
+                className="btn btn-pri"
+                type="button"
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+                onClick={() => void processRefund()}
+              >
                 {isSubmitting ? 'Processing refund…' : 'Confirm refund request'}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+              </button>
+            </>
+          }
+        >
+          <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
+            Refund ₹{money(refundTotal)} for invoice {sale.id}? This sends the selected {selectedLines.length} line
+            {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
+            {originalMethods.join(', ')}), and returns approved units to stock.
+          </p>
+        </Modal>
       )}
-    </main>
+    </>
   )
 }
 
 export default function ReturnsPage() {
   return (
-    <Suspense fallback={<main>Loading returns…</main>}>
+    <Suspense fallback={<EmptyState title="Loading returns…" />}>
       <ReturnsPageInner />
     </Suspense>
   )

@@ -47,7 +47,6 @@ type ShiftHistoryEntry = {
   staffName: string | null
   terminalName: string | null
 }
-
 const LOAD_ERROR = "We couldn't load this shift. Check your connection and try again."
 const money = (value: string) => `₹${Number(value).toFixed(2)}`
 const stamp = (value: string) =>
