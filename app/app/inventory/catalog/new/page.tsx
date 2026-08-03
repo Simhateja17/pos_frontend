@@ -19,6 +19,10 @@ type VariantFormRow = {
   material: string
   price: string
   reorderThreshold: string
+  /** Optional. Written as a 'receive' stock movement after the product is
+   * created — stock is never set directly, only ever added to the append-only
+   * ledger, same as CSV import already does for its quantityOnHand column. */
+  openingStock: string
 }
 
 const EMPTY_VARIANT_ROW: VariantFormRow = {
@@ -30,6 +34,7 @@ const EMPTY_VARIANT_ROW: VariantFormRow = {
   material: '',
   price: '',
   reorderThreshold: '',
+  openingStock: '',
 }
 
 async function authHeader() {
@@ -113,6 +118,15 @@ export default function NewProductPage() {
       ) {
         return `A ${row.unitOfMeasure} variant's reorder point must be a whole number${position}.`
       }
+      if (row.openingStock.trim()) {
+        const qty = Number(row.openingStock)
+        if (Number.isNaN(qty) || qty < 0) {
+          return `Enter a valid opening stock quantity${position}.`
+        }
+        if (!allowsFractionalQuantity(row.unitOfMeasure) && !Number.isInteger(qty)) {
+          return `A ${row.unitOfMeasure} variant's opening stock must be a whole number${position}.`
+        }
+      }
     }
 
     const entered = rows.map((r) => r.barcode.trim()).filter(Boolean)
@@ -134,7 +148,8 @@ export default function NewProductPage() {
     setError(null)
     setIsSubmitting(true)
 
-    const { error: requestError } = await apiClient.POST('/products', {
+    const headers = await authHeader()
+    const { data, error: requestError } = await apiClient.POST('/products', {
       body: {
         name: name.trim(),
         categoryId: category.categoryId,
@@ -150,20 +165,34 @@ export default function NewProductPage() {
           reorderThreshold: row.reorderThreshold.trim() ? Number(row.reorderThreshold) : undefined,
         })),
       },
-      headers: await authHeader(),
+      headers,
     })
 
-    setIsSubmitting(false)
-
-    if (requestError) {
+    if (requestError || !data) {
+      setIsSubmitting(false)
       setError(
-        (requestError as { error?: string }).error ??
+        (requestError as { error?: string } | undefined)?.error ??
           'Something went wrong saving this product — try again.',
       )
       return
     }
 
-    router.push('/app/inventory/catalog')
+    // Stock is never set directly, only ever added to the append-only ledger —
+    // same as CSV import's quantityOnHand column. The response's variants come
+    // back in the same order they were sent, so index-matching is safe here.
+    await Promise.all(
+      data.variants.map((variant, index) => {
+        const qty = rows[index]?.openingStock.trim()
+        if (!qty || Number(qty) <= 0) return Promise.resolve()
+        return apiClient.POST('/stock-movements', {
+          body: { variantId: variant.id, movementType: 'receive', quantityDelta: Number(qty) },
+          headers,
+        })
+      }),
+    )
+
+    setIsSubmitting(false)
+    router.push('/app/inventory')
   }
 
   return (
@@ -173,7 +202,7 @@ export default function NewProductPage() {
         sub="Scan a barcode to start, or type the details in"
         actions={
           <>
-            <Link className="btn" href="/app/inventory/catalog">
+            <Link className="btn" href="/app/inventory">
               Cancel
             </Link>
             <button className="btn btn-pri" type="submit" form="new-product-form" disabled={isSubmitting}>
@@ -293,7 +322,7 @@ export default function NewProductPage() {
                     </Fld>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                     <Fld id={`variant-${index}-price`} label={suffix ? `Price per ${suffix}` : 'Price'}>
                       <input
                         id={`variant-${index}-price`}
@@ -303,6 +332,17 @@ export default function NewProductPage() {
                         required
                         value={row.price}
                         onChange={(e) => setRow(index, 'price', e.target.value)}
+                      />
+                    </Fld>
+                    <Fld id={`variant-${index}-opening-stock`} label={suffix ? `Opening stock (${suffix})` : 'Opening stock'}>
+                      <input
+                        id={`variant-${index}-opening-stock`}
+                        type="number"
+                        min="0"
+                        step={fractional ? '0.001' : '1'}
+                        value={row.openingStock}
+                        onChange={(e) => setRow(index, 'openingStock', e.target.value)}
+                        placeholder="0"
                       />
                     </Fld>
                     <Fld id={`variant-${index}-reorder`} label="Reorder at">

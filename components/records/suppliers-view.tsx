@@ -24,9 +24,7 @@ const EMPTY_FORM = {
   contactName: '',
   email: '',
   phone: '',
-  address: '',
   leadTimeDays: '7',
-  minOrderValue: '',
   paymentTerms: '',
 }
 
@@ -74,9 +72,7 @@ export function SuppliersView() {
       contactName: supplier.contactName ?? '',
       email: supplier.email ?? '',
       phone: supplier.phone ?? '',
-      address: supplier.address ?? '',
       leadTimeDays: String(supplier.leadTimeDays),
-      minOrderValue: supplier.minOrderValue ?? '',
       paymentTerms: supplier.paymentTerms ?? '',
     })
     setFormError(null)
@@ -106,9 +102,7 @@ export function SuppliersView() {
       contactName: form.contactName.trim() || undefined,
       email: form.email.trim() || undefined,
       phone: form.phone.trim() || undefined,
-      address: form.address.trim() || undefined,
       leadTimeDays,
-      minOrderValue: form.minOrderValue.trim() ? Number(form.minOrderValue) : undefined,
       paymentTerms: form.paymentTerms.trim() || undefined,
     }
 
@@ -209,8 +203,8 @@ export function SuppliersView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['Supplier', 'Contact', 'Lead time', 'Min order', 'Terms', 'Status', '']}
-            minWidth={880}
+            cols={['Supplier', 'Contact', 'Lead time', 'Terms', 'Status', '']}
+            minWidth={780}
           >
             {visible.map((supplier) => (
               <tr key={supplier.id}>
@@ -220,7 +214,6 @@ export function SuppliersView() {
                   {supplier.phone ? <div className="t-mono t-sub">{supplier.phone}</div> : null}
                 </td>
                 <td className="num">{supplier.leadTimeDays} days</td>
-                <td className="num t-sub">{supplier.minOrderValue ? `₹${supplier.minOrderValue}` : '—'}</td>
                 <td className="t-sub">{supplier.paymentTerms ?? '—'}</td>
                 <td>
                   <Badge tone={supplier.isActive ? 'green' : 'grey'}>{supplier.isActive ? 'Active' : 'Inactive'}</Badge>
@@ -296,24 +289,9 @@ export function SuppliersView() {
               </Fld>
             </div>
 
-            <Fld id="sup-email" label="Email">
-              <input id="sup-email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
-            </Fld>
-
-            <Fld id="sup-address" label="Address">
-              <input id="sup-address" value={form.address} onChange={(e) => setField('address', e.target.value)} />
-            </Fld>
-
             <div style={{ display: 'flex', gap: 10 }}>
-              <Fld id="sup-moq" label="Minimum order value (₹)">
-                <input
-                  id="sup-moq"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={form.minOrderValue}
-                  onChange={(e) => setField('minOrderValue', e.target.value)}
-                />
+              <Fld id="sup-email" label="Email">
+                <input id="sup-email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
               </Fld>
               <Fld id="sup-terms" label="Payment terms">
                 <input
