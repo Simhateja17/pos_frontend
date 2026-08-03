@@ -3,27 +3,10 @@
 import "./landing.css";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-
-/* ---- icon path sets (inner SVG markup) ---- */
-const FEAT_ICONS = {
-  bill: '<path d="M5.5 8.5h13l-1 11a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8z"/><path d="M8.7 8.5V6.2a3.3 3.3 0 0 1 6.6 0v2.3"/>',
-  bolt: '<path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z"/>',
-  inventory: '<path d="M3.2 8.4 12 3.8l8.8 4.6-8.8 4.6z"/><path d="M3.2 8.4v7.3l8.8 4.6 8.8-4.6V8.4M12 13v7.7"/>',
-  channels: '<circle cx="12" cy="12" r="2.4"/><path d="M7.2 7.2a6.8 6.8 0 0 0 0 9.6M16.8 7.2a6.8 6.8 0 0 1 0 9.6M4.2 4.2a11 11 0 0 0 0 15.6M19.8 4.2a11 11 0 0 1 0 15.6"/>',
-  staff: '<circle cx="9" cy="8.2" r="3.1"/><path d="M3.5 19.4a5.5 5.5 0 0 1 11 0"/><path d="M16 5.4a3 3 0 0 1 0 5.8M17.2 13.6a5.5 5.5 0 0 1 3.3 5.3"/>',
-  reports: '<path d="M4.2 4v14.8a1.5 1.5 0 0 0 1.5 1.5H20.5"/><path d="M8 15.2l3.6-4.1 3 2.6L20.2 7.6"/><circle cx="20.2" cy="7.6" r="1.1" fill="currentColor" stroke="none"/>',
-  customer: '<circle cx="12" cy="8" r="3.6"/><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0"/>',
-  challan: '<path d="M2.6 6.4A1.5 1.5 0 0 1 4.1 5h8.4a1.5 1.5 0 0 1 1.5 1.5V16H2.6z"/><path d="M14 9h3.6l3.4 3.6V16H14z"/><circle cx="7" cy="18.4" r="2"/><circle cx="17.4" cy="18.4" r="2"/>',
-  payments: '<rect x="2.5" y="5.5" width="19" height="13" rx="2.6"/><path d="M2.5 9.6h19"/><path d="M5.8 14.6H10"/>',
-};
-
-const LOGO = (
-  <img
-    src="/logo.png"
-    alt="Couture POS"
-    style={{ maxWidth: "68%", maxHeight: "68%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
-  />
-);
+import SiteHeader from "@/components/marketing/site-header";
+import SiteFooter from "@/components/marketing/site-footer";
+import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
+import { PricingGrid } from "@/components/marketing/pricing-plans";
 
 const MOCK_SB = ["Dashboard", "Billing", "Sales / Orders", "Inventory", "Customers", "Staff", "Payments", "Reports", "Analytics"];
 const MOCK_KPI = [
@@ -38,18 +21,6 @@ const MOCK_LIST = [
   { bg: "#ECFDF5", color: "#0f8f63", inv: "INV-24848", who: "Rohit Mehra · Card", amt: "₹8,650" },
 ];
 const MOCK_BARS = [38, 52, 44, 68, 60, 72, 58, 80, 70, 76];
-
-const FEATURES = [
-  ["bill", "Billing & Cart", "Ultra-fast billing with barcode scan, product search, multi-cashier, split payment, and real-time GST calculation on every line.", "EXISTING", ""],
-  ["bolt", "AI Copilot", "Ask your store anything. Copilot reads live data — stock, sales, customers — and proposes actions with data basis, requiring your approval.", "NEW", "AI"],
-  ["inventory", "Inventory & Variants", "Size × colour matrix editor, batch tracking, expiry alerts, smart reorder with Prophet forecasting, and one-click barcode labels.", "", "★"],
-  ["channels", "Omnichannel", "POS + website + Instagram + marketplace, all sharing one live stock pool. Orders flow in from every channel automatically.", "NEW", ""],
-  ["staff", "Staff & Commissions", "Role-based permissions, shift scheduling, attendance, and an AI coaching score that nudges cashiers on the POS in real time.", "NEW", "★"],
-  ["reports", "GST & Reports", "GSTR-1 ready reports, daily P&L, custom builder, scheduled exports — and a direct filing API to the GST portal (coming).", "", ""],
-  ["customer", "Loyalty & CRM", "Tiered points, gift cards, WhatsApp campaigns, DND-safe DLT templates, and AI-segmented audience builder.", "", "IMPROVE"],
-  ["challan", "Delivery Challan", "Legally-required B2B and inter-branch dispatch documents, one-click convert to tax invoice on delivery.", "NEW", ""],
-  ["payments", "Payments & Settlement", "UPI, card, cash, split — with PSP-level UTR matching, daily settlement reconciliation, and failed-payment resolution.", "", "★"],
-];
 
 const STEPS = [
   ["Business\nProfile", "Set your GSTIN, invoice header & store branding"],
@@ -99,12 +70,6 @@ function featBadges(b3, b4) {
 
 export default function LandingPage() {
   const [authenticated, setAuthenticated] = useState(false);
-  const goLogin = () => {
-    window.location.href = "/login";
-  };
-  const goSignup = () => {
-    window.location.href = "/signup";
-  };
   const goApp = () => {
     window.location.href = "/app/dashboard";
   };
@@ -134,11 +99,6 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    // Nav shadow on scroll
-    const nav = document.getElementById("main-nav");
-    const onScroll = () => nav && nav.classList.toggle("scrolled", window.scrollY > 10);
-    window.addEventListener("scroll", onScroll);
-
     // Reveal-on-scroll
     const io = new IntersectionObserver(
       (entries) => {
@@ -204,7 +164,6 @@ export default function LandingPage() {
     }
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
       io.disconnect();
       statsIo.disconnect();
       glowHandlers.forEach(([c, h]) => c.removeEventListener("pointermove", h));
@@ -214,28 +173,7 @@ export default function LandingPage() {
   return (
     <>
       {/* NAV */}
-      <nav id="main-nav">
-        <a href="#" className="nav-logo">
-          <div className="nav-logo-mark">{LOGO}</div>
-          <span className="nav-logo-text">Couture POS</span>
-        </a>
-        <div className="nav-links">
-          <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <a href="#screens">Screens</a>
-          <a href="#pricing">Pricing</a>
-        </div>
-        <div className="nav-ctas">
-          {authenticated ? (
-            <button className="btn-primary" onClick={goApp}>Back to Billing</button>
-          ) : (
-            <>
-              <button className="btn-outline" onClick={goLogin}>Log in</button>
-              <button className="btn-primary" onClick={goSignup}>Start free trial</button>
-            </>
-          )}
-        </div>
-      </nav>
+      <SiteHeader authenticated={authenticated} />
 
       {/* HERO */}
       <section className="hero-section">
@@ -432,51 +370,7 @@ export default function LandingPage() {
           </div>
           <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Start free. <em>Scale without limits.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
-          <div className="pricing-grid">
-            <div className="price-card animate-in">
-              <div className="price-plan">Starter</div>
-              <div className="price-h">₹999<span>/mo</span></div>
-              <div className="price-sub">1 store · 2 counters</div>
-              <ul className="price-features">
-                <li>Billing, inventory, orders</li>
-                <li>UPI, card, cash payments</li>
-                <li>GST-ready reports</li>
-                <li>Up to 5 staff accounts</li>
-                <li>Email support</li>
-              </ul>
-              <button className="price-btn price-btn-default" onClick={goApp}>Get started free</button>
-            </div>
-            <div className="price-card featured animate-in" style={{ position: "relative" }}>
-              <div className="price-popular">Most popular</div>
-              <div className="price-plan" style={{ color: "rgba(255,255,255,.75)" }}>Growth</div>
-              <div className="price-h">₹2,499<span style={{ color: "rgba(255,255,255,.7)" }}>/mo</span></div>
-              <div className="price-sub" style={{ color: "rgba(255,255,255,.65)" }}>Up to 3 stores · unlimited counters</div>
-              <ul className="price-features" style={{ color: "rgba(255,255,255,.9)" }}>
-                <li>Everything in Starter</li>
-                <li>Loyalty, gift cards & CRM</li>
-                <li>Sales channels (online + social)</li>
-                <li>Delivery challan & receivables</li>
-                <li>AI Copilot (100 queries/mo)</li>
-                <li>WhatsApp campaigns</li>
-                <li>Priority support</li>
-              </ul>
-              <button className="price-btn price-btn-white" onClick={goApp}>Start 14-day free trial</button>
-            </div>
-            <div className="price-card animate-in">
-              <div className="price-plan">Enterprise</div>
-              <div className="price-h">Custom</div>
-              <div className="price-sub">Unlimited stores & counters</div>
-              <ul className="price-features">
-                <li>Everything in Growth</li>
-                <li>Unlimited AI Copilot queries</li>
-                <li>Custom report builder & API</li>
-                <li>Integration marketplace</li>
-                <li>Dedicated account manager</li>
-                <li>SLA guarantee · 99.98% uptime</li>
-              </ul>
-              <button className="price-btn price-btn-default" onClick={goApp}>Talk to sales</button>
-            </div>
-          </div>
+          <PricingGrid animate />
         </div>
       </section>
 
@@ -519,33 +413,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer>
-        <div className="footer-inner">
-          <div className="footer-brand">
-            <div className="nav-logo">
-              <div className="nav-logo-mark">{LOGO}</div>
-              <span className="nav-logo-text">Couture POS</span>
-            </div>
-            <p>India&apos;s most complete retail suite — GST-native, AI-powered, offline-first.</p>
-          </div>
-          <div className="footer-col">
-            <h4>Product</h4>
-            <a href="#">Features</a><a href="#">Pricing</a><a href="#">Changelog</a><a href="#">Roadmap</a>
-          </div>
-          <div className="footer-col">
-            <h4>Retail</h4>
-            <a href="#">Fashion & Apparel</a><a href="#">Beauty & Wellness</a><a href="#">Electronics</a><a href="#">Multi-store</a>
-          </div>
-          <div className="footer-col">
-            <h4>Company</h4>
-            <a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a><a href="#">Contact</a>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>© 2026 Couture Retail Technologies Pvt. Ltd.</span>
-          <div style={{ display: "flex", gap: 20 }}><a href="#">Privacy</a><a href="#">Terms</a><a href="#">GST: 27ABCDE1234F1Z5</a></div>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
