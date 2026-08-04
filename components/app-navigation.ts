@@ -60,8 +60,8 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList },
       { label: 'Register', href: '/app/shifts', icon: WalletCards },
       { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw },
-      { label: 'Sales Channels', href: '/app/sales-channels', icon: Radio, badge: 'new' },
-      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: Truck, badge: 'new' },
+      { label: 'Sales Channels', href: '/app/sales-channels', icon: Radio },
+      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: Truck },
     ],
   },
   {
@@ -77,7 +77,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'Customers & Team',
     items: [
       { label: 'Customers', href: '/app/customers', icon: Users },
-      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: MessageCircle, badge: 'new' },
+      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: MessageCircle },
       { label: 'Staff', href: '/app/settings/members', icon: UserCog },
     ],
   },
@@ -86,8 +86,8 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Payments', href: '/app/payments', icon: BadgeIndianRupee },
       { label: 'Expenses', href: '/app/expenses', icon: Wallet },
-      { label: 'Receivables', href: '/app/receivables', icon: ReceiptText, badge: 'new' },
-      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BookText, badge: 'new' },
+      { label: 'Receivables', href: '/app/receivables', icon: ReceiptText },
+      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BookText },
     ],
   },
   {
@@ -95,16 +95,16 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Reports', href: '/app/reports', icon: ClipboardList },
       { label: 'Analytics', href: '/app/analytics', icon: BarChart3 },
-      { label: 'AI Copilot', href: '/app/copilot', icon: Sparkles, badge: 'new' },
+      { label: 'AI Copilot', href: '/app/copilot', icon: Sparkles },
     ],
   },
   {
     label: 'System',
     items: [
       { label: 'Import Data', href: '/app/import', icon: Upload },
-      { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw, badge: 'new' },
-      { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb, badge: 'new' },
-      { label: 'Customer Display', href: '/app/customer-display', icon: Monitor, badge: 'new' },
+      { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw },
+      { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb },
+      { label: 'Customer Display', href: '/app/customer-display', icon: Monitor },
       { label: 'Email', href: '/app/email', icon: Mail },
       { label: 'Notifications', href: '/app/notifications', icon: Bell },
       { label: 'Settings', href: '/app/settings', icon: Settings },
