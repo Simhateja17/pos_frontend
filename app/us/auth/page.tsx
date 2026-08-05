@@ -12,7 +12,6 @@ type SignupFields = {
   ownerName: string
   businessName: string
   email: string
-  password: string
   addressLine1: string
   city: string
   state: string
@@ -20,7 +19,7 @@ type SignupFields = {
 }
 
 const initialSignup: SignupFields = {
-  ownerName: '', businessName: '', email: '', password: '', addressLine1: '', city: '', state: '', postalCode: '',
+  ownerName: '', businessName: '', email: '', addressLine1: '', city: '', state: '', postalCode: '',
 }
 
 function responseMessage(error: unknown, fallback: string): string {
@@ -35,7 +34,8 @@ export default function USAuthPage() {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
   const [signup, setSignup] = useState<SignupFields>(initialSignup)
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +44,26 @@ export default function USAuthPage() {
   function switchMode(next: Mode) {
     setMode(next)
     setError(null)
+    setOtpSent(false)
+    setOtp('')
+  }
+
+  async function handleSendOtp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null)
+    setBusy(true)
+    try {
+      const purpose = mode === 'login' ? 'login' : 'signup'
+      const requestEmail = mode === 'login' ? email : signup.email
+      if (mode === 'signup' && !agreed) throw new Error('Please accept the Terms of Service and Privacy Policy to continue.')
+      const { error: requestError } = await apiClient.POST('/auth/otp/request', { body: { email: requestEmail, purpose } })
+      if (requestError) throw new Error(responseMessage(requestError, 'We could not send a code right now.'))
+      setOtpSent(true)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'We could not send a code right now.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -51,8 +71,8 @@ export default function USAuthPage() {
     setError(null)
     setBusy(true)
     try {
-      const { data, error: requestError } = await apiClient.POST('/auth/login', { body: { email, password } })
-      if (requestError || !data?.session) throw new Error(responseMessage(requestError, 'Invalid email or password.'))
+      const { data, error: requestError } = await apiClient.POST('/auth/login', { body: { email, otp } })
+      if (requestError || !data?.session) throw new Error(responseMessage(requestError, 'Invalid or expired code.'))
       const session = await establishSession(data.session)
       if (!session.ok) throw new Error(session.message)
       router.push('/us/onboarding/1')
@@ -66,10 +86,6 @@ export default function USAuthPage() {
   async function handleSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    if (!agreed) {
-      setError('Please accept the Terms of Service and Privacy Policy to continue.')
-      return
-    }
     setBusy(true)
     try {
       const { data, error: requestError } = await apiClient.POST('/auth/signup', {
@@ -77,7 +93,7 @@ export default function USAuthPage() {
           ownerName: signup.ownerName,
           businessName: signup.businessName,
           email: signup.email,
-          password: signup.password,
+          otp,
           addressLine1: signup.addressLine1,
           city: signup.city,
           state: signup.state,
@@ -111,30 +127,42 @@ export default function USAuthPage() {
             <>
               <h1>Welcome back</h1>
               <p className="subtitle">Sign in to continue to your paid subscription setup.</p>
-              <form onSubmit={handleLogin}>
-                <div className="form-group"><label htmlFor="us-login-email">Email</label><input id="us-login-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></div>
-                <div className="form-group"><label htmlFor="us-login-password">Password</label><input id="us-login-password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" /></div>
-                <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Signing in…' : 'Sign in →'}</button>
-              </form>
+              {!otpSent ? (
+                <form onSubmit={handleSendOtp}>
+                  <div className="form-group"><label htmlFor="us-login-email">Email</label><input id="us-login-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></div>
+                  <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Sending code…' : 'Send code →'}</button>
+                </form>
+              ) : (
+                <form onSubmit={handleLogin}>
+                  <div className="form-group"><label htmlFor="us-login-otp">6-digit code</label><input id="us-login-otp" type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" /></div>
+                  <button type="submit" className="btn btn-primary" disabled={busy || otp.length !== 6}>{busy ? 'Signing in…' : 'Sign in →'}</button>
+                </form>
+              )}
             </>
           ) : (
             <>
               <h1>Create account</h1>
               <p className="subtitle">Create your account, then choose a paid USD subscription to activate your store.</p>
-              <form onSubmit={handleSignup}>
-                <div className="form-group"><label htmlFor="us-name">Full name</label><input id="us-name" required autoComplete="name" value={signup.ownerName} onChange={(event) => setSignup((current) => ({ ...current, ownerName: event.target.value }))} placeholder="Jane Doe" /></div>
-                <div className="form-group"><label htmlFor="us-business">Business name</label><input id="us-business" required value={signup.businessName} onChange={(event) => setSignup((current) => ({ ...current, businessName: event.target.value }))} placeholder="My Boutique LLC" /></div>
-                <div className="form-group"><label htmlFor="us-email">Email</label><input id="us-email" type="email" required autoComplete="email" value={signup.email} onChange={(event) => setSignup((current) => ({ ...current, email: event.target.value }))} placeholder="you@example.com" /></div>
-                <div className="form-group"><label htmlFor="us-password">Password</label><input id="us-password" type="password" minLength={8} required autoComplete="new-password" value={signup.password} onChange={(event) => setSignup((current) => ({ ...current, password: event.target.value }))} placeholder="At least 8 characters" /></div>
-                <div className="form-group"><label htmlFor="us-address">Business address</label><input id="us-address" required value={signup.addressLine1} onChange={(event) => setSignup((current) => ({ ...current, addressLine1: event.target.value }))} placeholder="100 Congress Ave" /></div>
-                <div className="form-group"><label htmlFor="us-city">City</label><input id="us-city" required value={signup.city} onChange={(event) => setSignup((current) => ({ ...current, city: event.target.value }))} placeholder="Austin" /></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <div className="form-group"><label htmlFor="us-state">State</label><input id="us-state" required value={signup.state} onChange={(event) => setSignup((current) => ({ ...current, state: event.target.value }))} placeholder="Texas" /></div>
-                  <div className="form-group"><label htmlFor="us-postal">ZIP code</label><input id="us-postal" required value={signup.postalCode} onChange={(event) => setSignup((current) => ({ ...current, postalCode: event.target.value }))} placeholder="78701" /></div>
-                </div>
-                <div className="form-check"><input id="us-terms" type="checkbox" required checked={agreed} onChange={(event) => setAgreed(event.target.checked)} /><label htmlFor="us-terms" style={{ margin: 0, letterSpacing: 'normal', textTransform: 'none' }}>I agree to the Terms of Service and Privacy Policy</label></div>
-                <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Creating account…' : 'Create account →'}</button>
-              </form>
+              {!otpSent ? (
+                <form onSubmit={handleSendOtp}>
+                  <div className="form-group"><label htmlFor="us-name">Full name</label><input id="us-name" required autoComplete="name" value={signup.ownerName} onChange={(event) => setSignup((current) => ({ ...current, ownerName: event.target.value }))} placeholder="Jane Doe" /></div>
+                  <div className="form-group"><label htmlFor="us-business">Business name</label><input id="us-business" required value={signup.businessName} onChange={(event) => setSignup((current) => ({ ...current, businessName: event.target.value }))} placeholder="My Boutique LLC" /></div>
+                  <div className="form-group"><label htmlFor="us-email">Email</label><input id="us-email" type="email" required autoComplete="email" value={signup.email} onChange={(event) => setSignup((current) => ({ ...current, email: event.target.value }))} placeholder="you@example.com" /></div>
+                  <div className="form-group"><label htmlFor="us-address">Business address</label><input id="us-address" required value={signup.addressLine1} onChange={(event) => setSignup((current) => ({ ...current, addressLine1: event.target.value }))} placeholder="100 Congress Ave" /></div>
+                  <div className="form-group"><label htmlFor="us-city">City</label><input id="us-city" required value={signup.city} onChange={(event) => setSignup((current) => ({ ...current, city: event.target.value }))} placeholder="Austin" /></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div className="form-group"><label htmlFor="us-state">State</label><input id="us-state" required value={signup.state} onChange={(event) => setSignup((current) => ({ ...current, state: event.target.value }))} placeholder="Texas" /></div>
+                    <div className="form-group"><label htmlFor="us-postal">ZIP code</label><input id="us-postal" required value={signup.postalCode} onChange={(event) => setSignup((current) => ({ ...current, postalCode: event.target.value }))} placeholder="78701" /></div>
+                  </div>
+                  <div className="form-check"><input id="us-terms" type="checkbox" required checked={agreed} onChange={(event) => setAgreed(event.target.checked)} /><label htmlFor="us-terms" style={{ margin: 0, letterSpacing: 'normal', textTransform: 'none' }}>I agree to the Terms of Service and Privacy Policy</label></div>
+                  <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Sending code…' : 'Send code →'}</button>
+                </form>
+              ) : (
+                <form onSubmit={handleSignup}>
+                  <div className="form-group"><label htmlFor="us-signup-otp">6-digit code</label><input id="us-signup-otp" type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" /></div>
+                  <button type="submit" className="btn btn-primary" disabled={busy || otp.length !== 6}>{busy ? 'Creating account…' : 'Create account →'}</button>
+                </form>
+              )}
             </>
           )}
           <p className="auth-link"><a href="/us">← Back to US retail</a></p>

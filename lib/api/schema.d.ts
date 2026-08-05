@@ -586,6 +586,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/otp/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Send a 6-digit email OTP via Supabase Auth. Always responds 200 regardless of whether the account exists, to avoid leaking account existence. `purpose: 'signup'` lets Supabase create the Auth user on verification; `purpose: 'login'` does not. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["OtpRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description Code sent (if applicable) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/signup": {
         parameters: {
             query?: never;
@@ -595,7 +644,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Real self-serve signup — creates a Supabase Auth user, a tenants row with the full business/tax profile, and an owner staff_members row. */
+        /** @description Real self-serve signup — verifies the emailed OTP (creating the Supabase Auth user if needed), then creates a tenants row with the full business/tax profile and an owner staff_members row. */
         post: {
             parameters: {
                 query?: never;
@@ -617,6 +666,13 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
+                };
+                /** @description Invalid or expired code */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description An account already exists with this email */
                 409: {
@@ -642,7 +698,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Email+password login via Supabase Auth. Derives role/tenantId from a server-side staff_members lookup. */
+        /** @description Email+OTP login via Supabase Auth. Derives role/tenantId from the custom access token hook claims on the verified session. */
         post: {
             parameters: {
                 query?: never;
@@ -665,7 +721,7 @@ export interface paths {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
                 };
-                /** @description Invalid email or password */
+                /** @description Invalid or expired code */
                 401: {
                     headers: {
                         [name: string]: unknown;
@@ -4126,6 +4182,12 @@ export interface components {
             };
         };
         CompleteOnboardingRequest: Record<string, never>;
+        OtpRequestRequest: {
+            /** Format: email */
+            email: string;
+            /** @enum {string} */
+            purpose: "login" | "signup";
+        };
         AuthResponse: {
             user: {
                 /** Format: uuid */
@@ -4145,7 +4207,7 @@ export interface components {
         SignupRequest: {
             /** Format: email */
             email: string;
-            password: string;
+            otp: string;
             ownerName: string;
             businessName: string;
             tradeName?: string;
@@ -4165,7 +4227,7 @@ export interface components {
         LoginRequest: {
             /** Format: email */
             email: string;
-            password: string;
+            otp: string;
         };
         Member: {
             /** Format: uuid */
