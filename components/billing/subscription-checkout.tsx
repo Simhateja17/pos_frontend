@@ -142,12 +142,28 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       setAttemptKey(currentAttemptKey)
       window.sessionStorage.setItem(attemptStorageKey, currentAttemptKey)
       if (region === 'IN' && (selected.key === 'starter' || selected.key === 'growth')) {
-        const selection = await apiClient.PUT('/onboarding/steps/{step}', {
-          params: { path: { step: 1 } },
-          headers,
-          body: { trialPlan: selected.key, billingCycle: cycle },
-        })
-        if (selection.error) throw new Error(providerError(selection.error, 'We could not save your plan selection.'))
+        // Persist the plan selection only for an unfinished onboarding record.
+        // Once onboarding is complete, billing owns the new plan choice and the
+        // old step-save endpoint correctly returns 409 for required steps. That
+        // 409 must not prevent the actual Razorpay subscription request.
+        const onboarding = await apiClient.GET('/onboarding', { headers })
+        if (onboarding.error || !onboarding.data) {
+          throw new Error(providerError(onboarding.error, 'We could not load your onboarding status.'))
+        }
+        if (!onboarding.data.completed) {
+          const selection = await apiClient.PUT('/onboarding/steps/{step}', {
+            params: { path: { step: 1 } },
+            headers,
+            body: { trialPlan: selected.key, billingCycle: cycle },
+          })
+          if (selection.error) {
+            const alreadyComplete = selection.response.status === 409
+              && providerError(selection.error, '') === 'Onboarding is already complete'
+            if (!alreadyComplete) {
+              throw new Error(providerError(selection.error, 'We could not save your plan selection.'))
+            }
+          }
+        }
       }
       const { data, error: createError, response } = await apiClient.POST('/billing/subscription', {
         headers,
