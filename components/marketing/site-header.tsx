@@ -37,7 +37,7 @@ export default function SiteHeader({ authenticated = false }: { authenticated?: 
         ) : (
           <>
             <a className="btn-outline" style={{ display: "inline-flex", alignItems: "center" }} href="/login">Log in</a>
-            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href="/signup">Start free trial</a>
+            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href="/signup">Choose a plan</a>
           </>
         )}
       </div>

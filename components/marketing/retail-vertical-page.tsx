@@ -58,9 +58,9 @@ export default function RetailVerticalPage({
 
       <section className="cta-section">
         <h2>Ready to run {tag.toLowerCase()}<br />on Couture POS?</h2>
-        <p>Start free, no card required. Migrate your existing catalog in minutes.</p>
+        <p>Choose a paid plan and migrate your existing catalog in minutes.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/signup">Start free trial</a>
+          <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>
         </div>
       </section>

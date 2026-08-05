@@ -1,38 +1,27 @@
 import { test, expect } from './fixtures'
 
 /**
- * The onboarding wizard is gone. Business identity and GST are captured once at
- * signup, plan selection is the only step between signup and the app, and the
- * remaining setup is done in-context from the dashboard's setup prompt.
+ * India onboarding now requires a verified paid subscription. These checks
+ * cover the payment summary and the test-mode configuration guard without
+ * opening an external Razorpay Checkout session.
  */
-test.describe('India onboarding', () => {
-  test('plan selection records the tier and lands the owner in the app', async ({ authenticatedPage: page }) => {
+test.describe('India onboarding billing', () => {
+  test('paid plan selection shows the exact tax-inclusive payment summary', async ({ authenticatedPage: page }) => {
     await page.goto('/plans')
     await page.getByRole('button', { name: /starter/i }).click()
-    await page.getByRole('button', { name: /start 14-day/i }).click()
-    await expect(page).toHaveURL(/\/app\/dashboard/)
+    await expect(page.getByText(/GST \(18% included\)/i)).toBeVisible()
+    await expect(page.getByText(/total payable/i)).toBeVisible()
+    await expect(page.getByRole('button', { name: /pay .*activate/i })).toBeVisible()
   })
 
-  test('a failed plan save still lets the owner reach the app', async ({ authenticatedPage: page }) => {
-    await page.route('**/api/onboarding/steps/1', (route) =>
-      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
-    )
+  test('the payment action is unavailable until a Razorpay test Plan ID is configured', async ({ authenticatedPage: page }) => {
     await page.goto('/plans')
-    await page.getByRole('button', { name: /start 14-day/i }).click()
-    await expect(page).toHaveURL(/\/app\/dashboard/)
-    await page.unroute('**/api/onboarding/steps/1')
+    await expect(page.getByText(/waiting for its Razorpay Plan ID/i)).toBeVisible()
+    await expect(page.getByRole('button', { name: /pay .*activate/i })).toBeDisabled()
   })
 
-  test('the retired wizard route no longer strands a bookmark', async ({ authenticatedPage: page }) => {
+  test('a stale onboarding bookmark returns to the paid plan step', async ({ authenticatedPage: page }) => {
     await page.goto('/onboarding')
-    await expect(page).toHaveURL(/\/app\/dashboard/)
-  })
-
-  test('renders only server-confirmed completion facts', async ({ authenticatedPage: page }) => {
-    await page.setViewportSize({ width: 1440, height: 960 })
-    await page.goto('/onboarding/complete')
-    await expect(page.getByRole('link', { name: /launch dashboard/i })).toBeVisible()
-    // The vertical picker is gone, so no category is reported.
-    await expect(page.getByText(/^category$/i)).toHaveCount(0)
+    await expect(page).toHaveURL(/\/plans/)
   })
 })

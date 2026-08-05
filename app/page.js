@@ -196,7 +196,7 @@ export default function LandingPage() {
           <span className="dot"></span>
           <span>✓ Works offline</span>
           <span className="dot"></span>
-          <span>✓ 14-day free trial</span>
+          <span>✓ Paid plans with secure checkout</span>
         </div>
 
         {/* product mock */}
@@ -401,15 +401,15 @@ export default function LandingPage() {
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
         <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Join 2,400+ retailers already running on Couture POS. Start free, no card required.</p>
+        <p className="animate-in">Join 2,400+ retailers already running on Couture POS. Choose a paid plan and activate your store.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
-            Start free trial
+            Choose a plan
           </button>
           <button className="btn-cta-g" onClick={goApp}>Explore prototype →</button>
         </div>
-        <p className="cta-note">No credit card · 14-day free trial · cancel any time</p>
+        <p className="cta-note">Secure checkout · monthly or annual billing · cancel at cycle end</p>
       </section>
 
       {/* FOOTER */}

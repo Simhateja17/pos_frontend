@@ -31,7 +31,7 @@ export default function LandingPage() {
               Sign in
             </button>
             <button className="btn btn-primary" onClick={goAuth}>
-              Start free trial
+              Choose a plan
             </button>
           </div>
         </header>
@@ -45,7 +45,7 @@ export default function LandingPage() {
           </p>
           <div className="hero-cta">
             <button className="btn btn-primary btn-lg" onClick={goAuth}>
-              Start free trial
+              Choose a plan
             </button>
             <button className="btn btn-ghost btn-lg">Watch demo</button>
           </div>
@@ -116,7 +116,7 @@ export default function LandingPage() {
                 <li>Phone &amp; email support</li>
               </ul>
               <button className="btn btn-primary" onClick={goAuth}>
-                Start free trial
+                Choose a plan
               </button>
             </div>
           </div>

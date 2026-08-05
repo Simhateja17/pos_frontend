@@ -14,8 +14,8 @@ export const STEPS = [
     n: 1,
     label: "Choose your plan",
     help: {
-      title: "14-day free trial",
-      text: "Try any plan free for 14 days. No credit card required — switch or cancel anytime.",
+      title: "Paid subscription",
+      text: "Choose a plan and complete secure checkout to activate your store.",
     },
     body: `
       <form data-onboarding-form>
@@ -24,7 +24,7 @@ export const STEPS = [
           Step 1 of 8
         </div>
         <h1>Pick the plan that fits your store</h1>
-        <p class="subtitle">All prices in USD. Start with a 14-day free trial — no card required. You can change plans anytime.</p>
+        <p class="subtitle">All prices in USD. Your subscription starts after secure checkout. You can change plans in a future billing cycle.</p>
 
         <div class="form-group">
           <label>Subscription plan</label>
@@ -43,11 +43,11 @@ export const STEPS = [
               <div class="choice-body"><b>Enterprise — Custom</b><span>Unlimited locations &amp; registers · custom reporting and API, dedicated account manager and 99.98% uptime SLA</span></div>
             </label>
           </div>
-          <div class="form-hint" style="margin-top:10px;">Save 20% with annual billing — applied at checkout after your trial.</div>
+          <div class="form-hint" style="margin-top:10px;">Annual billing is charged upfront through Razorpay.</div>
         </div>
 
         <div class="button-group">
-          <button type="submit" class="btn btn-primary">Start free trial
+          <button type="submit" class="btn btn-primary">Continue to payment
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </button>
           <button type="button" class="btn btn-skip" data-nav="skip">Decide later</button>

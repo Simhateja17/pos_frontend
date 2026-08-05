@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase/client'
 import {
   AuthenticatedRequestError,
   getAuthenticatedAppContext,
+  getAuthenticatedBillingStatus,
   type AppContext,
 } from '@/lib/api/authenticated-client'
 import styles from '@/components/app-shell.module.css'
@@ -63,6 +64,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (pathname !== '/app') void loadContext()
   }, [loadContext, pathname])
+
+  useEffect(() => {
+    if (pathname === '/app') return
+    void getAuthenticatedBillingStatus()
+      .then((status) => {
+        if (!status.accessAllowed) router.replace('/plans')
+      })
+      .catch(() => {
+        // Operational API calls remain server-gated. A transient status read
+        // must not turn a recoverable network failure into a logout.
+      })
+  }, [pathname, router])
 
   const reauthenticate = useCallback(async () => {
     await supabase.auth.signOut()

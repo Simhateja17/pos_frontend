@@ -156,7 +156,7 @@ export default function SignupPage() {
       {step === 'account' ? (
         <>
           <h1 className={styles.heading}>Create your store account.</h1>
-          <p className={styles.subheading}>14-day free trial · No credit card required.</p>
+          <p className={styles.subheading}>Create your account, then choose a paid subscription to activate your store.</p>
           {error && <div className={styles.alert} role="alert">{error}</div>}
           <form onSubmit={handleAccountSubmit}>
             <label className={styles.field}>

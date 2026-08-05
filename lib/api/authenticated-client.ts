@@ -3,6 +3,7 @@ import { apiClient } from './client'
 import { supabase } from '@/lib/supabase/client'
 
 export type AppContext = components['schemas']['AppContext']
+export type BillingStatus = components['schemas']['BillingStatus']
 export type NotificationList = components['schemas']['NotificationList']
 export type Dashboard = components['schemas']['Dashboard']
 export type DashboardRange = components['schemas']['DashboardRange']
@@ -138,6 +139,20 @@ export async function getAuthenticatedAppContext(): Promise<AppContext> {
       'network',
       'We could not reach the store context. Check your connection and retry.',
     )
+  }
+}
+
+export async function getAuthenticatedBillingStatus(): Promise<BillingStatus> {
+  try {
+    const { data, error, response } = await apiClient.GET('/billing/status', {
+      headers: await authorizationHeader(),
+    })
+    if (response.status === 401) throw new AuthenticatedRequestError('unauthenticated', 'Your session has expired. Sign in again to continue.')
+    if (error || !data) throw new AuthenticatedRequestError('unavailable', 'Subscription status is unavailable right now. Please retry.')
+    return data
+  } catch (error) {
+    if (error instanceof AuthenticatedRequestError) throw error
+    throw new AuthenticatedRequestError('network', 'We could not reach subscription status. Check your connection and retry.')
   }
 }
 

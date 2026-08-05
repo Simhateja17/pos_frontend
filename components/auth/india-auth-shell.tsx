@@ -20,7 +20,7 @@ type BackendSession = {
  * token handling here prevents login and signup from drifting into different
  * authentication paths.
  */
-export async function establishIndiaSession(session: BackendSession) {
+export async function establishSession(session: BackendSession) {
   const { error } = await supabase.auth.setSession({
     access_token: session.accessToken,
     refresh_token: session.refreshToken,
@@ -41,6 +41,10 @@ export async function establishIndiaSession(session: BackendSession) {
     return { ok: false as const, message: 'We could not open your store context. Please try again.' }
   }
 }
+
+// Kept as a compatibility alias for the existing India auth screens while
+// the US route uses the same verified Supabase-session installation path.
+export const establishIndiaSession = establishSession
 
 const content = {
   signup: {

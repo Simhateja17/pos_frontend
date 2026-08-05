@@ -4,6 +4,305 @@
  */
 
 export interface paths {
+    "/billing/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the backend-owned subscription catalog for the authenticated tenant region. Provider Plan IDs are never sent to the browser. */
+        get: {
+            parameters: {
+                query?: {
+                    region?: "IN" | "US";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription plan catalog */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingPlanCatalog"];
+                    };
+                };
+                /** @description Region does not match the tenant account */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the server-owned subscription entitlement and provider references for the authenticated tenant. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription entitlement */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create or recover one Razorpay Subscription using an application idempotency key. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Razorpay subscription ready for Checkout */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateSubscriptionResponse"];
+                    };
+                };
+                /** @description Invalid plan or request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Existing subscription or ended idempotency attempt */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider or plan configuration is not ready */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Verify the Razorpay Checkout signature and provider subscription state. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerifySubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Verified subscription entitlement */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Signature or subscription mismatch */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider status is not confirmed yet */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Schedule cancellation at the end of the current billing cycle. No immediate cancellation or refund is performed. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CancelSubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Cancellation scheduled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No subscription found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/context": {
         parameters: {
             query?: never;
@@ -3476,6 +3775,98 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BillingPlanCatalog: {
+            /** @enum {string} */
+            mode: "test" | "live";
+            region: components["schemas"]["BillingRegion"];
+            plans: components["schemas"]["BillingPlanOption"][];
+        };
+        /** @enum {string} */
+        BillingRegion: "IN" | "US";
+        BillingPlanOption: {
+            key: string;
+            region: components["schemas"]["BillingRegion"];
+            currency: components["schemas"]["BillingCurrency"];
+            name: string;
+            description: string;
+            popular: boolean;
+            features: string[];
+            monthly: components["schemas"]["BillingQuote"];
+            annual: components["schemas"]["BillingQuote"];
+            monthlyAvailable: boolean;
+            annualAvailable: boolean;
+            providerConfigured: {
+                monthly: boolean;
+                annual: boolean;
+            };
+        };
+        /** @enum {string} */
+        BillingCurrency: "INR" | "USD";
+        BillingQuote: {
+            baseAmountMinor: number;
+            taxAmountMinor: number;
+            totalAmountMinor: number;
+            taxRateBps: number;
+            /** @enum {string} */
+            taxMode: "included" | "exclusive";
+            taxLabel: string;
+        };
+        BillingStatus: {
+            hasSubscription: boolean;
+            /** @enum {string} */
+            entitlement: "active" | "grace" | "blocked";
+            accessAllowed: boolean;
+            /** Format: date-time */
+            graceUntil: string | null;
+            subscription: {
+                /** Format: uuid */
+                id: string;
+                providerSubscriptionId: string;
+                planKey: string;
+                billingCycle: components["schemas"]["BillingCycle"];
+                currency: components["schemas"]["BillingCurrency"];
+                status: string;
+                cancelAtCycleEnd: boolean;
+                /** Format: date-time */
+                currentEndAt: string | null;
+                lastPaymentId: string | null;
+                lastInvoiceId: string | null;
+            } | null;
+        };
+        /** @enum {string} */
+        BillingCycle: "monthly" | "annual";
+        CreateSubscriptionResponse: {
+            /** Format: uuid */
+            attemptId: string;
+            razorpayKeyId: string;
+            razorpaySubscriptionId: string;
+            status: string;
+            region: components["schemas"]["BillingRegion"];
+            planKey: string;
+            billingCycle: components["schemas"]["BillingCycle"];
+            currency: components["schemas"]["BillingCurrency"];
+            quote: components["schemas"]["BillingQuote"];
+        };
+        CreateSubscriptionRequest: {
+            planKey: string;
+            billingCycle: components["schemas"]["BillingCycle"];
+            /** Format: uuid */
+            idempotencyKey: string;
+        };
+        VerifySubscriptionRequest: {
+            /** Format: uuid */
+            attemptId: string;
+            razorpayPaymentId: string;
+            razorpaySubscriptionId: string;
+            razorpaySignature: string;
+        };
+        CancelSubscriptionRequest: {
+            /**
+             * @default true
+             * @enum {boolean}
+             */
+            cancelAtCycleEnd: true;
+        };
         AppContext: {
             staff: {
                 /** Format: uuid */

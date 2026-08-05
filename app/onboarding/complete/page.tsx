@@ -36,7 +36,10 @@ export default function OnboardingCompletePage() {
         }
         const { data, error, response } = await apiClient.POST('/onboarding/complete', { headers: auth, body: {} })
         if (response.status === 409) {
-          router.replace(`/onboarding/${Math.max(1, state.data.currentStep + 1)}`)
+          // The only required onboarding step is the paid subscription. A
+          // failed/unfinished payment returns the owner to the plan selector,
+          // never into a dead wizard step.
+          router.replace('/plans')
           return
         }
         if (error || !data) throw new Error('We could not confirm your setup. Please retry.')

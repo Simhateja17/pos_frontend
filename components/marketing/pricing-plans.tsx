@@ -26,7 +26,7 @@ export const PLANS: Plan[] = [
     sub: "Up to 3 stores · unlimited counters",
     features: ["Everything in Starter", "Loyalty, gift cards & CRM", "Sales channels (online + social)", "Delivery challan & receivables", "AI Copilot (100 queries/mo)", "WhatsApp campaigns", "Priority support"],
     featured: true,
-    ctaLabel: "Start 14-day free trial",
+    ctaLabel: "Choose a paid plan",
     ctaHref: "/app/dashboard",
   },
   {

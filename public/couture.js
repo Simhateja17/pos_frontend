@@ -1721,7 +1721,7 @@ splash: function(){
     +'<button onclick="authGo(\'login\')" style="height:50px;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-family:\'Space Grotesk\',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;transition:all .18s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.08)\'">Sign in to existing account</button>'
     +'</div>'
     +'<div style="display:flex;gap:20px;margin-top:28px;font-size:12px;color:rgba(255,255,255,.45)">'
-    +'<span>✓ 14-day free trial</span><span>✓ No credit card</span><span>✓ GST-compliant</span>'
+    +'<span>✓ Secure paid checkout</span><span>✓ Monthly or annual billing</span><span>✓ GST-compliant</span>'
     +'</div></div>'
     +'<div style="position:absolute;bottom:22px;font-size:12px;color:rgba(255,255,255,.28)">© 2026 Couture Retail Technologies Pvt Ltd</div>'
     +'</div>';
@@ -1759,7 +1759,7 @@ signup: function(){
     +'</div>'
   );
   var fp='<div class="a-form"><div class="a-form-inner">'
-    +'<div style="margin-bottom:22px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">Create your store account.</div><div style="font-size:14px;color:#667085">14-day free trial · No credit card required.</div></div>'
+    +'<div style="margin-bottom:22px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">Create your store account.</div><div style="font-size:14px;color:#667085">Create your account, then choose a paid subscription.</div></div>'
     +af('name','Full name',{ph:'Your name',req:true})
     +'<label class="af"><span>Mobile number<span class="ar">*</span></span><div style="display:flex">'+ccSel()+'<input type="tel" id="d_phone" placeholder="'+(AUTH.d.cc==='+1'?'(201) 555-0123':'98200 00000')+'" value="'+AUTH.d.phone+'" style="border:1.5px solid #E6E8EB;border-left:none;border-radius:0 10px 10px 0;flex:1;height:46px;padding:0 14px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:14px;outline:none" oninput="AUTH.d.phone=this.value"></div><div class="ah">OTP will be sent to verify this number</div></label>'
     +af('email','Email address',{type:'email',ph:'owner@yourstore.com'})
@@ -1826,7 +1826,7 @@ subscription: function(){
   return '<div class="a-full" style="background:#F2F4F7;overflow-y:auto;justify-content:flex-start;padding:48px 40px">'
     +'<div style="width:100%;max-width:860px;margin:0 auto">'
     +'<div style="text-align:center;margin-bottom:6px"><button class="ab-link" style="font-size:13px;color:#98A2B3" onclick="authGo(\'biztype\',\'back\')">← Back</button></div>'
-    +'<div style="text-align:center;margin-bottom:24px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">Choose your plan.</div><div style="font-size:15px;color:#667085;margin-bottom:20px">No credit card required · 14-day free trial on any plan</div>'
+    +'<div style="text-align:center;margin-bottom:24px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">Choose your plan.</div><div style="font-size:15px;color:#667085;margin-bottom:20px">Choose a paid plan and complete secure checkout</div>'
     +'<div class="a-bill-tog" style="margin:0 auto 0"><button class="a-bill-opt'+(billing==='monthly'?' on':'')+'" onclick="AUTH.billing=\'monthly\';authGo(\'subscription\')">Monthly</button><button class="a-bill-opt'+(billing==='annual'?' on':'')+'" onclick="AUTH.billing=\'annual\';authGo(\'subscription\')">Annual <span style="background:#10B981;color:#fff;padding:2px 7px;border-radius:100px;font-size:10px;margin-left:4px">Save 20%</span></button></div></div>'
     +'<div class="a-plan-wrap">'
     +plans.map(function(p){
@@ -1841,8 +1841,8 @@ subscription: function(){
         +'</div>';
     }).join('')
     +'</div>'
-    +'<div style="text-align:center;margin-top:16px"><button class="ab-pri" style="width:300px;height:50px;border-radius:12px;font-size:16px" onclick="AUTH.step=0;authGo(\'wizard\')">Start 14-day free trial →</button>'
-    +'<div style="font-size:12.5px;color:#98A2B3;margin-top:10px">No credit card · cancel any time · free plan available forever</div></div>'
+    +'<div style="text-align:center;margin-top:16px"><button class="ab-pri" style="width:300px;height:50px;border-radius:12px;font-size:16px" onclick="AUTH.step=0;authGo(\'wizard\')">Continue to payment →</button>'
+    +'<div style="font-size:12.5px;color:#98A2B3;margin-top:10px">Secure checkout · cancel at the end of your billing cycle</div></div>'
     +'</div></div>';
 },
 
