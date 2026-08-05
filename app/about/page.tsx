@@ -15,8 +15,6 @@ const TEAM = [
   ["LT", "#0058BA", "Lakshmi Thulasi", "Co-Founder & Director"],
   ["SP", "#0E7490", "Dr. Siva Prathap", "Co-Founder & Director"],
   ["ST", "#6D28D9", "Simha Teja", "Co-Founder & Director"],
-  ["P", "#B45309", "Poojitha", "Developer"],
-  ["S", "#15803D", "Surendra", "Developer"],
 ];
 
 export default function AboutPage() {
