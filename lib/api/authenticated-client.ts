@@ -13,6 +13,7 @@ export type Supplier = components['schemas']['Supplier']
 export type CreateSupplierRequest = components['schemas']['CreateSupplierRequest']
 export type UpdateSupplierRequest = components['schemas']['UpdateSupplierRequest']
 export type SupplierProduct = components['schemas']['SupplierProduct']
+export type SupplierProductWithVariant = components['schemas']['SupplierProductWithVariant']
 export type CreateSupplierProductRequest = components['schemas']['CreateSupplierProductRequest']
 export type UpdateSupplierProductRequest = components['schemas']['UpdateSupplierProductRequest']
 export type ReorderSuggestion = components['schemas']['ReorderSuggestion']
@@ -214,6 +215,14 @@ export function getAuthenticatedSuppliers(): Promise<Supplier[]> {
   )
 }
 
+export function getAuthenticatedSupplier(supplierId: string): Promise<Supplier> {
+  return authenticatedRead(
+    async () =>
+      apiClient.GET('/suppliers/{supplierId}', { params: { path: { supplierId } }, headers: await authorizationHeader() }),
+    'That supplier is unavailable right now. Please retry.',
+  )
+}
+
 export function createAuthenticatedSupplier(body: CreateSupplierRequest): Promise<Supplier> {
   return authenticatedRead(
     async () => apiClient.POST('/suppliers', { body, headers: await authorizationHeader() }),
@@ -230,6 +239,17 @@ export function updateAuthenticatedSupplier(supplierId: string, body: UpdateSupp
         headers: await authorizationHeader(),
       }),
     'That supplier could not be updated. Please retry.',
+  )
+}
+
+export function getAuthenticatedSupplierProductsForSupplier(supplierId: string): Promise<SupplierProductWithVariant[]> {
+  return authenticatedRead(
+    async () =>
+      apiClient.GET('/suppliers/{supplierId}/products', {
+        params: { path: { supplierId } },
+        headers: await authorizationHeader(),
+      }),
+    'Products for this supplier are unavailable right now. Please retry.',
   )
 }
 

@@ -2263,6 +2263,51 @@ export interface paths {
         };
         trace?: never;
     };
+    "/suppliers/{supplierId}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every product this supplier is linked to, for the supplier detail page's Products supplied tab. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Products supplied */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierProductWithVariantList"];
+                    };
+                };
+                /** @description Supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/variants/{variantId}/supplier-products": {
         parameters: {
             query?: never;
@@ -4153,7 +4198,14 @@ export interface components {
             paymentTerms?: string;
             isActive?: boolean;
         };
-        SupplierProductList: components["schemas"]["SupplierProduct"][];
+        SupplierProductWithVariantList: components["schemas"]["SupplierProductWithVariant"][];
+        SupplierProductWithVariant: components["schemas"]["SupplierProduct"] & {
+            sku: string;
+            productName: string;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+        };
         SupplierProduct: {
             /** Format: uuid */
             id: string;
@@ -4169,6 +4221,7 @@ export interface components {
             minOrderQty: number | null;
             createdAt: string;
         };
+        SupplierProductList: components["schemas"]["SupplierProduct"][];
         CreateSupplierProductRequest: {
             /** Format: uuid */
             supplierId: string;

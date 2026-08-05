@@ -121,8 +121,13 @@ export function PaymentMethodGrid({
               step={0.01}
               value={row.amount}
               disabled={disabled}
+              // Single-method mode always covers the whole bill — the amount
+              // is fixed to the total, so editing it would just get silently
+              // overwritten on the next render. Split mode still needs free
+              // entry, since amounts genuinely differ per method there.
+              readOnly={!splitEnabled}
               aria-label={`${METHOD_LABELS[row.method]} amount`}
-              onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
+              onChange={(e) => splitEnabled && onRowChange(index, { ...row, amount: e.target.value })}
               placeholder="₹0.00"
             />
 
