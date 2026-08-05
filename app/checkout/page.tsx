@@ -250,6 +250,17 @@ function CheckoutPageInner() {
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
 
+  // Single-method mode: the one tender row always covers the whole bill, so
+  // if the cart total changes after the method was picked (another item
+  // added, a discount applied), the amount tracks it rather than going
+  // stale and tripping the payment-sum check.
+  useEffect(() => {
+    if (splitEnabled || tenderRows.length !== 1) return
+    const total = preChargeEstimate.toFixed(2)
+    if (tenderRows[0].amount === total) return
+    setTenderRows((rows) => (rows[0] ? [{ ...rows[0], amount: total }] : rows))
+  }, [splitEnabled, preChargeEstimate, tenderRows])
+
   async function runSearch(query: string) {
     setSearchError(null)
     // Starting to scan/search for the next sale clears the prior receipt.
@@ -370,26 +381,37 @@ function CheckoutPageInner() {
   }
 
   function toggleTenderMethod(method: TenderMethod) {
+    // Reads current state directly rather than nesting a setTenderRows call
+    // inside setTenderMethods's updater — React Strict Mode double-invokes
+    // updater functions to check purity, and since the nested call had a
+    // side effect (dispatching its own state update), that doubling made
+    // every tap add two rows instead of one.
+    const alreadySelected = tenderMethods.includes(method)
+
     // Off split mode, one tap picks exactly one method — tapping the same
     // tile again clears it, tapping a different tile replaces it. This is
     // what keeps a single payment down to one tile + one input, instead of
     // both piling up looking like duplicate entries.
     if (!splitEnabled) {
-      setTenderMethods((current) => (current.includes(method) ? [] : [method]))
-      setTenderRows((rows) =>
-        rows.some((r) => r.method === method) ? [] : [{ method, amount: '' }],
+      setTenderMethods(alreadySelected ? [] : [method])
+      setTenderRows(
+        alreadySelected
+          ? []
+          // A single method covers the whole bill by definition — default
+          // the amount to the current total instead of making the cashier
+          // retype a number that's already on screen.
+          : [{ method, amount: preChargeEstimate.toFixed(2) }],
       )
       return
     }
 
-    setTenderMethods((current) => {
-      if (current.includes(method)) {
-        setTenderRows((rows) => rows.filter((r) => r.method !== method))
-        return current.filter((m) => m !== method)
-      }
-      setTenderRows((rows) => [...rows, { method, amount: '' }])
-      return [...current, method]
-    })
+    if (alreadySelected) {
+      setTenderMethods(tenderMethods.filter((m) => m !== method))
+      setTenderRows(tenderRows.filter((r) => r.method !== method))
+      return
+    }
+    setTenderMethods([...tenderMethods, method])
+    setTenderRows([...tenderRows, { method, amount: '' }])
   }
 
   function handleToggleSplit(enabled: boolean) {
@@ -408,18 +430,16 @@ function CheckoutPageInner() {
     const availableMethods: TenderMethod[] = ['cash', 'card', 'check']
     const next = availableMethods.find((m) => !tenderRows.some((r) => r.method === m))
     if (!next) return
-    setTenderMethods((current) => [...current, next])
-    setTenderRows((rows) => [...rows, { method: next, amount: '' }])
+    setTenderMethods([...tenderMethods, next])
+    setTenderRows([...tenderRows, { method: next, amount: '' }])
   }
 
   function handleRemoveTenderRow(index: number) {
-    setTenderRows((rows) => {
-      const removed = rows[index]
-      if (removed) {
-        setTenderMethods((methods) => methods.filter((m) => m !== removed.method))
-      }
-      return rows.filter((_, i) => i !== index)
-    })
+    const removed = tenderRows[index]
+    setTenderRows(tenderRows.filter((_, i) => i !== index))
+    if (removed) {
+      setTenderMethods(tenderMethods.filter((m) => m !== removed.method))
+    }
   }
 
   async function submitSale(body: PendingSaleBody, extraHeaders?: Record<string, string>) {

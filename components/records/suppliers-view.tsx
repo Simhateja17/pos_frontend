@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus, Truck } from 'lucide-react'
 import {
   type Supplier,
@@ -31,6 +32,7 @@ const EMPTY_FORM = {
 type FormState = typeof EMPTY_FORM
 
 export function SuppliersView() {
+  const router = useRouter()
   const [suppliers, setSuppliers] = useState<Supplier[] | null>(null)
   const [filter, setFilter] = useState<FilterTab>('all')
   const [loading, setLoading] = useState(true)
@@ -208,7 +210,22 @@ export function SuppliersView() {
           >
             {visible.map((supplier) => (
               <tr key={supplier.id}>
-                <td className="t-strong">{supplier.name}</td>
+                <td className="t-strong">
+                  <button
+                    style={{
+                      font: 'inherit',
+                      color: 'inherit',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => router.push(`/app/suppliers/${supplier.id}`)}
+                  >
+                    {supplier.name}
+                  </button>
+                </td>
                 <td className="t-sub">
                   {supplier.contactName ?? '—'}
                   {supplier.phone ? <div className="t-mono t-sub">{supplier.phone}</div> : null}
@@ -220,6 +237,9 @@ export function SuppliersView() {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                    <button className="btn btn-sm" onClick={() => router.push(`/app/suppliers/${supplier.id}`)}>
+                      View
+                    </button>
                     <button className="btn btn-sm" onClick={() => openEdit(supplier)}>
                       Edit
                     </button>
