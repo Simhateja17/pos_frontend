@@ -12,10 +12,11 @@ const VALUES = [
 ];
 
 const TEAM = [
-  ["AM", "#0058BA", "Ananya Mehta", "Co-founder & CEO"],
-  ["RK", "#0E7490", "Rohan Khanna", "Co-founder & CTO"],
-  ["PS", "#6D28D9", "Priya Sharma", "Head of Product"],
-  ["VN", "#B45309", "Vikram Nair", "Head of Retail Success"],
+  ["LT", "#0058BA", "Lakshmi Thulasi", "Co-Founder & Director"],
+  ["SP", "#0E7490", "Dr. Siva Prathap", "Co-Founder & Director"],
+  ["ST", "#6D28D9", "Simha Teja", "Co-Founder & Director"],
+  ["P", "#B45309", "Poojitha", "Developer"],
+  ["S", "#15803D", "Surendra", "Developer"],
 ];
 
 export default function AboutPage() {
