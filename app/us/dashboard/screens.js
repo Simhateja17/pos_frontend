@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   COUTURE POS  —  Screen Content
+   AMBEL POS  —  Screen Content
    All 10 screens, helpers, icons, nav data.
    Ported from the original static prototype to an ES module.
    ═══════════════════════════════════════════════ */
@@ -442,7 +442,7 @@ export const Screens = {
         <div class="card-header"><div class="card-header-left"><h3>Receipt preview</h3></div></div>
         <div class="card-body">
           <div class="receipt-pre">
-            <b>COUTURE POS — AUSTIN</b><br>
+            <b>AMBEL POS — AUSTIN</b><br>
             100 Congress Ave, Austin TX 78701<br>
             Receipt #AUS-24819 · Cashier: Mia James<br>
             <hr>

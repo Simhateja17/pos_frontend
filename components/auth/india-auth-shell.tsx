@@ -76,7 +76,7 @@ export function BrandMark() {
         {/* The legacy prototype uses this exact shipped brand asset. */}
         <img src="/logo.png" alt="" />
       </span>
-      <span className={styles.markName}>Couture POS</span>
+      <span className={styles.markName}>Ambel POS</span>
     </div>
   )
 }
@@ -101,7 +101,7 @@ export function IndiaAuthShell({ mode, children }: AuthShellProps) {
           </div>
         </div>
         <p className={styles.brandFooter}>
-          Couture Retail Technologies<br />
+          Ambel Retail Technologies<br />
           GST: 27ABCDE1234F1Z5
         </p>
       </aside>

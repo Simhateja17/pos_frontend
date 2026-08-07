@@ -60,9 +60,9 @@ export default function OnboardingShell({ step }) {
 
       <aside className="sidebar">
         <div className="sb-brand">
-          <div className="sb-mark">CP</div>
+          <div className="sb-mark">AP</div>
           <div>
-            <b>Couture POS</b>
+            <b>Ambel POS</b>
             <span>US retail edition</span>
           </div>
         </div>

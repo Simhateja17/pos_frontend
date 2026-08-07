@@ -1,7 +1,7 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
-export const metadata = { title: "Multi-store Retail POS — Couture POS" };
+export const metadata = { title: "Multi-store Retail POS — Ambel POS" };
 
 export default function Page() {
   return (

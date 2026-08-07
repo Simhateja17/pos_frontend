@@ -179,7 +179,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       const options: Record<string, unknown> = {
         key: data.razorpayKeyId,
         subscription_id: data.razorpaySubscriptionId,
-        name: 'Couture POS',
+        name: 'Ambel POS',
         description: `${selected.name} · ${cycle === 'annual' ? 'Annual' : 'Monthly'} subscription`,
         theme: { color: '#0f5ec7' },
         modal: { ondismiss: () => setMessage('Checkout was closed. Your payment attempt is saved; you can reopen it without creating a duplicate subscription.') },
@@ -258,11 +258,11 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                 )
               })}
             </div>
-            <div className={styles.enterprise}>Need a custom rollout? <a href="mailto:sales@couturepos.com">Contact sales for Enterprise</a>.</div>
+            <div className={styles.enterprise}>Need a custom rollout? <a href="mailto:sales@Ambel.in">Contact sales for Enterprise</a>.</div>
             <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || !available || paying}>
               {paying ? 'Opening secure checkout…' : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate →`}
             </button>
-            <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Couture POS unlocks access only after server verification.</p>
+            <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
           </>
         )}
       </div>

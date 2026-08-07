@@ -15,6 +15,9 @@ import {
   type AppContext,
 } from '@/lib/api/authenticated-client'
 import styles from '@/components/app-shell.module.css'
+import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
+import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -82,6 +85,22 @@ export function AppShell({ children }: { children: ReactNode }) {
     router.push('/login')
   }, [router])
 
+  const lockIdleRegister = useCallback(() => {
+    if (typeof window === 'undefined' || !window.sessionStorage.getItem('operatorToken')) return
+    void authHeaders()
+      .then((headers) => apiClient.POST('/terminal/pin/logout', { headers }))
+      .catch(() => undefined)
+      .finally(() => {
+        window.sessionStorage.removeItem('operatorToken')
+        router.push('/terminal/pin')
+      })
+  }, [router])
+
+  // Cashier sessions are idle-locked even when the cashier is inside Billing
+  // or another app route; the lock screen itself is the only place where a
+  // PIN can be entered again.
+  useIdleTimer(lockIdleRegister)
+
   useEffect(() => {
     if (!mobileOpen) return
 
@@ -116,7 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (pathname === '/app') return children
 
   const matchedHref = matchedNavHref(pathname)
-  const current = ALL_NAV_ITEMS.find((item) => item.href === matchedHref)?.label ?? 'Couture POS'
+  const current = ALL_NAV_ITEMS.find((item) => item.href === matchedHref)?.label ?? 'Ambel POS'
 
   const storeFull = context
     ? [context.tenant.businessName, context.tenant.locality].filter(Boolean).join(' · ')
@@ -154,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </svg>
           </div>
           <div>
-            <h1>Couture POS</h1>
+            <h1>Ambel POS</h1>
             <p>Retail operations suite</p>
           </div>
           <button className={styles.closeDrawer} aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
@@ -205,7 +224,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
 
           <div className={`crumb ${styles.crumb}`}>
-            Couture POS / <b>{current}</b>
+            Ambel POS / <b>{current}</b>
           </div>
 
           <div className="search">

@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "About — Couture POS" };
+export const metadata = { title: "About — Ambel POS" };
 
 const VALUES = [
   ["Built for Indian retail", "Every workflow — GST, HSN codes, UPI settlement, DLT-compliant WhatsApp — is designed around how Indian retailers actually operate, not adapted from a Western template."],
@@ -24,16 +24,16 @@ export default function AboutPage() {
       <section className="content-hero">
         <div className="section-tag">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="3.6" /><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0" /></svg>
-          About Couture POS
+          About Ambel POS
         </div>
         <h1>We&apos;re building the retail<br /><em>backbone of India.</em></h1>
-        <p>Couture POS started in 2023 with a simple observation: Indian retailers were stitching together five different tools to run one store. We set out to build the one that does it all.</p>
+          <p>Ambel POS started in 2023 with a simple observation: Indian retailers were stitching together five different tools to run one store. We set out to build the one that does it all.</p>
       </section>
 
       <section className="content-section">
         <div className="content-wrap content-prose">
           <h2>Our story</h2>
-          <p>Couture POS was founded by two former retail-tech engineers who watched a Jaipur boutique owner run billing on one app, inventory on a spreadsheet, and GST filing through a CA — every month, by hand. We built the first version of Couture POS over a weekend to fix that one store's workflow. Three years later, it runs 2,400+ stores across India.</p>
+          <p>Ambel POS was founded by two former retail-tech engineers who watched a Jaipur boutique owner run billing on one app, inventory on a spreadsheet, and GST filing through a CA — every month, by hand. We built the first version of Ambel POS over a weekend to fix that one store's workflow. Three years later, it runs 2,400+ stores across India.</p>
           <p>We&apos;re headquartered in Bengaluru with team members across Jaipur, Mumbai and Pune — the same cities where our earliest customers opened their doors to us.</p>
           <h2>What we believe</h2>
         </div>

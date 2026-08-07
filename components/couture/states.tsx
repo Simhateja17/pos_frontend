@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Shared read-states for India screens, styled to the Couture design system.
+ * Shared read-states for India screens, styled to the Ambel design system.
  *
  * Phase 3.2 rule (ROADMAP criterion 4): a screen with no backend contract, or
  * a metric the server reports as unavailable, must say so plainly. It must
@@ -99,7 +99,7 @@ export function LoadingState({ label = 'Loading records', rows = 5 }: { label?: 
   )
 }
 
-// --kpi-cols, not an inline grid-template — see the note on KpiRow in couture/ui.tsx.
+// --kpi-cols, not an inline grid-template — see the note on KpiRow in ui.tsx.
 export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
   return (
     <div className="kpi-row" style={{ '--kpi-cols': cols } as CSSProperties} aria-busy="true">

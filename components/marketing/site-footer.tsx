@@ -1,7 +1,7 @@
 const LOGO = (
   <img
     src="/logo.png"
-    alt="Couture POS"
+    alt="Ambel POS"
     style={{ maxWidth: "68%", maxHeight: "68%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
   />
 );
@@ -43,7 +43,7 @@ export default function SiteFooter() {
         <div className="footer-brand">
           <div className="nav-logo">
             <div className="nav-logo-mark">{LOGO}</div>
-            <span className="nav-logo-text">Couture POS</span>
+            <span className="nav-logo-text">Ambel POS</span>
           </div>
           <p>India&apos;s most complete retail suite — GST-native, AI-powered, offline-first.</p>
         </div>
@@ -57,7 +57,7 @@ export default function SiteFooter() {
         ))}
       </div>
       <div className="footer-bottom">
-        <span>© 2026 Couture Retail Technologies Pvt. Ltd.</span>
+        <span>© 2026 Ambel Retail Technologies Pvt. Ltd.</span>
         <div style={{ display: "flex", gap: 20 }}>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>

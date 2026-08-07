@@ -772,7 +772,45 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** @description Create a local counter-only staff profile with a temporary four-digit PIN. Managers can create cashiers; owners can also create managers. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateStaffRequest"];
+                };
+            };
+            responses: {
+                /** @description Staff profile created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Member"];
+                    };
+                };
+                /** @description Invalid staff details */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -929,6 +967,62 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/{memberId}/reset-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reset a local staff PIN and force a personal PIN change at the next login. Manager+. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResetStaffPinRequest"];
+                };
+            };
+            responses: {
+                /** @description PIN reset */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Member"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Member not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1328,6 +1422,136 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminal/pin/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Change the currently PIN-authenticated cashier's personal PIN after a temporary PIN login. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChangeOperatorPinRequest"];
+                };
+            };
+            responses: {
+                /** @description PIN changed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid PIN or operator session */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminal/pin/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description End the current cashier session while keeping the organisation/device session connected. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Operator session ended */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminal/pin/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Manager/owner audit list of cashier login/logout sessions. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cashier sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffSession"][];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1844,6 +2068,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/shifts/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the open shift for this paired counter. The result is counter-scoped, not cashier-scoped, so a cashier handover continues the same drawer shift. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current counter shift */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CurrentShift"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/shifts/{shiftId}/x-report": {
         parameters: {
             query?: never;
@@ -2005,6 +2265,96 @@ export interface paths {
                     content?: never;
                 };
                 /** @description A counter with that name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminals/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Resolve the current browser/device pairing to a counter, if one exists. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current counter pairing */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            terminal: components["schemas"]["Terminal"] | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminals/{terminalId}/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Pair or reassign this browser/device to a counter. Manager/owner only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    terminalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Device paired */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Terminal"];
+                    };
+                };
+                /** @description Counter not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Counter is turned off */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -4237,6 +4587,18 @@ export interface components {
             role: "owner" | "manager" | "cashier";
             isActive: boolean;
             createdAt: string;
+            /** Format: email */
+            email?: string | null;
+            /** @enum {string} */
+            accessMode?: "account" | "pin";
+            pinConfigured?: boolean;
+            pinMustChange?: boolean;
+        };
+        CreateStaffRequest: {
+            name: string;
+            /** @enum {string} */
+            role: "manager" | "cashier";
+            temporaryPin: string;
         };
         InviteMemberRequest: {
             /** Format: email */
@@ -4248,6 +4610,9 @@ export interface components {
         UpdateMemberRoleRequest: {
             /** @enum {string} */
             role: "owner" | "manager" | "cashier";
+        };
+        ResetStaffPinRequest: {
+            pin: string;
         };
         Product: {
             /** Format: uuid */
@@ -4351,11 +4716,32 @@ export interface components {
                 id: string;
                 /** @enum {string} */
                 role: "owner" | "manager" | "cashier";
+                mustChangePin: boolean;
             };
         };
         PinSwitchRequest: {
             staffId: string;
             pin: string;
+            /**
+             * @default register
+             * @enum {string}
+             */
+            sessionType: "register" | "approval";
+        };
+        ChangeOperatorPinRequest: {
+            pin: string;
+        };
+        StaffSession: {
+            id: string;
+            staffId: string;
+            staffName: string | null;
+            terminalId: string | null;
+            terminalName: string | null;
+            shiftId: string | null;
+            loggedInAt: string;
+            loggedOutAt: string | null;
+            logoutReason: string | null;
+            lastSeenAt: string;
         };
         Sale: {
             /** Format: uuid */
@@ -4511,10 +4897,30 @@ export interface components {
             variance: string | null;
             closedAt: string | null;
         };
-        OpenShiftRequest: {
-            startingCash: string;
+        CurrentShift: {
+            terminal: components["schemas"]["Terminal"] | null;
+            shift: (components["schemas"]["Shift"] & {
+                staffName: string | null;
+            }) | null;
+        };
+        Terminal: {
             /** Format: uuid */
-            terminalId: string;
+            id: string;
+            name: string;
+            isActive: boolean;
+            hasOpenShift: boolean;
+            createdAt: string;
+            /** @enum {string} */
+            cashMode?: "cash" | "none";
+            isPaired?: boolean;
+            isCurrentDevice?: boolean;
+            deviceLastSeenAt?: string | null;
+            activeCashierName?: string | null;
+        };
+        OpenShiftRequest: {
+            startingCash?: string;
+            /** Format: uuid */
+            terminalId?: string;
         };
         XReport: {
             /** Format: uuid */
@@ -4534,20 +4940,19 @@ export interface components {
         CloseShiftRequest: {
             countedCash: string;
         };
-        Terminal: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            isActive: boolean;
-            hasOpenShift: boolean;
-            createdAt: string;
-        };
         CreateTerminalRequest: {
             name: string;
+            /**
+             * @default cash
+             * @enum {string}
+             */
+            cashMode: "cash" | "none";
         };
         UpdateTerminalRequest: {
             name?: string;
             isActive?: boolean;
+            /** @enum {string} */
+            cashMode?: "cash" | "none";
         };
         Category: {
             /** Format: uuid */

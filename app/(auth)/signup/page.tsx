@@ -228,7 +228,7 @@ export default function SignupPage() {
             <label className={styles.agreement}>
               <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
               <span>
-                I agree to Couture POS <a className={styles.link} href="#terms">Terms of Service</a> and{' '}
+                I agree to Ambel POS <a className={styles.link} href="#terms">Terms of Service</a> and{' '}
                 <a className={styles.link} href="#privacy">Privacy Policy</a>
               </span>
             </label>

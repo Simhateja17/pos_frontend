@@ -52,7 +52,7 @@ const GC_BAR_W = [88, 72, 94];
 const GC_BAR_BG = ["#EEF4FF", "#F5F6F9", "#fff"];
 
 const TESTIMONIALS = [
-  ["AM", "#0058BA", "Couture POS handles our 3-store billing, inventory sync and WhatsApp campaigns in one place. Our staff billing time dropped by 40%.", "Ananya Mehta", "Owner, Rangreza Ethnic · Jaipur"],
+  ["AM", "#0058BA", "Ambel POS handles our 3-store billing, inventory sync and WhatsApp campaigns in one place. Our staff billing time dropped by 40%.", "Ananya Mehta", "Owner, Rangreza Ethnic · Jaipur"],
   ["RK", "#0E7490", "The GST reports save us 2 hours every month-end. GSTR-1 export is error-free and our CA is happy.", "Rohan Khanna", "CFO, Threads & Threads · Mumbai"],
   ["PS", "#6D28D9", "The offline mode is a lifesaver during monsoons when our internet drops. Bills keep printing and sync later.", "Priya Sharma", "Store Manager, Silkworm · Pune"],
 ];
@@ -213,9 +213,9 @@ export default function LandingPage() {
               <div className="mock-sb">
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 10px 12px", color: "#fff", fontFamily: "'Space Grotesk'", fontWeight: 700, fontSize: 13 }}>
                   <div style={{ width: 24, height: 24, borderRadius: 7, background: "linear-gradient(135deg,#6C9FFF,#0058BA)", display: "grid", placeItems: "center" }}>
-                    <img src="/logo.png" alt="Couture POS" style={{ maxWidth: "70%", maxHeight: "70%", width: "auto", height: "auto", objectFit: "contain", display: "block" }} />
+                    <img src="/logo.png" alt="Ambel POS" style={{ maxWidth: "70%", maxHeight: "70%", width: "auto", height: "auto", objectFit: "contain", display: "block" }} />
                   </div>
-                  Couture POS
+                  Ambel POS
                 </div>
                 {MOCK_SB.map((t, i) => (
                   <div className={"mock-sb-item" + (i === 0 ? " a" : "")} key={i}>
@@ -401,7 +401,7 @@ export default function LandingPage() {
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
         <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Join 2,400+ retailers already running on Couture POS. Choose a paid plan and activate your store.</p>
+        <p className="animate-in">Join 2,400+ retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>

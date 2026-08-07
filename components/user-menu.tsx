@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LockKeyhole, LogOut } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import type { AppContext } from '@/lib/api/authenticated-client'
 import styles from './user-menu.module.css'
 
@@ -39,8 +41,27 @@ export function UserMenu({
 
   async function signOut() {
     setSigningOut(true)
+    try {
+      await apiClient.POST('/terminal/pin/logout', { headers: await authHeaders() })
+    } catch {
+      // Signing out the organisation session below is still the safe fallback
+      // if the cashier-session request cannot reach the server.
+    }
+    if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  async function lockRegister() {
+    setOpen(false)
+    try {
+      await apiClient.POST('/terminal/pin/logout', { headers: await authHeaders() })
+    } catch {
+      // The local token is still removed, so the next screen cannot continue
+      // acting as the previous cashier.
+    }
+    if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
+    router.push('/terminal/pin')
   }
 
   return (
@@ -62,6 +83,9 @@ export function UserMenu({
 
       {open && (
         <div className={styles.panel} role="menu" aria-label="Account menu">
+          <button type="button" className={styles.item} role="menuitem" onClick={() => void lockRegister()}>
+            <LockKeyhole size={15} strokeWidth={1.85} /> Lock register
+          </button>
           <button type="button" className={styles.item} role="menuitem" onClick={() => void signOut()} disabled={signingOut}>
             <LogOut size={15} strokeWidth={1.85} /> {signingOut ? 'Signing out…' : 'Sign out'}
           </button>

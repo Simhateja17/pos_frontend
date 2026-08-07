@@ -45,7 +45,7 @@ export function ManagerApprovalModal({
     setError(null)
     const headers = await authHeader()
     const { data, error: apiError } = await apiClient.POST('/terminal/pin/switch', {
-      body: { staffId: selectedStaffId, pin },
+      body: { staffId: selectedStaffId, pin, sessionType: 'approval' },
       headers,
     })
     setIsSubmitting(false)

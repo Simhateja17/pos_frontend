@@ -3,7 +3,7 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { PricingGrid } from "@/components/marketing/pricing-plans";
 
-export const metadata = { title: "Pricing — Couture POS" };
+export const metadata = { title: "Pricing — Ambel POS" };
 
 const FAQ: [string, string][] = [
   ["Is there a setup fee?", "No. Every plan includes onboarding, catalog import and hardware pairing support at no extra cost."],
@@ -47,7 +47,7 @@ export default function PricingPage() {
 
       <section className="cta-section">
         <h2>Ready to transform<br />your store?</h2>
-        <p>Join 2,400+ retailers already running on Couture POS. Choose a paid plan and activate your store.</p>
+        <p>Join 2,400+ retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
         <div className="cta-actions">
           <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>

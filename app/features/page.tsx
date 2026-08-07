@@ -3,7 +3,7 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
 
-export const metadata = { title: "Features — Couture POS" };
+export const metadata = { title: "Features — Ambel POS" };
 
 function featBadges(b3: string, b4: string) {
   return (

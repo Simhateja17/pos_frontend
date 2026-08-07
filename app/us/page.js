@@ -18,8 +18,8 @@ export default function LandingPage() {
         {/* Header */}
         <header className="header">
           <div className="logo">
-            <div className="logo-mark">CP</div>
-            <span>Couture POS</span>
+            <div className="logo-mark">AP</div>
+            <span>Ambel POS</span>
           </div>
           <nav className="nav-links">
             <a href="#features">Features</a>
@@ -53,7 +53,7 @@ export default function LandingPage() {
 
         {/* Features */}
         <section className="features" id="features">
-          <h2>Why Couture POS?</h2>
+          <h2>Why Ambel POS?</h2>
           <div className="feature-grid">
             <div className="feature-card">
               <div className="feature-icon">🧮</div>
@@ -138,7 +138,7 @@ export default function LandingPage() {
         {/* Footer */}
         <footer className="footer">
           <p>
-            &copy; 2026 Couture POS. <a href="#">Privacy</a> ·{" "}
+            &copy; 2026 Ambel POS. <a href="#">Privacy</a> ·{" "}
             <a href="#">Terms</a> · <a href="#">Contact</a>
           </p>
         </footer>

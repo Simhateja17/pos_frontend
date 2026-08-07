@@ -117,7 +117,7 @@ export default function USAuthPage() {
       <div className="bg-orbs"><div className="orb orb-1" /><div className="orb orb-2" /></div>
       <div className="page">
         <div className="auth-card">
-          <div className="auth-logo"><div className="auth-logo-mark">CP</div><span>Couture POS · US</span></div>
+          <div className="auth-logo"><div className="auth-logo-mark">AP</div><span>Ambel POS · US</span></div>
           <div className="tab-switcher">
             <button type="button" className={`tab-btn${mode === 'login' ? ' active' : ''}`} onClick={() => switchMode('login')}>Sign in</button>
             <button type="button" className={`tab-btn${mode === 'signup' ? ' active' : ''}`} onClick={() => switchMode('signup')}>Create account</button>

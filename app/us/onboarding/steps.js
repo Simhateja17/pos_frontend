@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   COUTURE POS — Onboarding step data
+   AMBEL POS — Onboarding step data
    Each step's main body (form + context aside) is kept as
    markup and rendered by the shared shell. Inline handlers
    from the original HTML are replaced with data-nav hooks:
@@ -90,7 +90,7 @@ export const STEPS = [
 
         <div class="form-group">
           <label>Legal business name</label>
-          <input type="text" placeholder="Couture Boutique LLC" value="Couture Boutique LLC" required>
+          <input type="text" placeholder="Ambel Boutique LLC" value="Ambel Boutique LLC" required>
         </div>
 
         <div class="form-group">
@@ -583,7 +583,7 @@ export const STEPS = [
         <div class="form-row">
           <div class="form-group">
             <label>Store name on receipt</label>
-            <input type="text" value="Couture Boutique" required>
+            <input type="text" value="Ambel Boutique" required>
           </div>
           <div class="form-group">
             <label>Return / exchange window</label>

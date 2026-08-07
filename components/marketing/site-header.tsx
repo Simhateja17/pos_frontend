@@ -5,7 +5,7 @@ import { useEffect } from "react";
 const LOGO = (
   <img
     src="/logo.png"
-    alt="Couture POS"
+    alt="Ambel POS"
     style={{ maxWidth: "68%", maxHeight: "68%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
   />
 );
@@ -23,7 +23,7 @@ export default function SiteHeader({ authenticated = false }: { authenticated?: 
     <nav id="main-nav">
       <a href="/" className="nav-logo">
         <div className="nav-logo-mark">{LOGO}</div>
-        <span className="nav-logo-text">Couture POS</span>
+        <span className="nav-logo-text">Ambel POS</span>
       </a>
       <div className="nav-links">
         <a href="/features">Features</a>

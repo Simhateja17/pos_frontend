@@ -33,7 +33,14 @@ type XReport = {
 }
 type ZReport = XReport & { countedCash: string; variance: string; closedAt: string }
 
-type Terminal = { id: string; name: string; isActive: boolean; hasOpenShift: boolean }
+type Terminal = {
+  id: string
+  name: string
+  isActive: boolean
+  hasOpenShift: boolean
+  cashMode?: 'cash' | 'none'
+  isCurrentDevice?: boolean
+}
 
 type ShiftHistoryEntry = {
   id: string
@@ -55,22 +62,20 @@ const stamp = (value: string) =>
 export function ShiftsView() {
   /**
    * Which shift is "mine" is derived from the server, not cached in
-   * localStorage. The old version keyed it to a single browser-wide value, so
-   * on a shared till a PIN-switch left the next cashier looking at the
-   * previous one's shift. Matching my acting staff id against the open shifts
-   * is correct for both hardware modes: a shared till (identity changes, same
-   * browser) and separate devices (same identity, different browsers).
+   * localStorage. A paired counter is the primary key: cashiers can change
+   * on the same device while the one physical drawer shift stays open. The
+   * staff-id fallback only supports older, unpaired API sessions.
    */
   const [staffId, setStaffId] = useState<string | null>(null)
   const [cashier, setCashier] = useState('Current operator')
 
   const [shifts, setShifts] = useState<ShiftHistoryEntry[]>([])
   const [terminals, setTerminals] = useState<Terminal[]>([])
+  const [currentTerminal, setCurrentTerminal] = useState<Terminal | null>(null)
   const [report, setReport] = useState<XReport | null>(null)
   const [closed, setClosed] = useState<ZReport | null>(null)
 
   const [startingCash, setStartingCash] = useState('')
-  const [terminalId, setTerminalId] = useState('')
   const [countedCash, setCountedCash] = useState('')
 
   const [loading, setLoading] = useState(true)
@@ -79,9 +84,11 @@ export function ShiftsView() {
   const [openError, setOpenError] = useState<string | null>(null)
   const [closeOpen, setCloseOpen] = useState(false)
 
-  const activeShift = staffId
-    ? shifts.find((s) => s.closedAt === null && s.staffId === staffId) ?? null
-    : null
+  const activeShift = currentTerminal
+    ? shifts.find((s) => s.closedAt === null && s.terminalId === currentTerminal.id) ?? null
+    : staffId
+      ? shifts.find((s) => s.closedAt === null && s.staffId === staffId) ?? null
+      : null
 
   const loadXReport = useCallback(async (id: string) => {
     const result = await apiClient.GET('/shifts/{shiftId}/x-report', {
@@ -99,12 +106,13 @@ export function ShiftsView() {
     setError(null)
     const headers = await authHeaders()
 
-    const [shiftsResult, terminalsResult] = await Promise.all([
+    const [shiftsResult, terminalsResult, deviceResult] = await Promise.all([
       apiClient.GET('/shifts', { headers }),
       apiClient.GET('/terminals', { headers }),
+      apiClient.GET('/terminals/device', { headers }),
     ])
 
-    if (shiftsResult.error || !shiftsResult.data || terminalsResult.error || !terminalsResult.data) {
+    if (shiftsResult.error || !shiftsResult.data || terminalsResult.error || !terminalsResult.data || deviceResult.error) {
       setLoading(false)
       setError(LOAD_ERROR)
       return
@@ -112,6 +120,7 @@ export function ShiftsView() {
 
     setShifts(shiftsResult.data as ShiftHistoryEntry[])
     setTerminals(terminalsResult.data as Terminal[])
+    setCurrentTerminal(deviceResult.data?.terminal ?? null)
     setLoading(false)
   }, [])
 
@@ -137,12 +146,18 @@ export function ShiftsView() {
 
   async function openShift(event: FormEvent) {
     event.preventDefault()
-    if (!startingCash || Number(startingCash) < 0 || !terminalId) return
+    if (!currentTerminal) {
+      setOpenError('Pair this device to a counter before opening a shift.')
+      return
+    }
+    if (currentTerminal.cashMode !== 'none' && (!startingCash || Number(startingCash) < 0)) return
 
     setBusy(true)
     setOpenError(null)
     const result = await apiClient.POST('/shifts', {
-      body: { startingCash: Number(startingCash).toFixed(2), terminalId },
+      body: {
+        startingCash: currentTerminal.cashMode === 'none' ? '0.00' : Number(startingCash).toFixed(2),
+      },
       headers: await authHeaders(),
     })
     setBusy(false)
@@ -156,7 +171,6 @@ export function ShiftsView() {
 
     setClosed(null)
     setStartingCash('')
-    setTerminalId('')
     await load()
   }
 
@@ -228,9 +242,7 @@ export function ShiftsView() {
           ) : (
             <OpenRegister
               cashier={cashier}
-              terminals={terminals}
-              terminalId={terminalId}
-              onTerminalId={setTerminalId}
+              currentTerminal={currentTerminal}
               startingCash={startingCash}
               onStartingCash={setStartingCash}
               onSubmit={openShift}
@@ -254,9 +266,9 @@ export function ShiftsView() {
                     <td className="t-strong">{shift.terminalName ?? '—'}</td>
                     <td>
                       {shift.staffName ?? '—'}
-                      {shift.staffId === staffId && (
+                      {currentTerminal && shift.terminalId === currentTerminal.id && (
                         <span style={{ marginLeft: 8 }}>
-                          <Badge tone="blue">You</Badge>
+                          <Badge tone="blue">This counter</Badge>
                         </span>
                       )}
                     </td>
@@ -300,9 +312,7 @@ export function ShiftsView() {
 
 function OpenRegister({
   cashier,
-  terminals,
-  terminalId,
-  onTerminalId,
+  currentTerminal,
   startingCash,
   onStartingCash,
   onSubmit,
@@ -310,22 +320,22 @@ function OpenRegister({
   error,
 }: {
   cashier: string
-  terminals: Terminal[]
-  terminalId: string
-  onTerminalId: (value: string) => void
+  currentTerminal: Terminal | null
   startingCash: string
   onStartingCash: (value: string) => void
   onSubmit: (event: FormEvent) => void
   busy: boolean
   error: string | null
 }) {
-  const available = terminals.filter((t) => t.isActive && !t.hasOpenShift)
-
   return (
     <Card>
       <CardHead
-        title="Open register"
-        sub={`Count the drawer before the first sale. This is the opening cash for ${cashier}.`}
+        title={currentTerminal ? `Open ${currentTerminal.name}` : 'Connect this device'}
+        sub={currentTerminal
+          ? currentTerminal.cashMode === 'none'
+            ? `${cashier} can start immediately. This counter has no cash drawer, so opening cash is ₹0.00.`
+            : `Count the drawer before the first sale. This is the opening cash for ${currentTerminal.name}.`
+          : 'An owner or manager must pair this browser to a counter before a shift can start.'}
       />
       <CardPad>
         {error && (
@@ -334,52 +344,36 @@ function OpenRegister({
           </div>
         )}
 
-        {terminals.length === 0 ? (
+        {!currentTerminal ? (
           <EmptyState
             icon={<Monitor size={24} strokeWidth={1.8} />}
-            title="No counters set up yet"
-            body="A shift belongs to a counter, so there has to be at least one before the register can open."
+            title="This device is not paired"
+            body="Choose this device's counter from Counter settings. The pairing can be replaced if the device fails."
             action={
               <Link className="btn btn-pri" href="/app/settings/terminals">
-                Set up counters
-              </Link>
-            }
-          />
-        ) : available.length === 0 ? (
-          <EmptyState
-            icon={<Monitor size={24} strokeWidth={1.8} />}
-            title="Every counter is already running"
-            body="All active counters have a shift open on them. Close one, or add another counter."
-            action={
-              <Link className="btn btn-pri" href="/app/settings/terminals">
-                Manage counters
+                Pair a counter
               </Link>
             }
           />
         ) : (
           <form onSubmit={onSubmit} style={{ maxWidth: 460 }}>
-            <Fld id="terminal" label="Which counter">
-              <select id="terminal" value={terminalId} onChange={(e) => onTerminalId(e.target.value)}>
-                <option value="">Pick a counter…</option>
-                {available.map((terminal) => (
-                  <option key={terminal.id} value={terminal.id}>
-                    {terminal.name}
-                  </option>
-                ))}
-              </select>
-            </Fld>
+            {currentTerminal.cashMode === 'none' ? (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--soft)', color: 'var(--ink-2)', fontSize: 13 }}>
+                Opening cash: <b>₹0.00</b> — this is a no-cash counter.
+              </div>
+            ) : (
+              <Fld id="starting-cash" label="Opening cash count">
+                <input
+                  id="starting-cash"
+                  inputMode="decimal"
+                  placeholder="₹0.00"
+                  value={startingCash}
+                  onChange={(e) => onStartingCash(e.target.value)}
+                />
+              </Fld>
+            )}
 
-            <Fld id="starting-cash" label="Opening cash count">
-              <input
-                id="starting-cash"
-                inputMode="decimal"
-                placeholder="₹0.00"
-                value={startingCash}
-                onChange={(e) => onStartingCash(e.target.value)}
-              />
-            </Fld>
-
-            <button className="btn btn-pri" style={{ marginTop: 6 }} disabled={!startingCash || !terminalId || busy}>
+            <button className="btn btn-pri" style={{ marginTop: 6 }} disabled={(currentTerminal.cashMode !== 'none' && !startingCash) || busy}>
               {busy ? 'Opening register…' : 'Open register'}
             </button>
           </form>

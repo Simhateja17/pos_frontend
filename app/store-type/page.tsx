@@ -60,7 +60,7 @@ export default function StoreTypePage() {
       <div className={styles.selectionCanvas}>
         <div className={styles.selectionBrand}>
           <span className={styles.selectionLogo}>C</span>
-          <strong>Couture POS</strong>
+          <strong>Ambel POS</strong>
         </div>
         <header className={styles.selectionHeader}>
           <h1>What kind of shop do you run?</h1>

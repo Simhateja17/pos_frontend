@@ -124,7 +124,7 @@ export default function LoginPage() {
         </form>
       )}
       <div className={styles.separator}>or</div>
-      <p className={styles.footerText}>New to Couture POS? <Link className={styles.link} href="/signup">Create a store account</Link></p>
+      <p className={styles.footerText}>New to Ambel POS? <Link className={styles.link} href="/signup">Create a store account</Link></p>
     </IndiaAuthShell>
   )
 }

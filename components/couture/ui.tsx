@@ -1,8 +1,8 @@
 /**
- * Couture design-system primitives.
+ * Ambel design-system primitives.
  *
  * These are 1:1 React ports of the helper functions in the approved prototype
- * (`retail pos (1)/Couture POS - Animated.html`): head(), kpis(), tabs(), seg(),
+ * (the approved retail prototype): head(), kpis(), tabs(), seg(),
  * dataTable(), flag(), cb(), tg(). They emit exactly the same markup and class
  * names, so they inherit the design-system CSS already present in
  * `app/globals.css` (all 150 prototype classes are there).

@@ -108,6 +108,7 @@ interface PendingSaleBody {
 type OpenShiftEntry = {
   id: string
   staffId: string
+  terminalId: string | null
   closedAt: string | null
   terminalName: string | null
 }
@@ -122,8 +123,8 @@ function CheckoutPageInner() {
    * Which shift this bill charges against is derived from the server, not a
    * URL param — nothing ever populated one, so Billing always read as "no
    * open shift" even with a shift open on the register. Mirrors the same
-   * staffId-matching pattern shifts-view.tsx uses: the acting staff member's
-   * own open shift, wherever they opened it, not a cached/URL-carried id.
+   * paired-counter pattern shifts-view.tsx uses: a cashier handover continues
+   * the counter's open shift, regardless of which staff member opened it.
    */
   const [openShiftsForStaff, setOpenShiftsForStaff] = useState<OpenShiftEntry[]>([])
   const activeShift =
@@ -133,13 +134,17 @@ function CheckoutPageInner() {
 
   const loadActiveShift = useCallback(async () => {
     try {
-      const [context, shiftsResult] = await Promise.all([
+      const [context, shiftsResult, deviceResult] = await Promise.all([
         getAuthenticatedAppContext(),
         apiClient.GET('/shifts', { headers: await authHeaders() }),
+        apiClient.GET('/terminals/device', { headers: await authHeaders() }),
       ])
       const mine = context.staff.id
       const shifts = (shiftsResult.data as OpenShiftEntry[] | undefined) ?? []
-      setOpenShiftsForStaff(shifts.filter((s) => s.closedAt === null && s.staffId === mine))
+      const currentTerminalId = deviceResult.data?.terminal?.id
+      setOpenShiftsForStaff(
+        shifts.filter((s) => s.closedAt === null && (currentTerminalId ? s.terminalId === currentTerminalId : s.staffId === mine)),
+      )
     } catch {
       // The banner already covers "no shift" — a failed lookup reads the
       // same way (Charge stays disabled) rather than a separate error state.
@@ -605,6 +610,12 @@ function CheckoutPageInner() {
     }
     const { data, error } = await submitSale(pendingSaleBody, {
       'X-Operator-Token': operatorToken,
+    })
+    // Manager approval is a one-sale session, not a cashier handover. Close
+    // the durable audit row immediately after the sale attempt.
+    const baseHeaders = await authHeaders()
+    await apiClient.POST('/terminal/pin/logout', {
+      headers: { ...(baseHeaders ?? {}), 'X-Operator-Token': operatorToken },
     })
     if (!error && data) {
       setShowApprovalModal(false)

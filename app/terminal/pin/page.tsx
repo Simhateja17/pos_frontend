@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -14,57 +14,88 @@ type Staff = {
   name: string
   role: 'owner' | 'manager' | 'cashier'
   isActive: boolean
+  pinConfigured?: boolean
+}
+
+type Terminal = {
+  id: string
+  name: string
+  isActive: boolean
+  hasOpenShift: boolean
+  cashMode?: 'cash' | 'none'
+  isCurrentDevice?: boolean
 }
 
 const DIGIT_GRID = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'backspace'] as const
 
 const GENERIC_LOAD_ERROR = "Couldn't load team members. Check your connection and try again."
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 export default function PinPadPage() {
   const router = useRouter()
   const [staff, setStaff] = useState<Staff[]>([])
+  const [terminals, setTerminals] = useState<Terminal[]>([])
+  const [currentTerminal, setCurrentTerminal] = useState<Terminal | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [isLoadingStaff, setIsLoadingStaff] = useState(true)
+  const [isPairing, setIsPairing] = useState(false)
+  const [pairError, setPairError] = useState<string | null>(null)
 
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null)
   const [pin, setPin] = useState('')
   const [pinError, setPinError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [mustChangePin, setMustChangePin] = useState(false)
+  const [newPin, setNewPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [changeError, setChangeError] = useState<string | null>(null)
+  const [isChangingPin, setIsChangingPin] = useState(false)
 
   const loadStaff = useCallback(async () => {
     setIsLoadingStaff(true)
     setLoadError(null)
 
-    const headers = await authHeader()
-    const { data, error } = await apiClient.GET('/members', { headers })
+    const headers = await authHeaders()
+    const [staffResult, deviceResult, terminalsResult] = await Promise.all([
+      apiClient.GET('/members', { headers }),
+      apiClient.GET('/terminals/device', { headers }),
+      apiClient.GET('/terminals', { headers }),
+    ])
 
     setIsLoadingStaff(false)
 
-    if (error || !data) {
+    if (staffResult.error || !staffResult.data || deviceResult.error || terminalsResult.error || !terminalsResult.data) {
       setLoadError(GENERIC_LOAD_ERROR)
       return
     }
 
-    setStaff(data.filter((member) => member.isActive))
+    setStaff(staffResult.data.filter((member) => member.isActive && member.pinConfigured !== false))
+    setCurrentTerminal(deviceResult.data?.terminal ?? null)
+    setTerminals(terminalsResult.data.filter((terminal) => terminal.isActive))
   }, [])
 
   useEffect(() => {
-    loadStaff()
+    const operatorToken = sessionStorage.getItem('operatorToken')
+    if (operatorToken) {
+      void authHeaders().then((headers) => apiClient.POST('/terminal/pin/logout', {
+        headers: { ...(headers ?? {}), 'X-Operator-Token': operatorToken },
+      }))
+    }
+    sessionStorage.removeItem('operatorToken')
+    void loadStaff()
   }, [loadStaff])
 
   // D-11 auto-timeout: after a period of inactivity, re-lock the terminal to
   // the staff-picker step and clear the current operator token.
   const resetToStaffPicker = useCallback(() => {
+    const operatorToken = sessionStorage.getItem('operatorToken')
+    void authHeaders().then((headers) => apiClient.POST('/terminal/pin/logout', {
+      headers: operatorToken ? { ...(headers ?? {}), 'X-Operator-Token': operatorToken } : headers,
+    }))
     sessionStorage.removeItem('operatorToken')
     setSelectedStaffId(null)
     setPin('')
     setPinError(null)
+    setMustChangePin(false)
   }, [])
 
   useIdleTimer(resetToStaffPicker)
@@ -75,14 +106,29 @@ export default function PinPadPage() {
     setPinError(null)
   }
 
+  async function pairTerminal(terminalId: string) {
+    setIsPairing(true)
+    setPairError(null)
+    const result = await apiClient.POST('/terminals/{terminalId}/pair', {
+      params: { path: { terminalId } },
+      headers: await authHeaders(),
+    })
+    setIsPairing(false)
+    if (result.error || !result.data) {
+      setPairError((result.error as { error?: string } | undefined)?.error ?? 'This device could not be paired.')
+      return
+    }
+    setCurrentTerminal(result.data)
+  }
+
   async function submitPin(nextPin: string) {
     if (!selectedStaffId) return
     setIsSubmitting(true)
     setPinError(null)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data, error } = await apiClient.POST('/terminal/pin/switch', {
-      body: { staffId: selectedStaffId, pin: nextPin },
+      body: { staffId: selectedStaffId, pin: nextPin, sessionType: 'register' },
       headers,
     })
 
@@ -105,10 +151,33 @@ export default function PinPadPage() {
     // it scoped to this terminal tab only, cleared on idle-timeout/logout.
     sessionStorage.setItem('operatorToken', data.operatorToken)
 
-    // The real register/checkout landing page is a later-phase concern
-    // (Phase 3+). Redirect to the app root as a placeholder authenticated
-    // route for now, matching the pattern used by 01-11's auth pages.
-    router.push('/')
+    if (data.staff.mustChangePin) {
+      setMustChangePin(true)
+      setNewPin('')
+      setConfirmPin('')
+      return
+    }
+
+    router.push('/app/shifts')
+  }
+
+  async function changeOperatorPin() {
+    if (newPin.length !== 4 || newPin !== confirmPin) {
+      setChangeError('Enter the same four-digit PIN twice.')
+      return
+    }
+    setIsChangingPin(true)
+    setChangeError(null)
+    const result = await apiClient.POST('/terminal/pin/change', {
+      body: { pin: newPin },
+      headers: await authHeaders(),
+    })
+    setIsChangingPin(false)
+    if (result.error) {
+      setChangeError((result.error as { error?: string }).error ?? 'We could not change your PIN.')
+      return
+    }
+    router.push('/app/shifts')
   }
 
   function handleDigitPress(key: string) {
@@ -144,7 +213,13 @@ export default function PinPadPage() {
               color: '#64748B',
             }}
           >
-            {selectedStaffId ? 'Enter your PIN' : "Who's ringing this up?"}
+            {mustChangePin
+              ? 'Choose your personal PIN'
+              : selectedStaffId
+                ? `Enter your PIN · ${currentTerminal?.name ?? 'Counter'}`
+                : currentTerminal
+                  ? `Who's ringing this up? · ${currentTerminal.name}`
+                  : 'Assign this device to a counter'}
           </h1>
         </CardHeader>
         <CardContent>
@@ -168,7 +243,35 @@ export default function PinPadPage() {
             </p>
           )}
 
-          {!loadError && !isLoadingStaff && !selectedStaffId && (
+          {!loadError && !isLoadingStaff && !currentTerminal && (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm" style={{ color: '#64748B' }}>
+                This browser is not assigned to a counter yet. An owner or manager can choose which counter this device represents.
+              </p>
+              {pairError && <p className="text-sm" style={{ color: '#DC2626' }}>{pairError}</p>}
+              {terminals.length === 0 && (
+                <p className="text-sm" style={{ color: '#64748B' }}>No active counters are set up yet. Create one in Counter settings.</p>
+              )}
+              {terminals.map((terminal) => (
+                <button
+                  key={terminal.id}
+                  type="button"
+                  disabled={isPairing}
+                  onClick={() => void pairTerminal(terminal.id)}
+                  className="min-h-[48px] rounded-md border px-4 text-left"
+                  style={{ borderColor: '#E2E8F0', fontFamily: 'Inter, sans-serif', fontSize: '16px' }}
+                >
+                  <span style={{ display: 'block', fontWeight: 600 }}>{isPairing ? 'Pairing…' : terminal.name}</span>
+                  <span style={{ display: 'block', marginTop: 3, color: '#64748B', fontSize: 12 }}>
+                    {terminal.cashMode === 'none' ? 'No cash drawer' : 'Cash drawer'}
+                    {terminal.hasOpenShift ? ' · Existing shift can be resumed' : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!loadError && !isLoadingStaff && currentTerminal && !selectedStaffId && !mustChangePin && (
             <div className="flex flex-col gap-2">
               {staff.length === 0 && (
                 <p className="text-sm" style={{ color: '#64748B' }}>
@@ -194,7 +297,7 @@ export default function PinPadPage() {
             </div>
           )}
 
-          {!loadError && !isLoadingStaff && selectedStaffId && (
+          {!loadError && !isLoadingStaff && currentTerminal && selectedStaffId && !mustChangePin && (
             <div className="flex flex-col items-center gap-4">
               {/* PIN progress dots — visual feedback only, never renders the digits themselves */}
               <div className="flex gap-2" aria-hidden="true">
@@ -253,6 +356,46 @@ export default function PinPadPage() {
                 style={{ color: '#0058BA' }}
               >
                 Not you? Switch staff
+              </button>
+            </div>
+          )}
+
+          {!loadError && !isLoadingStaff && mustChangePin && (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm" style={{ color: '#64748B' }}>
+                This was a temporary PIN. Choose a personal four-digit PIN that only you know.
+              </p>
+              {changeError && <p className="text-sm" style={{ color: '#DC2626' }}>{changeError}</p>}
+              <input
+                aria-label="New personal PIN"
+                inputMode="numeric"
+                pattern="[0-9]{4}"
+                maxLength={4}
+                type="password"
+                value={newPin}
+                onChange={(event) => setNewPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="New four-digit PIN"
+                className="min-h-[44px] rounded-md border px-3"
+              />
+              <input
+                aria-label="Confirm personal PIN"
+                inputMode="numeric"
+                pattern="[0-9]{4}"
+                maxLength={4}
+                type="password"
+                value={confirmPin}
+                onChange={(event) => setConfirmPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="Repeat PIN"
+                className="min-h-[44px] rounded-md border px-3"
+              />
+              <button
+                type="button"
+                disabled={isChangingPin || newPin.length !== 4 || confirmPin.length !== 4}
+                onClick={() => void changeOperatorPin()}
+                className="min-h-[44px] rounded-md px-4"
+                style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
+              >
+                {isChangingPin ? 'Saving PIN…' : 'Save personal PIN'}
               </button>
             </div>
           )}

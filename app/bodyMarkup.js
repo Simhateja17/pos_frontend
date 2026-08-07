@@ -6,9 +6,9 @@ export const BODY = `<div id="route-bar"></div>
   <aside class="sidebar">
     <div class="sb-brand">
       <div class="sb-logo">
-        <img src="/logo.png" alt="Couture POS" style="max-width:68%;max-height:68%;width:auto;height:auto;object-fit:contain;display:block" />
+        <img src="/logo.png" alt="Ambel POS" style="max-width:68%;max-height:68%;width:auto;height:auto;object-fit:contain;display:block" />
       </div>
-      <div><h1>Couture POS</h1><p>Retail operations suite</p></div>
+      <div><h1>Ambel POS</h1><p>Retail operations suite</p></div>
     </div>
     <nav class="sb-nav" id="nav"></nav>
     <div class="sb-foot">
@@ -26,7 +26,7 @@ export const BODY = `<div id="route-bar"></div>
   <!-- MAIN -->
   <div class="main">
     <header class="topbar">
-      <div class="crumb">Couture POS / <b id="crumb">Feature Map</b></div>
+      <div class="crumb">Ambel POS / <b id="crumb">Feature Map</b></div>
       <div class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input placeholder="Search orders, products, customers, suppliers…  or type a command" />

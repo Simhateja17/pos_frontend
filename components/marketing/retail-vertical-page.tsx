@@ -57,7 +57,7 @@ export default function RetailVerticalPage({
       </section>
 
       <section className="cta-section">
-        <h2>Ready to run {tag.toLowerCase()}<br />on Couture POS?</h2>
+        <h2>Ready to run {tag.toLowerCase()}<br />on Ambel POS?</h2>
         <p>Choose a paid plan and migrate your existing catalog in minutes.</p>
         <div className="cta-actions">
           <a className="btn-cta-w" href="/signup">Choose a plan</a>
