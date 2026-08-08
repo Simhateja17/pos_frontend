@@ -68,6 +68,7 @@ export function ShiftsView() {
    */
   const [staffId, setStaffId] = useState<string | null>(null)
   const [cashier, setCashier] = useState('Current operator')
+  const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
 
   const [shifts, setShifts] = useState<ShiftHistoryEntry[]>([])
   const [terminals, setTerminals] = useState<Terminal[]>([])
@@ -128,6 +129,7 @@ export function ShiftsView() {
     void getAuthenticatedAppContext()
       .then((context) => {
         setStaffId(context.staff.id)
+        setRole(context.staff.role)
         if (context.staff.name) setCashier(context.staff.name)
       })
       .catch(() => {
@@ -248,12 +250,13 @@ export function ShiftsView() {
               onSubmit={openShift}
               busy={busy}
               error={openError}
+              canPairCounter={role !== 'cashier'}
             />
           )}
 
           {/* What every other counter is doing right now — the reason a store
               running two tills can tell them apart at a glance. */}
-          {openShifts.length > 0 && (
+          {role && role !== 'cashier' && openShifts.length > 0 && (
             <Card>
               <CardHead
                 title="Open across the store"
@@ -280,7 +283,7 @@ export function ShiftsView() {
             </Card>
           )}
 
-          <ShiftHistory shifts={shifts.filter((s) => s.closedAt !== null)} />
+          {role && role !== 'cashier' && <ShiftHistory shifts={shifts.filter((s) => s.closedAt !== null)} />}
         </>
       )}
 
@@ -318,6 +321,7 @@ function OpenRegister({
   onSubmit,
   busy,
   error,
+  canPairCounter = true,
 }: {
   cashier: string
   currentTerminal: Terminal | null
@@ -326,6 +330,7 @@ function OpenRegister({
   onSubmit: (event: FormEvent) => void
   busy: boolean
   error: string | null
+  canPairCounter?: boolean
 }) {
   return (
     <Card>
@@ -349,11 +354,11 @@ function OpenRegister({
             icon={<Monitor size={24} strokeWidth={1.8} />}
             title="This device is not paired"
             body="Choose this device's counter from Counter settings. The pairing can be replaced if the device fails."
-            action={
+            action={canPairCounter ? (
               <Link className="btn btn-pri" href="/app/settings/terminals">
                 Pair a counter
               </Link>
-            }
+            ) : undefined}
           />
         ) : (
           <form onSubmit={onSubmit} style={{ maxWidth: 460 }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { Monitor, Plus } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
@@ -21,6 +22,7 @@ type Terminal = {
 }
 
 export function TerminalsView() {
+  const router = useRouter()
   const [terminals, setTerminals] = useState<Terminal[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -136,7 +138,7 @@ export function TerminalsView() {
     // The server interrupts any operator session attached to the old or
     // replaced counter. Do not send that now-invalid token on the refresh.
     sessionStorage.removeItem('operatorToken')
-    await load()
+    router.push('/terminal/pin')
   }
 
   return (

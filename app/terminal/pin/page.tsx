@@ -222,12 +222,12 @@ export default function PinPadPage() {
               <p className="text-xs text-[#64748B]">Secure register access</p>
             </div>
           </div>
-          <Link
+          {!currentTerminal && <Link
             href="/app/settings/terminals"
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DCE3EC] bg-white px-3 text-sm font-medium text-[#334155] shadow-sm transition hover:border-[#B8C8DC] hover:bg-[#F8FAFC]"
           >
             <Settings className="h-4 w-4" /> Manage counters
-          </Link>
+          </Link>}
         </header>
 
         <main className="flex flex-1 items-center justify-center py-8 sm:py-12">
@@ -291,7 +291,20 @@ export default function PinPadPage() {
                   {pairError}
                 </div>
               )}
-              {terminals.length === 0 ? (
+              {pinReadyStaff.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#C9D7E8] bg-[#F8FBFF] px-5 py-7 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#0058BA] shadow-sm">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <h2 className="mt-4 text-base font-semibold text-[#172033]">Set up a staff PIN first</h2>
+                  <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-[#64748B]">
+                    At least one active staff PIN is required before this browser can be paired to a counter.
+                  </p>
+                  <Button asChild className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]">
+                    <Link href="/terminal/setup-pin">Set up the first PIN</Link>
+                  </Button>
+                </div>
+              ) : terminals.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-[#C9D7E8] bg-[#F8FBFF] px-5 py-7 text-center">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#0058BA] shadow-sm">
                     <Monitor className="h-6 w-6" />
@@ -347,9 +360,7 @@ export default function PinPadPage() {
                   <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">This device</p>
                   <p className="mt-0.5 text-sm font-semibold text-[#172033]">{currentTerminal.name}</p>
                 </div>
-                <Link href="/app/settings/terminals" className="text-sm font-medium text-[#0058BA] hover:underline">
-                  Change counter
-                </Link>
+                <span className="text-xs text-[#64748B]">Owner or manager PIN required to change it</span>
               </div>
 
               {pinReadyStaff.length === 0 ? (
@@ -364,7 +375,7 @@ export default function PinPadPage() {
                       : 'Add a cashier or manager, then give them a counter PIN.'}
                   </p>
                   <Button asChild className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]">
-                    <Link href="/app/settings/members">Set up staff PINs</Link>
+                    <Link href="/terminal/setup-pin">Set up the first PIN</Link>
                   </Button>
                   <p className="mt-3 text-xs leading-5 text-[#64748B]">Roles decide permissions. A PIN decides who is operating this counter.</p>
                 </div>

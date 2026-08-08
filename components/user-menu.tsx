@@ -19,11 +19,13 @@ export function UserMenu({
   context,
   isContextLoading,
   hasError,
+  allowOrganizationSignOut = true,
   className,
 }: {
   context: AppContext | null
   isContextLoading: boolean
   hasError: boolean
+  allowOrganizationSignOut?: boolean
   className?: string
 }) {
   const router = useRouter()
@@ -86,9 +88,11 @@ export function UserMenu({
           <button type="button" className={styles.item} role="menuitem" onClick={() => void lockRegister()}>
             <LockKeyhole size={15} strokeWidth={1.85} /> Lock register
           </button>
-          <button type="button" className={styles.item} role="menuitem" onClick={() => void signOut()} disabled={signingOut}>
-            <LogOut size={15} strokeWidth={1.85} /> {signingOut ? 'Signing out…' : 'Sign out'}
-          </button>
+          {allowOrganizationSignOut && (
+            <button type="button" className={styles.item} role="menuitem" onClick={() => void signOut()} disabled={signingOut}>
+              <LogOut size={15} strokeWidth={1.85} /> {signingOut ? 'Signing out…' : 'Sign out organisation'}
+            </button>
+          )}
         </div>
       )}
     </div>

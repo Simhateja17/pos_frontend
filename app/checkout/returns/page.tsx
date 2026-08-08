@@ -1,9 +1,9 @@
 'use client'
 
-import { FormEvent, Suspense, useMemo, useState } from 'react'
+import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, Checkbox, DataTable, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState } from '@/components/couture/states'
 
@@ -41,12 +41,6 @@ const LOAD_ERROR = "Couldn't load this page. Check your connection and try again
 const NO_MATCH =
   'No matching sale found. Check the receipt number or try searching by customer instead.'
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 async function responseError(response: Response, fallback: string) {
   try {
     const body = (await response.clone().json()) as { error?: string }
@@ -63,7 +57,8 @@ function money(value: number | string) {
 function ReturnsPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const shiftId = searchParams.get('shiftId')
+  const requestedShiftId = searchParams.get('shiftId')
+  const [shiftId, setShiftId] = useState<string | null>(requestedShiftId)
   const [lookupTab, setLookupTab] = useState<'receipt' | 'customer'>('receipt')
   const [receiptNumber, setReceiptNumber] = useState('')
   const [customerSearch, setCustomerSearch] = useState('')
@@ -76,6 +71,18 @@ function ReturnsPageInner() {
   const [error, setError] = useState<string | null>(null)
   const [successAmount, setSuccessAmount] = useState<string | null>(null)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [reason, setReason] = useState('')
+
+  useEffect(() => {
+    if (requestedShiftId) {
+      setShiftId(requestedShiftId)
+      return
+    }
+    void authHeaders()
+      .then((headers) => apiClient.GET('/shifts/current', { headers }))
+      .then((result) => setShiftId(result.data?.shift?.id ?? null))
+      .catch(() => setShiftId(null))
+  }, [requestedShiftId])
 
   const selectedLines = useMemo(
     () =>
@@ -107,7 +114,7 @@ function ReturnsPageInner() {
     setHasSearched(true)
     setSale(null)
     setMatches([])
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const result = await apiClient.GET('/sales', { params: { query }, headers })
     setIsLoading(false)
     if (result.error) {
@@ -146,20 +153,21 @@ function ReturnsPageInner() {
 
   function requestRefund(event: FormEvent) {
     event.preventDefault()
-    if (!sale || !shiftId || selectedLines.length === 0 || originalPayments.length === 0) return
+    if (!sale || !shiftId || !reason || selectedLines.length === 0 || originalPayments.length === 0) return
     setError(null)
     setIsConfirmationOpen(true)
   }
 
   async function processRefund() {
-    if (!sale || !shiftId || selectedLines.length === 0 || originalPayments.length === 0) return
+    if (!sale || !shiftId || !reason || selectedLines.length === 0 || originalPayments.length === 0) return
     setIsSubmitting(true)
     setError(null)
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const result = await apiClient.POST('/returns', {
       body: {
         saleId: sale.id,
         shiftId,
+        reason,
         lines: selectedLines.map(({ saleLineItemId, quantity }) => ({
           saleLineItemId,
           quantity,
@@ -206,7 +214,7 @@ function ReturnsPageInner() {
           }}
         >
           <span>An open shift is required before a return can be processed.</span>
-          <button className="btn btn-sm" type="button" onClick={() => router.push('/shifts')}>
+          <button className="btn btn-sm" type="button" onClick={() => router.push('/app/shifts')}>
             Open a shift
           </button>
         </div>
@@ -262,8 +270,8 @@ function ReturnsPageInner() {
               <SearchField
                 value={customerSearch}
                 onChange={setCustomerSearch}
-                placeholder="Customer name, phone, or email"
-                ariaLabel="Customer name, phone, or email"
+                placeholder="Customer phone number"
+                ariaLabel="Customer phone number"
                 flex
               />
               <button className="btn btn-pri" type="submit" disabled={!customerSearch.trim() || isLoading}>
@@ -370,6 +378,24 @@ function ReturnsPageInner() {
                   background: 'var(--bg)',
                 }}
               >
+                <label style={{ display: 'block', marginBottom: 14 }}>
+                  <span style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700 }}>
+                    Reason for return
+                  </span>
+                  <select
+                    className="fld-select"
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    required
+                  >
+                    <option value="">Select a reason</option>
+                    <option value="Customer changed their mind">Customer changed their mind</option>
+                    <option value="Wrong item or size">Wrong item or size</option>
+                    <option value="Damaged or defective item">Damaged or defective item</option>
+                    <option value="Incorrect item billed">Incorrect item billed</option>
+                    <option value="Other return reason">Other</option>
+                  </select>
+                </label>
                 <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>
                   Refund tender: {originalMethods.join(', ') || 'unavailable'}. The server validates the original sale,
                   return entitlement, and final refund before anything is recorded.
@@ -388,6 +414,7 @@ function ReturnsPageInner() {
                     type="submit"
                     disabled={
                       !shiftId ||
+                      !reason ||
                       selectedLines.length === 0 ||
                       originalPayments.length === 0 ||
                       isSubmitting ||
@@ -416,7 +443,7 @@ function ReturnsPageInner() {
               className="btn btn-pri"
               type="button"
               style={{ marginTop: 14 }}
-              onClick={() => router.push(sale.customerId ? `/checkout?customerId=${sale.customerId}` : '/checkout')}
+              onClick={() => router.push(sale.customerId ? `/app/billing?customerId=${sale.customerId}` : '/app/billing')}
             >
               Start new sale
             </button>
@@ -448,7 +475,7 @@ function ReturnsPageInner() {
           <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
             Refund ₹{money(refundTotal)} for invoice {sale.id}? This sends the selected {selectedLines.length} line
             {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
-            {originalMethods.join(', ')}), and returns approved units to stock.
+            {originalMethods.join(', ')}), records “{reason}”, and returns approved units to stock.
           </p>
         </Modal>
       )}

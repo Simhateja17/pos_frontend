@@ -1940,7 +1940,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Resend a receipt email for a completed sale (CHECK-06) — resolves a real target email and reports the actual send outcome. */
+        /** @description Resend a receipt email for a completed sale (CHECK-06) — uses the customer address on file for cashier requests, requires manager approval for a different address, and is rate limited. */
         post: {
             parameters: {
                 query?: never;
@@ -1972,8 +1972,22 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description A manager is required to change the recipient address */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Sale not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Receipt resend cooldown or tenant email budget exceeded */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4846,6 +4860,7 @@ export interface components {
             saleId: string;
             /** Format: uuid */
             shiftId: string;
+            reason: string;
             lines: {
                 /** Format: uuid */
                 saleLineItemId: string;

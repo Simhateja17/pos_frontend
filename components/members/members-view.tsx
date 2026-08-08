@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge, type BadgeTone, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { apiClient } from '@/lib/api/client'
@@ -30,7 +31,8 @@ const LOAD_ERROR = "We couldn't load team members. Check your connection and try
 const roleLabel = (role: Role) => `${role[0].toUpperCase()}${role.slice(1)}`
 const ROLE_TONE: Record<Role, BadgeTone> = { owner: 'gold', manager: 'blue', cashier: 'grey' }
 
-export function MembersView() {
+export function MembersView({ firstPinSetup = false }: { firstPinSetup?: boolean }) {
+  const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
   const [sessions, setSessions] = useState<StaffSession[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,9 +66,13 @@ export function MembersView() {
     ])
     setLoading(false)
     if (membersResult.error || !membersResult.data) { setLoadError(LOAD_ERROR); return }
+    if (firstPinSetup && membersResult.data.some((member) => member.isActive && member.pinConfigured)) {
+      router.replace('/terminal/pin')
+      return
+    }
     setMembers(membersResult.data)
     if (!sessionsResult.error && sessionsResult.data) setSessions(sessionsResult.data)
-  }, [])
+  }, [firstPinSetup, router])
   useEffect(() => { void load() }, [load])
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setInviting(true); setInviteError(null)
@@ -84,7 +90,9 @@ export function MembersView() {
       setInviteError((result.error as { error?: string }).error ?? 'We could not add this staff member. Check the details and try again.')
       return
     }
-    setInviteOpen(false); setInviteName(''); setInviteEmail(''); setTemporaryPin(''); setInviteRole('cashier'); setAccessMode('pin'); void load()
+    setInviteOpen(false); setInviteName(''); setInviteEmail(''); setTemporaryPin(''); setInviteRole('cashier'); setAccessMode('pin')
+    if (firstPinSetup) router.push('/terminal/pin')
+    else void load()
   }
   async function changeRole() {
     if (!roleTarget) return
@@ -116,14 +124,18 @@ export function MembersView() {
       setResetError((error as { error?: string }).error ?? 'We could not reset this PIN.')
       return
     }
-    setResetTarget(null); setResetPin(''); void load()
+    setResetTarget(null); setResetPin('')
+    if (firstPinSetup) router.push('/terminal/pin')
+    else void load()
   }
 
   return (
     <>
       <PageHead
-        title="Staff"
-        sub="Manage real staff access. Server role checks determine which changes are allowed."
+        title={firstPinSetup ? 'Set up the first counter PIN' : 'Staff'}
+        sub={firstPinSetup
+          ? 'Create one PIN-enabled staff profile, or set a PIN for an existing member. You will return to the register afterward.'
+          : 'Manage real staff access. Server role checks determine which changes are allowed.'}
         actions={
           <button className="btn btn-pri" type="button" onClick={() => { setAccessMode('pin'); setInviteOpen(true) }}>
             Add staff
@@ -193,13 +205,15 @@ export function MembersView() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                      <button
-                        className="btn btn-sm"
-                        type="button"
-                        onClick={() => { setRoleTarget(member); setPendingRole(member.role); setRoleError(null) }}
-                      >
-                        Change role
-                      </button>
+                      {!firstPinSetup && (
+                        <button
+                          className="btn btn-sm"
+                          type="button"
+                          onClick={() => { setRoleTarget(member); setPendingRole(member.role); setRoleError(null) }}
+                        >
+                          Change role
+                        </button>
+                      )}
                       {member.isActive && (
                         <button
                           className="btn btn-sm"
@@ -209,13 +223,15 @@ export function MembersView() {
                           {member.pinConfigured ? 'Reset PIN' : 'Set counter PIN'}
                         </button>
                       )}
-                      <button
-                        className="btn btn-sm btn-ghost"
-                        type="button"
-                        onClick={() => { setRemoveTarget(member); setRemoveError(null) }}
-                      >
-                        Remove
-                      </button>
+                      {!firstPinSetup && (
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          type="button"
+                          onClick={() => { setRemoveTarget(member); setRemoveError(null) }}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -225,7 +241,7 @@ export function MembersView() {
         </Card>
       )}
 
-      {!loading && !loadError && (
+      {!firstPinSetup && !loading && !loadError && (
         <Card>
           <CardHead title="Cashier sessions" sub="Every PIN login, handover, lock, and interruption is retained for the store." />
           <CardPad style={{ paddingTop: 4 }}>
@@ -273,14 +289,16 @@ export function MembersView() {
                 {inviteError}
               </div>
             )}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <button className={`btn btn-sm ${accessMode === 'pin' ? 'btn-pri' : ''}`} type="button" onClick={() => setAccessMode('pin')}>
-                Counter PIN
-              </button>
-              <button className={`btn btn-sm ${accessMode === 'email' ? 'btn-pri' : ''}`} type="button" onClick={() => setAccessMode('email')}>
-                Email account
-              </button>
-            </div>
+            {!firstPinSetup && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <button className={`btn btn-sm ${accessMode === 'pin' ? 'btn-pri' : ''}`} type="button" onClick={() => setAccessMode('pin')}>
+                  Counter PIN
+                </button>
+                <button className={`btn btn-sm ${accessMode === 'email' ? 'btn-pri' : ''}`} type="button" onClick={() => setAccessMode('email')}>
+                  Email account
+                </button>
+              </div>
+            )}
             <p className="t-sub" style={{ fontSize: 12.5, marginBottom: 14 }}>
               {accessMode === 'pin'
                 ? 'Use this for cashiers who work inside the store. The name appears on the counter lock screen.'
