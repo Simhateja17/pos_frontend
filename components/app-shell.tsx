@@ -82,6 +82,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [router])
 
   useEffect(() => {
+    // AppShell stays mounted while Next changes routes. Include pathname here:
+    // browser Back/Forward must re-check the lock, otherwise a locked register
+    // can render the previous /app page without an operator token.
     let cancelled = false
     setDeviceGate('checking')
 
@@ -107,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [pathname, router])
 
   useEffect(() => {
     if (deviceGate === 'ready') void loadContext()
@@ -143,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       .catch(() => undefined)
       .finally(() => {
         window.sessionStorage.removeItem('operatorToken')
-        router.push('/terminal/pin')
+        router.replace('/terminal/pin')
       })
   }, [router])
 

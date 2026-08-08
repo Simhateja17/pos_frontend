@@ -63,7 +63,10 @@ export function UserMenu({
       // acting as the previous cashier.
     }
     if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
-    router.push('/terminal/pin')
+    // Replace the app entry so browser Back cannot simply restore the unlocked
+    // register page. The AppShell also re-checks the paired-device guard on
+    // every pathname change as a defence in depth.
+    router.replace('/terminal/pin')
   }
 
   return (
