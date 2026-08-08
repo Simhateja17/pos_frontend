@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft, Banknote, ChevronRight, LockKeyhole, Monitor, Settings, Users } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
@@ -27,6 +30,12 @@ type Terminal = {
 }
 
 const DIGIT_GRID = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'backspace'] as const
+const ROLE_LABEL: Record<Staff['role'], string> = { owner: 'Owner', manager: 'Manager', cashier: 'Cashier' }
+const ROLE_BADGE_CLASS: Record<Staff['role'], string> = {
+  owner: 'bg-[#FFF5D6] text-[#8A6410]',
+  manager: 'bg-[#EAF2FF] text-[#0058BA]',
+  cashier: 'bg-[#F1F5F9] text-[#475569]',
+}
 
 const GENERIC_LOAD_ERROR = "Couldn't load team members. Check your connection and try again."
 
@@ -37,7 +46,7 @@ export default function PinPadPage() {
   const [currentTerminal, setCurrentTerminal] = useState<Terminal | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [isLoadingStaff, setIsLoadingStaff] = useState(true)
-  const [isPairing, setIsPairing] = useState(false)
+  const [pairingTerminalId, setPairingTerminalId] = useState<string | null>(null)
   const [pairError, setPairError] = useState<string | null>(null)
 
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null)
@@ -68,7 +77,7 @@ export default function PinPadPage() {
       return
     }
 
-    setStaff(staffResult.data.filter((member) => member.isActive && member.pinConfigured !== false))
+    setStaff(staffResult.data.filter((member) => member.isActive))
     setCurrentTerminal(deviceResult.data?.terminal ?? null)
     setTerminals(terminalsResult.data.filter((terminal) => terminal.isActive))
   }, [])
@@ -107,13 +116,13 @@ export default function PinPadPage() {
   }
 
   async function pairTerminal(terminalId: string) {
-    setIsPairing(true)
+    setPairingTerminalId(terminalId)
     setPairError(null)
     const result = await apiClient.POST('/terminals/{terminalId}/pair', {
       params: { path: { terminalId } },
       headers: await authHeaders(),
     })
-    setIsPairing(false)
+    setPairingTerminalId(null)
     if (result.error || !result.data) {
       setPairError((result.error as { error?: string } | undefined)?.error ?? 'This device could not be paired.')
       return
@@ -197,32 +206,63 @@ export default function PinPadPage() {
     }
   }
 
+  const pinReadyStaff = staff.filter((member) => member.pinConfigured !== false)
+  const selectedStaff = pinReadyStaff.find((member) => member.id === selectedStaffId) ?? null
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: '#FFFDF7' }}
-    >
-      <Card className="w-full max-w-[400px]" style={{ backgroundColor: '#FFFFFF' }}>
-        <CardHeader>
-          <h1
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.5,
-              color: '#64748B',
-            }}
+    <div className="min-h-screen bg-[#FFFDF7] px-4 py-5 sm:px-8 sm:py-7">
+      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-5xl flex-col sm:min-h-[calc(100vh-3.5rem)]">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#DCE6F2] bg-white shadow-sm">
+              <Image src="/logo.png" alt="Ambel POS" width={28} height={28} className="object-contain" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#172033]">Ambel POS</p>
+              <p className="text-xs text-[#64748B]">Secure register access</p>
+            </div>
+          </div>
+          <Link
+            href="/app/settings/terminals"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DCE3EC] bg-white px-3 text-sm font-medium text-[#334155] shadow-sm transition hover:border-[#B8C8DC] hover:bg-[#F8FAFC]"
           >
-            {mustChangePin
-              ? 'Choose your personal PIN'
-              : selectedStaffId
-                ? `Enter your PIN · ${currentTerminal?.name ?? 'Counter'}`
-                : currentTerminal
-                  ? `Who's ringing this up? · ${currentTerminal.name}`
-                  : 'Assign this device to a counter'}
-          </h1>
-        </CardHeader>
-        <CardContent>
+            <Settings className="h-4 w-4" /> Manage counters
+          </Link>
+        </header>
+
+        <main className="flex flex-1 items-center justify-center py-8 sm:py-12">
+          <Card className="w-full max-w-[560px] overflow-hidden border-[#DDE5EF] bg-white shadow-[0_18px_55px_rgba(28,45,72,0.10)]">
+            <CardHeader className="border-b border-[#E8EDF3] bg-[#FBFCFE] px-5 py-5 sm:px-7">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF2FF] text-[#0058BA]">
+                  {currentTerminal ? <LockKeyhole className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+                </div>
+                <div>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#0058BA]">
+                    {currentTerminal ? currentTerminal.name : 'Device setup'}
+                  </p>
+                  <h1 className="text-xl font-semibold leading-tight text-[#172033] sm:text-2xl">
+                    {mustChangePin
+                      ? 'Choose your personal PIN'
+                      : selectedStaff
+                        ? `Welcome, ${selectedStaff.name}`
+                        : currentTerminal
+                          ? 'Who is using this register?'
+                          : 'Assign this device to a counter'}
+                  </h1>
+                  <p className="mt-1.5 text-sm leading-6 text-[#64748B]">
+                    {mustChangePin
+                      ? 'Replace the temporary PIN with four digits only you know.'
+                      : selectedStaff
+                        ? `Enter your four-digit PIN to operate ${currentTerminal?.name ?? 'this counter'}.`
+                        : currentTerminal
+                          ? 'Choose your own staff profile. Roles control permissions; the PIN records who is operating this counter.'
+                          : 'A counter belongs to this browser. Staff can then take turns using it with their own PINs.'}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-5 py-5 sm:px-7 sm:py-6">
           {loadError && (
             <Alert variant="destructive" className="mb-4">
               <AlertDescription>{loadError}</AlertDescription>
@@ -238,73 +278,130 @@ export default function PinPadPage() {
           )}
 
           {!loadError && isLoadingStaff && (
-            <p className="text-sm" style={{ color: '#64748B' }}>
-              Loading staff…
-            </p>
+            <div className="flex items-center gap-3 rounded-xl border border-[#E5EAF1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C8D4E3] border-t-[#0058BA]" />
+              Loading counter and staff…
+            </div>
           )}
 
           {!loadError && !isLoadingStaff && !currentTerminal && (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm" style={{ color: '#64748B' }}>
-                This browser is not assigned to a counter yet. An owner or manager can choose which counter this device represents.
-              </p>
-              {pairError && <p className="text-sm" style={{ color: '#DC2626' }}>{pairError}</p>}
-              {terminals.length === 0 && (
-                <p className="text-sm" style={{ color: '#64748B' }}>No active counters are set up yet. Create one in Counter settings.</p>
+            <div className="flex flex-col gap-4">
+              {pairError && (
+                <div role="alert" className="rounded-xl border border-[#F4C7C7] bg-[#FFF5F5] px-4 py-3 text-sm text-[#B42318]">
+                  {pairError}
+                </div>
               )}
-              {terminals.map((terminal) => (
-                <button
-                  key={terminal.id}
-                  type="button"
-                  disabled={isPairing}
-                  onClick={() => void pairTerminal(terminal.id)}
-                  className="min-h-[48px] rounded-md border px-4 text-left"
-                  style={{ borderColor: '#E2E8F0', fontFamily: 'Inter, sans-serif', fontSize: '16px' }}
-                >
-                  <span style={{ display: 'block', fontWeight: 600 }}>{isPairing ? 'Pairing…' : terminal.name}</span>
-                  <span style={{ display: 'block', marginTop: 3, color: '#64748B', fontSize: 12 }}>
-                    {terminal.cashMode === 'none' ? 'No cash drawer' : 'Cash drawer'}
-                    {terminal.hasOpenShift ? ' · Existing shift can be resumed' : ''}
-                  </span>
-                </button>
-              ))}
+              {terminals.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#C9D7E8] bg-[#F8FBFF] px-5 py-7 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#0058BA] shadow-sm">
+                    <Monitor className="h-6 w-6" />
+                  </div>
+                  <h2 className="mt-4 text-base font-semibold text-[#172033]">Create your first counter</h2>
+                  <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-[#64748B]">
+                    Name the counter and choose whether it has a cash drawer. You will return here to assign this browser.
+                  </p>
+                  <Button asChild className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]">
+                    <Link href="/app/settings/terminals">Create a counter</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-[#334155]">Which counter does this browser represent?</p>
+                  <div className="grid gap-3">
+                    {terminals.map((terminal) => {
+                      const isThisPairing = pairingTerminalId === terminal.id
+                      return (
+                        <button
+                          key={terminal.id}
+                          type="button"
+                          disabled={pairingTerminalId !== null}
+                          onClick={() => void pairTerminal(terminal.id)}
+                          className="group flex min-h-[76px] items-center gap-4 rounded-xl border border-[#DCE4EE] bg-white px-4 py-3 text-left transition hover:border-[#8CB5EA] hover:bg-[#F7FAFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0058BA] focus-visible:ring-offset-2 disabled:opacity-60"
+                        >
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF5FF] text-[#0058BA]">
+                            {terminal.cashMode === 'none' ? <Monitor className="h-5 w-5" /> : <Banknote className="h-5 w-5" />}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-base font-semibold text-[#172033]">
+                              {isThisPairing ? 'Assigning device…' : terminal.name}
+                            </span>
+                            <span className="mt-0.5 block text-sm text-[#64748B]">
+                              {terminal.cashMode === 'none' ? 'No cash drawer' : 'Cash drawer'}
+                              {terminal.hasOpenShift ? ' · Open shift will continue' : ' · Ready to start'}
+                            </span>
+                          </span>
+                          <ChevronRight className="h-5 w-5 text-[#94A3B8] transition group-hover:translate-x-0.5 group-hover:text-[#0058BA]" />
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
           {!loadError && !isLoadingStaff && currentTerminal && !selectedStaffId && !mustChangePin && (
-            <div className="flex flex-col gap-2">
-              {staff.length === 0 && (
-                <p className="text-sm" style={{ color: '#64748B' }}>
-                  No active staff found for this terminal.
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E3E9F1] bg-[#F8FAFC] px-4 py-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">This device</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[#172033]">{currentTerminal.name}</p>
+                </div>
+                <Link href="/app/settings/terminals" className="text-sm font-medium text-[#0058BA] hover:underline">
+                  Change counter
+                </Link>
+              </div>
+
+              {pinReadyStaff.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#C9D7E8] bg-[#F8FBFF] px-5 py-7 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#0058BA] shadow-sm">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <h2 className="mt-4 text-base font-semibold text-[#172033]">No counter PINs are set</h2>
+                  <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-[#64748B]">
+                    {staff.length > 0
+                      ? `${staff.length} active staff ${staff.length === 1 ? 'profile exists' : 'profiles exist'}, but none has a counter PIN yet.`
+                      : 'Add a cashier or manager, then give them a counter PIN.'}
+                  </p>
+                  <Button asChild className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]">
+                    <Link href="/app/settings/members">Set up staff PINs</Link>
+                  </Button>
+                  <p className="mt-3 text-xs leading-5 text-[#64748B]">Roles decide permissions. A PIN decides who is operating this counter.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {pinReadyStaff.map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => selectStaff(member.id)}
+                      className="group flex min-h-[82px] items-center gap-3 rounded-xl border border-[#DCE4EE] bg-white px-4 py-3 text-left transition hover:border-[#8CB5EA] hover:bg-[#F7FAFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0058BA] focus-visible:ring-offset-2"
+                    >
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EAF2FF] text-sm font-bold text-[#0058BA]">
+                        {member.name.trim().slice(0, 2).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-[#172033]">{member.name}</span>
+                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${ROLE_BADGE_CLASS[member.role]}`}>
+                          {ROLE_LABEL[member.role]}
+                        </span>
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-[#94A3B8] group-hover:text-[#0058BA]" />
+                    </button>
+                  ))}
+                </div>
               )}
-              {staff.map((member) => (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={() => selectStaff(member.id)}
-                  className="min-h-[44px] rounded-md border px-4 text-left"
-                  style={{
-                    borderColor: '#E2E8F0',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '16px',
-                    fontWeight: 400,
-                  }}
-                >
-                  {member.name}
-                </button>
-              ))}
             </div>
           )}
 
           {!loadError && !isLoadingStaff && currentTerminal && selectedStaffId && !mustChangePin && (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-5">
               {/* PIN progress dots — visual feedback only, never renders the digits themselves */}
-              <div className="flex gap-2" aria-hidden="true">
+              <div className="flex gap-3 py-1" aria-hidden="true">
                 {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="inline-block h-3 w-3 rounded-full"
+                    className="inline-block h-3.5 w-3.5 rounded-full transition-colors"
                     style={{
                       backgroundColor: i < pin.length ? '#0058BA' : '#E2E8F0',
                     }}
@@ -312,10 +409,10 @@ export default function PinPadPage() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {DIGIT_GRID.map((key, i) => {
                   if (key === '') {
-                    return <span key={`blank-${i}`} className="min-h-[44px] min-w-[44px]" />
+                    return <span key={`blank-${i}`} className="h-14 w-16 sm:w-20" />
                   }
                   return (
                     <button
@@ -323,7 +420,7 @@ export default function PinPadPage() {
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleDigitPress(key)}
-                      className="min-h-[44px] min-w-[44px] rounded-md border"
+                      className="h-14 w-16 rounded-xl border bg-white transition hover:border-[#8CB5EA] hover:bg-[#F7FAFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0058BA] focus-visible:ring-offset-2 sm:w-20"
                       style={{
                         borderColor: '#E2E8F0',
                         fontFamily: 'Inter, sans-serif',
@@ -352,19 +449,15 @@ export default function PinPadPage() {
               <button
                 type="button"
                 onClick={resetToStaffPicker}
-                className="text-sm"
-                style={{ color: '#0058BA' }}
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-[#0058BA] hover:bg-[#F1F6FD]"
               >
-                Not you? Switch staff
+                <ArrowLeft className="h-4 w-4" /> Choose another staff member
               </button>
             </div>
           )}
 
           {!loadError && !isLoadingStaff && mustChangePin && (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm" style={{ color: '#64748B' }}>
-                This was a temporary PIN. Choose a personal four-digit PIN that only you know.
-              </p>
+            <div className="flex flex-col gap-4">
               {changeError && <p className="text-sm" style={{ color: '#DC2626' }}>{changeError}</p>}
               <input
                 aria-label="New personal PIN"
@@ -375,7 +468,7 @@ export default function PinPadPage() {
                 value={newPin}
                 onChange={(event) => setNewPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder="New four-digit PIN"
-                className="min-h-[44px] rounded-md border px-3"
+                className="min-h-12 rounded-xl border border-[#DCE4EE] px-4 outline-none focus:border-[#0058BA] focus:ring-2 focus:ring-[#D6E7FB]"
               />
               <input
                 aria-label="Confirm personal PIN"
@@ -386,21 +479,23 @@ export default function PinPadPage() {
                 value={confirmPin}
                 onChange={(event) => setConfirmPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder="Repeat PIN"
-                className="min-h-[44px] rounded-md border px-3"
+                className="min-h-12 rounded-xl border border-[#DCE4EE] px-4 outline-none focus:border-[#0058BA] focus:ring-2 focus:ring-[#D6E7FB]"
               />
               <button
                 type="button"
                 disabled={isChangingPin || newPin.length !== 4 || confirmPin.length !== 4}
                 onClick={() => void changeOperatorPin()}
-                className="min-h-[44px] rounded-md px-4"
+                className="min-h-12 rounded-xl px-4 font-medium disabled:opacity-50"
                 style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
               >
                 {isChangingPin ? 'Saving PIN…' : 'Save personal PIN'}
               </button>
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
     </div>
   )
 }

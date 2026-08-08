@@ -175,9 +175,16 @@ export function MembersView() {
                     <Badge tone={ROLE_TONE[member.role]}>{roleLabel(member.role)}</Badge>
                   </td>
                   <td>
-                    <Badge tone={member.accessMode === 'account' ? 'blue' : 'grey'}>
-                      {member.accessMode === 'account' ? 'Email account' : 'Counter PIN'}
-                    </Badge>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {member.accessMode === 'account' && <Badge tone="blue">Email account</Badge>}
+                      <Badge tone={member.pinConfigured ? 'green' : 'amber'}>
+                        {member.pinConfigured
+                          ? member.pinMustChange
+                            ? 'Temporary PIN'
+                            : 'Counter PIN ready'
+                          : 'No counter PIN'}
+                      </Badge>
+                    </div>
                   </td>
                   <td>
                     <Badge tone={member.isActive ? 'green' : 'grey'} dot={member.isActive ? 'g' : undefined}>
@@ -193,13 +200,13 @@ export function MembersView() {
                       >
                         Change role
                       </button>
-                      {member.accessMode === 'pin' && member.isActive && (
+                      {member.isActive && (
                         <button
                           className="btn btn-sm"
                           type="button"
                           onClick={() => { setResetTarget(member); setResetPin(''); setResetError(null) }}
                         >
-                          Reset PIN
+                          {member.pinConfigured ? 'Reset PIN' : 'Set counter PIN'}
                         </button>
                       )}
                       <button
@@ -319,19 +326,27 @@ export function MembersView() {
 
       {resetTarget && (
         <Modal
-          title={`Reset ${resetTarget.name}'s PIN`}
+          title={resetTarget.pinConfigured
+            ? `Reset ${resetTarget.name}'s counter PIN`
+            : `Set up ${resetTarget.name}'s counter PIN`}
           onClose={() => setResetTarget(null)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setResetTarget(null)}>Cancel</button>
               <button className="btn btn-pri" type="button" disabled={resetting || resetPin.length !== 4} onClick={() => void resetStaffPin()}>
-                {resetting ? 'Resetting…' : 'Reset PIN'}
+                {resetting
+                  ? 'Saving…'
+                  : resetTarget.pinConfigured
+                    ? 'Reset PIN'
+                    : 'Set counter PIN'}
               </button>
             </>
           }
         >
           {resetError && <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>{resetError}</div>}
-          <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>The next login will ask this staff member to choose a new personal PIN.</p>
+          <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+            Enter a temporary four-digit PIN. {resetTarget.name} will use it once on the counter, then choose a private personal PIN.
+          </p>
           <Fld id="reset-pin" label="Temporary PIN">
             <input id="reset-pin" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={resetPin} onChange={(event) => setResetPin(event.target.value.replace(/\D/g, '').slice(0, 4))} />
           </Fld>
