@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import { Barcode, Boxes, Package, Plus, Upload } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { LowStockBadge } from '@/components/low-stock-badge'
@@ -50,11 +50,6 @@ type Product = {
 const LOAD_ERROR = "We couldn't load your current stock. Check your connection and try again."
 const CATALOG_LOAD_ERROR = "Couldn't load your catalog. Check your connection and try again."
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  return data.session?.access_token ? { Authorization: `Bearer ${data.session.access_token}` } : undefined
-}
-
 function variantAttributes(variant: Variant) {
   return [variant.size, variant.color, variant.material].filter(Boolean).join(' / ')
 }
@@ -72,7 +67,7 @@ export function InventoryView() {
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const { data, error: requestError } = await apiClient.GET('/stock-movements/low-stock', { headers: await authHeader() })
+    const { data, error: requestError } = await apiClient.GET('/stock-movements/low-stock', { headers: await authHeaders() })
     setLoading(false)
     if (requestError || !data) {
       setError(LOAD_ERROR)
@@ -84,7 +79,7 @@ export function InventoryView() {
   const loadCatalog = useCallback(async () => {
     setCatalogLoading(true)
     setCatalogError(null)
-    const { data, error: requestError } = await apiClient.GET('/products', { headers: await authHeader() })
+    const { data, error: requestError } = await apiClient.GET('/products', { headers: await authHeaders() })
     setCatalogLoading(false)
     if (requestError || !data) {
       setCatalogError(CATALOG_LOAD_ERROR)

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import styles from '@/components/india-migration.module.css'
 
 /**
@@ -38,11 +38,11 @@ export default function StoreTypePage() {
     setMessage('')
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.access_token) {
+      const headers = await authHeaders()
+      if (headers) {
         await apiClient.POST('/categories/seed', {
           body: { businessType: selected },
-          headers: { Authorization: `Bearer ${session.access_token}` },
+          headers,
         })
       }
     } catch {

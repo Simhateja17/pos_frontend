@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { FolderTree, Plus } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 
@@ -13,12 +13,6 @@ type Category = {
   sortOrder: number
   productCount: number
   createdAt: string
-}
-
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
 }
 
 export function CategoriesView() {
@@ -35,7 +29,7 @@ export function CategoriesView() {
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const { data, error: requestError } = await apiClient.GET('/categories', { headers: await authHeader() })
+    const { data, error: requestError } = await apiClient.GET('/categories', { headers: await authHeaders() })
     setLoading(false)
     if (requestError || !data) {
       setError('We couldn’t load your categories. Check your connection and try again.')
@@ -71,7 +65,7 @@ export function CategoriesView() {
 
     setSaving(true)
     setFormError(null)
-    const headers = await authHeader()
+    const headers = await authHeaders()
 
     const { error: requestError } = editing
       ? await apiClient.PATCH('/categories/{categoryId}', {
@@ -95,7 +89,7 @@ export function CategoriesView() {
   async function remove(category: Category) {
     const { error: requestError } = await apiClient.DELETE('/categories/{categoryId}', {
       params: { path: { categoryId: category.id } },
-      headers: await authHeader(),
+      headers: await authHeaders(),
     })
     if (requestError) {
       setError('That category could not be deleted.')

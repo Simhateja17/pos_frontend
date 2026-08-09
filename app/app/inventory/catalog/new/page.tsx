@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, ScanLine, Trash2 } from 'lucide-react'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, Fld, PageHead } from '@/components/couture/ui'
 import { UNITS, allowsFractionalQuantity, unitSuffix, type Unit } from '@/lib/units'
 import { CategorySelect, type CategoryOption } from '@/components/inventory/category-select'
@@ -37,12 +37,6 @@ const EMPTY_VARIANT_ROW: VariantFormRow = {
   openingStock: '',
 }
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 export default function NewProductPage() {
   const router = useRouter()
 
@@ -58,12 +52,12 @@ export default function NewProductPage() {
   const firstBarcodeRef = useRef<HTMLInputElement>(null)
 
   const loadCategories = useCallback(async () => {
-    const { data } = await apiClient.GET('/categories', { headers: await authHeader() })
+    const { data } = await apiClient.GET('/categories', { headers: await authHeaders() })
     if (data) setCategories(data.map((c) => ({ id: c.id, name: c.name })))
   }, [])
 
   const loadKnownBarcodes = useCallback(async () => {
-    const { data } = await apiClient.GET('/products', { headers: await authHeader() })
+    const { data } = await apiClient.GET('/products', { headers: await authHeaders() })
     if (!data) return
     const found = new Map<string, string>()
     for (const product of data) {
@@ -148,7 +142,7 @@ export default function NewProductPage() {
     setError(null)
     setIsSubmitting(true)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data, error: requestError } = await apiClient.POST('/products', {
       body: {
         name: name.trim(),

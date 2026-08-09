@@ -21,7 +21,7 @@ import {
 } from '@/lib/api/authenticated-client'
 import styles from '@/components/app-shell.module.css'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
-import { apiClient } from '@/lib/api/client'
+import { apiClient, REGISTER_LOCKED_EVENT } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
@@ -79,6 +79,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     } finally {
       setIsContextLoading(false)
     }
+  }, [router])
+
+  useEffect(() => {
+    const returnToPin = () => {
+      setDeviceGate('redirecting')
+      router.replace('/terminal/pin')
+    }
+    window.addEventListener(REGISTER_LOCKED_EVENT, returnToPin)
+    return () => window.removeEventListener(REGISTER_LOCKED_EVENT, returnToPin)
   }, [router])
 
   useEffect(() => {

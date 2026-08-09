@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { ListChecks } from 'lucide-react'
 import { Card, CardHead, CardPad, ListRow } from '@/components/couture/ui'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { SETUP_TASKS, setupTaskForStep, type SetupTask } from '@/components/onboarding/setup-tasks'
 
 /**
@@ -23,10 +23,10 @@ export function SetupPrompt() {
     let active = true
     ;(async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.access_token) return
+        const headers = await authHeaders()
+        if (!headers) return
         const { data } = await apiClient.GET('/onboarding', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
+          headers,
         })
         if (!active || !data) return
         // pendingSteps still includes steps whose screen does not exist yet;

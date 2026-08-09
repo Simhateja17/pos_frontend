@@ -4,8 +4,8 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useSearchParams } from 'next/navigation'
 import { useReactToPrint } from 'react-to-print'
 import { Printer } from 'lucide-react'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { BarcodeLabel } from '@/components/barcode-label'
@@ -40,12 +40,6 @@ type VariantRow = {
 
 const LOAD_ERROR = "Couldn't load your catalog. Check your connection and try again."
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 function variantDisplayName(row: VariantRow) {
   const attrs = [row.variant.size, row.variant.color, row.variant.material].filter(Boolean).join(' / ')
   return attrs ? `${row.productName} - ${attrs}` : row.productName
@@ -75,7 +69,7 @@ function LabelsPageContent() {
     setIsLoading(true)
     setLoadError(null)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data, error } = await apiClient.GET('/products', { headers })
 
     setIsLoading(false)

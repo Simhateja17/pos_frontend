@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { UNITS, allowsFractionalQuantity, unitSuffix } from '@/lib/units'
@@ -86,12 +86,6 @@ function movementTypeLabel(type: StockMovement['movementType']) {
   return type.charAt(0).toUpperCase() + type.slice(1)
 }
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 export default function VariantDetailPage() {
   const params = useParams<{ variantId: string }>()
   const variantId = params.variantId
@@ -150,7 +144,7 @@ export default function VariantDetailPage() {
     setIsLoading(true)
     setLoadError(null)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data, error } = await apiClient.GET('/products', { headers })
 
     if (error || !data) {
@@ -180,7 +174,7 @@ export default function VariantDetailPage() {
   const loadHistory = useCallback(async () => {
     setHistoryError(null)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { data, error } = await apiClient.GET('/stock-movements', {
       params: { query: { variantId } },
       headers,
@@ -292,7 +286,7 @@ export default function VariantDetailPage() {
     setEditError(null)
     setIsSavingEdit(true)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { error } = await apiClient.PATCH('/products/{productId}/variants/{variantId}', {
       params: { path: { productId: product.id, variantId: variant.id } },
       body: {
@@ -322,7 +316,7 @@ export default function VariantDetailPage() {
     setReceiveError(null)
     setIsReceiving(true)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { error } = await apiClient.POST('/stock-movements', {
       body: {
         variantId: variant.id,
@@ -361,7 +355,7 @@ export default function VariantDetailPage() {
 
     setIsAdjusting(true)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { error, response } = await apiClient.POST('/stock-movements', {
       body: {
         variantId: variant.id,
@@ -404,7 +398,7 @@ export default function VariantDetailPage() {
 
     setIsTransferring(true)
 
-    const headers = await authHeader()
+    const headers = await authHeaders()
     const { error } = await apiClient.POST('/stock-movements', {
       body: {
         variantId: variant.id,

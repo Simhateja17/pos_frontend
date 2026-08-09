@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders as sharedAuthHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
 import styles from './subscription-checkout.module.css'
 
@@ -34,9 +34,9 @@ declare global {
 }
 
 async function authHeaders(): Promise<Record<string, string>> {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.access_token) throw new Error('Your session has expired. Sign in again to continue.')
-  return { Authorization: `Bearer ${session.access_token}` }
+  const headers = await sharedAuthHeaders()
+  if (!headers) throw new Error('Your session has expired. Sign in again to continue.')
+  return headers
 }
 
 function money(minor: number, currency: string, region: Region): string {

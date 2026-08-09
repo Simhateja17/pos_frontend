@@ -2,8 +2,8 @@
 
 import { useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -28,12 +28,6 @@ export interface ReceiptSale {
   lines: ReceiptLine[]
 }
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessName: string }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const printFn = useReactToPrint({ contentRef })
@@ -44,7 +38,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
   async function handleEmailReceipt() {
     setIsSending(true)
     setEmailStatus(null)
-    const headers = await authHeader()
+    const headers = await authHeaders()
 
     // Real backend call — POST /sales/:id/resend-receipt (03-05) resolves the
     // target email (the entered address, or the sale's on-file customer

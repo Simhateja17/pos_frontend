@@ -14,17 +14,14 @@ const POLL_INTERVAL_MS = 15_000
 const PROBE_TIMEOUT_MS = 4_000
 
 /**
- * GET /health lives at the API root, not under /api (see backend/src/server.ts:
- * app.get('/health', ...) is registered before app.use('/api', routes)). This
- * derives the root from NEXT_PUBLIC_API_URL — the same variable
- * lib/api/client.ts uses — by stripping a trailing /api rather than
- * introducing a second env var that would need to be kept in sync with it.
+ * Probe through the exact same API proxy used by product, stock and sale
+ * requests. A separate top-level health proxy was classified differently by
+ * the browser and could fail while every real API request was succeeding.
  */
-function healthUrl() {
-  if (process.env.NODE_ENV === 'production') return '/_backend-health'
-  const apiUrl =
-    process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
-  return `${apiUrl.replace(/\/api\/?$/, '')}/health`
+function readinessUrl() {
+  if (process.env.NODE_ENV === 'production') return '/_backend/status'
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
+  return `${apiUrl.replace(/\/$/, '')}/status`
 }
 
 /** Single reachability probe. Never throws. */
@@ -33,7 +30,7 @@ export async function probeReachable(): Promise<boolean> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS)
-    const res = await fetch(healthUrl(), {
+    const res = await fetch(readinessUrl(), {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal,

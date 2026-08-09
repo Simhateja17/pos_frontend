@@ -9,10 +9,6 @@ const nextConfig = {
     const backendApi = (process.env.BACKEND_API_URL ?? 'https://posbackend.withcouture.me/api').replace(/\/$/, '')
     return [
       {
-        source: '/_backend-health',
-        destination: `${backendApi.replace(/\/api$/, '')}/health`,
-      },
-      {
         source: '/_backend/:path*',
         destination: `${backendApi}/:path*`,
       },

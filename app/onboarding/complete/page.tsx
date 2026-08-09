@@ -5,16 +5,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { setupTaskForStep } from '@/components/onboarding/setup-tasks'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
 import styles from './complete.module.css'
 
 type Completion = components['schemas']['OnboardingCompletionResponse']
 
 async function headers() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.access_token) throw new Error('Your session has expired. Sign in again to continue.')
-  return { Authorization: `Bearer ${session.access_token}` }
+  const result = await authHeaders()
+  if (!result) throw new Error('Your session has expired. Sign in again to continue.')
+  return result
 }
 
 export default function OnboardingCompletePage() {
