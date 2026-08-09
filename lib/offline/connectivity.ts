@@ -21,7 +21,9 @@ const PROBE_TIMEOUT_MS = 4_000
  * introducing a second env var that would need to be kept in sync with it.
  */
 function healthUrl() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
+  if (process.env.NODE_ENV === 'production') return '/_backend-health'
+  const apiUrl =
+    process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
   return `${apiUrl.replace(/\/api\/?$/, '')}/health`
 }
 

@@ -76,7 +76,9 @@ export default function LandingPage() {
 
   useEffect(() => {
     let active = true;
-    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+    const apiBase = process.env.NODE_ENV === "production"
+      ? "/_backend"
+      : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
     void fetch(`${apiBase}/auth/session`, { credentials: "include" })
       .then((response) => response.ok ? response.json() : { authenticated: false })
       .then((data) => {

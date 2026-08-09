@@ -44,7 +44,9 @@ function backoffFor(attempts: number) {
  * origin (relative URL, no host) and silently 404ed.
  */
 function apiUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
+  return process.env.NODE_ENV === 'production'
+    ? '/_backend'
+    : process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
 }
 
 async function postSale(entry: QueuedSale): Promise<Response> {
