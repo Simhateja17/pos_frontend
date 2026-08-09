@@ -145,7 +145,7 @@ export function TerminalsView() {
     <>
       <PageHead
         title="Counters"
-        sub="Each browser/device is a counter. Cashiers enter a PIN here after the device is paired."
+        sub="A counter is created first, then assigned to the browser that will operate it."
         actions={
           <button className="btn btn-pri" onClick={openCreate}>
             <Plus size={15} /> Add counter
@@ -187,13 +187,19 @@ export function TerminalsView() {
                     </Badge>
                     {terminal.hasOpenShift && <Badge tone="amber">Shift open</Badge>}
                     {terminal.isCurrentDevice && <Badge tone="blue">This device</Badge>}
+                    {!terminal.isCurrentDevice && terminal.isPaired && <Badge tone="amber">Another device</Badge>}
+                    {!terminal.isCurrentDevice && !terminal.isPaired && <Badge tone="grey">No device assigned</Badge>}
                     {terminal.activeCashierName && <Badge tone="amber">{terminal.activeCashierName} active</Badge>}
                   </div>
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                     <button className="btn btn-sm" onClick={() => void pair(terminal)}>
-                      {terminal.isCurrentDevice ? 'Re-pair device' : 'Use this device'}
+                      {terminal.isCurrentDevice
+                        ? 'Reassign this device'
+                        : terminal.isPaired
+                          ? 'Replace device'
+                          : 'Assign this device'}
                     </button>
                     <button className="btn btn-sm" onClick={() => openEdit(terminal)}>
                       Rename

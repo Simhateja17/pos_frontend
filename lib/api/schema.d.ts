@@ -1381,6 +1381,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/terminal/pin/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Lock this browser as a shared register while keeping the organisation session connected. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Register locked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/terminal/pin/switch": {
         parameters: {
             query?: never;
@@ -1415,6 +1453,13 @@ export interface paths {
                 };
                 /** @description Incorrect PIN, locked out, or unauthenticated */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The browser must be paired before a register or approval session can start */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2318,6 +2363,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             terminal: components["schemas"]["Terminal"] | null;
+                            isRegisterLocked: boolean;
                         };
                     };
                 };
@@ -4740,7 +4786,7 @@ export interface components {
              * @default register
              * @enum {string}
              */
-            sessionType: "register" | "approval";
+            sessionType: "register" | "approval" | "management";
         };
         ChangeOperatorPinRequest: {
             pin: string;

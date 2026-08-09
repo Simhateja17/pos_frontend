@@ -56,8 +56,9 @@ export function UserMenu({
 
   async function lockRegister() {
     setOpen(false)
+    if (typeof window !== 'undefined') window.sessionStorage.setItem('registerLocked', 'true')
     try {
-      await apiClient.POST('/terminal/pin/logout', { headers: await authHeaders() })
+      await apiClient.POST('/terminal/pin/lock', { headers: await authHeaders() })
     } catch {
       // The local token is still removed, so the next screen cannot continue
       // acting as the previous cashier.

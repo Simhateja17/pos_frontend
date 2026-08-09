@@ -94,7 +94,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         if (cancelled) return
         const paired = Boolean(result.data?.terminal)
         const hasOperator = Boolean(window.sessionStorage.getItem('operatorToken'))
-        if (paired && !hasOperator) {
+        const registerLocked =
+          Boolean(result.data?.isRegisterLocked) ||
+          window.sessionStorage.getItem('registerLocked') === 'true'
+        if ((paired || registerLocked) && !hasOperator) {
           setDeviceGate('redirecting')
           router.replace('/terminal/pin')
           return
@@ -141,8 +144,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const lockIdleRegister = useCallback(() => {
     if (typeof window === 'undefined' || !window.sessionStorage.getItem('operatorToken')) return
+    window.sessionStorage.setItem('registerLocked', 'true')
     void authHeaders()
-      .then((headers) => apiClient.POST('/terminal/pin/logout', { headers }))
+      .then((headers) => apiClient.POST('/terminal/pin/lock', { headers }))
       .catch(() => undefined)
       .finally(() => {
         window.sessionStorage.removeItem('operatorToken')

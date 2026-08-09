@@ -29,6 +29,10 @@ type Terminal = {
   isCurrentDevice?: boolean
 }
 
+type ManagementIntent =
+  | { type: 'manage' }
+  | { type: 'pair'; terminalId: string; terminalName: string }
+
 const DIGIT_GRID = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'backspace'] as const
 const ROLE_LABEL: Record<Staff['role'], string> = { owner: 'Owner', manager: 'Manager', cashier: 'Cashier' }
 const ROLE_BADGE_CLASS: Record<Staff['role'], string> = {
@@ -48,6 +52,7 @@ export default function PinPadPage() {
   const [isLoadingStaff, setIsLoadingStaff] = useState(true)
   const [pairingTerminalId, setPairingTerminalId] = useState<string | null>(null)
   const [pairError, setPairError] = useState<string | null>(null)
+  const [managementIntent, setManagementIntent] = useState<ManagementIntent | null>(null)
 
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null)
   const [pin, setPin] = useState('')
@@ -83,24 +88,26 @@ export default function PinPadPage() {
   }, [])
 
   useEffect(() => {
-    const operatorToken = sessionStorage.getItem('operatorToken')
-    if (operatorToken) {
-      void authHeaders().then((headers) => apiClient.POST('/terminal/pin/logout', {
-        headers: { ...(headers ?? {}), 'X-Operator-Token': operatorToken },
-      }))
+    sessionStorage.setItem('registerLocked', 'true')
+    let cancelled = false
+    void (async () => {
+      const headers = await authHeaders()
+      await apiClient.POST('/terminal/pin/lock', { headers })
+      sessionStorage.removeItem('operatorToken')
+      if (!cancelled) await loadStaff()
+    })()
+    return () => {
+      cancelled = true
     }
-    sessionStorage.removeItem('operatorToken')
-    void loadStaff()
   }, [loadStaff])
 
   // D-11 auto-timeout: after a period of inactivity, re-lock the terminal to
   // the staff-picker step and clear the current operator token.
   const resetToStaffPicker = useCallback(() => {
-    const operatorToken = sessionStorage.getItem('operatorToken')
-    void authHeaders().then((headers) => apiClient.POST('/terminal/pin/logout', {
-      headers: operatorToken ? { ...(headers ?? {}), 'X-Operator-Token': operatorToken } : headers,
-    }))
+    sessionStorage.setItem('registerLocked', 'true')
+    void authHeaders().then((headers) => apiClient.POST('/terminal/pin/lock', { headers }))
     sessionStorage.removeItem('operatorToken')
+    setManagementIntent(null)
     setSelectedStaffId(null)
     setPin('')
     setPinError(null)
@@ -115,7 +122,21 @@ export default function PinPadPage() {
     setPinError(null)
   }
 
-  async function pairTerminal(terminalId: string) {
+  function chooseAnotherStaff() {
+    setSelectedStaffId(null)
+    setPin('')
+    setPinError(null)
+  }
+
+  function requestManagement(intent: ManagementIntent) {
+    setManagementIntent(intent)
+    setSelectedStaffId(null)
+    setPin('')
+    setPinError(null)
+    setPairError(null)
+  }
+
+  async function pairTerminal(terminalId: string): Promise<boolean> {
     setPairingTerminalId(terminalId)
     setPairError(null)
     const result = await apiClient.POST('/terminals/{terminalId}/pair', {
@@ -125,9 +146,29 @@ export default function PinPadPage() {
     setPairingTerminalId(null)
     if (result.error || !result.data) {
       setPairError((result.error as { error?: string } | undefined)?.error ?? 'This device could not be paired.')
-      return
+      return false
     }
     setCurrentTerminal(result.data)
+    return true
+  }
+
+  async function continueAfterPinAuthentication() {
+    if (managementIntent?.type === 'manage') {
+      router.replace('/app/settings/terminals')
+      return
+    }
+
+    if (managementIntent?.type === 'pair') {
+      const paired = await pairTerminal(managementIntent.terminalId)
+      sessionStorage.removeItem('operatorToken')
+      setManagementIntent(null)
+      setSelectedStaffId(null)
+      setPin('')
+      if (paired) await loadStaff()
+      return
+    }
+
+    router.replace('/app/shifts')
   }
 
   async function submitPin(nextPin: string) {
@@ -137,7 +178,11 @@ export default function PinPadPage() {
 
     const headers = await authHeaders()
     const { data, error } = await apiClient.POST('/terminal/pin/switch', {
-      body: { staffId: selectedStaffId, pin: nextPin, sessionType: 'register' },
+      body: {
+        staffId: selectedStaffId,
+        pin: nextPin,
+        sessionType: managementIntent ? 'management' : 'register',
+      },
       headers,
     })
 
@@ -167,7 +212,7 @@ export default function PinPadPage() {
       return
     }
 
-    router.push('/app/shifts')
+    await continueAfterPinAuthentication()
   }
 
   async function changeOperatorPin() {
@@ -186,7 +231,7 @@ export default function PinPadPage() {
       setChangeError((result.error as { error?: string }).error ?? 'We could not change your PIN.')
       return
     }
-    router.push('/app/shifts')
+    await continueAfterPinAuthentication()
   }
 
   function handleDigitPress(key: string) {
@@ -207,7 +252,9 @@ export default function PinPadPage() {
   }
 
   const pinReadyStaff = staff.filter((member) => member.pinConfigured !== false)
-  const selectedStaff = pinReadyStaff.find((member) => member.id === selectedStaffId) ?? null
+  const managementStaff = pinReadyStaff.filter((member) => member.role === 'owner' || member.role === 'manager')
+  const visibleStaff = managementIntent ? managementStaff : pinReadyStaff
+  const selectedStaff = visibleStaff.find((member) => member.id === selectedStaffId) ?? null
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] px-4 py-5 sm:px-8 sm:py-7">
@@ -222,12 +269,13 @@ export default function PinPadPage() {
               <p className="text-xs text-[#64748B]">Secure register access</p>
             </div>
           </div>
-          {!currentTerminal && <Link
-            href="/app/settings/terminals"
+          <button
+            type="button"
+            onClick={() => requestManagement({ type: 'manage' })}
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DCE3EC] bg-white px-3 text-sm font-medium text-[#334155] shadow-sm transition hover:border-[#B8C8DC] hover:bg-[#F8FAFC]"
           >
             <Settings className="h-4 w-4" /> Manage counters
-          </Link>}
+          </button>
         </header>
 
         <main className="flex flex-1 items-center justify-center py-8 sm:py-12">
@@ -235,17 +283,19 @@ export default function PinPadPage() {
             <CardHeader className="border-b border-[#E8EDF3] bg-[#FBFCFE] px-5 py-5 sm:px-7">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF2FF] text-[#0058BA]">
-                  {currentTerminal ? <LockKeyhole className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+                  {managementIntent ? <LockKeyhole className="h-5 w-5" /> : currentTerminal ? <LockKeyhole className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
                 </div>
                 <div>
                   <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#0058BA]">
-                    {currentTerminal ? currentTerminal.name : 'Device setup'}
+                    {managementIntent ? 'Owner approval' : currentTerminal ? currentTerminal.name : 'Device setup'}
                   </p>
                   <h1 className="text-xl font-semibold leading-tight text-[#172033] sm:text-2xl">
                     {mustChangePin
                       ? 'Choose your personal PIN'
                       : selectedStaff
                         ? `Welcome, ${selectedStaff.name}`
+                        : managementIntent
+                          ? 'Owner or manager PIN required'
                         : currentTerminal
                           ? 'Who is using this register?'
                           : 'Assign this device to a counter'}
@@ -254,7 +304,13 @@ export default function PinPadPage() {
                     {mustChangePin
                       ? 'Replace the temporary PIN with four digits only you know.'
                       : selectedStaff
-                        ? `Enter your four-digit PIN to operate ${currentTerminal?.name ?? 'this counter'}.`
+                        ? managementIntent?.type === 'pair'
+                          ? `Enter your PIN to assign this browser to ${managementIntent.terminalName}.`
+                          : managementIntent?.type === 'manage'
+                            ? 'Enter your PIN to open counter settings.'
+                            : `Enter your four-digit PIN to operate ${currentTerminal?.name ?? 'this counter'}.`
+                        : managementIntent
+                          ? 'Choose an owner or manager. Cashier PINs cannot change device or counter settings.'
                         : currentTerminal
                           ? 'Choose your own staff profile. Roles control permissions; the PIN records who is operating this counter.'
                           : 'A counter belongs to this browser. Staff can then take turns using it with their own PINs.'}
@@ -284,7 +340,59 @@ export default function PinPadPage() {
             </div>
           )}
 
-          {!loadError && !isLoadingStaff && !currentTerminal && (
+          {!loadError && !isLoadingStaff && managementIntent && !selectedStaffId && !mustChangePin && (
+            <div className="flex flex-col gap-4">
+              <div className="rounded-xl border border-[#D9E5F3] bg-[#F7FAFF] px-4 py-3 text-sm leading-6 text-[#475569]">
+                {managementIntent.type === 'pair'
+                  ? `Confirm who is assigning this browser to ${managementIntent.terminalName}.`
+                  : 'Confirm who is opening counter settings.'}
+              </div>
+
+              {managementStaff.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#C9D7E8] bg-[#F8FBFF] px-5 py-7 text-center">
+                  <h2 className="text-base font-semibold text-[#172033]">No owner or manager PIN is ready</h2>
+                  <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-[#64748B]">
+                    Set up an owner or manager PIN before changing counter settings.
+                  </p>
+                  <Button asChild className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]">
+                    <Link href="/terminal/setup-pin">Set up a PIN</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {managementStaff.map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => selectStaff(member.id)}
+                      className="group flex min-h-[82px] items-center gap-3 rounded-xl border border-[#DCE4EE] bg-white px-4 py-3 text-left transition hover:border-[#8CB5EA] hover:bg-[#F7FAFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0058BA] focus-visible:ring-offset-2"
+                    >
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EAF2FF] text-sm font-bold text-[#0058BA]">
+                        {member.name.trim().slice(0, 2).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-[#172033]">{member.name}</span>
+                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${ROLE_BADGE_CLASS[member.role]}`}>
+                          {ROLE_LABEL[member.role]}
+                        </span>
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-[#94A3B8] group-hover:text-[#0058BA]" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setManagementIntent(null)}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-[#0058BA] hover:bg-[#F1F6FD]"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to register
+              </button>
+            </div>
+          )}
+
+          {!loadError && !isLoadingStaff && !currentTerminal && !managementIntent && (
             <div className="flex flex-col gap-4">
               {pairError && (
                 <div role="alert" className="rounded-xl border border-[#F4C7C7] bg-[#FFF5F5] px-4 py-3 text-sm text-[#B42318]">
@@ -313,8 +421,12 @@ export default function PinPadPage() {
                   <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-[#64748B]">
                     Name the counter and choose whether it has a cash drawer. You will return here to assign this browser.
                   </p>
-                  <Button asChild className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]">
-                    <Link href="/app/settings/terminals">Create a counter</Link>
+                  <Button
+                    type="button"
+                    onClick={() => requestManagement({ type: 'manage' })}
+                    className="mt-5 h-11 bg-[#0058BA] px-5 text-white hover:bg-[#004A9D]"
+                  >
+                    Continue with owner PIN
                   </Button>
                 </div>
               ) : (
@@ -328,7 +440,11 @@ export default function PinPadPage() {
                           key={terminal.id}
                           type="button"
                           disabled={pairingTerminalId !== null}
-                          onClick={() => void pairTerminal(terminal.id)}
+                          onClick={() => requestManagement({
+                            type: 'pair',
+                            terminalId: terminal.id,
+                            terminalName: terminal.name,
+                          })}
                           className="group flex min-h-[76px] items-center gap-4 rounded-xl border border-[#DCE4EE] bg-white px-4 py-3 text-left transition hover:border-[#8CB5EA] hover:bg-[#F7FAFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0058BA] focus-visible:ring-offset-2 disabled:opacity-60"
                         >
                           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF5FF] text-[#0058BA]">
@@ -353,7 +469,7 @@ export default function PinPadPage() {
             </div>
           )}
 
-          {!loadError && !isLoadingStaff && currentTerminal && !selectedStaffId && !mustChangePin && (
+          {!loadError && !isLoadingStaff && currentTerminal && !managementIntent && !selectedStaffId && !mustChangePin && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E3E9F1] bg-[#F8FAFC] px-4 py-3">
                 <div>
@@ -405,7 +521,7 @@ export default function PinPadPage() {
             </div>
           )}
 
-          {!loadError && !isLoadingStaff && currentTerminal && selectedStaffId && !mustChangePin && (
+          {!loadError && !isLoadingStaff && selectedStaffId && !mustChangePin && (
             <div className="flex flex-col items-center gap-5">
               {/* PIN progress dots — visual feedback only, never renders the digits themselves */}
               <div className="flex gap-3 py-1" aria-hidden="true">
@@ -459,7 +575,7 @@ export default function PinPadPage() {
 
               <button
                 type="button"
-                onClick={resetToStaffPicker}
+                onClick={chooseAnotherStaff}
                 className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-[#0058BA] hover:bg-[#F1F6FD]"
               >
                 <ArrowLeft className="h-4 w-4" /> Choose another staff member
