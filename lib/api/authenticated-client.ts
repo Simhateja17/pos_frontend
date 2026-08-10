@@ -10,6 +10,9 @@ export type DashboardRange = components['schemas']['DashboardRange']
 export type SaleList = components['schemas']['SaleList']
 export type CustomerList = components['schemas']['CustomerList']
 export type PaymentRead = components['schemas']['PaymentRead']
+export type Store = components['schemas']['Store']
+export type CreateStoreRequest = components['schemas']['CreateStoreRequest']
+export type UpdateStoreRequest = components['schemas']['UpdateStoreRequest']
 export type Supplier = components['schemas']['Supplier']
 export type CreateSupplierRequest = components['schemas']['CreateSupplierRequest']
 export type UpdateSupplierRequest = components['schemas']['UpdateSupplierRequest']
@@ -220,6 +223,40 @@ export function getAuthenticatedPayments(query: PaymentRecordQuery): Promise<Pay
   return authenticatedRead(
     async () => apiClient.GET('/sales/payments', { params: { query }, headers: await authorizationHeader() }),
     'Payment records are unavailable right now. Please retry.',
+  )
+}
+
+/**
+ * The business's shops (Phase 8).
+ *
+ * The server decides what comes back: an owner receives every shop, a manager
+ * or cashier receives only their own. The client does not filter — doing so
+ * here would be a UI convenience masquerading as a permission.
+ */
+export async function getAuthenticatedStores(): Promise<Store[]> {
+  const payload = await authenticatedRead(
+    async () => apiClient.GET('/stores', { headers: await authorizationHeader() }),
+    'Store records are unavailable right now. Please retry.',
+  )
+  return payload.stores
+}
+
+export function createAuthenticatedStore(body: CreateStoreRequest): Promise<Store> {
+  return authenticatedRead(
+    async () => apiClient.POST('/stores', { body, headers: await authorizationHeader() }),
+    'That store could not be saved. Please retry.',
+  )
+}
+
+export function updateAuthenticatedStore(storeId: string, body: UpdateStoreRequest): Promise<Store> {
+  return authenticatedRead(
+    async () =>
+      apiClient.PATCH('/stores/{storeId}', {
+        params: { path: { storeId } },
+        body,
+        headers: await authorizationHeader(),
+      }),
+    'That store could not be saved. Please retry.',
   )
 }
 

@@ -635,6 +635,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/owner-pin-recovery/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Request a one-time email link to recover an owner counter PIN. Always returns the same success response for existing and non-existing accounts. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["OwnerPinRecoveryRequest"];
+                };
+            };
+            responses: {
+                /** @description Recovery email requested when applicable */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid email address */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Recovery email provider unavailable */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/owner-pin-recovery/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Use the authenticated Supabase recovery-link session to replace the current active owner's 4-digit counter PIN and revoke their active PIN sessions. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetPinRequest"];
+                };
+            };
+            responses: {
+                /** @description Owner PIN recovered */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid PIN */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid or expired recovery link */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/signup": {
         parameters: {
             query?: never;
@@ -2262,6 +2381,159 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/stores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The business's shops (Phase 8). An owner receives every store; a manager or cashier receives only their own, since they have no Stores module and no reason to enumerate the business's other outlets. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Stores */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            stores: components["schemas"]["Store"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description Open a new shop. Owner only — adding an outlet is a business decision and a billing event. Names are unique per business, case-insensitively. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateStoreRequest"];
+                };
+            };
+            responses: {
+                /** @description Store created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Store"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description A store with that name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/{storeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Rename, re-address, retax or deactivate a shop. Owner only. Stores are deactivated rather than deleted because historical sales, shifts and Z reports must keep naming the shop they happened at, and a business must always retain at least one active store. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateStoreRequest"];
+                };
+            };
+            responses: {
+                /** @description Store updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Store"];
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Store not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Name taken, or this is the last active store */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/terminals": {
@@ -4528,7 +4800,7 @@ export interface components {
             /** @enum {string} */
             unitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "box" | "pack" | "set" | "pair";
             /** @enum {string} */
-            barcodeFormat: "ean13" | "code128" | "qr" | "upca" | "internal";
+            barcodeFormat?: "ean13" | "code128" | "qr" | "upca" | "internal";
             hsnAutoLookup: boolean;
             mrpRequired: boolean;
             variantTracking: boolean;
@@ -4597,6 +4869,13 @@ export interface components {
             email: string;
             /** @enum {string} */
             purpose: "login" | "signup";
+        };
+        OwnerPinRecoveryRequest: {
+            /** Format: email */
+            email: string;
+        };
+        SetPinRequest: {
+            pin: string;
         };
         AuthResponse: {
             user: {
@@ -4766,9 +5045,6 @@ export interface components {
             quantity: number;
             reorderThreshold: number;
             unitOfMeasure: string;
-        };
-        SetPinRequest: {
-            pin: string;
         };
         PinSwitchResponse: {
             operatorToken: string;
@@ -5001,6 +5277,54 @@ export interface components {
         CloseShiftRequest: {
             countedCash: string;
         };
+        Store: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            addressLine1: string | null;
+            addressLine2: string | null;
+            city: string | null;
+            state: string | null;
+            postalCode: string | null;
+            country: string;
+            isActive: boolean;
+            createdAt: string;
+            isOwnStore: boolean;
+            taxRateState: string;
+            taxRateCounty: string;
+            taxRateCity: string;
+            taxRateDistrict: string;
+            placeOfSupply: string | null;
+        };
+        CreateStoreRequest: {
+            name: string;
+            addressLine1?: string;
+            addressLine2?: string;
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            country?: string;
+            taxRateState?: number;
+            taxRateCounty?: number;
+            taxRateCity?: number;
+            taxRateDistrict?: number;
+            placeOfSupply?: string;
+        };
+        UpdateStoreRequest: {
+            name?: string;
+            addressLine1?: string;
+            addressLine2?: string;
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            country?: string;
+            isActive?: boolean;
+            taxRateState?: number;
+            taxRateCounty?: number;
+            taxRateCity?: number;
+            taxRateDistrict?: number;
+            placeOfSupply?: string;
+        };
         CreateTerminalRequest: {
             name: string;
             /**
@@ -5068,7 +5392,10 @@ export interface components {
             businessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
             combinedTaxRatePercent: string;
             discountThresholdPercent: string;
+            barcodeLabelFormat: components["schemas"]["BarcodeLabelFormat"];
         };
+        /** @enum {string} */
+        BarcodeLabelFormat: "code128" | "ean13" | "upca" | "qr";
         UpdateStoreSettingsRequest: {
             businessName?: string;
             tradeName?: string | null;
@@ -5084,6 +5411,7 @@ export interface components {
             placeOfSupply?: string | null;
             combinedTaxRatePercent?: number;
             discountThresholdPercent?: number;
+            barcodeLabelFormat?: components["schemas"]["BarcodeLabelFormat"];
         };
         SupplierList: components["schemas"]["Supplier"][];
         Supplier: {

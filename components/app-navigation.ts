@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Settings,
   ShoppingBag,
+  Store,
   Sparkles,
   Truck,
   Upload,
@@ -42,6 +43,14 @@ export type AppNavItem = {
   badge?: 'new'
   /** Visible to, and route-authorized for, a PIN-logged cashier. */
   cashierAccessible?: boolean
+  /**
+   * Owner-only module (Phase 8). Stores is the only one: a manager or cashier
+   * belongs to exactly one shop and has no business enumerating the others.
+   *
+   * This hides the nav entry — it is NOT the permission. The server refuses a
+   * non-owner's store writes regardless of what the sidebar shows.
+   */
+  ownerOnly?: boolean
 }
 
 export type AppNavGroup = {
@@ -73,6 +82,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Categories', href: '/app/inventory/categories', icon: FolderTree },
       { label: 'Purchases', href: '/app/purchases', icon: Warehouse },
       { label: 'Suppliers', href: '/app/suppliers', icon: Truck },
+      { label: 'Stores', href: '/app/stores', icon: Store, ownerOnly: true },
     ],
   },
   {
@@ -116,9 +126,15 @@ export const APP_NAVIGATION: AppNavGroup[] = [
 
 export function navigationForRole(role?: 'owner' | 'manager' | 'cashier'): AppNavGroup[] {
   if (!role) return []
-  if (role !== 'cashier') return APP_NAVIGATION
+
+  const visible = (item: AppNavItem) => {
+    if (item.ownerOnly && role !== 'owner') return false
+    if (role === 'cashier') return Boolean(item.cashierAccessible)
+    return true
+  }
+
   return APP_NAVIGATION
-    .map((group) => ({ ...group, items: group.items.filter((item) => item.cashierAccessible) }))
+    .map((group) => ({ ...group, items: group.items.filter(visible) }))
     .filter((group) => group.items.length > 0)
 }
 
