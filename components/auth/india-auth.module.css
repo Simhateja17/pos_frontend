@@ -65,9 +65,8 @@
   height: 40px;
   flex-shrink: 0;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.13);
+  /* The brand mark supplies its own tile, so this box stays unframed. */
 }
 
 .markBox img {
@@ -551,8 +550,12 @@
 }
 
 @media (max-width: 760px) {
+  /* Static flow instead of `position: fixed` so the form can scroll with the
+     page (and above the on-screen keyboard). It must still span the full
+     viewport, hence the explicit width. */
   .screen {
     position: relative;
+    width: 100%;
     min-height: 100dvh;
     flex-direction: column;
     overflow: visible;
@@ -561,7 +564,7 @@
   .brand {
     width: 100%;
     flex: 0 0 auto;
-    padding: 24px;
+    padding: 20px 22px;
   }
 
   .brandHeading,
@@ -571,10 +574,21 @@
     display: none;
   }
 
+  /* flex-start, not centre: with the brand strip stacked on top there is no
+     spare height to centre into once the keyboard opens. */
   .formCanvas {
     align-items: flex-start;
     overflow: visible;
-    padding: 32px 22px 48px;
+    padding: 28px 22px 48px;
+  }
+}
+
+@media (max-width: 400px) {
+  .brand {
+    padding: 18px 16px;
   }
 
+  .formCanvas {
+    padding: 24px 16px 40px;
+  }
 }

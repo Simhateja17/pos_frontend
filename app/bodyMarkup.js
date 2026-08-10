@@ -6,9 +6,9 @@ export const BODY = `<div id="route-bar"></div>
   <aside class="sidebar">
     <div class="sb-brand">
       <div class="sb-logo">
-        <img src="/logo.png" alt="Couture POS" style="max-width:68%;max-height:68%;width:auto;height:auto;object-fit:contain;display:block" />
+        <svg viewBox="0 0 120 120" role="img" aria-label="Ambel POS" style="width:38px;height:38px;display:block;stroke:none"><rect width="120" height="120" rx="34" fill="#4285F4"/><path d="M60 0L107 94L75.95 94L60 49.2L44.05 94L13 94Z" fill="#FFFFFF"/><rect x="26" y="85" width="68" height="9" rx="4.5" fill="#4285F4"/></svg>
       </div>
-      <div><h1>Couture POS</h1><p>Retail operations suite</p></div>
+      <div><h1>Ambel POS</h1><p>Retail operations suite</p></div>
     </div>
     <nav class="sb-nav" id="nav"></nav>
     <div class="sb-foot">
@@ -26,7 +26,7 @@ export const BODY = `<div id="route-bar"></div>
   <!-- MAIN -->
   <div class="main">
     <header class="topbar">
-      <div class="crumb">Couture POS / <b id="crumb">Feature Map</b></div>
+      <div class="crumb">Ambel POS / <b id="crumb">Feature Map</b></div>
       <div class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input placeholder="Search orders, products, customers, suppliers…  or type a command" />

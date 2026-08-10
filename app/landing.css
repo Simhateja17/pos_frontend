@@ -21,7 +21,8 @@ body{font-family:var(--body);color:var(--ink);background:var(--bg);-webkit-font-
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5vw;height:68px;display:flex;align-items:center;gap:32px;background:rgba(255,255,255,.85);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
 nav.scrolled{box-shadow:0 2px 24px rgba(0,0,0,.08)}
 .nav-logo{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0}
-.nav-logo-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand-dark),var(--brand-2));display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,88,186,.35)}
+/* same ramp as .btn-hero-pri, so the tile behind the mark matches the mark */
+.nav-logo-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(120deg,var(--brand-dark),var(--brand-1) 50%,var(--brand-2));display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,88,186,.35)}
 .nav-logo-mark svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-logo-text{font-family:var(--display);font-weight:700;font-size:17px;color:var(--ink);letter-spacing:-.02em}
 .nav-links{display:flex;gap:4px;flex:1;justify-content:center}
@@ -80,7 +81,7 @@ nav.scrolled{box-shadow:0 2px 24px rgba(0,0,0,.08)}
 .mock-list{background:#fff;border-radius:9px;border:1px solid rgba(0,0,0,.06);padding:10px;display:flex;flex-direction:column;gap:6px}
 .ml-row{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--ink-2)}
 .ml-dot{width:20px;height:20px;border-radius:6px;flex-shrink:0;display:grid;place-items:center}
-.ml-text{flex:1;font-weight:600}
+.ml-text{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ml-amt{font-family:var(--mono);font-size:10px;font-weight:700}
 .ml-badge{padding:2px 6px;border-radius:5px;font-size:9px;font-weight:700}
 
@@ -93,7 +94,9 @@ section{padding:80px 5vw}
 
 /* ============ STATS BAND ============ */
 .stats-band{background:linear-gradient(120deg,var(--brand-dark) 0%,var(--brand-1) 50%,#2B6FDB 100%);background-size:220%;animation:gradShift 9s ease infinite;color:#fff;padding:52px 5vw}
-.stats-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:0;max-width:1100px;margin:0 auto}
+/* column count comes from --stat-cols so pages with 3 stats can set it without
+   an inline grid-template that would survive the mobile media queries below */
+.stats-inner{display:grid;grid-template-columns:repeat(var(--stat-cols,4),1fr);gap:0;max-width:1100px;margin:0 auto}
 .stat-item{text-align:center;padding:20px;position:relative}
 .stat-item+.stat-item::before{content:"";position:absolute;left:0;top:20%;height:60%;width:1px;background:rgba(255,255,255,.2)}
 .stat-num{font-family:var(--display);font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-.04em;line-height:1}
@@ -123,6 +126,8 @@ section{padding:80px 5vw}
 .step-num{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;font-family:var(--display);font-size:20px;font-weight:800;display:grid;place-items:center;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,88,186,.3);transition:transform .3s var(--ease-spring)}
 .step-item:hover .step-num{transform:scale(1.12)}
 .step-h{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:6px}
+/* stacked on the wide rail so each step reads as two short lines */
+.step-h span{display:block}
 .step-p{font-size:12.5px;color:var(--muted);line-height:1.55}
 
 /* ============ SCREEN GALLERY ============ */
@@ -209,16 +214,116 @@ footer{background:#0A1628;color:rgba(255,255,255,.6);padding:52px 5vw 28px}
 
 @media(max-width:900px){
   .features-grid,.steps-row,.pricing-grid,.social-grid{grid-template-columns:1fr 1fr}
-  .stats-inner{grid-template-columns:1fr 1fr}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  /* 2-up layout: the 3rd stat starts a new row, so its divider would hang at
+     the container edge — keep dividers only between side-by-side items */
+  .stat-item:nth-child(odd)::before{display:none}
   .footer-inner{grid-template-columns:1fr 1fr}
-  .nav-links{display:none}
+  /* once the steps wrap onto multiple rows the horizontal rail only spans the
+     first row, so it stops reading as a connector */
+  .steps-row::before{display:none}
   .price-card.featured{transform:none}
+  /* links collapse here, so the CTAs anchor to the right edge instead of
+     trailing the logo behind a fixed 32px gap that pushed them off-screen */
+  nav{gap:14px;padding:0 20px}
+  .nav-links{display:none}
+  .nav-ctas{margin-left:auto}
+  /* hero mock: narrower sidebar so the dashboard side keeps breathing room */
+  .mock-content{grid-template-columns:148px 1fr;height:300px}
+  .mock-sb{padding:14px 8px}
+  .mock-sb-item{height:27px;padding:0 8px;font-size:10px;gap:6px}
+  .mock-kpi{padding:9px 10px}
+  .mk-val{font-size:13px}
 }
 @media(max-width:600px){
   .features-grid,.pricing-grid,.social-grid,.steps-row{grid-template-columns:1fr}
-  .stats-inner{grid-template-columns:1fr 1fr}
-  .hero-actions{flex-direction:column;align-items:center}
-  .cta-actions{flex-direction:column;align-items:center}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+
+  /* steps become a vertical timeline: number on the left, copy on the right,
+     and the connector runs down between consecutive circles */
+  .steps-row{max-width:420px}
+  .step-item{display:grid;grid-template-columns:52px 1fr;column-gap:16px;text-align:left;padding:0 0 26px}
+  .step-item:last-child{padding-bottom:0}
+  .step-num{grid-row:1/span 2;width:52px;height:52px;font-size:18px;margin-bottom:0}
+  .step-h{align-self:end;font-size:15px}
+  .step-h span{display:inline}
+  .step-p{font-size:13px}
+  .step-item:not(:last-child)::after{content:"";position:absolute;left:25px;top:58px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--brand-1),var(--brand-2));opacity:.25}
+
+  /* nav — every part shrinks so logo + both CTAs fit a 360px viewport */
+  nav{height:62px;padding:0 14px;gap:10px}
+  nav .nav-logo{gap:8px;min-width:0}
+  nav .nav-logo-mark{width:32px;height:32px;border-radius:9px}
+  nav .nav-logo-mark svg{width:17px;height:17px}
+  nav .nav-logo-text{font-size:15px}
+  .nav-ctas{gap:8px}
+  .nav-ctas .btn-outline,.nav-ctas .btn-primary{height:36px;padding:0 13px;font-size:13px;white-space:nowrap}
+
+  section{padding:60px 20px}
+  .section-sub{font-size:15.5px}
+  .hero-section{padding:100px 20px 64px;min-height:auto}
+  .hero-h1{font-size:clamp(28px,9vw,42px)}
+  .hero-badge{font-size:11.5px;padding:6px 13px;letter-spacing:.04em;margin-bottom:22px}
+  .hero-actions{flex-direction:column;align-items:stretch;width:min(100%,320px)}
+  .btn-hero{width:100%;height:50px;font-size:15px}
+  .hero-trust{gap:12px;font-size:12.5px}
+  .hero-trust .dot{display:none}
+
+  .stats-band{padding:40px 20px}
+  .stat-item{padding:14px 8px}
+  .stat-label{font-size:12px}
+  .feat-card{padding:22px}
+  .price-card{padding:26px 22px}
+  .price-h{font-size:32px}
+
+  .cta-section{padding:64px 20px}
+  .cta-section h2{font-size:clamp(26px,7.5vw,40px)}
+  .cta-section p{font-size:16px}
+  .cta-actions{flex-direction:column;align-items:stretch;width:min(100%,320px);margin:0 auto}
+  .btn-cta-w,.btn-cta-g{width:100%;height:50px;font-size:15px}
+
+  footer{padding:40px 20px 24px}
+  .footer-inner{gap:26px;padding-bottom:30px}
+  .footer-brand{grid-column:1/-1}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:10px;font-size:12.5px}
+  .footer-bottom>div{flex-wrap:wrap;gap:14px}
+  /* hero mock: drop the sidebar, stack the dashboard full-width */
+  .hero-mock{width:100%;margin-top:36px}
+  .mock-frame{border-radius:14px}
+  .mock-bar{height:34px;gap:6px;padding:0 12px}
+  .mock-dot{width:9px;height:9px}
+  .mock-sb{display:none}
+  .mock-content{grid-template-columns:1fr;height:auto}
+  .mock-main{padding:12px;gap:8px}
+  .mock-topbar{height:28px;padding:0 10px}
+  .mock-kpi-row{grid-template-columns:1fr 1fr;gap:6px}
+  .mock-kpi{padding:8px 10px;border-radius:8px}
+  .mk-val{font-size:14px}
+  .mock-chart{flex:none;height:132px;padding:10px}
+  .chart-bar{gap:4px}
+  .mock-list{padding:8px;gap:5px}
+  .ml-row{gap:6px}
+  .ml-dot{width:18px;height:18px}
+  .ml-amt,.ml-badge{flex-shrink:0}
+}
+@media(max-width:420px){
+  .mock-kpi-row{gap:5px}
+  .mk-label{font-size:8px}
+  .mk-val{font-size:12.5px}
+  .mock-chart{height:112px}
+  .ml-row{font-size:9.5px}
+  .ml-badge{padding:2px 5px}
+}
+/* smallest handsets (320–400px, e.g. iPhone SE): the wordmark goes so the
+   "Choose a plan" CTA always stays fully on screen — the logo mark stays */
+@media(max-width:400px){
+  nav{padding:0 12px;gap:8px}
+  nav .nav-logo-text{display:none}
+  .nav-ctas .btn-outline,.nav-ctas .btn-primary{padding:0 12px;font-size:12.5px}
+  section{padding:52px 16px}
+  .hero-section{padding:94px 16px 56px}
+  .stats-band,.cta-section{padding-left:16px;padding-right:16px}
+  footer{padding:36px 16px 22px}
 }
 
 /* ============ CONTENT PAGES (footer sub-pages) ============ */
@@ -290,6 +395,19 @@ footer{background:#0A1628;color:rgba(255,255,255,.6);padding:52px 5vw 28px}
 }
 @media(max-width:600px){
   .blog-grid{grid-template-columns:1fr}
-  .job-card{flex-direction:column;align-items:flex-start}
-  .timeline-item{grid-template-columns:1fr}
+  .job-card{flex-direction:column;align-items:flex-start;padding:18px 20px}
+  .timeline-item{grid-template-columns:1fr;gap:8px;padding:22px 0}
+  .content-hero{padding:112px 20px 40px}
+  .content-hero h1{font-size:clamp(26px,8vw,38px)}
+  .content-hero p{font-size:15.5px}
+  .content-section{padding:0 20px 64px}
+  .content-prose h2{font-size:21px;margin:32px 0 12px}
+  .content-prose p,.content-prose ul{font-size:15px}
+}
+@media(max-width:400px){
+  .content-hero{padding:104px 16px 36px}
+  .content-section{padding:0 16px 56px}
+  .price-card{padding:22px 18px}
+  .feat-card{padding:20px 18px}
+  .roadmap-card,.job-card{padding:16px}
 }

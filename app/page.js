@@ -3,6 +3,7 @@
 import "./landing.css";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { AmbelMark } from "@/components/brand/ambel-mark";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
@@ -25,14 +26,14 @@ const MOCK_BARS = [38, 52, 44, 68, 60, 72, 58, 80, 70, 76];
 const STEPS = [
   ["Business\nProfile", "Set your GSTIN, invoice header & store branding"],
   ["GST &\nTax Setup", "Map HSN/SAC codes, configure slabs & round-off"],
-  ["Import\nCatalog", "CSV import or manual — 408 products in 4 minutes"],
+  ["Import\nCatalog", "CSV import or manual: 408 products in 4 minutes"],
   ["Pair\nHardware", "Printer, scanner & cash drawer paired in one screen"],
   ["First\nSale", "Run a test bill, verify receipt, open for the day"],
 ];
 
 const GALLERY = [
   ["Dashboard", "#0A2348", "Sales overview, KPIs, action center, AI suggestions"],
-  ["Billing", "#06337A", "Cart, search, loyalty, payment, GST — in one screen"],
+  ["Billing", "#06337A", "Cart, search, loyalty, payment, GST, all in one screen"],
   ["Inventory", "#1A3A5C", "Stock matrix, variants, expiry, smart reorder"],
   ["Analytics", "#0E2642", "Footfall, margin, Prophet forecast, anomaly detection"],
   ["Customers", "#0A2348", "CRM, loyalty tiers, gift cards, WhatsApp campaigns"],
@@ -40,9 +41,9 @@ const GALLERY = [
   ["Staff", "#1A3A5C", "Roster, permissions matrix, commissions, AI coach"],
   ["Settings", "#0E2642", "12 setting cards, each with its own detail sub-screen"],
   ["Reports", "#0A2348", "GST-ready exports, custom builder, scheduled delivery"],
-  ["AI Copilot", "#06337A", "Ask anything — Copilot reads your live store data"],
+  ["AI Copilot", "#06337A", "Ask anything. Copilot reads your live store data"],
   ["Dashboard", "#0A2348", "Sales overview, KPIs, action center, AI suggestions"],
-  ["Billing", "#06337A", "Cart, search, loyalty, payment, GST — in one screen"],
+  ["Billing", "#06337A", "Cart, search, loyalty, payment, GST, all in one screen"],
   ["Inventory", "#1A3A5C", "Stock matrix, variants, expiry, smart reorder"],
   ["Analytics", "#0E2642", "Footfall, margin, Prophet forecast, anomaly detection"],
   ["Customers", "#0A2348", "CRM, loyalty tiers, gift cards, WhatsApp campaigns"],
@@ -52,7 +53,7 @@ const GC_BAR_W = [88, 72, 94];
 const GC_BAR_BG = ["#EEF4FF", "#F5F6F9", "#fff"];
 
 const TESTIMONIALS = [
-  ["AM", "#0058BA", "Couture POS handles our 3-store billing, inventory sync and WhatsApp campaigns in one place. Our staff billing time dropped by 40%.", "Ananya Mehta", "Owner, Rangreza Ethnic · Jaipur"],
+  ["AM", "#0058BA", "Ambel POS handles our 3-store billing, inventory sync and WhatsApp campaigns in one place. Our staff billing time dropped by 40%.", "Ananya Mehta", "Owner, Rangreza Ethnic · Jaipur"],
   ["RK", "#0E7490", "The GST reports save us 2 hours every month-end. GSTR-1 export is error-free and our CA is happy.", "Rohan Khanna", "CFO, Threads & Threads · Mumbai"],
   ["PS", "#6D28D9", "The offline mode is a lifesaver during monsoons when our internet drops. Bills keep printing and sync later.", "Priya Sharma", "Store Manager, Silkworm · Pune"],
 ];
@@ -76,7 +77,9 @@ export default function LandingPage() {
 
   useEffect(() => {
     let active = true;
-    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+    const apiBase = process.env.NODE_ENV === "production"
+      ? "/_backend"
+      : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
     void fetch(`${apiBase}/auth/session`, { credentials: "include" })
       .then((response) => response.ok ? response.json() : { authenticated: false })
       .then((data) => {
@@ -181,7 +184,7 @@ export default function LandingPage() {
         <div className="hero-grid"></div>
         <div className="hero-badge"><span></span> Now with AI Copilot · GST-native · Offline-first</div>
         <h1 className="hero-h1">India&apos;s retail suite,<br /><em>finally complete.</em></h1>
-        <p className="hero-sub">Billing, inventory, staff, loyalty, analytics and compliance — unified in one beautiful POS built for the modern Indian retailer.</p>
+        <p className="hero-sub">Billing, inventory, staff, loyalty, analytics and compliance, unified in one beautiful POS built for the modern Indian retailer.</p>
         <div className="hero-actions">
           <button className="btn-hero btn-hero-pri" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
@@ -196,7 +199,7 @@ export default function LandingPage() {
           <span className="dot"></span>
           <span>✓ Works offline</span>
           <span className="dot"></span>
-          <span>✓ 14-day free trial</span>
+          <span>✓ Paid plans with secure checkout</span>
         </div>
 
         {/* product mock */}
@@ -212,10 +215,10 @@ export default function LandingPage() {
             <div className="mock-content">
               <div className="mock-sb">
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 10px 12px", color: "#fff", fontFamily: "'Space Grotesk'", fontWeight: 700, fontSize: 13 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: 7, background: "linear-gradient(135deg,#6C9FFF,#0058BA)", display: "grid", placeItems: "center" }}>
-                    <img src="/logo.png" alt="Couture POS" style={{ maxWidth: "70%", maxHeight: "70%", width: "auto", height: "auto", objectFit: "contain", display: "block" }} />
+                  <div style={{ width: 24, height: 24, borderRadius: 7, display: "grid", placeItems: "center" }}>
+                    <AmbelMark size={24} title="Ambel POS" />
                   </div>
-                  Couture POS
+                  Ambel POS
                 </div>
                 {MOCK_SB.map((t, i) => (
                   <div className={"mock-sb-item" + (i === 0 ? " a" : "")} key={i}>
@@ -317,7 +320,9 @@ export default function LandingPage() {
               return (
                 <div className="step-item animate-in" key={i}>
                   <div className="step-num">{i + 1}</div>
-                  <div className="step-h">{l1}<br />{l2}</div>
+                  {/* two spans instead of a <br> so the line break is a CSS
+                      decision — the mobile timeline runs the title on one line */}
+                  <div className="step-h"><span>{l1}</span>{" "}<span>{l2}</span></div>
                   <p className="step-p">{s[1]}</p>
                 </div>
               );
@@ -401,15 +406,15 @@ export default function LandingPage() {
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
         <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Join 2,400+ retailers already running on Couture POS. Start free, no card required.</p>
+        <p className="animate-in">Join 2,400+ retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
-            Start free trial
+            Choose a plan
           </button>
           <button className="btn-cta-g" onClick={goApp}>Explore prototype →</button>
         </div>
-        <p className="cta-note">No credit card · 14-day free trial · cancel any time</p>
+        <p className="cta-note">Secure checkout · monthly or annual billing · cancel at cycle end</p>
       </section>
 
       {/* FOOTER */}

@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
@@ -32,7 +34,9 @@ export default function RetailVerticalPage({
       </section>
 
       <div className="stats-band" style={{ marginBottom: 0 }}>
-        <div className="stats-inner" style={{ gridTemplateColumns: `repeat(${stats.length},1fr)` }}>
+        {/* a custom property, not an inline grid-template — an inline template
+            would outrank the mobile media queries and keep N columns on phones */}
+        <div className="stats-inner" style={{ "--stat-cols": stats.length } as CSSProperties}>
           {stats.map(([num, label]) => (
             <div className="stat-item" key={label}>
               <div className="stat-num">{num}</div>
@@ -57,10 +61,10 @@ export default function RetailVerticalPage({
       </section>
 
       <section className="cta-section">
-        <h2>Ready to run {tag.toLowerCase()}<br />on Couture POS?</h2>
-        <p>Start free, no card required. Migrate your existing catalog in minutes.</p>
+        <h2>Ready to run {tag.toLowerCase()}<br />on Ambel POS?</h2>
+        <p>Choose a paid plan and migrate your existing catalog in minutes.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/signup">Start free trial</a>
+          <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>
         </div>
       </section>

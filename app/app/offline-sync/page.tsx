@@ -59,7 +59,7 @@ export default function OfflineSyncPage() {
     await refresh()
     setNote(
       outcome.stoppedBecauseOffline
-        ? 'Still offline — nothing was sent. The queue is intact.'
+        ? 'Still offline. Nothing was sent. The queue is intact.'
         : `Synced ${outcome.synced}. ${outcome.dead > 0 ? `${outcome.dead} need attention. ` : ''}${outcome.failed > 0 ? `${outcome.failed} will retry.` : ''}`,
     )
   }
@@ -124,7 +124,7 @@ export default function OfflineSyncPage() {
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
                 <td className="num">{e.attempts}</td>
-                <td className="t-sub">{e.lastError ?? '—'}</td>
+                <td className="t-sub">{e.lastError ?? '-'}</td>
                 <td className="num t-strong" style={{ textAlign: 'right' }}>{inr.format(Number(e.estimatedTotal))}</td>
                 <td>
                   <span className={`badge ${e.status === 'sending' ? 'b-blue' : 'b-amber'}`}>
@@ -166,7 +166,7 @@ export default function OfflineSyncPage() {
                     style={{ color: 'var(--danger)' }}
                     onClick={async () => {
                       const reason = window.prompt(
-                        `Discard bill ${e.clientSaleId.slice(0, 8).toUpperCase()} (${inr.format(Number(e.estimatedTotal))})?\n\nThis sale will never reach the server. Give a reason — it is recorded.`,
+                        `Discard bill ${e.clientSaleId.slice(0, 8).toUpperCase()} (${inr.format(Number(e.estimatedTotal))})?\n\nThis sale will never reach the server. Give a reason. It is recorded.`,
                       )
                       if (!reason?.trim()) return
                       await discardDead(e.clientSaleId, reason.trim())
@@ -202,7 +202,7 @@ export default function OfflineSyncPage() {
                       View
                     </Link>
                   ) : (
-                    '—'
+                    '-'
                   )}
                 </td>
               </tr>

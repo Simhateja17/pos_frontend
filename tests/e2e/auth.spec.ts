@@ -11,7 +11,7 @@ async function completeAccountStep(page: import('@playwright/test').Page) {
   await page.getByLabel(/Mobile number/).fill('9820000000')
   await page.getByLabel(/^Email address/).fill('owner@example.test')
   await page.getByLabel(/^Password/).fill('test-password')
-  await page.getByLabel(/I agree to Couture POS/).check()
+  await page.getByLabel(/I agree to Ambel POS/).check()
   await page.getByRole('button', { name: 'Create account & continue' }).click()
 }
 

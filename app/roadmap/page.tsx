@@ -2,14 +2,14 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Roadmap — Couture POS" };
+export const metadata = { title: "Roadmap | Ambel POS" };
 
 const COLUMNS: [string, string, [string, string][]][] = [
   [
     "In progress",
     "#0058BA",
     [
-      ["Direct GST filing API", "File GSTR-1 straight to the GST portal without leaving Couture POS."],
+      ["Direct GST filing API", "File GSTR-1 straight to the GST portal without leaving Ambel POS."],
       ["Marketplace order sync", "Two-way order and stock sync with Amazon and Flipkart Seller accounts."],
       ["Copilot for staff scheduling", "AI-suggested shift rosters based on footfall forecasts."],
     ],
@@ -44,7 +44,7 @@ export default function RoadmapPage() {
           Roadmap
         </div>
         <h1>What we&apos;re building<br /><em>next.</em></h1>
-        <p>A living view of what&apos;s in progress, planned and being explored. Priorities shift based on feedback from stores running Couture POS today.</p>
+        <p>A living view of what&apos;s in progress, planned and being explored. Priorities shift based on feedback from stores running Ambel POS today.</p>
       </section>
 
       <section className="content-section">

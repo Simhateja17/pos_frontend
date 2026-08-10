@@ -4,6 +4,305 @@
  */
 
 export interface paths {
+    "/billing/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the backend-owned subscription catalog for the authenticated tenant region. Provider Plan IDs are never sent to the browser. */
+        get: {
+            parameters: {
+                query?: {
+                    region?: "IN" | "US";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription plan catalog */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingPlanCatalog"];
+                    };
+                };
+                /** @description Region does not match the tenant account */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the server-owned subscription entitlement and provider references for the authenticated tenant. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription entitlement */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create or recover one Razorpay Subscription using an application idempotency key. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Razorpay subscription ready for Checkout */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateSubscriptionResponse"];
+                    };
+                };
+                /** @description Invalid plan or request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Existing subscription or ended idempotency attempt */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider or plan configuration is not ready */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Verify the Razorpay Checkout signature and provider subscription state. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerifySubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Verified subscription entitlement */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Signature or subscription mismatch */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider status is not confirmed yet */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Schedule cancellation at the end of the current billing cycle. No immediate cancellation or refund is performed. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CancelSubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Cancellation scheduled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No subscription found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/context": {
         parameters: {
             query?: never;
@@ -287,6 +586,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/otp/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Send a 6-digit email OTP via Supabase Auth. Always responds 200 regardless of whether the account exists, to avoid leaking account existence. `purpose: 'signup'` lets Supabase create the Auth user on verification; `purpose: 'login'` does not. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["OtpRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description Code sent (if applicable) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/signup": {
         parameters: {
             query?: never;
@@ -296,7 +644,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Real self-serve signup — creates a Supabase Auth user, a tenants row with the full business/tax profile, and an owner staff_members row. */
+        /** @description Real self-serve signup — verifies the emailed OTP (creating the Supabase Auth user if needed), then creates a tenants row with the full business/tax profile and an owner staff_members row. */
         post: {
             parameters: {
                 query?: never;
@@ -318,6 +666,13 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
+                };
+                /** @description Invalid or expired code */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description An account already exists with this email */
                 409: {
@@ -343,7 +698,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Email+password login via Supabase Auth. Derives role/tenantId from a server-side staff_members lookup. */
+        /** @description Email+OTP login via Supabase Auth. Derives role/tenantId from the custom access token hook claims on the verified session. */
         post: {
             parameters: {
                 query?: never;
@@ -366,7 +721,7 @@ export interface paths {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
                 };
-                /** @description Invalid email or password */
+                /** @description Invalid or expired code */
                 401: {
                     headers: {
                         [name: string]: unknown;
@@ -417,7 +772,45 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** @description Create a local counter-only staff profile with a temporary four-digit PIN. Managers can create cashiers; owners can also create managers. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateStaffRequest"];
+                };
+            };
+            responses: {
+                /** @description Staff profile created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Member"];
+                    };
+                };
+                /** @description Invalid staff details */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -574,6 +967,62 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/{memberId}/reset-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reset a local staff PIN and force a personal PIN change at the next login. Manager+. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResetStaffPinRequest"];
+                };
+            };
+            responses: {
+                /** @description PIN reset */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Member"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Member not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -932,6 +1381,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/terminal/pin/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Lock this browser as a shared register while keeping the organisation session connected. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Register locked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/terminal/pin/switch": {
         parameters: {
             query?: never;
@@ -971,8 +1458,145 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description The browser must be paired before a register or approval session can start */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminal/pin/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Change the currently PIN-authenticated cashier's personal PIN after a temporary PIN login. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChangeOperatorPinRequest"];
+                };
+            };
+            responses: {
+                /** @description PIN changed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid PIN or operator session */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminal/pin/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description End the current cashier session while keeping the organisation/device session connected. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Operator session ended */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminal/pin/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Manager/owner audit list of cashier login/logout sessions. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cashier sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffSession"][];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1361,7 +1985,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Resend a receipt email for a completed sale (CHECK-06) — resolves a real target email and reports the actual send outcome. */
+        /** @description Resend a receipt email for a completed sale (CHECK-06) — uses the customer address on file for cashier requests, requires manager approval for a different address, and is rate limited. */
         post: {
             parameters: {
                 query?: never;
@@ -1393,8 +2017,22 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description A manager is required to change the recipient address */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Sale not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Receipt resend cooldown or tenant email budget exceeded */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1483,6 +2121,42 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shifts/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the open shift for this paired counter. The result is counter-scoped, not cashier-scoped, so a cashier handover continues the same drawer shift. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current counter shift */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CurrentShift"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1650,6 +2324,97 @@ export interface paths {
                     content?: never;
                 };
                 /** @description A counter with that name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminals/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Resolve the current browser/device pairing to a counter, if one exists. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current counter pairing */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            terminal: components["schemas"]["Terminal"] | null;
+                            isRegisterLocked: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terminals/{terminalId}/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Pair or reassign this browser/device to a counter. Manager/owner only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    terminalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Device paired */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Terminal"];
+                    };
+                };
+                /** @description Counter not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Counter is turned off */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -2261,6 +3026,51 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/suppliers/{supplierId}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every product this supplier is linked to, for the supplier detail page's Products supplied tab. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Products supplied */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierProductWithVariantList"];
+                    };
+                };
+                /** @description Supplier not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/variants/{variantId}/supplier-products": {
@@ -3431,6 +4241,98 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BillingPlanCatalog: {
+            /** @enum {string} */
+            mode: "test" | "live";
+            region: components["schemas"]["BillingRegion"];
+            plans: components["schemas"]["BillingPlanOption"][];
+        };
+        /** @enum {string} */
+        BillingRegion: "IN" | "US";
+        BillingPlanOption: {
+            key: string;
+            region: components["schemas"]["BillingRegion"];
+            currency: components["schemas"]["BillingCurrency"];
+            name: string;
+            description: string;
+            popular: boolean;
+            features: string[];
+            monthly: components["schemas"]["BillingQuote"];
+            annual: components["schemas"]["BillingQuote"];
+            monthlyAvailable: boolean;
+            annualAvailable: boolean;
+            providerConfigured: {
+                monthly: boolean;
+                annual: boolean;
+            };
+        };
+        /** @enum {string} */
+        BillingCurrency: "INR" | "USD";
+        BillingQuote: {
+            baseAmountMinor: number;
+            taxAmountMinor: number;
+            totalAmountMinor: number;
+            taxRateBps: number;
+            /** @enum {string} */
+            taxMode: "included" | "exclusive";
+            taxLabel: string;
+        };
+        BillingStatus: {
+            hasSubscription: boolean;
+            /** @enum {string} */
+            entitlement: "active" | "grace" | "blocked";
+            accessAllowed: boolean;
+            /** Format: date-time */
+            graceUntil: string | null;
+            subscription: {
+                /** Format: uuid */
+                id: string;
+                providerSubscriptionId: string;
+                planKey: string;
+                billingCycle: components["schemas"]["BillingCycle"];
+                currency: components["schemas"]["BillingCurrency"];
+                status: string;
+                cancelAtCycleEnd: boolean;
+                /** Format: date-time */
+                currentEndAt: string | null;
+                lastPaymentId: string | null;
+                lastInvoiceId: string | null;
+            } | null;
+        };
+        /** @enum {string} */
+        BillingCycle: "monthly" | "annual";
+        CreateSubscriptionResponse: {
+            /** Format: uuid */
+            attemptId: string;
+            razorpayKeyId: string;
+            razorpaySubscriptionId: string;
+            status: string;
+            region: components["schemas"]["BillingRegion"];
+            planKey: string;
+            billingCycle: components["schemas"]["BillingCycle"];
+            currency: components["schemas"]["BillingCurrency"];
+            quote: components["schemas"]["BillingQuote"];
+        };
+        CreateSubscriptionRequest: {
+            planKey: string;
+            billingCycle: components["schemas"]["BillingCycle"];
+            /** Format: uuid */
+            idempotencyKey: string;
+        };
+        VerifySubscriptionRequest: {
+            /** Format: uuid */
+            attemptId: string;
+            razorpayPaymentId: string;
+            razorpaySubscriptionId: string;
+            razorpaySignature: string;
+        };
+        CancelSubscriptionRequest: {
+            /**
+             * @default true
+             * @enum {boolean}
+             */
+            cancelAtCycleEnd: true;
+        };
         AppContext: {
             staff: {
                 /** Format: uuid */
@@ -3690,6 +4592,12 @@ export interface components {
             };
         };
         CompleteOnboardingRequest: Record<string, never>;
+        OtpRequestRequest: {
+            /** Format: email */
+            email: string;
+            /** @enum {string} */
+            purpose: "login" | "signup";
+        };
         AuthResponse: {
             user: {
                 /** Format: uuid */
@@ -3709,7 +4617,7 @@ export interface components {
         SignupRequest: {
             /** Format: email */
             email: string;
-            password: string;
+            otp: string;
             ownerName: string;
             businessName: string;
             tradeName?: string;
@@ -3729,7 +4637,7 @@ export interface components {
         LoginRequest: {
             /** Format: email */
             email: string;
-            password: string;
+            otp: string;
         };
         Member: {
             /** Format: uuid */
@@ -3739,6 +4647,18 @@ export interface components {
             role: "owner" | "manager" | "cashier";
             isActive: boolean;
             createdAt: string;
+            /** Format: email */
+            email?: string | null;
+            /** @enum {string} */
+            accessMode?: "account" | "pin";
+            pinConfigured?: boolean;
+            pinMustChange?: boolean;
+        };
+        CreateStaffRequest: {
+            name: string;
+            /** @enum {string} */
+            role: "manager" | "cashier";
+            temporaryPin: string;
         };
         InviteMemberRequest: {
             /** Format: email */
@@ -3750,6 +4670,9 @@ export interface components {
         UpdateMemberRoleRequest: {
             /** @enum {string} */
             role: "owner" | "manager" | "cashier";
+        };
+        ResetStaffPinRequest: {
+            pin: string;
         };
         Product: {
             /** Format: uuid */
@@ -3853,11 +4776,32 @@ export interface components {
                 id: string;
                 /** @enum {string} */
                 role: "owner" | "manager" | "cashier";
+                mustChangePin: boolean;
             };
         };
         PinSwitchRequest: {
             staffId: string;
             pin: string;
+            /**
+             * @default register
+             * @enum {string}
+             */
+            sessionType: "register" | "approval" | "management";
+        };
+        ChangeOperatorPinRequest: {
+            pin: string;
+        };
+        StaffSession: {
+            id: string;
+            staffId: string;
+            staffName: string | null;
+            terminalId: string | null;
+            terminalName: string | null;
+            shiftId: string | null;
+            loggedInAt: string;
+            loggedOutAt: string | null;
+            logoutReason: string | null;
+            lastSeenAt: string;
         };
         Sale: {
             /** Format: uuid */
@@ -3962,6 +4906,7 @@ export interface components {
             saleId: string;
             /** Format: uuid */
             shiftId: string;
+            reason: string;
             lines: {
                 /** Format: uuid */
                 saleLineItemId: string;
@@ -4013,10 +4958,30 @@ export interface components {
             variance: string | null;
             closedAt: string | null;
         };
-        OpenShiftRequest: {
-            startingCash: string;
+        CurrentShift: {
+            terminal: components["schemas"]["Terminal"] | null;
+            shift: (components["schemas"]["Shift"] & {
+                staffName: string | null;
+            }) | null;
+        };
+        Terminal: {
             /** Format: uuid */
-            terminalId: string;
+            id: string;
+            name: string;
+            isActive: boolean;
+            hasOpenShift: boolean;
+            createdAt: string;
+            /** @enum {string} */
+            cashMode?: "cash" | "none";
+            isPaired?: boolean;
+            isCurrentDevice?: boolean;
+            deviceLastSeenAt?: string | null;
+            activeCashierName?: string | null;
+        };
+        OpenShiftRequest: {
+            startingCash?: string;
+            /** Format: uuid */
+            terminalId?: string;
         };
         XReport: {
             /** Format: uuid */
@@ -4036,20 +5001,19 @@ export interface components {
         CloseShiftRequest: {
             countedCash: string;
         };
-        Terminal: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            isActive: boolean;
-            hasOpenShift: boolean;
-            createdAt: string;
-        };
         CreateTerminalRequest: {
             name: string;
+            /**
+             * @default cash
+             * @enum {string}
+             */
+            cashMode: "cash" | "none";
         };
         UpdateTerminalRequest: {
             name?: string;
             isActive?: boolean;
+            /** @enum {string} */
+            cashMode?: "cash" | "none";
         };
         Category: {
             /** Format: uuid */
@@ -4153,7 +5117,14 @@ export interface components {
             paymentTerms?: string;
             isActive?: boolean;
         };
-        SupplierProductList: components["schemas"]["SupplierProduct"][];
+        SupplierProductWithVariantList: components["schemas"]["SupplierProductWithVariant"][];
+        SupplierProductWithVariant: components["schemas"]["SupplierProduct"] & {
+            sku: string;
+            productName: string;
+            size: string | null;
+            color: string | null;
+            material: string | null;
+        };
         SupplierProduct: {
             /** Format: uuid */
             id: string;
@@ -4169,6 +5140,7 @@ export interface components {
             minOrderQty: number | null;
             createdAt: string;
         };
+        SupplierProductList: components["schemas"]["SupplierProduct"][];
         CreateSupplierProductRequest: {
             /** Format: uuid */
             supplierId: string;

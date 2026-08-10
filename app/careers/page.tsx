@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Careers — Couture POS" };
+export const metadata = { title: "Careers | Ambel POS" };
 
 const PERKS = [
   ["Remote-friendly", "Work from Bengaluru, or remotely from anywhere in India."],
@@ -27,7 +27,7 @@ export default function CareersPage() {
       <section className="content-hero">
         <div className="section-tag">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7" /></svg>
-          Careers at Couture POS
+          Careers at Ambel POS
         </div>
         <h1>Help India&apos;s retailers<br /><em>run better stores.</em></h1>
         <p>We&apos;re a small team solving a big, unglamorous problem: making retail software that actually fits how Indian stores work. Come build it with us.</p>
@@ -61,7 +61,7 @@ export default function CareersPage() {
           </div>
         ))}
         <p style={{ textAlign: "center", marginTop: 24, color: "var(--muted)", fontSize: 14.5 }}>
-          Don&apos;t see a fit? Write to us at <a href="mailto:careers@withcouture.com" style={{ color: "var(--brand-1)" }}>careers@withcouture.com</a>.
+          Don&apos;t see a fit? Write to us at <a href="mailto:careers@Ambel.in" style={{ color: "var(--brand-1)" }}>careers@Ambel.in</a>.
         </p>
       </section>
       <SiteFooter />

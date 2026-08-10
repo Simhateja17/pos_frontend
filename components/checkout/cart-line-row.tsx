@@ -7,7 +7,7 @@ export interface CartLine {
   variantId: string
   sku: string
   name: string
-  attributes: string // "Size / Color / Material" joined, "—" if none
+  attributes: string // "Size / Color / Material" joined, "-" if none
   unitPrice: string
   /** Drives whether this line is weighed (typed) or counted (stepped). */
   unitOfMeasure: string
@@ -49,7 +49,7 @@ export function CartLineRow({
         <div className="t-strong">{line.name}</div>
         <div className="t-sub t-mono">
           {line.sku}
-          {line.attributes && line.attributes !== '—' ? ` · ${line.attributes}` : ''}
+          {line.attributes && line.attributes !== '-' ? ` · ${line.attributes}` : ''}
           {discount > 0 ? (
             <>
               {' · '}

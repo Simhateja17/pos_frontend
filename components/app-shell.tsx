@@ -4,16 +4,26 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { UserMenu } from '@/components/user-menu'
-import { APP_NAVIGATION } from '@/components/app-navigation'
+import {
+  APP_NAVIGATION,
+  cashierCanAccessAppPath,
+  navigationForRole,
+  type AppNavItem,
+} from '@/components/app-navigation'
 import { supabase } from '@/lib/supabase/client'
 import {
   AuthenticatedRequestError,
   getAuthenticatedAppContext,
+  getAuthenticatedBillingStatus,
   type AppContext,
 } from '@/lib/api/authenticated-client'
 import styles from '@/components/app-shell.module.css'
+import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
+import { apiClient, REGISTER_LOCKED_EVENT } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -23,9 +33,9 @@ const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
  * picking "any prefix match" highlights both. Only the longest — i.e. most
  * specific — matching href should be marked active.
  */
-function matchedNavHref(pathname: string): string | undefined {
+function matchedNavHref(pathname: string, items: AppNavItem[] = ALL_NAV_ITEMS): string | undefined {
   let best: string | undefined
-  for (const item of ALL_NAV_ITEMS) {
+  for (const item of items) {
     if (pathname === item.href || pathname.startsWith(`${item.href}/`)) {
       if (!best || item.href.length > best.length) best = item.href
     }
@@ -40,6 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [context, setContext] = useState<AppContext | null>(null)
   const [contextError, setContextError] = useState<AuthenticatedRequestError | null>(null)
   const [isContextLoading, setIsContextLoading] = useState(true)
+  const [deviceGate, setDeviceGate] = useState<'checking' | 'ready' | 'redirecting'>('checking')
   const drawerRef = useRef<HTMLElement>(null)
 
   const loadContext = useCallback(async () => {
@@ -50,6 +61,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     try {
       setContext(await getAuthenticatedAppContext())
     } catch (error) {
+      if (
+        error instanceof AuthenticatedRequestError &&
+        error.kind === 'unauthenticated' &&
+        typeof window !== 'undefined' &&
+        window.sessionStorage.getItem('operatorToken')
+      ) {
+        window.sessionStorage.removeItem('operatorToken')
+        setDeviceGate('redirecting')
+        router.replace('/terminal/pin')
+        return
+      }
       setContextError(
         error instanceof AuthenticatedRequestError
           ? error
@@ -58,16 +80,94 @@ export function AppShell({ children }: { children: ReactNode }) {
     } finally {
       setIsContextLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
-    if (pathname !== '/app') void loadContext()
-  }, [loadContext, pathname])
+    const returnToPin = () => {
+      setDeviceGate('redirecting')
+      router.replace('/terminal/pin')
+    }
+    window.addEventListener(REGISTER_LOCKED_EVENT, returnToPin)
+    return () => window.removeEventListener(REGISTER_LOCKED_EVENT, returnToPin)
+  }, [router])
+
+  useEffect(() => {
+    // AppShell stays mounted while Next changes routes. Include pathname here:
+    // browser Back/Forward must re-check the lock, otherwise a locked register
+    // can render the previous /app page without an operator token.
+    let cancelled = false
+    setDeviceGate('checking')
+
+    void authHeaders()
+      .then((headers) => apiClient.GET('/terminals/device', { headers }))
+      .then((result) => {
+        if (cancelled) return
+        const paired = Boolean(result.data?.terminal)
+        const hasOperator = Boolean(window.sessionStorage.getItem('operatorToken'))
+        const registerLocked =
+          Boolean(result.data?.isRegisterLocked) ||
+          window.sessionStorage.getItem('registerLocked') === 'true'
+        if ((paired || registerLocked) && !hasOperator) {
+          setDeviceGate('redirecting')
+          router.replace('/terminal/pin')
+          return
+        }
+        setDeviceGate('ready')
+      })
+      .catch(() => {
+        // Context below owns the visible network/session error. Do not guess
+        // that an unreachable device endpoint means the register is unpaired.
+        if (!cancelled) setDeviceGate('ready')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [pathname, router])
+
+  useEffect(() => {
+    if (deviceGate === 'ready') void loadContext()
+  }, [deviceGate, loadContext])
+
+  useEffect(() => {
+    if (pathname === '/app' || deviceGate !== 'ready') return
+    void getAuthenticatedBillingStatus()
+      .then((status) => {
+        if (!status.accessAllowed) router.replace('/plans')
+      })
+      .catch(() => {
+        // Operational API calls remain server-gated. A transient status read
+        // must not turn a recoverable network failure into a logout.
+      })
+  }, [deviceGate, pathname, router])
+
+  useEffect(() => {
+    if (context?.staff.role === 'cashier' && !cashierCanAccessAppPath(pathname)) {
+      router.replace('/app/billing')
+    }
+  }, [context?.staff.role, pathname, router])
 
   const reauthenticate = useCallback(async () => {
     await supabase.auth.signOut()
     router.push('/login')
   }, [router])
+
+  const lockIdleRegister = useCallback(() => {
+    if (typeof window === 'undefined' || !window.sessionStorage.getItem('operatorToken')) return
+    window.sessionStorage.setItem('registerLocked', 'true')
+    void authHeaders()
+      .then((headers) => apiClient.POST('/terminal/pin/lock', { headers }))
+      .catch(() => undefined)
+      .finally(() => {
+        window.sessionStorage.removeItem('operatorToken')
+        router.replace('/terminal/pin')
+      })
+  }, [router])
+
+  // Cashier sessions are idle-locked even when the cashier is inside Billing
+  // or another app route; the lock screen itself is the only place where a
+  // PIN can be entered again.
+  useIdleTimer(lockIdleRegister)
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -100,10 +200,21 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [mobileOpen])
 
-  if (pathname === '/app') return children
+  const cashierIsRedirecting =
+    context?.staff.role === 'cashier' && !cashierCanAccessAppPath(pathname)
+  if (deviceGate !== 'ready' || isContextLoading || cashierIsRedirecting) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--muted)' }}>
+        Opening register…
+      </div>
+    )
+  }
 
-  const matchedHref = matchedNavHref(pathname)
-  const current = ALL_NAV_ITEMS.find((item) => item.href === matchedHref)?.label ?? 'Couture POS'
+  const navigation = navigationForRole(context?.staff.role)
+  const visibleNavItems = navigation.flatMap((group) => group.items)
+  const matchedHref = matchedNavHref(pathname, visibleNavItems)
+  const current = visibleNavItems.find((item) => item.href === matchedHref)?.label ?? 'Ambel POS'
+  const isCashier = context?.staff.role === 'cashier'
 
   const storeFull = context
     ? [context.tenant.businessName, context.tenant.locality].filter(Boolean).join(' · ')
@@ -133,15 +244,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="sb-brand">
           <div className="sb-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <rect x="3" y="3" width="7.4" height="7.4" rx="2.4" />
-              <rect x="13.6" y="3" width="7.4" height="7.4" rx="2.4" />
-              <rect x="3" y="13.6" width="7.4" height="7.4" rx="2.4" />
-              <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.4" />
-            </svg>
+            <AmbelMark size={38} />
           </div>
           <div>
-            <h1>Couture POS</h1>
+            <h1>Ambel POS</h1>
             <p>Retail operations suite</p>
           </div>
           <button className={styles.closeDrawer} aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
@@ -150,7 +256,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="sb-nav">
-          {APP_NAVIGATION.map((group) => (
+          {navigation.map((group) => (
             <div key={group.label}>
               <div className="sb-group">{group.label}</div>
               {group.items.map((item) => {
@@ -192,20 +298,22 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
 
           <div className={`crumb ${styles.crumb}`}>
-            Couture POS / <b>{current}</b>
+            Ambel POS / <b>{current}</b>
           </div>
 
-          <div className="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-            <input
-              placeholder="Search orders, products, customers, suppliers…  or type a command"
-              aria-label="Search"
-            />
-            <span className="kbd">⌘K</span>
-          </div>
+          {!isCashier && (
+            <div className="search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+              <input
+                placeholder="Search orders, products, customers, suppliers…  or type a command"
+                aria-label="Search"
+              />
+              <span className="kbd">⌘K</span>
+            </div>
+          )}
 
           {/* Pinned to the right edge so the cluster does not shift with the breadcrumb width. */}
           <div className={styles.topbarActions}>
@@ -215,12 +323,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             </div>
 
-            <NotificationBell />
+            {!isCashier && <NotificationBell />}
 
             <UserMenu
               context={context}
               isContextLoading={isContextLoading}
               hasError={!!contextError}
+              allowOrganizationSignOut={!isCashier}
               className={styles.user}
             />
           </div>

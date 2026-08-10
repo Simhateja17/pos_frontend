@@ -65,7 +65,7 @@ export function NotificationBell() {
         <div className={styles.panel} role="dialog" aria-label="Notifications">
           <div className={styles.panelHead}>Notifications</div>
           {recent.length === 0 ? (
-            <div className={styles.empty}>Nothing yet — you're all caught up.</div>
+            <div className={styles.empty}>Nothing yet. You're all caught up.</div>
           ) : (
             recent.map((n) => (
               <Link

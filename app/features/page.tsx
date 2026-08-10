@@ -3,7 +3,7 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
 
-export const metadata = { title: "Features — Couture POS" };
+export const metadata = { title: "Features | Ambel POS" };
 
 function featBadges(b3: string, b4: string) {
   return (
@@ -48,7 +48,7 @@ export default function FeaturesPage() {
         <h2>See it running<br />on your own catalog.</h2>
         <p>Import your products in minutes and try every module free for 14 days.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/signup">Start free trial</a>
+          <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>
         </div>
       </section>

@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { establishIndiaSession, IndiaAuthShell } from '@/components/auth/india-auth-shell'
 import { IndiaStateCombobox } from '@/components/auth/india-state-combobox'
@@ -13,7 +12,6 @@ type AccountFields = {
   ownerName: string
   phone: string
   email: string
-  password: string
 }
 
 /**
@@ -42,15 +40,15 @@ const DUPLICATE_EMAIL_ERROR = 'An account already exists with this email. Log in
 
 export default function SignupPage() {
   const router = useRouter()
-  const [step, setStep] = useState<'account' | 'business'>('account')
-  const [showPassword, setShowPassword] = useState(false)
+  const [step, setStep] = useState<'account' | 'otp' | 'business'>('account')
   const [agreed, setAgreed] = useState(false)
   const [account, setAccount] = useState<AccountFields>({
     ownerName: '',
     phone: '',
     email: '',
-    password: '',
   })
+  const [otp, setOtp] = useState('')
+  const [isSendingOtp, setIsSendingOtp] = useState(false)
   const [business, setBusiness] = useState<BusinessFields>({
     businessName: '',
     tradeName: '',
@@ -67,7 +65,7 @@ export default function SignupPage() {
   const [emailError, setEmailError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleAccountSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleAccountSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
     setEmailError(null)
@@ -75,10 +73,30 @@ export default function SignupPage() {
       setError('Please accept the Terms of Service and Privacy Policy to continue.')
       return
     }
-    localStorage.setItem(
-      'couture.signup.draft',
-      JSON.stringify({ ownerName: account.ownerName, phone: account.phone, email: account.email }),
-    )
+    setIsSendingOtp(true)
+    try {
+      const { error: requestError } = await apiClient.POST('/auth/otp/request', {
+        body: { email: account.email, purpose: 'signup' },
+      })
+      if (requestError) {
+        setError('We could not send a code right now. Please try again.')
+        return
+      }
+      localStorage.setItem(
+        'couture.signup.draft',
+        JSON.stringify({ ownerName: account.ownerName, phone: account.phone, email: account.email }),
+      )
+      setStep('otp')
+    } catch {
+      setError('We could not send a code right now. Please try again.')
+    } finally {
+      setIsSendingOtp(false)
+    }
+  }
+
+  function handleOtpSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError(null)
     setStep('business')
   }
 
@@ -101,7 +119,7 @@ export default function SignupPage() {
           businessName: business.businessName,
           tradeName: business.tradeName || undefined,
           email: account.email,
-          password: account.password,
+          otp,
           addressLine1: business.addressLine1,
           addressLine2: business.addressLine2 || undefined,
           city: business.city,
@@ -121,6 +139,10 @@ export default function SignupPage() {
         const message = (signupError as { error?: string }).error
         if (message === DUPLICATE_EMAIL_ERROR) {
           setEmailError(DUPLICATE_EMAIL_ERROR)
+          setStep('account')
+        } else if (message === 'Invalid or expired code') {
+          setError('That code is invalid or expired. Please request a new one.')
+          setStep('otp')
         } else {
           setError(
             message === 'Invalid request'
@@ -156,7 +178,7 @@ export default function SignupPage() {
       {step === 'account' ? (
         <>
           <h1 className={styles.heading}>Create your store account.</h1>
-          <p className={styles.subheading}>14-day free trial · No credit card required.</p>
+          <p className={styles.subheading}>Create your account, then choose a paid subscription to activate your store.</p>
           {error && <div className={styles.alert} role="alert">{error}</div>}
           <form onSubmit={handleAccountSubmit}>
             <label className={styles.field}>
@@ -203,42 +225,46 @@ export default function SignupPage() {
               />
               {emailError && <span className={styles.fieldError} id="signup-email-error">{emailError}</span>}
             </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Password<span className={styles.required}>*</span></span>
-              <span className={styles.passwordWrap}>
-                <input
-                  className={styles.input}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Min 8 characters"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                  value={account.password}
-                  onChange={(event) => setAccount((current) => ({ ...current, password: event.target.value }))}
-                />
-                <button
-                  className={styles.eye}
-                  type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </span>
-            </label>
             <label className={styles.agreement}>
               <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
               <span>
-                I agree to Couture POS <a className={styles.link} href="#terms">Terms of Service</a> and{' '}
+                I agree to Ambel POS <a className={styles.link} href="#terms">Terms of Service</a> and{' '}
                 <a className={styles.link} href="#privacy">Privacy Policy</a>
               </span>
             </label>
-            <button className={styles.primary} type="submit">Create account &amp; continue →</button>
+            <button className={styles.primary} type="submit" disabled={isSendingOtp}>{isSendingOtp ? 'Sending code…' : 'Send code →'}</button>
           </form>
           <div className={styles.separator}>or</div>
           <p className={styles.footerText}>
             Already have an account? <Link className={styles.link} href="/login">Sign in</Link>
           </p>
+        </>
+      ) : step === 'otp' ? (
+        <>
+          <h1 className={styles.heading}>Verify your email.</h1>
+          <p className={styles.subheading}>Enter the 6-digit code we sent to {account.email}.</p>
+          {error && <div className={styles.alert} role="alert">{error}</div>}
+          <form onSubmit={handleOtpSubmit}>
+            <label className={styles.field}>
+              <span className={styles.label}>6-digit code<span className={styles.required}>*</span></span>
+              <input
+                className={styles.input}
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                placeholder="123456"
+                autoComplete="one-time-code"
+                required
+                value={otp}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+            </label>
+            <div className={styles.actions}>
+              <button className={styles.secondary} type="button" onClick={() => setStep('account')}>← Back</button>
+              <button className={styles.primary} type="submit" disabled={otp.length !== 6}>Continue →</button>
+            </div>
+          </form>
         </>
       ) : (
         <>
@@ -314,7 +340,7 @@ export default function SignupPage() {
               </div>
             )}
             <div className={styles.actions}>
-              <button className={styles.secondary} type="button" onClick={() => setStep('account')}>← Back</button>
+              <button className={styles.secondary} type="button" onClick={() => setStep('otp')}>← Back</button>
               <button className={styles.primary} type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Creating account…' : 'Create account →'}
               </button>

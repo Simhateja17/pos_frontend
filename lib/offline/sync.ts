@@ -15,7 +15,8 @@
  */
 'use client'
 
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
+import { notifyRegisterLocked } from '@/lib/api/client'
 import { probeReachable } from './connectivity'
 import { claimNext, markDead, releaseForRetry, resolveSynced, type QueuedSale } from './queue'
 
@@ -44,12 +45,13 @@ function backoffFor(attempts: number) {
  * origin (relative URL, no host) and silently 404ed.
  */
 function apiUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
+  return process.env.NODE_ENV === 'production'
+    ? '/_backend'
+    : process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
 }
 
 async function postSale(entry: QueuedSale): Promise<Response> {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
+  const auth = await authHeaders()
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
@@ -58,7 +60,7 @@ async function postSale(entry: QueuedSale): Promise<Response> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(auth ?? {}),
       },
       body: JSON.stringify(entry.body),
       signal: controller.signal,
@@ -124,6 +126,15 @@ export async function drainQueue(): Promise<SyncOutcome> {
         outcome.failed += 1
         await new Promise((r) => setTimeout(r, backoffFor(entry.attempts)))
         continue
+      }
+
+      // A locked register needs a fresh PIN, not payload intervention. Keep
+      // the sale queued and return the whole app to the operator gate.
+      if (res.status === 423) {
+        await releaseForRetry(entry.clientSaleId, 'Staff PIN required before this sale can sync', res.status)
+        outcome.failed += 1
+        notifyRegisterLocked()
+        break
       }
 
       // 401/403 — the session expired or lost authorisation. Not the sale's

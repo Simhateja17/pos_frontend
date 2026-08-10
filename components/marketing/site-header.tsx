@@ -2,13 +2,9 @@
 
 import { useEffect } from "react";
 
-const LOGO = (
-  <img
-    src="/logo.png"
-    alt="Couture POS"
-    style={{ maxWidth: "68%", maxHeight: "68%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
-  />
-);
+import { AmbelMark } from "@/components/brand/ambel-mark";
+
+const LOGO = <AmbelMark size={38} />;
 
 export default function SiteHeader({ authenticated = false }: { authenticated?: boolean }) {
   useEffect(() => {
@@ -23,7 +19,7 @@ export default function SiteHeader({ authenticated = false }: { authenticated?: 
     <nav id="main-nav">
       <a href="/" className="nav-logo">
         <div className="nav-logo-mark">{LOGO}</div>
-        <span className="nav-logo-text">Couture POS</span>
+        <span className="nav-logo-text">Ambel POS</span>
       </a>
       <div className="nav-links">
         <a href="/features">Features</a>
@@ -37,7 +33,7 @@ export default function SiteHeader({ authenticated = false }: { authenticated?: 
         ) : (
           <>
             <a className="btn-outline" style={{ display: "inline-flex", alignItems: "center" }} href="/login">Log in</a>
-            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href="/signup">Start free trial</a>
+            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href="/signup">Choose a plan</a>
           </>
         )}
       </div>

@@ -40,6 +40,8 @@ export type AppNavItem = {
    * those routes render the explicit unavailable state.
    */
   badge?: 'new'
+  /** Visible to, and route-authorized for, a PIN-logged cashier. */
+  cashierAccessible?: boolean
 }
 
 export type AppNavGroup = {
@@ -56,10 +58,10 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'Sales',
     items: [
       { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
-      { label: 'Billing', href: '/app/billing', icon: ShoppingBag },
-      { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList },
-      { label: 'Register', href: '/app/shifts', icon: WalletCards },
-      { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw },
+      { label: 'Billing', href: '/app/billing', icon: ShoppingBag, cashierAccessible: true },
+      { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList, cashierAccessible: true },
+      { label: 'Register', href: '/app/shifts', icon: WalletCards, cashierAccessible: true },
+      { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw, cashierAccessible: true },
       { label: 'Sales Channels', href: '/app/sales-channels', icon: Radio },
       { label: 'Delivery Challan', href: '/app/delivery-challan', icon: Truck },
     ],
@@ -76,7 +78,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
   {
     label: 'Customers & Team',
     items: [
-      { label: 'Customers', href: '/app/customers', icon: Users },
+      { label: 'Customers', href: '/app/customers', icon: Users, cashierAccessible: true },
       { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: MessageCircle },
       { label: 'Staff', href: '/app/settings/members', icon: UserCog },
     ],
@@ -111,3 +113,19 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     ],
   },
 ]
+
+export function navigationForRole(role?: 'owner' | 'manager' | 'cashier'): AppNavGroup[] {
+  if (!role) return []
+  if (role !== 'cashier') return APP_NAVIGATION
+  return APP_NAVIGATION
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.cashierAccessible) }))
+    .filter((group) => group.items.length > 0)
+}
+
+export function cashierCanAccessAppPath(pathname: string): boolean {
+  return APP_NAVIGATION.some((group) =>
+    group.items.some(
+      (item) => item.cashierAccessible && (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+    ),
+  )
+}

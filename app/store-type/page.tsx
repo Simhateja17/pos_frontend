@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import styles from '@/components/india-migration.module.css'
 
 /**
@@ -38,21 +38,21 @@ export default function StoreTypePage() {
     setMessage('')
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.access_token) {
+      const headers = await authHeaders()
+      if (headers) {
         await apiClient.POST('/categories/seed', {
           body: { businessType: selected },
-          headers: { Authorization: `Bearer ${session.access_token}` },
+          headers,
         })
       }
     } catch {
       // Seeding is a convenience, not a gate — a failure must not trap the
       // owner on this screen. They can add categories from the app instead.
-      setMessage('We couldn’t set up your starter categories — you can add them from Categories later.')
+      setMessage('We couldn’t set up your starter categories. You can add them from Categories later.')
     }
 
     setSaving(false)
-    router.push('/app/dashboard')
+    router.push('/onboarding/complete')
   }
 
   return (
@@ -60,7 +60,7 @@ export default function StoreTypePage() {
       <div className={styles.selectionCanvas}>
         <div className={styles.selectionBrand}>
           <span className={styles.selectionLogo}>C</span>
-          <strong>Couture POS</strong>
+          <strong>Ambel POS</strong>
         </div>
         <header className={styles.selectionHeader}>
           <h1>What kind of shop do you run?</h1>
@@ -86,7 +86,7 @@ export default function StoreTypePage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/app/dashboard')}
+          onClick={() => router.push('/onboarding/complete')}
           style={{
             display: 'block',
             margin: '14px auto 0',
@@ -97,7 +97,7 @@ export default function StoreTypePage() {
             cursor: 'pointer',
           }}
         >
-          Skip — I’ll set up categories myself
+          Skip, I’ll set up categories myself
         </button>
       </div>
     </main>

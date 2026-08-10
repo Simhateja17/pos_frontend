@@ -78,8 +78,8 @@ export function CustomersView() {
             {data.items.map((customer) => (
               <tr key={customer.id}>
                 <td className="t-strong">{customer.name ?? 'Unnamed customer'}</td>
-                <td className="t-mono t-sub">{customer.phone ?? '—'}</td>
-                <td className="t-sub">{customer.email ?? '—'}</td>
+                <td className="t-mono t-sub">{customer.phone ?? '-'}</td>
+                <td className="t-sub">{customer.email ?? '-'}</td>
                 <td className="t-mono t-sub">{dateOnly.format(new Date(customer.createdAt))}</td>
                 <td className="t-sub">Not available</td>
               </tr>

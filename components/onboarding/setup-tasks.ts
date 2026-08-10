@@ -23,7 +23,7 @@ export const SETUP_TASKS: readonly SetupTask[] = [
   {
     step: 6,
     title: 'Add your products',
-    description: 'Build the catalog your till sells from — import a file or add items directly.',
+    description: 'Build the catalog your till sells from: import a file or add items directly.',
     href: '/app/inventory/catalog',
   },
   {

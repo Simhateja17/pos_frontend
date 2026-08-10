@@ -92,10 +92,10 @@ export default function Dashboard() {
         <aside className="sidebar">
           <div className="brand">
             <div className="brand-mark">
-              <span>CP</span>
+              <span>AP</span>
             </div>
             <div className="brand-text">
-              <strong>Couture POS</strong>
+              <strong>Ambel POS</strong>
               <span>US retail edition</span>
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function Dashboard() {
           {/* Top navigation bar */}
           <header className="topbar">
             <div className="crumb">
-              <span>Couture POS</span>
+              <span>Ambel POS</span>
               <svg
                 width="12"
                 height="12"

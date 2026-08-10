@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { FolderTree, Monitor, UserCog } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, Fld, ListRow, PageHead } from '@/components/couture/ui'
 import { ErrorState, LoadingState } from '@/components/couture/states'
 
@@ -35,12 +35,6 @@ const BUSINESS_TYPE_LABELS: Record<NonNullable<Settings['businessType']>, string
   other: 'Something else',
 }
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 export function SettingsView() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [loading, setLoading] = useState(true)
@@ -60,7 +54,7 @@ export function SettingsView() {
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
-    const { data, error } = await apiClient.GET('/settings', { headers: await authHeader() })
+    const { data, error } = await apiClient.GET('/settings', { headers: await authHeaders() })
     setLoading(false)
     if (error || !data) {
       setLoadError('We couldn’t load your store settings. Check your connection and try again.')
@@ -98,7 +92,7 @@ export function SettingsView() {
         pan: form.pan,
         placeOfSupply: form.placeOfSupply,
       },
-      headers: await authHeader(),
+      headers: await authHeaders(),
     })
 
     setSavingProfile(false)
@@ -107,7 +101,7 @@ export function SettingsView() {
       setProfileError(
         (error as { error?: string }).error === 'Only the owner can change store settings'
           ? 'Only the store owner can change these details.'
-          : 'That could not be saved — try again.',
+          : 'That could not be saved. Try again.',
       )
       return
     }
@@ -127,7 +121,7 @@ export function SettingsView() {
         combinedTaxRatePercent: Number(taxRate),
         discountThresholdPercent: Number(discountThreshold),
       },
-      headers: await authHeader(),
+      headers: await authHeaders(),
     })
 
     setSavingTax(false)
@@ -136,7 +130,7 @@ export function SettingsView() {
       setTaxError(
         (error as { error?: string }).error === 'Only the owner can change store settings'
           ? 'Only the store owner can change these details.'
-          : 'That could not be saved — try again.',
+          : 'That could not be saved. Try again.',
       )
       return
     }
@@ -253,7 +247,7 @@ export function SettingsView() {
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Must match your GST registration. Changing it here does not amend your registration — file Form GST
+              Must match your GST registration. Changing it here does not amend your registration. File Form GST
               REG-14 on the GST portal first, then update it here to match.
             </p>
 
@@ -325,7 +319,7 @@ export function SettingsView() {
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Same rule as the name above — this must match what is on file with the GST portal.
+              Same rule as the name above: this must match what is on file with the GST portal.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>

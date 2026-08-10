@@ -190,7 +190,7 @@ export function ReorderSuggestions() {
         sub={
           data?.generatedAt
             ? `Rule-based · worked out ${new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
-            : 'Rule-based — sales rate multiplied by supplier lead time'
+            : 'Rule-based, sales rate multiplied by supplier lead time'
         }
         right={
           <div style={{ display: 'flex', gap: 8 }}>

@@ -2,13 +2,13 @@
 
 import { useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
-import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 const EMAIL_FAILURE_COPY =
-  "Couldn't send the receipt email. The sale is saved — try emailing it again from the receipt lookup."
+  "Couldn't send the receipt email. The sale is saved. Try emailing it again from the receipt lookup."
 
 export interface ReceiptLine {
   variantId: string
@@ -28,12 +28,6 @@ export interface ReceiptSale {
   lines: ReceiptLine[]
 }
 
-async function authHeader() {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  return token ? { Authorization: `Bearer ${token}` } : undefined
-}
-
 export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessName: string }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const printFn = useReactToPrint({ contentRef })
@@ -44,7 +38,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
   async function handleEmailReceipt() {
     setIsSending(true)
     setEmailStatus(null)
-    const headers = await authHeader()
+    const headers = await authHeaders()
 
     // Real backend call — POST /sales/:id/resend-receipt (03-05) resolves the
     // target email (the entered address, or the sale's on-file customer
@@ -116,7 +110,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           <hr />
           {sale.lines.map((line) => (
             <div key={line.variantId} className="receipt-line">
-              {line.quantity} x {line.name ?? line.variantId} — ${line.lineTotal}
+              {line.quantity} x {line.name ?? line.variantId}: ${line.lineTotal}
             </div>
           ))}
           <hr />

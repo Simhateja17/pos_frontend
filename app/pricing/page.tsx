@@ -3,15 +3,15 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { PricingGrid } from "@/components/marketing/pricing-plans";
 
-export const metadata = { title: "Pricing — Couture POS" };
+export const metadata = { title: "Pricing | Ambel POS" };
 
 const FAQ: [string, string][] = [
   ["Is there a setup fee?", "No. Every plan includes onboarding, catalog import and hardware pairing support at no extra cost."],
-  ["Can I switch plans later?", "Yes — upgrade or downgrade at any time. Changes apply from your next billing cycle, and we prorate upgrades made mid-cycle."],
+  ["Can I switch plans later?", "Yes. Upgrade or downgrade at any time. Changes apply from your next billing cycle, and we prorate upgrades made mid-cycle."],
   ["Do you charge per transaction?", "No. All plans are flat monthly or annual fees regardless of how many bills you process."],
-  ["What happens after the 14-day trial?", "You can add a payment method to continue on the Growth plan, or downgrade to Starter — your data is never deleted."],
+  ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
   ["Is GST filing included?", "GSTR-1 ready reports and exports are included on every plan. Direct filing to the GST portal is available as an add-on."],
-  ["Do you offer discounts for annual billing?", "Yes — paying annually saves 2 months compared to monthly billing on Starter and Growth."],
+  ["Do you offer discounts for annual billing?", "Yes. Paying annually saves 2 months compared to monthly billing on Starter and Growth."],
 ];
 
 export default function PricingPage() {
@@ -47,9 +47,9 @@ export default function PricingPage() {
 
       <section className="cta-section">
         <h2>Ready to transform<br />your store?</h2>
-        <p>Join 2,400+ retailers already running on Couture POS. Start free, no card required.</p>
+        <p>Join 2,400+ retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/signup">Start free trial</a>
+          <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>
         </div>
       </section>

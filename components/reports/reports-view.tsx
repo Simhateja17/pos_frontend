@@ -29,7 +29,7 @@ function isoDaysAgo(days: number): string {
 }
 
 function cell(value: string | number | null, money: boolean): string {
-  if (value === null || value === undefined) return '—'
+  if (value === null || value === undefined) return '-'
   if (money) return currency.format(Number(value))
   return String(value)
 }

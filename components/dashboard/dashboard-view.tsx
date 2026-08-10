@@ -472,7 +472,7 @@ function ReorderSummaryCard() {
     <Card style={{ marginTop: 18 }}>
       <CardHead
         title="Reorder suggestions"
-        sub="Rule-based — worked out from sales rate and supplier lead time"
+        sub="Rule-based, worked out from sales rate and supplier lead time"
         right={
           <Link className="btn btn-sm btn-pri" href="/app/inventory">
             <Sparkle size={14} /> Review all ({items.length})
@@ -485,7 +485,7 @@ function ReorderSummaryCard() {
             key={s.id}
             tone="blue"
             icon={<Boxes size={17} strokeWidth={1.85} />}
-            title={`${s.productName} — reorder ${s.suggestedQuantity} units`}
+            title={`${s.productName}: reorder ${s.suggestedQuantity} units`}
             sub={`${s.sku} · ${s.reason.currentStock} in stock`}
             action={<Badge tone={s.confidence === 'high' ? 'green' : s.confidence === 'medium' ? 'amber' : 'grey'}>{s.confidence} confidence</Badge>}
           />

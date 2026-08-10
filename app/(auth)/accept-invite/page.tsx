@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type SessionState = 'loading' | 'present' | 'absent'
 
-const GENERIC_ERROR = 'Something went wrong — try again.'
+const GENERIC_ERROR = 'Something went wrong. Try again.'
 
 function labelStyle() {
   return {
@@ -115,141 +115,145 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <Card className="w-full max-w-[400px]" style={{ backgroundColor: '#FFFFFF' }}>
-      <CardHeader>
-        <h1
-          className="mb-2"
-          style={{
-            fontFamily: 'Sora, sans-serif',
-            fontSize: '28px',
-            fontWeight: 700,
-            lineHeight: 1.2,
-          }}
-        >
-          Welcome to the team
-        </h1>
-        {sessionState === 'present' && (
-          <p className="text-sm" style={{ color: '#64748B' }}>
-            Set a password and PIN to finish activating your account.
-          </p>
-        )}
-      </CardHeader>
-      <CardContent>
-        {sessionState === 'loading' && (
-          <p className="text-sm" style={{ color: '#64748B' }}>
-            Activating your invite…
-          </p>
-        )}
+    // Centring lives here rather than in the shared auth layout: this surface is
+    // a lone card, unlike the login/signup shell which is a full-screen layout.
+    <div className="flex min-h-screen w-full items-center justify-center px-4 py-10 sm:py-16">
+      <Card className="w-full max-w-[400px]" style={{ backgroundColor: '#FFFFFF' }}>
+        <CardHeader>
+          <h1
+            className="mb-2"
+            style={{
+              fontFamily: 'Sora, sans-serif',
+              fontSize: '28px',
+              fontWeight: 700,
+              lineHeight: 1.2,
+            }}
+          >
+            Welcome to the team
+          </h1>
+          {sessionState === 'present' && (
+            <p className="text-sm" style={{ color: '#64748B' }}>
+              Set a password and PIN to finish activating your account.
+            </p>
+          )}
+        </CardHeader>
+        <CardContent>
+          {sessionState === 'loading' && (
+            <p className="text-sm" style={{ color: '#64748B' }}>
+              Activating your invite…
+            </p>
+          )}
 
-        {sessionState === 'absent' && (
-          <Alert variant="destructive">
-            <AlertDescription>
-              This invite link is invalid or has expired. Ask your manager to send a
-              new one.
-            </AlertDescription>
-          </Alert>
-        )}
+          {sessionState === 'absent' && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                This invite link is invalid or has expired. Ask your manager to send a
+                new one.
+              </AlertDescription>
+            </Alert>
+          )}
 
-        {sessionState === 'present' && (
-          <div className="flex flex-col gap-6">
-            <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
-              <h2
-                style={{
-                  fontFamily: 'Sora, sans-serif',
-                  fontSize: '20px',
-                  fontWeight: 700,
-                  lineHeight: 1.2,
-                }}
-              >
-                Set a password
-              </h2>
-              {passwordError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{passwordError}</AlertDescription>
-                </Alert>
-              )}
-              {passwordSaved ? (
-                <p className="text-sm" style={{ color: '#0058BA' }}>
-                  Password set.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="password" style={labelStyle()}>
-                      Password
-                    </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={8}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isSavingPassword}
-                    className="w-full"
-                    style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
-                  >
-                    Save password
-                  </Button>
-                </>
-              )}
-            </form>
+          {sessionState === 'present' && (
+            <div className="flex flex-col gap-6">
+              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+                <h2
+                  style={{
+                    fontFamily: 'Sora, sans-serif',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Set a password
+                </h2>
+                {passwordError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{passwordError}</AlertDescription>
+                  </Alert>
+                )}
+                {passwordSaved ? (
+                  <p className="text-sm" style={{ color: '#0058BA' }}>
+                    Password set.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="password" style={labelStyle()}>
+                        Password
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        autoComplete="new-password"
+                        minLength={8}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={isSavingPassword}
+                      className="w-full"
+                      style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
+                    >
+                      Save password
+                    </Button>
+                  </>
+                )}
+              </form>
 
-            <form onSubmit={handlePinSubmit} className="flex flex-col gap-4">
-              <h2
-                style={{
-                  fontFamily: 'Sora, sans-serif',
-                  fontSize: '20px',
-                  fontWeight: 700,
-                  lineHeight: 1.2,
-                }}
-              >
-                Set your 4-digit PIN
-              </h2>
-              {pinError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{pinError}</AlertDescription>
-                </Alert>
-              )}
-              {pinSaved ? (
-                <p className="text-sm" style={{ color: '#0058BA' }}>
-                  PIN set.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="pin" style={labelStyle()}>
-                      PIN
-                    </Label>
-                    <Input
-                      id="pin"
-                      inputMode="numeric"
-                      pattern="\d{4}"
-                      maxLength={4}
-                      required
-                      value={pin}
-                      onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isSavingPin || pin.length !== 4}
-                    className="w-full"
-                    style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
-                  >
-                    Save PIN
-                  </Button>
-                </>
-              )}
-            </form>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <form onSubmit={handlePinSubmit} className="flex flex-col gap-4">
+                <h2
+                  style={{
+                    fontFamily: 'Sora, sans-serif',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Set your 4-digit PIN
+                </h2>
+                {pinError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{pinError}</AlertDescription>
+                  </Alert>
+                )}
+                {pinSaved ? (
+                  <p className="text-sm" style={{ color: '#0058BA' }}>
+                    PIN set.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="pin" style={labelStyle()}>
+                        PIN
+                      </Label>
+                      <Input
+                        id="pin"
+                        inputMode="numeric"
+                        pattern="\d{4}"
+                        maxLength={4}
+                        required
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={isSavingPin || pin.length !== 4}
+                      className="w-full"
+                      style={{ backgroundColor: '#0058BA', color: '#FFFFFF' }}
+                    >
+                      Save PIN
+                    </Button>
+                  </>
+                )}
+              </form>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }

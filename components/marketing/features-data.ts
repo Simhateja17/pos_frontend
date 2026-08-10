@@ -14,12 +14,12 @@ export type Feature = [icon: string, title: string, body: string, badge3: string
 
 export const FEATURES: Feature[] = [
   ["bill", "Billing & Cart", "Ultra-fast billing with barcode scan, product search, multi-cashier, split payment, and real-time GST calculation on every line.", "EXISTING", ""],
-  ["bolt", "AI Copilot", "Ask your store anything. Copilot reads live data — stock, sales, customers — and proposes actions with data basis, requiring your approval.", "NEW", "AI"],
+  ["bolt", "AI Copilot", "Ask your store anything. Copilot reads live data (stock, sales, customers) and proposes actions with data basis, requiring your approval.", "NEW", "AI"],
   ["inventory", "Inventory & Variants", "Size × colour matrix editor, batch tracking, expiry alerts, smart reorder with Prophet forecasting, and one-click barcode labels.", "", "★"],
   ["channels", "Omnichannel", "POS + website + Instagram + marketplace, all sharing one live stock pool. Orders flow in from every channel automatically.", "NEW", ""],
   ["staff", "Staff & Commissions", "Role-based permissions, shift scheduling, attendance, and an AI coaching score that nudges cashiers on the POS in real time.", "NEW", "★"],
-  ["reports", "GST & Reports", "GSTR-1 ready reports, daily P&L, custom builder, scheduled exports — and a direct filing API to the GST portal (coming).", "", ""],
+  ["reports", "GST & Reports", "GSTR-1 ready reports, daily P&L, custom builder, scheduled exports, plus a direct filing API to the GST portal (coming).", "", ""],
   ["customer", "Loyalty & CRM", "Tiered points, gift cards, WhatsApp campaigns, DND-safe DLT templates, and AI-segmented audience builder.", "", "IMPROVE"],
   ["challan", "Delivery Challan", "Legally-required B2B and inter-branch dispatch documents, one-click convert to tax invoice on delivery.", "NEW", ""],
-  ["payments", "Payments & Settlement", "UPI, card, cash, split — with PSP-level UTR matching, daily settlement reconciliation, and failed-payment resolution.", "", "★"],
+  ["payments", "Payments & Settlement", "UPI, card, cash, split, with PSP-level UTR matching, daily settlement reconciliation, and failed-payment resolution.", "", "★"],
 ];

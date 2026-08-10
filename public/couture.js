@@ -1,4 +1,4 @@
-/* ============ ICONS — original Couture glyph set ============ */
+/* ============ ICONS — original Ambel glyph set ============ */
 const I={
  dash:'<rect x="3" y="3" width="7.5" height="9.5" rx="2.2"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="2.2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2.2"/><rect x="13.5" y="11" width="7.5" height="10" rx="2.2"/>',
  bill:'<path d="M5.5 8.5h13l-1 11a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8z"/><path d="M8.7 8.5V6.2a3.3 3.3 0 0 1 6.6 0v2.3"/><path d="M9.2 12v1M14.8 12v1"/>',
@@ -317,7 +317,7 @@ SCREENS.map=()=>{
  const arrow='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
  const flagship=[
   {ico:'ai',t:'AI Copilot',d:'Ask "why are margins down?" — every answer shows its data basis and waits for your approval.',badge:'NEW',scr:'copilot'},
-  {ico:'bill',t:'Cashier ⇄ Manager Mode',d:'One tap hides cost & margin for billing speed, or reveals them for managers. Unique to Couture.',badge:'★',scr:'billing'},
+  {ico:'bill',t:'Cashier ⇄ Manager Mode',d:'One tap hides cost & margin for billing speed, or reveals them for managers. Unique to Ambel.',badge:'★',scr:'billing'},
   {ico:'ai',t:'Prophet Smart Reorder',d:'ML demand forecast surfaces exactly what to reorder before the weekend rush.',badge:'AI',scr:'inventory'},
   {ico:'inventory',t:'Variant Matrix Editor',d:'Size × colour grid at a glance — tap any cell to adjust stock, set reorder or print labels.',badge:'★',scr:'inventory'},
   {ico:'swap',t:'One-Receipt Exchange',d:'Return + new item as a single net payment, one GST calc, one receipt — not two transactions.',badge:'★',scr:'returns'},
@@ -330,7 +330,7 @@ SCREENS.map=()=>{
    <div class="spot-head"><span class="sh-ico">${ic('bolt')}</span><div><h3>Flagship features</h3><div class="sh-sub">The unique differentiators — beyond Zoho &amp; Square. Tap any to jump straight in.</div></div></div>
    <div class="spot-grid">${flagship.map(f=>`<div class="spot-card" onclick="go('${f.scr}')"><div class="sc-top"><span class="sc-ico">${ic(f.ico)}</span>${flag(f.badge)}</div><div class="sc-title">${f.t}</div><div class="sc-desc">${f.d}</div><div class="sc-open">Open ${arrow}</div></div>`).join('')}</div>
  </div>`;
- return hero('Couture POS · Feature Integration Map',
+ return hero('Ambel POS · Feature Integration Map',
    'Everything we&rsquo;re building, mapped onto the live product',
    'A clickable spec derived from the Zoho &amp; Square competitive reports. Every module below opens a high-fidelity mock — new and enhanced features are badged and annotated so you know exactly what goes where.',
    `<span class="hero-btn solid" onclick="go('dashboard')">${ic('dash')} Start tour</span><span class="hero-btn" onclick="go('billing')">${ic('bolt')} Open Billing</span>`,
@@ -562,7 +562,7 @@ SCREENS.returns=()=>{
 
 /* ============ SALES CHANNELS ============ */
 SCREENS.channels=()=>{
- const ch=[['Storefront (POS)','In-store','b-green','Live','₹4.84 L','342'],['Couture Online','Website','b-green','Live','₹1.92 L','86'],['Instagram Shop','Social','b-amber','Syncing','₹38 K','12'],['Amazon / Flipkart','Marketplace','b-grey','Not connected','—','—'],['Pickup & Delivery','Fulfilment','b-green','Live','₹64 K','21']];
+ const ch=[['Storefront (POS)','In-store','b-green','Live','₹4.84 L','342'],['Ambel Online','Website','b-green','Live','₹1.92 L','86'],['Instagram Shop','Social','b-amber','Syncing','₹38 K','12'],['Amazon / Flipkart','Marketplace','b-grey','Not connected','—','—'],['Pickup & Delivery','Fulfilment','b-green','Live','₹64 K','21']];
  return head('Sales Channels','Omnichannel orders & real-time inventory sync '+flag('NEW'),`<button class="btn-pri btn" data-act="connectchannel">${ic('plus')} Connect channel</button>`)
   
   + kpis([{l:'Channels Live',v:'4 of 5',m:'1 syncing · 1 to connect'},{l:'Online Orders Today',v:'119',m:'web + social + marketplace'},{l:'Omni Revenue',v:'₹7.78 L',m:'across all channels'},{l:'Stock Sync',v:'Real-time',m:'last sync 12s ago'}],4)
@@ -671,7 +671,7 @@ SCREENS.whatsapp=()=>{
           <div class="section-label">Audience</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-blue">Gold tier · 612</span><span class="badge b-grey">Lapsed 90D+ · 248</span><button class="btn btn-sm">${ic('plus')} Add segment</button></div>
           <div class="section-label" style="margin-top:14px">Template</div>
-          <div style="border:1px solid var(--border);border-radius:10px;padding:11px;font-size:13px;background:#FAFBFC">Namaste {name}! Your Gold tier earns 2× points this weekend ✨ Plus ₹500 off above ₹3,000. Visit us at Couture Bandra.</div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:11px;font-size:13px;background:#FAFBFC">Namaste {name}! Your Gold tier earns 2× points this weekend ✨ Plus ₹500 off above ₹3,000. Visit us at Ambel Bandra.</div>
           <div class="cl" style="margin-top:8px">${cb(1)}<span style="color:var(--muted)">Marketing template approved · consent verified (DND-safe)</span></div>
           <button class="btn-grad btn" style="width:100%;justify-content:center;margin-top:10px" data-act="newbroadcast">${ic('wa')} Send to 612 · est. ₹3.2 L lift</button>
         </div>
@@ -914,8 +914,8 @@ let OB_STEP=0;
 const OB_STEPS=[
  {tag:'STEP 1 · BUSINESS PROFILE',h:'Set up your store.',sub:'Your store identity, GSTIN and invoice settings go on every receipt, tax document and report.',ic:'settings'},
  {tag:'STEP 2 · GST & TAX',h:'Configure your taxes.',sub:'Map your product slabs, HSN/SAC codes and round-off rules so every bill is GST-compliant from the first sale.',ic:'reports'},
- {tag:'STEP 3 · IMPORT CATALOG',h:'Bring in your products.',sub:'Upload a CSV, scan barcodes or add products one by one. Couture validates HSN, duplicate SKUs and GST slabs before import.',ic:'inventory'},
- {tag:'STEP 4 · OPEN REGISTER',h:'Open your cash drawer.',sub:'Set your opening float for each counter. Couture tracks every rupee in and out from this baseline automatically.',ic:'register'},
+ {tag:'STEP 3 · IMPORT CATALOG',h:'Bring in your products.',sub:'Upload a CSV, scan barcodes or add products one by one. Ambel validates HSN, duplicate SKUs and GST slabs before import.',ic:'inventory'},
+ {tag:'STEP 4 · OPEN REGISTER',h:'Open your cash drawer.',sub:'Set your opening float for each counter. Ambel tracks every rupee in and out from this baseline automatically.',ic:'register'},
  {tag:'STEP 5 · PAIR HARDWARE',h:'Connect your devices.',sub:'Thermal printer, barcode scanner and cash drawer — pair in seconds. Test each device before you go live.',ic:'hardware'},
  {tag:'STEP 6 · FIRST TRANSACTION',h:'Ring your first sale.',sub:'Run a test bill, verify the GST breakdown, print a receipt and confirm your payment methods are working.',ic:'bill'},
  {tag:'STEP 7 · INVITE TEAM',h:'Bring in your team.',sub:'Add cashiers, managers and floor staff. Assign roles, set permissions and schedule their first shift.',ic:'staff'},
@@ -923,13 +923,13 @@ const OB_STEPS=[
 const OB_CONTENT=[
  // Step 0 — Business Profile
  ()=>`<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
-   <label class="fld"><span>Legal business name</span><input type="text" value="Couture Retail Pvt Ltd"></label>
-   <label class="fld"><span>Store display name</span><input type="text" value="Couture · Bandra"></label>
+   <label class="fld"><span>Legal business name</span><input type="text" value="Ambel Retail Pvt Ltd"></label>
+   <label class="fld"><span>Store display name</span><input type="text" value="Ambel · Bandra"></label>
    <label class="fld"><span>GSTIN</span><input type="text" value="27ABCDE1234F1Z5"></label>
    <label class="fld"><span>Invoice prefix</span><input type="text" value="INV-"></label>
    <label class="fld" style="grid-column:1/-1"><span>Registered address</span><input type="text" value="12 Hill Rd, Bandra West, Mumbai 400050"></label>
    <label class="fld"><span>Contact phone</span><input type="text" value="+91 22 4000 1200"></label>
-   <label class="fld"><span>Support email</span><input type="text" value="ops@couture.in"></label>
+   <label class="fld"><span>Support email</span><input type="text" value="ops@Ambel.in"></label>
  </div>
  <div style="margin-top:16px">
    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Receipt options</div>
@@ -1035,7 +1035,7 @@ SCREENS.onboarding=()=>{
  </div>`;
 };
 function obNav(dir){OB_STEP=Math.max(0,Math.min(OB_STEPS.length-1,OB_STEP+dir));go('onboarding');}
-function obComplete(){OB_STEP=0;toast('Setup complete! Welcome to Couture POS 🎉');go('dashboard');}
+function obComplete(){OB_STEP=0;toast('Setup complete! Welcome to Ambel POS 🎉');go('dashboard');}
 window.obNav=obNav;window.obComplete=obComplete;
 
 /* ============ OFFLINE & SYNC ============ */
@@ -1112,15 +1112,15 @@ SCREENS.settings=()=>{
 /* ============ SETTINGS DETAIL ============ */
 let SETTING_CUR='Business Profile';
 const SETTING_DEF={
- 'Business Profile':{ic:'settings',sub:'Store identity, GSTIN & invoice header',fields:[['Legal business name','Couture Retail Pvt Ltd'],['Store display name','Couture · Bandra'],['GSTIN','27ABCDE1234F1Z5'],['Invoice prefix','INV-'],['Registered address','12 Hill Rd, Bandra West, Mumbai 400050'],['Support phone','+91 22 4000 1200']],toggles:[['Print GSTIN on receipt',1],['Show HSN per line',1],['Email invoice copy to customer',0]]},
+ 'Business Profile':{ic:'settings',sub:'Store identity, GSTIN & invoice header',fields:[['Legal business name','Ambel Retail Pvt Ltd'],['Store display name','Ambel · Bandra'],['GSTIN','27ABCDE1234F1Z5'],['Invoice prefix','INV-'],['Registered address','12 Hill Rd, Bandra West, Mumbai 400050'],['Support phone','+91 22 4000 1200']],toggles:[['Print GSTIN on receipt',1],['Show HSN per line',1],['Email invoice copy to customer',0]]},
  'Tax & GST':{ic:'expenses',sub:'Slabs, HSN/SAC mapping & round-off',fields:[['Default GST slab','5%'],['Composition scheme','No'],['Round-off rule','Nearest ₹1'],['Place of supply','Maharashtra (27)']],toggles:[['Auto-pick slab from HSN',1],['Block sale if HSN missing',0],['Inclusive-of-tax pricing',1]]},
- 'Payment Methods':{ic:'payments',sub:'Cash, card, UPI, wallets, gift cards',fields:[['Primary UPI VPA','couture@hdfcbank'],['Card PSP','Pine Labs'],['UPI PSP','Razorpay'],['Default tender','UPI']],toggles:[['Accept cash',1],['Accept card',1],['Accept UPI QR',1],['Accept gift cards',1],['Allow split payment',1]]},
+ 'Payment Methods':{ic:'payments',sub:'Cash, card, UPI, wallets, gift cards',fields:[['Primary UPI VPA','Ambel@hdfcbank'],['Card PSP','Pine Labs'],['UPI PSP','Razorpay'],['Default tender','UPI']],toggles:[['Accept cash',1],['Accept card',1],['Accept UPI QR',1],['Accept gift cards',1],['Allow split payment',1]]},
  'Hardware':{ic:'hardware',sub:'Printer, scanner, drawer & scale',fields:[['Receipt printer','Thermal 80mm · Cloud'],['Barcode scanner','USB · Counter 1'],['Cash drawer','Auto-open on pay'],['Weighing scale','Not paired']],toggles:[['Auto cash-drawer kick',1],['Self-test on register open',1],['Buzzer on scan error',0]]},
  'Team & Roles':{ic:'staff',sub:'Roles, permission matrix & approval limits',fields:[['Default new-hire role','Cashier'],['Manager approval over','₹2,000'],['Auto clock-out after','10 hours'],['PIN length','4 digits']],toggles:[['Require PIN for refunds',1],['Require PIN for discounts',1],['Lock settings to Admin',1]]},
- 'Notifications':{ic:'bell',sub:'Email, SMS, WhatsApp & in-app alerts',fields:[['Alert email','ops@couture.in'],['WhatsApp sender','+91 90000 12345'],['Low-stock threshold','At reorder level'],['Daily summary at','21:30']],toggles:[['Stock-out alerts',1],['Payment failure alerts',1],['Late clock-in alerts',1],['Daily GST summary',1],['Marketing opt-ins only (DND-safe)',1]]},
- 'API & Webhooks':{ic:'api',sub:'Connect ERP, loyalty apps & e-commerce',fields:[['Live API key','sk_live_••••••4f2a'],['Webhook URL','https://erp.couture.in/hooks'],['Rate limit','600 req/min'],['API version','2026-04']],toggles:[['order.created webhook',1],['inventory.updated webhook',1],['payment.settled webhook',0]]},
+ 'Notifications':{ic:'bell',sub:'Email, SMS, WhatsApp & in-app alerts',fields:[['Alert email','ops@Ambel.in'],['WhatsApp sender','+91 90000 12345'],['Low-stock threshold','At reorder level'],['Daily summary at','21:30']],toggles:[['Stock-out alerts',1],['Payment failure alerts',1],['Late clock-in alerts',1],['Daily GST summary',1],['Marketing opt-ins only (DND-safe)',1]]},
+ 'API & Webhooks':{ic:'api',sub:'Connect ERP, loyalty apps & e-commerce',fields:[['Live API key','sk_live_••••••4f2a'],['Webhook URL','https://erp.Ambel.in/hooks'],['Rate limit','600 req/min'],['API version','2026-04']],toggles:[['order.created webhook',1],['inventory.updated webhook',1],['payment.settled webhook',0]]},
  'Integration Marketplace':{ic:'supplier',sub:'Tally, WhatsApp, Razorpay, Shiprocket…',fields:[],apps:[['Tally','Accounting sync','b-green','Connected'],['WhatsApp Business','Campaigns & receipts','b-green','Connected'],['Razorpay','Payments','b-green','Connected'],['Shiprocket','Logistics','b-amber','Disconnected'],['Zoho Books','Accounting','b-amber','Disconnected'],['Shopify','E-commerce','b-grey','Available']]},
- 'Document Vault':{ic:'doc',sub:'GST, FSSAI & lease per store / supplier',fields:[],docs:[['GST Registration Certificate','Couture Retail · valid','b-green'],['FSSAI License','Beauty counter · exp 2027','b-green'],['Shop & Establishment','Bandra · valid','b-green'],['Lease Agreement — Bandra','exp Mar 2028','b-green'],['Supplier GST — HUL','missing','b-red']]},
+ 'Document Vault':{ic:'doc',sub:'GST, FSSAI & lease per store / supplier',fields:[],docs:[['GST Registration Certificate','Ambel Retail · valid','b-green'],['FSSAI License','Beauty counter · exp 2027','b-green'],['Shop & Establishment','Bandra · valid','b-green'],['Lease Agreement — Bandra','exp Mar 2028','b-green'],['Supplier GST — HUL','missing','b-red']]},
  'Audit Log':{ic:'reports',sub:'Who did what, when & from which counter',fields:[],log:[['Pooja Menon','Approved refund RET-1143','C-1 · 14:42'],['Aarav Pillai','Opened register REG-0501-C2','C-2 · 10:00'],['Riya Sharma','Voided bill INV-24846','C-1 · 14:11'],['System','Auto-generated GSTR-1 snapshot','Cloud · 02:00'],['Karan B.','Edited GST slab on 3 SKUs','Web · Yesterday']]},
  'Modules':{ic:'inventory',sub:'Toggle inventory, loyalty & gift cards',fields:[],toggles:[['Inventory & stock',1],['Loyalty & points',1],['Gift cards',1],['Sales channels',1],['Delivery challan',1],['Receivables',1],['AI Copilot',1],['Customer-facing display',1],['Offline mode',1]]},
  'Store Preferences':{ic:'channels',sub:'Currency, language, SKU & invoice rules',fields:[['Currency','INR ₹'],['Language','English (en-IN)'],['Timezone','Asia/Kolkata'],['SKU format','COU-XXX-0000'],['Financial year start','April'],['Week starts','Monday']],toggles:[['Barcode auto-generate',1],['Negative stock block',1],['Multi-store price sync',0]]},
@@ -1162,7 +1162,7 @@ const DB={
   {sku:'COU-ACC-3392',name:'Leather Belt — Tan (32)',cat:'Accessories',price:899,gst:12,cost:520,supplier:'Hidesign Co.',stock:48,reorder:25},
   {sku:'COU-COS-0912',name:'Lakmé Lip · Berry',cat:'Beauty',price:449,gst:18,cost:300,supplier:'HUL Distribution',stock:22,reorder:15,expiry:'12 Aug 2026'},
   {sku:'COU-DEN-5520',name:"Men's Slim Denim (32)",cat:'Mens Western',price:1999,gst:12,cost:1150,supplier:'Aravind Mills',stock:36,reorder:20},
-  {sku:'COU-WMS-0044',name:'Embroidered Lehenga (S)',cat:'Womens Ethnic',price:8400,gst:5,cost:5200,supplier:'Surat Couture',stock:7,reorder:10},
+  {sku:'COU-WMS-0044',name:'Embroidered Lehenga (S)',cat:'Womens Ethnic',price:8400,gst:5,cost:5200,supplier:'Surat Ambel',stock:7,reorder:10},
   {sku:'COU-FRG-1108',name:'Banarasi Dupatta — Gold',cat:'Womens Ethnic',price:2600,gst:5,cost:1700,supplier:'Banaras Weaves',stock:0,reorder:15},
  ],
  customers:[
@@ -1383,8 +1383,8 @@ function newNoteForm(){openModal('New credit / debit note',
 function saveNote(){const p=val('nt_party');if(!p){toast('Party is required');return;}const type=val('nt_type').startsWith('Credit')?'Credit':'Debit';const no=(type==='Credit'?'CN':'DN')+'-2026-0'+(19+Math.floor(Math.random()*60));DB.notes.unshift({no,type,party:p,reason:val('nt_reason'),amount:+val('nt_amt')||0,status:['b-amber','Draft']});closeModal();toast(no+' drafted');go('creditnotes');}
 
 function connectChannelForm(){openModal('Connect a channel',
-  fld('cc_ch','Channel',{type:'select',options:['Amazon','Flipkart','Instagram Shop','Myntra','WhatsApp Catalog','Couture Online (web)']})
-  +fld('cc_acct','Account / seller ID',{ph:'e.g. couture-seller'})
+  fld('cc_ch','Channel',{type:'select',options:['Amazon','Flipkart','Instagram Shop','Myntra','WhatsApp Catalog','Ambel Online (web)']})
+  +fld('cc_acct','Account / seller ID',{ph:'e.g. Ambel-seller'})
   +`<div style="display:flex;gap:10px;align-items:center;margin-top:6px"><div style="flex:1;font-size:13px">Sync one stock pool in real-time</div>${tg(1)}</div>`,'Connect','doConnectChannel');}
 function doConnectChannel(){const ch=val('cc_ch');closeModal();toast(ch+' connecting — stock sync starting…');go('channels');}
 
@@ -1397,7 +1397,7 @@ function doNewBroadcast(){const a=val('wb_aud');closeModal();toast('Broadcast qu
 function newTemplateForm(){openModal('New message template',
   fld('wt_name','Template name',{ph:'e.g. Back-in-stock alert'})
   +fld('wt_cat','Category',{type:'select',options:['Utility (transactional)','Marketing (promotional)','Authentication (OTP)']})
-  +`<label class="fld"><span>Body</span><textarea id="wt_body" rows="3" style="resize:vertical;font-family:inherit" placeholder="Use {name}, {amount}, {link} as variables">Namaste {name}! {item} is back in stock at Couture Bandra. Reply YES to reserve yours.</textarea></label>`
+  +`<label class="fld"><span>Body</span><textarea id="wt_body" rows="3" style="resize:vertical;font-family:inherit" placeholder="Use {name}, {amount}, {link} as variables">Namaste {name}! {item} is back in stock at Ambel Bandra. Reply YES to reserve yours.</textarea></label>`
   +`<div class="t-sub" style="margin-top:2px">Submitted to Meta &amp; DLT for approval — usually live within a few hours.</div>`,'Submit for approval','doNewTemplate');}
 function doNewTemplate(){const n=val('wt_name');if(!n){toast('Template name is required');return;}closeModal();toast('"'+n+'" submitted for approval');go('whatsapp');}
 window.newBroadcastForm=newBroadcastForm;window.doNewBroadcast=doNewBroadcast;window.newTemplateForm=newTemplateForm;window.doNewTemplate=doNewTemplate;
@@ -1410,7 +1410,7 @@ function doGenReport(){const t=val('rp_type');const f=val('rp_fmt');closeModal()
 function scheduleReportForm(){openModal('Schedule a report',
   fld('sr_type','Report',{type:'select',options:['Daily Sales Summary','GST Output (GSTR-1)','Stock Valuation','Profit & Loss']})
   +row2(fld('sr_freq','Frequency',{type:'select',options:['Daily','Weekly','Monthly']}),fld('sr_time','Send at',{type:'time',val:'21:30'}))
-  +fld('sr_to','Email to',{ph:'ops@couture.in'}),'Schedule','doScheduleReport');}
+  +fld('sr_to','Email to',{ph:'ops@Ambel.in'}),'Schedule','doScheduleReport');}
 function doScheduleReport(){closeModal();toast(val('sr_type')+' scheduled · '+val('sr_freq'));}
 
 function runSettlement(){openModal('Run settlement · 03 May',
@@ -1452,7 +1452,7 @@ function doLaunchDisplay(){closeModal();toast('Preview pushed to customer displa
 function pairDisplay(){openModal('Pair customer display',
   fld('pds_type','Display device',{type:'select',options:['Android tablet','iPad','HDMI second screen','Web URL']})
   +fld('pds_code','Pairing code',{val:'CFD-7741',ph:''})
-  +`<div class="t-sub" style="margin-top:4px">Open <b>display.couture.in</b> on the second screen and enter this code.</div>`,'Pair display','doPairDisplay');}
+  +`<div class="t-sub" style="margin-top:4px">Open <b>display.Ambel.in</b> on the second screen and enter this code.</div>`,'Pair display','doPairDisplay');}
 function doPairDisplay(){closeModal();toast('Customer display paired');go('cfd');}
 function scheduleShiftForm(){openModal('Schedule a shift',
   fld('ss_staff','Staff',{type:'select',options:DB.staff.map(s=>s.name)})
@@ -1573,7 +1573,7 @@ function authSubmit(){
 window.authGo=authGo;window.authBack=authBack;window.completeAuth=completeAuth;window.authSubmit=authSubmit;
 
 /* helpers */
-var POSSVG='<img src="/logo.png" alt="Couture POS" style="max-width:70%;max-height:70%;width:auto;height:auto;object-fit:contain;display:block" />';
+var POSSVG='<img src="/logo.png" alt="Ambel POS" style="max-width:70%;max-height:70%;width:auto;height:auto;object-fit:contain;display:block" />';
 var CHK='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>';
 var EYESVG='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 var STATES=['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
@@ -1681,7 +1681,7 @@ function wizSidebar(){
     var num=i<AUTH.step?CHK:('0'+(i+1));
     return '<div class="a-step '+st+'"><div class="a-snum '+nc+'">'+num+'</div><div><div class="a-step-t">Step 0'+(i+1)+'</div><div class="a-step-n">'+n+'</div></div></div>';
   }).join('');
-  return '<div class="a-wsb"><div class="a-mark" style="margin-bottom:26px"><div class="a-icon">'+POSSVG+'</div><div class="a-mname">Couture POS</div></div>'
+  return '<div class="a-wsb"><div class="a-mark" style="margin-bottom:26px"><div class="a-icon">'+POSSVG+'</div><div class="a-mname">Ambel POS</div></div>'
     +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px">SETUP · '+pct+'% COMPLETE</div>'
     +'<div class="a-prog"><div class="a-prog-f" style="width:'+pct+'%"></div></div>'
     +steps
@@ -1696,9 +1696,9 @@ function wnav(isLast){
 /* brand panel helper */
 function brandPanel(body){
   return '<div class="a-brand"><div>'
-    +'<div class="a-mark" style="margin-bottom:28px"><div class="a-icon">'+POSSVG+'</div><div class="a-mname">Couture POS</div></div>'
+    +'<div class="a-mark" style="margin-bottom:28px"><div class="a-icon">'+POSSVG+'</div><div class="a-mname">Ambel POS</div></div>'
     +body+'</div>'
-    +'<div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.7">Couture Retail Technologies<br>GST: 27ABCDE1234F1Z5</div></div>';
+    +'<div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.7">Ambel Retail Technologies<br>GST: 27ABCDE1234F1Z5</div></div>';
 }
 
 /* ========== SCREENS ========== */
@@ -1712,7 +1712,7 @@ splash: function(){
     +'<div style="position:absolute;width:250px;height:250px;border:1px solid rgba(255,255,255,.09);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)"></div>'
     +'</div>'
     +'<div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center">'
-    +'<div class="a-mark" style="margin-bottom:28px;justify-content:center"><div class="a-icon">'+POSSVG+'</div><div class="a-mname" style="font-size:20px">Couture POS</div></div>'
+    +'<div class="a-mark" style="margin-bottom:28px;justify-content:center"><div class="a-icon">'+POSSVG+'</div><div class="a-mname" style="font-size:20px">Ambel POS</div></div>'
     +'<div style="display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:100px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:22px">✦ India\'s most complete retail suite</div>'
     +'<h1 style="font-family:\'Space Grotesk\',sans-serif;font-size:clamp(34px,5vw,62px);font-weight:800;letter-spacing:-.04em;line-height:1;margin-bottom:14px;text-align:center">Retail, reimagined.<br>For every Indian store.</h1>'
     +'<p style="font-size:16px;color:rgba(255,255,255,.7);max-width:420px;line-height:1.6;margin-bottom:36px;text-align:center">GST-native · AI-powered · Offline-first<br>From first bill to GSTR-1 — one POS.</p>'
@@ -1721,9 +1721,9 @@ splash: function(){
     +'<button onclick="authGo(\'login\')" style="height:50px;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-family:\'Space Grotesk\',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;transition:all .18s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.08)\'">Sign in to existing account</button>'
     +'</div>'
     +'<div style="display:flex;gap:20px;margin-top:28px;font-size:12px;color:rgba(255,255,255,.45)">'
-    +'<span>✓ 14-day free trial</span><span>✓ No credit card</span><span>✓ GST-compliant</span>'
+    +'<span>✓ Secure paid checkout</span><span>✓ Monthly or annual billing</span><span>✓ GST-compliant</span>'
     +'</div></div>'
-    +'<div style="position:absolute;bottom:22px;font-size:12px;color:rgba(255,255,255,.28)">© 2026 Couture Retail Technologies Pvt Ltd</div>'
+    +'<div style="position:absolute;bottom:22px;font-size:12px;color:rgba(255,255,255,.28)">© 2026 Ambel Retail Technologies Pvt Ltd</div>'
     +'</div>';
 },
 
@@ -1745,7 +1745,7 @@ login: function(){
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#3A3F4A;cursor:pointer"><input type="checkbox" style="width:15px;height:15px;accent-color:#0058BA"> Remember this device</label><button class="ab-link" onclick="authGo(\'forgot\')">Forgot password?</button></div>'
     +'<button class="ab-pri" onclick="authSubmit()">Sign in →</button>'
     +'<div class="a-sep">or</div>'
-    +'<p style="text-align:center;font-size:14px;color:#667085">New to Couture POS? <button class="ab-link" onclick="authGo(\'signup\')">Create a store account</button></p>'
+    +'<p style="text-align:center;font-size:14px;color:#667085">New to Ambel POS? <button class="ab-link" onclick="authGo(\'signup\')">Create a store account</button></p>'
     +'</div></div>';
   return bp+fp;
 },
@@ -1759,12 +1759,12 @@ signup: function(){
     +'</div>'
   );
   var fp='<div class="a-form"><div class="a-form-inner">'
-    +'<div style="margin-bottom:22px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">Create your store account.</div><div style="font-size:14px;color:#667085">14-day free trial · No credit card required.</div></div>'
+    +'<div style="margin-bottom:22px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">Create your store account.</div><div style="font-size:14px;color:#667085">Create your account, then choose a paid subscription.</div></div>'
     +af('name','Full name',{ph:'Your name',req:true})
     +'<label class="af"><span>Mobile number<span class="ar">*</span></span><div style="display:flex">'+ccSel()+'<input type="tel" id="d_phone" placeholder="'+(AUTH.d.cc==='+1'?'(201) 555-0123':'98200 00000')+'" value="'+AUTH.d.phone+'" style="border:1.5px solid #E6E8EB;border-left:none;border-radius:0 10px 10px 0;flex:1;height:46px;padding:0 14px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:14px;outline:none" oninput="AUTH.d.phone=this.value"></div><div class="ah">OTP will be sent to verify this number</div></label>'
     +af('email','Email address',{type:'email',ph:'owner@yourstore.com'})
     +af('password','Password',{type:'password',ph:'Min 8 characters',req:true})
-    +'<label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:18px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:#0058BA;margin-top:2px;flex-shrink:0"><span style="font-size:13px;color:#3A3F4A;line-height:1.5">I agree to Couture POS <button class="ab-link" style="font-size:13px">Terms of Service</button> and <button class="ab-link" style="font-size:13px">Privacy Policy</button></span></label>'
+    +'<label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:18px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:#0058BA;margin-top:2px;flex-shrink:0"><span style="font-size:13px;color:#3A3F4A;line-height:1.5">I agree to Ambel POS <button class="ab-link" style="font-size:13px">Terms of Service</button> and <button class="ab-link" style="font-size:13px">Privacy Policy</button></span></label>'
     +'<button class="ab-pri" onclick="authSubmit()">Create account & verify mobile →</button>'
     +'<div class="a-sep">or</div>'
     +'<p style="text-align:center;font-size:14px;color:#667085">Already have an account? <button class="ab-link" onclick="authGo(\'login\',\'back\')">Sign in</button></p>'
@@ -1775,7 +1775,7 @@ signup: function(){
 forgot: function(){
   return '<div class="a-full" style="background:#F2F4F7">'
     +'<div style="background:#fff;border-radius:20px;padding:40px;width:440px;box-shadow:0 8px 40px rgba(0,0,0,.1)">'
-    +'<div class="a-mark" style="margin-bottom:24px;justify-content:center"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06337A,#0058BA);display:grid;place-items:center">'+POSSVG+'</div><div style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:17px;color:#0F1729;letter-spacing:-.02em;margin-left:9px">Couture POS</div></div>'
+    +'<div class="a-mark" style="margin-bottom:24px;justify-content:center"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06337A,#0058BA);display:grid;place-items:center">'+POSSVG+'</div><div style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:17px;color:#0F1729;letter-spacing:-.02em;margin-left:9px">Ambel POS</div></div>'
     +'<div style="font-family:\'Space Grotesk\',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px">Reset your password.</div>'
     +'<div style="font-size:14px;color:#667085;margin-bottom:24px">Enter your registered mobile number. We\'ll send a 6-digit OTP to reset your password.</div>'
     +'<label class="af"><span>Registered mobile number<span class="ar">*</span></span><div style="display:flex">'+ccSel()+'<input type="tel" placeholder="'+(AUTH.d.cc==='+1'?'(201) 555-0123':'98200 00000')+'" style="border:1.5px solid #E6E8EB;border-left:none;border-radius:0 10px 10px 0;flex:1;height:46px;padding:0 14px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:14px;outline:none;transition:border-color .18s,box-shadow .18s" onfocus="this.style.borderColor=\'#0058BA\';this.style.boxShadow=\'0 0 0 3px rgba(0,88,186,.1)\'" onblur="this.style.borderColor=\'#E6E8EB\';this.style.boxShadow=\'none\'"></div></label>'
@@ -1807,7 +1807,7 @@ biztype: function(){
   var cats=[['fashion','👗','Fashion & Apparel','Clothing, ethnic wear, western'],['beauty','💄','Beauty & Wellness','Cosmetics, salon, spa'],['electronics','📱','Electronics & Gadgets','Phones, accessories, tech'],['footwear','👟','Footwear','Shoes, sandals, sports'],['jewellery','💎','Jewellery','Gold, diamond, fashion jewellery'],['books','📚','Books & Stationery','Books, gifts, office supplies'],['pharmacy','💊','Pharmacy & Healthcare','OTC medicine, wellness'],['grocery','🛒','Grocery & FMCG','Supermarket, convenience'],['multi','🏪','Multi-brand / Other','General retail, mixed categories']];
   return '<div class="a-full" style="background:#F2F4F7;overflow-y:auto;justify-content:flex-start;padding-top:52px">'
     +'<div style="width:100%;max-width:720px;margin:0 auto">'
-    +'<div class="a-mark" style="margin-bottom:24px;justify-content:center"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06337A,#0058BA);display:grid;place-items:center">'+POSSVG+'</div><div style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:17px;color:#0F1729;letter-spacing:-.02em;margin-left:9px">Couture POS</div></div>'
+    +'<div class="a-mark" style="margin-bottom:24px;justify-content:center"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06337A,#0058BA);display:grid;place-items:center">'+POSSVG+'</div><div style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:17px;color:#0F1729;letter-spacing:-.02em;margin-left:9px">Ambel POS</div></div>'
     +'<div style="text-align:center;margin-bottom:28px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">What kind of store do you run?</div><div style="font-size:15px;color:#667085">We\'ll configure GST slabs, HSN codes and catalog structure for your category.</div></div>'
     +'<div class="a-cat-grid">'
     +cats.map(function(c){var sel=AUTH.category===c[0];return '<div class="a-cat-card'+(sel?' sel':'')+'" onclick="AUTH.category=\''+c[0]+'\';document.querySelectorAll(\'.a-cat-card\').forEach(function(x){x.classList.remove(\'sel\');});this.classList.add(\'sel\')"><div style="font-size:28px;margin-bottom:7px">'+c[1]+'</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:13px;font-weight:700;color:#0F1729">'+c[2]+'</div><div style="font-size:11px;color:#667085;margin-top:3px">'+c[3]+'</div></div>';}).join('')
@@ -1826,7 +1826,7 @@ subscription: function(){
   return '<div class="a-full" style="background:#F2F4F7;overflow-y:auto;justify-content:flex-start;padding:48px 40px">'
     +'<div style="width:100%;max-width:860px;margin:0 auto">'
     +'<div style="text-align:center;margin-bottom:6px"><button class="ab-link" style="font-size:13px;color:#98A2B3" onclick="authGo(\'biztype\',\'back\')">← Back</button></div>'
-    +'<div style="text-align:center;margin-bottom:24px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">Choose your plan.</div><div style="font-size:15px;color:#667085;margin-bottom:20px">No credit card required · 14-day free trial on any plan</div>'
+    +'<div style="text-align:center;margin-bottom:24px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">Choose your plan.</div><div style="font-size:15px;color:#667085;margin-bottom:20px">Choose a paid plan and complete secure checkout</div>'
     +'<div class="a-bill-tog" style="margin:0 auto 0"><button class="a-bill-opt'+(billing==='monthly'?' on':'')+'" onclick="AUTH.billing=\'monthly\';authGo(\'subscription\')">Monthly</button><button class="a-bill-opt'+(billing==='annual'?' on':'')+'" onclick="AUTH.billing=\'annual\';authGo(\'subscription\')">Annual <span style="background:#10B981;color:#fff;padding:2px 7px;border-radius:100px;font-size:10px;margin-left:4px">Save 20%</span></button></div></div>'
     +'<div class="a-plan-wrap">'
     +plans.map(function(p){
@@ -1841,8 +1841,8 @@ subscription: function(){
         +'</div>';
     }).join('')
     +'</div>'
-    +'<div style="text-align:center;margin-top:16px"><button class="ab-pri" style="width:300px;height:50px;border-radius:12px;font-size:16px" onclick="AUTH.step=0;authGo(\'wizard\')">Start 14-day free trial →</button>'
-    +'<div style="font-size:12.5px;color:#98A2B3;margin-top:10px">No credit card · cancel any time · free plan available forever</div></div>'
+    +'<div style="text-align:center;margin-top:16px"><button class="ab-pri" style="width:300px;height:50px;border-radius:12px;font-size:16px" onclick="AUTH.step=0;authGo(\'wizard\')">Continue to payment →</button>'
+    +'<div style="font-size:12.5px;color:#98A2B3;margin-top:10px">Secure checkout · cancel at the end of your billing cycle</div></div>'
     +'</div></div>';
 },
 
@@ -1927,7 +1927,7 @@ function ob1(){
 
 function ob2(){
   return '<div class="a-shd"><div class="a-shd-tag">Step 03 · Store Setup</div><h2>Configure your store location.</h2><p>These details appear on receipt headers, GSTIN invoice address and multi-store reports. Every store location requires its own entry.</p></div>'
-  +af('storeName','Store display name (shown on receipt)',{ph:'e.g. Couture · Bandra West',req:true,hint:'Appears on every printed receipt, PDF invoice and customer-facing display'})
+  +af('storeName','Store display name (shown on receipt)',{ph:'e.g. Ambel · Bandra West',req:true,hint:'Appears on every printed receipt, PDF invoice and customer-facing display'})
   +af('addr1','Address line 1 — Shop no., building, floor',{ph:'e.g. Shop 4, Ground Floor, Hill View Complex',req:true})
   +af('addr2','Address line 2 — Street, area, landmark',{ph:'e.g. 12 Hill Road, Near Linking Road'})
   +'<div class="arow3">'
@@ -1984,7 +1984,7 @@ function ob4(){
   +atgl('upi',true,'Accept UPI payments',null)
   +(AUTH.d.upi?'<div class="a-slbl" style="margin-top:10px">UPI partner</div>'
     +'<div style="display:flex;flex-wrap:wrap">'+[['razorpay','Razorpay'],['phonepe','PhonePe Biz'],['bharatpe','BharatPe'],['paytm','Paytm Biz'],['pinelabs_upi','Pine Labs UPI'],['googlepay','Google Pay Biz']].map(function(c){return achip('upiPsp',c[0],c[1]);}).join('')+'</div>'
-    +af('upiVpa','Merchant UPI VPA / Virtual Payment Address',{ph:'e.g. couture@hdfcbank',hint:'The VPA your customers see when they scan your QR code. Must match your PSP dashboard exactly.'})
+    +af('upiVpa','Merchant UPI VPA / Virtual Payment Address',{ph:'e.g. Ambel@hdfcbank',hint:'The VPA your customers see when they scan your QR code. Must match your PSP dashboard exactly.'})
     +atgl('soundBox',false,'UPI Sound Box / smart speaker','Announces payment confirmation audibly — ideal for noisy retail environments.')
   :'')
   +'<div class="a-slbl">Card / POS terminal</div>'
@@ -2031,7 +2031,7 @@ function ob5(){
 }
 
 function ob6(){
-  return '<div class="a-shd"><div class="a-shd-tag">Step 07 · Hardware & Devices</div><h2>Set up your devices.</h2><p>Couture supports cloud print, Bluetooth and LAN hardware. You can also pair devices after setup — each device runs a self-test before going live.</p></div>'
+  return '<div class="a-shd"><div class="a-shd-tag">Step 07 · Hardware & Devices</div><h2>Set up your devices.</h2><p>Ambel supports cloud print, Bluetooth and LAN hardware. You can also pair devices after setup — each device runs a self-test before going live.</p></div>'
   +'<div class="a-slbl">Billing counters</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['5plus','5+']].map(function(c){return achip('counters',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Receipt printer</div>'

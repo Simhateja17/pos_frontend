@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { Download, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { type SaleList, getAuthenticatedSales } from '@/lib/api/authenticated-client'
+import {
+  type SaleList,
+  getAuthenticatedAppContext,
+  getAuthenticatedSales,
+} from '@/lib/api/authenticated-client'
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, Tabs, type BadgeTone, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { downloadCsv } from '@/lib/csv'
@@ -40,6 +44,8 @@ export function OrdersView() {
   const [cursor, setCursor] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
+  const isCashier = role === 'cashier'
 
   const load = useCallback(
     async (nextCursor?: string) => {
@@ -50,7 +56,7 @@ export function OrdersView() {
           await getAuthenticatedSales({
             search: search || undefined,
             status: status || undefined,
-            ...rangeQuery(range),
+            ...(role === 'cashier' ? {} : rangeQuery(range)),
             cursor: nextCursor,
             limit: 25,
           }),
@@ -62,24 +68,31 @@ export function OrdersView() {
         setIsLoading(false)
       }
     },
-    [range, search, status],
+    [range, role, search, status],
   )
 
   useEffect(() => {
+    void getAuthenticatedAppContext()
+      .then((appContext) => setRole(appContext.staff.role))
+      .catch(() => setRole('cashier'))
+  }, [])
+
+  useEffect(() => {
+    if (!role) return
     const timer = window.setTimeout(() => void load(), 300)
     return () => window.clearTimeout(timer)
-  }, [load])
+  }, [load, role])
 
   useEffect(() => {
     const next = new URLSearchParams()
     if (search) next.set('search', search)
     if (status) next.set('status', status)
-    next.set('range', range)
+    if (!isCashier) next.set('range', range)
     router.replace(`/app/orders?${next.toString()}`)
-  }, [range, router, search, status])
+  }, [isCashier, range, router, search, status])
 
   const metrics: KpiItem[] = [
-    { label: 'Matching Invoices', value: data ? String(data.total) : '—', meta: 'Server-filtered records' },
+    { label: 'Matching Invoices', value: data ? String(data.total) : '-', meta: 'Server-filtered records' },
     { label: 'Held Bills', value: <UnavailableValue />, meta: 'No held-bill aggregate is available' },
     { label: 'Paid Sales', value: <UnavailableValue />, meta: 'No sales aggregate is available' },
     { label: 'Cancelled / Refunded', value: <UnavailableValue />, meta: 'No aggregate is available' },
@@ -92,33 +105,35 @@ export function OrdersView() {
         sub="Invoice and held-bill history"
         actions={
           <>
-            <button
-              className="btn"
-              type="button"
-              disabled={!data || data.items.length === 0}
-              title={data?.items.length ? 'Download the sales shown below' : 'There is nothing to export yet'}
-              onClick={() =>
-                data &&
-                downloadCsv(
-                  `sales-${range}-${new Date().toISOString().slice(0, 10)}.csv`,
-                  ['Invoice', 'Sale ID', 'Customer', 'Created at', 'Payment methods', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total'],
-                  data.items.map((sale) => [
-                    sale.id.slice(0, 8).toUpperCase(),
-                    sale.id,
-                    sale.customerId ? 'Customer linked' : 'Walk-in',
-                    sale.createdAt,
-                    sale.payments.map((payment) => payment.method).join(' / '),
-                    sale.status,
-                    sale.subtotal,
-                    sale.discountAmount,
-                    sale.taxAmount,
-                    sale.totalAmount,
-                  ]),
-                )
-              }
-            >
-              <Download size={15} /> Export
-            </button>
+            {!isCashier && (
+              <button
+                className="btn"
+                type="button"
+                disabled={!data || data.items.length === 0}
+                title={data?.items.length ? 'Download the sales shown below' : 'There is nothing to export yet'}
+                onClick={() =>
+                  data &&
+                  downloadCsv(
+                    `sales-${range}-${new Date().toISOString().slice(0, 10)}.csv`,
+                    ['Invoice', 'Sale ID', 'Customer', 'Created at', 'Payment methods', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total'],
+                    data.items.map((sale) => [
+                      sale.id.slice(0, 8).toUpperCase(),
+                      sale.id,
+                      sale.customerId ? 'Customer linked' : 'Walk-in',
+                      sale.createdAt,
+                      sale.payments.map((payment) => payment.method).join(' / '),
+                      sale.status,
+                      sale.subtotal,
+                      sale.discountAmount,
+                      sale.taxAmount,
+                      sale.totalAmount,
+                    ]),
+                  )
+                }
+              >
+                <Download size={15} /> Export
+              </button>
+            )}
             <Link className="btn btn-pri" href="/app/billing">
               <Plus size={15} /> New Bill
             </Link>
@@ -126,18 +141,24 @@ export function OrdersView() {
         }
       />
 
-      <KpiRow items={metrics} cols={4} />
+      {!isCashier && <KpiRow items={metrics} cols={4} />}
 
       <Card>
         <CardHead
-          title={<Tabs items={RANGES} active={range} onSelect={setRange} ariaLabel="Sales date range" />}
+          title={
+            isCashier
+              ? 'Sales on this counter\'s current shift'
+              : <Tabs items={RANGES} active={range} onSelect={setRange} ariaLabel="Sales date range" />
+          }
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <SearchField value={search} onChange={setSearch} placeholder="Invoice or customer" ariaLabel="Search sales" width={200} />
-              <select className="fld-select" aria-label="Sales status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="">All statuses</option>
-                <option value="completed">Completed</option>
-              </select>
+              {!isCashier && (
+                <select className="fld-select" aria-label="Sales status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <option value="">All statuses</option>
+                  <option value="completed">Completed</option>
+                </select>
+              )}
             </div>
           }
         />
@@ -172,7 +193,7 @@ export function OrdersView() {
                     {timeOnly.format(created)}
                     <div className="t-sub">{dateShort.format(created)}</div>
                   </td>
-                  <td>{sale.payments.map((p) => p.method).join(', ') || '—'}</td>
+                  <td>{sale.payments.map((p) => p.method).join(', ') || '-'}</td>
                   <td>
                     <span className={`badge b-${STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'}`}>{sale.status}</span>
                   </td>

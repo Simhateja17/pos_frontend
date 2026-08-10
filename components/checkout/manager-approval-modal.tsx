@@ -45,14 +45,14 @@ export function ManagerApprovalModal({
     setError(null)
     const headers = await authHeader()
     const { data, error: apiError } = await apiClient.POST('/terminal/pin/switch', {
-      body: { staffId: selectedStaffId, pin },
+      body: { staffId: selectedStaffId, pin, sessionType: 'approval' },
       headers,
     })
     setIsSubmitting(false)
     if (apiError || !data) {
       // Verbatim backend copy (same 01-06 strings the terminal PIN page reads) —
-      // "Incorrect PIN — try again." / "Too many attempts. Ask a manager to unlock this terminal."
-      setError((apiError as { error?: string } | undefined)?.error ?? 'Incorrect PIN — try again.')
+      // "Incorrect PIN. Try again." / "Too many attempts. Ask a manager to unlock this terminal."
+      setError((apiError as { error?: string } | undefined)?.error ?? 'Incorrect PIN. Try again.')
       setPin('')
       return
     }

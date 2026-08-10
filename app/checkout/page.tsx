@@ -71,11 +71,11 @@ const CLEAR_CART_CONFIRM = (n: number) =>
 const TAX_DISCLOSURE =
   'This is a pre-charge estimate from the current cart. The server validates price, discounts, tax, stock, tender, and the final total when you charge.'
 const GENERIC_CHARGE_FAILURE =
-  'Something went wrong completing this sale. Nothing was charged — try again.'
+  'Something went wrong completing this sale. Nothing was charged. Try again.'
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
 
 function variantAttributes(v: Variant): string {
-  return [v.size, v.color, v.material].filter(Boolean).join(' / ') || '—'
+  return [v.size, v.color, v.material].filter(Boolean).join(' / ') || '-'
 }
 
 function money(n: number): string {
@@ -108,6 +108,7 @@ interface PendingSaleBody {
 type OpenShiftEntry = {
   id: string
   staffId: string
+  terminalId: string | null
   closedAt: string | null
   terminalName: string | null
 }
@@ -122,8 +123,8 @@ function CheckoutPageInner() {
    * Which shift this bill charges against is derived from the server, not a
    * URL param — nothing ever populated one, so Billing always read as "no
    * open shift" even with a shift open on the register. Mirrors the same
-   * staffId-matching pattern shifts-view.tsx uses: the acting staff member's
-   * own open shift, wherever they opened it, not a cached/URL-carried id.
+   * paired-counter pattern shifts-view.tsx uses: a cashier handover continues
+   * the counter's open shift, regardless of which staff member opened it.
    */
   const [openShiftsForStaff, setOpenShiftsForStaff] = useState<OpenShiftEntry[]>([])
   const activeShift =
@@ -133,13 +134,17 @@ function CheckoutPageInner() {
 
   const loadActiveShift = useCallback(async () => {
     try {
-      const [context, shiftsResult] = await Promise.all([
+      const [context, shiftsResult, deviceResult] = await Promise.all([
         getAuthenticatedAppContext(),
         apiClient.GET('/shifts', { headers: await authHeaders() }),
+        apiClient.GET('/terminals/device', { headers: await authHeaders() }),
       ])
       const mine = context.staff.id
       const shifts = (shiftsResult.data as OpenShiftEntry[] | undefined) ?? []
-      setOpenShiftsForStaff(shifts.filter((s) => s.closedAt === null && s.staffId === mine))
+      const currentTerminalId = deviceResult.data?.terminal?.id
+      setOpenShiftsForStaff(
+        shifts.filter((s) => s.closedAt === null && (currentTerminalId ? s.terminalId === currentTerminalId : s.staffId === mine)),
+      )
     } catch {
       // The banner already covers "no shift" — a failed lookup reads the
       // same way (Charge stays disabled) rather than a separate error state.
@@ -249,6 +254,17 @@ function CheckoutPageInner() {
   const preChargeEstimate = discountedSubtotal
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
+
+  // Single-method mode: the one tender row always covers the whole bill, so
+  // if the cart total changes after the method was picked (another item
+  // added, a discount applied), the amount tracks it rather than going
+  // stale and tripping the payment-sum check.
+  useEffect(() => {
+    if (splitEnabled || tenderRows.length !== 1) return
+    const total = preChargeEstimate.toFixed(2)
+    if (tenderRows[0].amount === total) return
+    setTenderRows((rows) => (rows[0] ? [{ ...rows[0], amount: total }] : rows))
+  }, [splitEnabled, preChargeEstimate, tenderRows])
 
   async function runSearch(query: string) {
     setSearchError(null)
@@ -370,26 +386,37 @@ function CheckoutPageInner() {
   }
 
   function toggleTenderMethod(method: TenderMethod) {
+    // Reads current state directly rather than nesting a setTenderRows call
+    // inside setTenderMethods's updater — React Strict Mode double-invokes
+    // updater functions to check purity, and since the nested call had a
+    // side effect (dispatching its own state update), that doubling made
+    // every tap add two rows instead of one.
+    const alreadySelected = tenderMethods.includes(method)
+
     // Off split mode, one tap picks exactly one method — tapping the same
     // tile again clears it, tapping a different tile replaces it. This is
     // what keeps a single payment down to one tile + one input, instead of
     // both piling up looking like duplicate entries.
     if (!splitEnabled) {
-      setTenderMethods((current) => (current.includes(method) ? [] : [method]))
-      setTenderRows((rows) =>
-        rows.some((r) => r.method === method) ? [] : [{ method, amount: '' }],
+      setTenderMethods(alreadySelected ? [] : [method])
+      setTenderRows(
+        alreadySelected
+          ? []
+          // A single method covers the whole bill by definition — default
+          // the amount to the current total instead of making the cashier
+          // retype a number that's already on screen.
+          : [{ method, amount: preChargeEstimate.toFixed(2) }],
       )
       return
     }
 
-    setTenderMethods((current) => {
-      if (current.includes(method)) {
-        setTenderRows((rows) => rows.filter((r) => r.method !== method))
-        return current.filter((m) => m !== method)
-      }
-      setTenderRows((rows) => [...rows, { method, amount: '' }])
-      return [...current, method]
-    })
+    if (alreadySelected) {
+      setTenderMethods(tenderMethods.filter((m) => m !== method))
+      setTenderRows(tenderRows.filter((r) => r.method !== method))
+      return
+    }
+    setTenderMethods([...tenderMethods, method])
+    setTenderRows([...tenderRows, { method, amount: '' }])
   }
 
   function handleToggleSplit(enabled: boolean) {
@@ -408,18 +435,16 @@ function CheckoutPageInner() {
     const availableMethods: TenderMethod[] = ['cash', 'card', 'check']
     const next = availableMethods.find((m) => !tenderRows.some((r) => r.method === m))
     if (!next) return
-    setTenderMethods((current) => [...current, next])
-    setTenderRows((rows) => [...rows, { method: next, amount: '' }])
+    setTenderMethods([...tenderMethods, next])
+    setTenderRows([...tenderRows, { method: next, amount: '' }])
   }
 
   function handleRemoveTenderRow(index: number) {
-    setTenderRows((rows) => {
-      const removed = rows[index]
-      if (removed) {
-        setTenderMethods((methods) => methods.filter((m) => m !== removed.method))
-      }
-      return rows.filter((_, i) => i !== index)
-    })
+    const removed = tenderRows[index]
+    setTenderRows(tenderRows.filter((_, i) => i !== index))
+    if (removed) {
+      setTenderMethods(tenderMethods.filter((m) => m !== removed.method))
+    }
   }
 
   async function submitSale(body: PendingSaleBody, extraHeaders?: Record<string, string>) {
@@ -462,7 +487,7 @@ function CheckoutPageInner() {
     if (Math.abs(diff) > 0.001) {
       const direction = diff > 0 ? 'over' : 'under'
       setChargeError(
-        `Tender entries must match the current cart estimate (₹${money(total)}). Currently ₹${money(paymentSum)} — ₹${money(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
+        `Tender entries must match the current cart estimate (₹${money(total)}). Currently ₹${money(paymentSum)}, ₹${money(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
       )
       return
     }
@@ -502,7 +527,7 @@ function CheckoutPageInner() {
         })
         await refreshQueueCount()
         setQueuedMessage(
-          `Sale queued offline — ${inr(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
+          `Sale queued offline: ${inr(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
         )
         setCart([])
         setCartDiscountMode('none')
@@ -542,7 +567,7 @@ function CheckoutPageInner() {
   }
 
   function onChargeSuccess(sale: SaleResponse) {
-    setSuccessMessage(`Sale complete — ₹${sale.totalAmount} charged and recorded by the server.`)
+    setSuccessMessage(`Sale complete: ₹${sale.totalAmount} charged and recorded by the server.`)
 
     // Enrich the persisted sale's lines with the cart's product names for
     // receipt display — the sale response itself only carries variantId
@@ -586,6 +611,12 @@ function CheckoutPageInner() {
     const { data, error } = await submitSale(pendingSaleBody, {
       'X-Operator-Token': operatorToken,
     })
+    // Manager approval is a one-sale session, not a cashier handover. Close
+    // the durable audit row immediately after the sale attempt.
+    const baseHeaders = await authHeaders()
+    await apiClient.POST('/terminal/pin/logout', {
+      headers: { ...(baseHeaders ?? {}), 'X-Operator-Token': operatorToken },
+    })
     if (!error && data) {
       setShowApprovalModal(false)
       onChargeSuccess(data as SaleResponse)
@@ -613,7 +644,7 @@ function CheckoutPageInner() {
             </span>
           ) : (
             <span className="badge b-amber">
-              <span className="dot-a" /> Offline — sales are queued
+              <span className="dot-a" /> Offline, sales are queued
             </span>
           )
         }
