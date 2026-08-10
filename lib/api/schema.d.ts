@@ -2458,9 +2458,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            stores: components["schemas"]["Store"][];
-                        };
+                        "application/json": components["schemas"]["StoreList"];
                     };
                 };
             };
@@ -2503,7 +2501,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description A store with that name already exists */
+                /** @description A store with that name already exists, or the plan's store allowance is used up (response carries storeAllowance and an upgrade message) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5343,6 +5341,10 @@ export interface components {
             quantity: string;
             isOwnStore: boolean;
         };
+        StoreList: {
+            stores: components["schemas"]["Store"][];
+            storeAllowance: components["schemas"]["StoreAllowance"];
+        };
         Store: {
             /** Format: uuid */
             id: string;
@@ -5362,6 +5364,13 @@ export interface components {
             taxRateDistrict: string;
             placeOfSupply: string | null;
         };
+        StoreAllowance: {
+            used: number;
+            limit: number;
+            canAddStore: boolean;
+            includedInPlan: number;
+            additionalPurchased: number;
+        } | null;
         CreateStoreRequest: {
             name: string;
             addressLine1?: string;
