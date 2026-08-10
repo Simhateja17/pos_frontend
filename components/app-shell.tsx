@@ -60,15 +60,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     try {
       setContext(await getAuthenticatedAppContext())
     } catch (error) {
-      if (
-        error instanceof AuthenticatedRequestError &&
-        error.kind === 'unauthenticated' &&
-        typeof window !== 'undefined' &&
-        window.sessionStorage.getItem('operatorToken')
-      ) {
-        window.sessionStorage.removeItem('operatorToken')
+      if (error instanceof AuthenticatedRequestError && error.kind === 'unauthenticated') {
+        if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
         setDeviceGate('redirecting')
-        router.replace('/terminal/pin')
+        router.replace('/login')
         return
       }
       setContextError(
@@ -98,9 +93,20 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDeviceGate('checking')
 
     void authHeaders()
-      .then((headers) => apiClient.GET('/terminals/device', { headers }))
+      .then((headers) => {
+        // Do this before asking the device endpoint anything. An anonymous
+        // URL visit is a login concern, never a register setup concern.
+        if (!headers) {
+          if (!cancelled) {
+            setDeviceGate('redirecting')
+            router.replace('/login')
+          }
+          return null
+        }
+        return apiClient.GET('/terminals/device', { headers })
+      })
       .then((result) => {
-        if (cancelled) return
+        if (cancelled || !result) return
         const paired = Boolean(result.data?.terminal)
         const hasOperator = Boolean(window.sessionStorage.getItem('operatorToken'))
         const registerLocked =
