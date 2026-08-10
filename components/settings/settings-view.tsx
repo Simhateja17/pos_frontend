@@ -6,6 +6,7 @@ import { FolderTree, Monitor, UserCog } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, Fld, ListRow, PageHead } from '@/components/couture/ui'
+import type { BarcodeLabelFormat } from '@/components/barcode-label'
 import { ErrorState, LoadingState } from '@/components/couture/states'
 
 type Settings = {
@@ -23,7 +24,19 @@ type Settings = {
   businessType: 'supermarket' | 'grocery' | 'bakery' | 'general' | 'apparel' | 'electronics' | 'other' | null
   combinedTaxRatePercent: string
   discountThresholdPercent: string
+  barcodeLabelFormat: BarcodeLabelFormat
 }
+
+/**
+ * Ordered for the picker: the two that work for every variant first, then the
+ * two that need a manufacturer barcode.
+ */
+const BARCODE_FORMAT_OPTIONS: { value: BarcodeLabelFormat; label: string; hint: string }[] = [
+  { value: 'code128', label: 'Code 128', hint: 'Encodes your own SKU. Works for every product.' },
+  { value: 'qr', label: 'QR', hint: 'Encodes your own SKU as a 2D code, for phone cameras.' },
+  { value: 'ean13', label: 'EAN-13', hint: 'Needs a 13-digit manufacturer barcode on the variant.' },
+  { value: 'upca', label: 'UPC-A', hint: 'Needs a 12-digit manufacturer barcode on the variant.' },
+]
 
 const BUSINESS_TYPE_LABELS: Record<NonNullable<Settings['businessType']>, string> = {
   supermarket: 'Supermarket',
@@ -51,6 +64,11 @@ export function SettingsView() {
   const [taxSaved, setTaxSaved] = useState(false)
   const [savingTax, setSavingTax] = useState(false)
 
+  const [labelFormat, setLabelFormat] = useState<BarcodeLabelFormat>('code128')
+  const [labelError, setLabelError] = useState<string | null>(null)
+  const [labelSaved, setLabelSaved] = useState(false)
+  const [savingLabel, setSavingLabel] = useState(false)
+
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
@@ -65,6 +83,7 @@ export function SettingsView() {
     setForm(typed)
     setTaxRate(typed.combinedTaxRatePercent)
     setDiscountThreshold(typed.discountThresholdPercent)
+    setLabelFormat(typed.barcodeLabelFormat)
   }, [])
 
   useEffect(() => {
@@ -140,6 +159,34 @@ export function SettingsView() {
     setTaxRate(typed.combinedTaxRatePercent)
     setDiscountThreshold(typed.discountThresholdPercent)
     setTaxSaved(true)
+  }
+
+  async function saveLabelFormat(event: FormEvent) {
+    event.preventDefault()
+    setLabelError(null)
+    setLabelSaved(false)
+    setSavingLabel(true)
+
+    const { data, error } = await apiClient.PATCH('/settings', {
+      body: { barcodeLabelFormat: labelFormat },
+      headers: await authHeaders(),
+    })
+
+    setSavingLabel(false)
+
+    if (error) {
+      setLabelError(
+        (error as { error?: string }).error === 'Only the owner can change store settings'
+          ? 'Only the store owner can change these details.'
+          : 'That could not be saved — try again.',
+      )
+      return
+    }
+
+    const typed = data as Settings
+    setSettings(typed)
+    setLabelFormat(typed.barcodeLabelFormat)
+    setLabelSaved(true)
   }
 
   if (loading) {
@@ -392,6 +439,45 @@ export function SettingsView() {
 
             <button type="submit" className="btn btn-pri" disabled={savingTax}>
               {savingTax ? 'Saving…' : 'Save tax & discounts'}
+            </button>
+          </form>
+        </CardPad>
+      </Card>
+
+      <Card>
+        <CardHead title="Barcode labels" sub="The symbology used when you print product labels" />
+        <CardPad>
+          <form onSubmit={saveLabelFormat}>
+            {labelError && (
+              <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>
+                {labelError}
+              </div>
+            )}
+            {labelSaved && !labelError && (
+              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>Saved.</div>
+            )}
+
+            <Fld id="settings-barcode-format" label="Label format">
+              <select
+                id="settings-barcode-format"
+                value={labelFormat}
+                onChange={(e) => setLabelFormat(e.target.value as BarcodeLabelFormat)}
+              >
+                {BARCODE_FORMAT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Fld>
+            <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
+              {BARCODE_FORMAT_OPTIONS.find((o) => o.value === labelFormat)?.hint}
+              {(labelFormat === 'ean13' || labelFormat === 'upca') &&
+                ' Variants without one still print as Code 128 of the SKU, and the label screen says which.'}
+            </p>
+
+            <button type="submit" className="btn btn-pri" disabled={savingLabel}>
+              {savingLabel ? 'Saving…' : 'Save label format'}
             </button>
           </form>
         </CardPad>

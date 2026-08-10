@@ -619,6 +619,13 @@ export default function PinPadPage() {
               </button>
             </div>
           )}
+          {!isLoadingStaff && !mustChangePin && (
+            <div className="mt-6 border-t border-[#E8EDF3] pt-4 text-center">
+              <Link href="/terminal/forgot-owner-pin" className="text-sm font-medium text-[#0058BA] hover:underline">
+                Forgot an owner PIN? Reset it by email
+              </Link>
+            </div>
+          )}
             </CardContent>
           </Card>
         </main>
