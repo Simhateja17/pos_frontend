@@ -2383,6 +2383,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/variants/{variantId}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Where else in the business this variant is in stock (Phase 8). Open to EVERY role, cashiers included — a customer asking for blue when this shop is out is the reason a chain is worth running. Returns QUANTITY ONLY: another shop's sales, takings and shift figures stay scoped to the shop a person works in. Active shops only, own shop first, then fullest shelf first. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per-shop availability */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VariantAvailability"];
+                    };
+                };
+                /** @description Invalid variant id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Variant not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stores": {
         parameters: {
             query?: never;
@@ -5277,6 +5329,20 @@ export interface components {
         CloseShiftRequest: {
             countedCash: string;
         };
+        VariantAvailability: {
+            /** Format: uuid */
+            variantId: string;
+            sku: string;
+            productName: string;
+            stores: components["schemas"]["StoreAvailability"][];
+        };
+        StoreAvailability: {
+            /** Format: uuid */
+            storeId: string;
+            storeName: string;
+            quantity: string;
+            isOwnStore: boolean;
+        };
         Store: {
             /** Format: uuid */
             id: string;
@@ -5363,6 +5429,8 @@ export interface components {
         NotificationList: {
             notifications: components["schemas"]["Notification"][];
             unreadCount: number;
+            byStore: components["schemas"]["StoreUnreadCount"][];
+            businessWideUnreadCount: number;
         };
         Notification: {
             /** Format: uuid */
@@ -5374,6 +5442,15 @@ export interface components {
             link: string | null;
             read: boolean;
             createdAt: string;
+            /** Format: uuid */
+            storeId: string | null;
+            storeName: string | null;
+        };
+        StoreUnreadCount: {
+            /** Format: uuid */
+            storeId: string;
+            storeName: string;
+            unreadCount: number;
         };
         StoreSettings: {
             businessName: string;
