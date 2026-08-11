@@ -230,6 +230,12 @@ function ReturnsPageInner() {
     setSuccessAmount(response.refundTotal)
     setCreditNote(response.creditNoteId && response.creditNoteNumber ? { id: response.creditNoteId, number: response.creditNoteNumber } : null)
     setIsConfirmationOpen(false)
+    // The reference identifies one logical return attempt. Keep it for
+    // network retries, but rotate it after a confirmed commit so a cashier
+    // can process a second partial return against the same sale.
+    setReturnReferenceId(crypto.randomUUID())
+    setQuantities(Object.fromEntries(sale.lines.map((line) => [line.id, 0])))
+    setReason('')
   }
 
   return (
