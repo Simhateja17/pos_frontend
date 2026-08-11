@@ -1,48 +1,95 @@
+/* The plan cards deliberately mirror `.price-card` in app/landing.css so the
+   checkout reads as the same product as the marketing pricing grid. landing.css
+   cannot be imported here (it carries a global reset and element selectors), so
+   the shared values are restated as literals. */
 .page {
   min-height: 100vh;
   padding: 48px 24px 72px;
   background: linear-gradient(145deg, #fffdf7 0%, #f3f7ff 56%, #f8fafc 100%);
-  color: #0f172a;
+  color: #0e1117;
 }
 
 .canvas { max-width: 1120px; margin: 0 auto; }
-.back { border: 0; background: transparent; color: #64748b; cursor: pointer; font-size: 14px; padding: 0; }
+.back { border: 0; background: transparent; color: #6b7280; cursor: pointer; font-size: 14px; padding: 0; }
 .header { text-align: center; max-width: 700px; margin: 30px auto 26px; }
-.header h1 { font-family: 'Sora', system-ui, sans-serif; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.04em; margin: 0 0 10px; }
-.header p { color: #64748b; margin: 0; line-height: 1.6; }
+.header h1 { font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 800; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.04em; margin: 0 0 10px; }
+.header p { color: #6b7280; margin: 0; line-height: 1.6; }
 .mode { display: inline-flex; gap: 6px; margin: 18px 0 26px; padding: 4px; border: 1px solid #dbe4f0; border-radius: 999px; background: rgba(255,255,255,.72); }
-.mode button { border: 0; background: transparent; border-radius: 999px; padding: 9px 16px; color: #64748b; cursor: pointer; font-weight: 700; }
-.mode .active { background: #0f5ec7; color: white; box-shadow: 0 4px 12px rgba(15,94,199,.2); }
+.mode button { border: 0; background: transparent; border-radius: 999px; padding: 9px 16px; color: #6b7280; cursor: pointer; font-weight: 700; }
+.mode .active { background: #0058BA; color: white; box-shadow: 0 4px 12px rgba(0,88,186,.25); }
 .message { margin: 0 auto 20px; max-width: 760px; border-radius: 12px; padding: 13px 16px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
 .success { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
 .error { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
-.card { position: relative; text-align: left; border: 1px solid #dbe4f0; border-radius: 20px; background: rgba(255,255,255,.9); padding: 24px; box-shadow: 0 8px 30px rgba(30,64,175,.07); }
-.cardSelected { border-color: #0f5ec7; box-shadow: 0 0 0 2px rgba(15,94,199,.14), 0 12px 36px rgba(30,64,175,.11); }
-.cardButton { width: 100%; border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; color: inherit; }
-.popular { position: absolute; top: 18px; right: 18px; border-radius: 999px; background: #eaf1ff; color: #0f5ec7; padding: 5px 9px; font-size: 11px; font-weight: 800; }
-.name { font-family: 'Sora', system-ui, sans-serif; font-size: 20px; font-weight: 700; margin: 0 0 7px; }
-.description { color: #64748b; min-height: 44px; margin: 0; line-height: 1.5; font-size: 14px; }
-.price { display: flex; align-items: baseline; gap: 7px; margin: 20px 0 3px; }
-.price strong { font-size: 34px; letter-spacing: -.04em; }
-.price span { color: #64748b; font-size: 13px; }
-.annualNote { color: #64748b; font-size: 12px; margin: 0 0 18px; }
-.features { display: grid; gap: 9px; list-style: none; padding: 18px 0 0; margin: 0; border-top: 1px solid #edf1f6; color: #334155; font-size: 13px; }
-.features li::before { content: '✓'; color: #0f9f6e; font-weight: 800; margin-right: 8px; }
-.quote { margin-top: 22px; border-top: 1px solid #edf1f6; padding-top: 16px; display: grid; gap: 8px; font-size: 13px; }
-.quoteRow { display: flex; justify-content: space-between; gap: 20px; color: #64748b; }
-.quoteRow strong { color: #0f172a; }
-.quoteTotal { margin-top: 4px; padding-top: 12px; border-top: 1px solid #dbe4f0; font-size: 15px; color: #0f172a; }
-.quoteTotal strong { font-size: 22px; }
+
+/* Top padding keeps the "Most popular" ribbon, which hangs above the card edge,
+   from being clipped by the grid. */
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: stretch; padding-top: 16px; max-width: 860px; margin: 0 auto; }
+
+.card {
+  position: relative;
+  text-align: left;
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,.08);
+  border-radius: 22px;
+  padding: 32px;
+  transition: all .28s cubic-bezier(.22,.68,0,1);
+}
+.card:not(.cardFeatured):hover { transform: translateY(-4px); box-shadow: 0 12px 44px rgba(0,88,186,.18); border-color: rgba(0,88,186,.2); }
+.cardFeatured {
+  background: linear-gradient(145deg, #06337A, #0058BA, #2B6FDB);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 20px 60px rgba(0,88,186,.35);
+}
+.cardSelected { box-shadow: 0 0 0 3px rgba(0,88,186,.45), 0 12px 44px rgba(0,88,186,.18); }
+.cardFeatured.cardSelected { box-shadow: 0 0 0 3px rgba(255,255,255,.75), 0 20px 60px rgba(0,88,186,.35); }
+
+.cardButton { width: 100%; border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.popular {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: #FFD060; color: #7A5900;
+  font-size: 11px; font-weight: 800; letter-spacing: .08em;
+  padding: 5px 14px; border-radius: 100px; white-space: nowrap;
+}
+.name { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 10px; opacity: .7; }
+.cardFeatured .name { opacity: .9; }
+.price { font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif; display: flex; align-items: baseline; gap: 7px; margin: 0 0 6px; }
+.price strong { font-size: 36px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.price span { font-size: 14px; font-weight: 600; opacity: .7; }
+.annualNote { font-size: 12.5px; opacity: .6; margin: 0 0 6px; }
+.description { min-height: 40px; margin: 0 0 24px; line-height: 1.5; font-size: 13px; opacity: .65; }
+.features { list-style: none; display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; font-size: 14px; }
+.features li { display: flex; align-items: flex-start; gap: 9px; }
+.features li::before { content: '✓'; font-weight: 800; color: #6C9FFF; flex-shrink: 0; }
+.cardFeatured .features li::before { color: #A9C7FF; }
+
+.quote { margin-top: 22px; border-top: 1px solid rgba(0,0,0,.08); padding-top: 16px; display: grid; gap: 8px; font-size: 13px; }
+.cardFeatured .quote { border-top-color: rgba(255,255,255,.22); }
+.quoteRow { display: flex; justify-content: space-between; gap: 20px; opacity: .7; }
+.quoteRow strong { opacity: 1; }
+.quoteTotal { margin-top: 4px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,.08); font-size: 15px; opacity: 1; }
+.cardFeatured .quoteTotal { border-top-color: rgba(255,255,255,.22); }
+.quoteTotal strong { font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
 .providerNote { margin: 12px 0 0; color: #9a3412; font-size: 12px; line-height: 1.45; }
-.action { display: block; width: min(100%, 460px); margin: 26px auto 0; border: 0; border-radius: 12px; padding: 15px 20px; background: #0f5ec7; color: white; cursor: pointer; font-weight: 800; font-size: 15px; box-shadow: 0 8px 20px rgba(15,94,199,.24); }
+.cardFeatured .providerNote { color: #FFD060; }
+
+.action {
+  display: block; width: min(100%, 460px); margin: 26px auto 0;
+  border: 0; border-radius: 12px; padding: 15px 20px;
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: #0058BA; color: white; cursor: pointer; font-weight: 700; font-size: 16px;
+  box-shadow: 0 8px 20px rgba(0,88,186,.3); transition: all .18s;
+}
+.action:hover:not(:disabled) { background: #06337A; transform: translateY(-1px); }
 .action:disabled { cursor: not-allowed; opacity: .55; box-shadow: none; }
-.legal { text-align: center; max-width: 620px; margin: 16px auto 0; color: #64748b; font-size: 12px; line-height: 1.5; }
-.enterprise { margin: 18px auto 0; max-width: 700px; text-align: center; border: 1px dashed #cbd5e1; border-radius: 16px; padding: 17px; color: #475569; font-size: 13px; }
-.enterprise a { color: #0f5ec7; font-weight: 700; }
+.legal { text-align: center; max-width: 620px; margin: 16px auto 0; color: #6b7280; font-size: 12px; line-height: 1.5; }
+.enterprise { margin: 22px auto 0; max-width: 700px; text-align: center; border: 1px dashed #cbd5e1; border-radius: 16px; padding: 17px; color: #3A3F4A; font-size: 13px; }
+.enterprise a { color: #0058BA; font-weight: 700; }
 
 @media (max-width: 760px) {
   .page { padding: 30px 16px 56px; }
   .grid { grid-template-columns: 1fr; }
+  .card { padding: 26px 22px; }
+  .price strong { font-size: 32px; }
   .description { min-height: 0; }
 }

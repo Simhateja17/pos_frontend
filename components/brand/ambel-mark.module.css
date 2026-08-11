@@ -1,0 +1,50 @@
+/*
+ * Animated brand-tile ramp — the SVG counterpart of the hero's "Explore
+ * prototype" button (`.btn-hero-pri`, app/landing.css), which sweeps a 120deg
+ * #06337A → #0058BA → #6C9FFF ramp at background-size:220% with
+ * `gradShift 6s ease infinite`.
+ *
+ * A CSS gradient shifts by sliding background-position across an oversized
+ * image. An SVG <linearGradient> has no equivalent, and its x1/y1/x2/y2 are
+ * geometry attributes, not CSS-animatable properties — so the sweep is
+ * reproduced on `stop-color` instead: each stop walks through the colour the
+ * button shows at that same point of its box at that same instant.
+ *
+ * The endpoints come straight off the button's ramp. At 220% the visible window
+ * is 1/2.2 = 45.45% of the ramp, so background-position 0% shows ramp 0→45.45%
+ * and 100% shows 54.55%→100%; sampling each window at its start, middle and end
+ * gives the three stops below.
+ *
+ * Keyframes stay at 0/50/100 with `ease` — the same shape as gradShift — so the
+ * mark and the button breathe on one rhythm. Intermediate keyframes would track
+ * the colour path a little closer but re-ease at every stop, which reads as a
+ * stutter the button does not have.
+ *
+ * The stopColor attributes in ambel-mark.tsx stay the un-animated paint: what
+ * renders under reduced motion, and before this sheet arrives.
+ */
+
+@keyframes ambelTileDark {
+  0%, 100% { stop-color: #06337A }
+  50%      { stop-color: #0A5FC0 }
+}
+
+@keyframes ambelTileMid {
+  0%, 100% { stop-color: #034497 }
+  50%      { stop-color: #3B7FE0 }
+}
+
+@keyframes ambelTileLight {
+  0%, 100% { stop-color: #0155B4 }
+  50%      { stop-color: #6C9FFF }
+}
+
+.stopDark  { animation: ambelTileDark 6s ease infinite }
+.stopMid   { animation: ambelTileMid 6s ease infinite }
+.stopLight { animation: ambelTileLight 6s ease infinite }
+
+@media (prefers-reduced-motion: reduce) {
+  .stopDark,
+  .stopMid,
+  .stopLight { animation: none }
+}
