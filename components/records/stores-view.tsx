@@ -76,7 +76,6 @@ export function StoresView() {
   }, [load])
 
   function openCreate() {
-    if (allowance && !allowance.canAddStore) return
     setEditing(null)
     setForm(EMPTY_FORM)
     setFormError(null)
@@ -148,6 +147,10 @@ export function StoresView() {
   )
 
   const activeCount = (stores ?? []).filter((s) => s.isActive).length
+  const allowanceReached = formOpen && !editing && Boolean(allowance && !allowance.canAddStore)
+  const allowanceMessage = allowance
+    ? `Your plan covers ${allowance.limit} ${allowance.limit === 1 ? 'store' : 'stores'} and you have ${allowance.used}. Upgrade your plan or add a store to your subscription to open another.`
+    : null
 
   return (
     <>
@@ -162,7 +165,6 @@ export function StoresView() {
           <button
             className="btn btn-pri"
             onClick={openCreate}
-            disabled={Boolean(allowance && !allowance.canAddStore)}
             title={allowance && !allowance.canAddStore ? 'Upgrade your plan to add another store' : undefined}
           >
             <Plus size={15} /> Add store
@@ -273,69 +275,99 @@ export function StoresView() {
           title={editing ? `Edit ${editing.name}` : 'Add store'}
           onClose={() => setFormOpen(false)}
           footer={
-            <>
-              <button className="btn" onClick={() => setFormOpen(false)} disabled={saving}>
-                Cancel
-              </button>
-              <button className="btn btn-pri" onClick={submit} disabled={saving}>
-                {saving ? 'Saving…' : editing ? 'Save changes' : 'Add store'}
-              </button>
-            </>
+            allowanceReached ? (
+              <>
+                <button className="btn" type="button" onClick={() => setFormOpen(false)}>
+                  Close
+                </button>
+                <button
+                  className="btn btn-pri"
+                  type="button"
+                  onClick={() => {
+                    setFormOpen(false)
+                    router.push('/app/billing')
+                  }}
+                >
+                  Review billing
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="btn" type="button" onClick={() => setFormOpen(false)} disabled={saving}>
+                  Cancel
+                </button>
+                <button className="btn btn-pri" type="submit" form="store-form" disabled={saving}>
+                  {saving ? 'Saving…' : editing ? 'Save changes' : 'Add store'}
+                </button>
+              </>
+            )
           }
         >
-          <form onSubmit={submit}>
-            <Fld id="store-name" label="Store name">
-              <input
-                id="store-name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Andheri"
-                autoFocus
-              />
-            </Fld>
-            <Fld id="store-address" label="Address">
-              <input
-                id="store-address"
-                value={form.addressLine1}
-                onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
-                placeholder="Shop 4, Link Road"
-              />
-            </Fld>
-            <Fld id="store-city" label="City">
-              <input
-                id="store-city"
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-              />
-            </Fld>
-            <Fld id="store-state" label="State">
-              <input
-                id="store-state"
-                value={form.state}
-                onChange={(e) => setForm({ ...form, state: e.target.value })}
-              />
-            </Fld>
-            <Fld id="store-postal" label="PIN code">
-              <input
-                id="store-postal"
-                value={form.postalCode}
-                onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-              />
-            </Fld>
-            {/* Same-state only for V1 (migration 0046): a shop in another state
-                needs its own GST registration and makes an inter-store transfer
-                a taxable supply. Say so rather than letting an owner set one up
-                and discover the gap at filing time. */}
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, lineHeight: 1.5 }}>
-              All your shops must be in the same state for now. A shop in another state needs its own GST
-              registration, which this build does not handle yet.
-            </p>
-            {formError ? (
-              <div role="alert" style={{ color: 'var(--danger, #b42318)', fontSize: 13, marginTop: 10 }}>
-                {formError}
-              </div>
-            ) : null}
-          </form>
+          {allowanceReached ? (
+            <div role="status" style={{ display: 'grid', gap: 12, lineHeight: 1.55 }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>Your store allowance is full.</p>
+              <p style={{ margin: 0, color: 'var(--muted)' }}>
+                {allowanceMessage ?? 'Review your subscription to add another store.'}
+              </p>
+              <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
+                Your existing stores are safe. Billing will show the available upgrade or add-on options.
+              </p>
+            </div>
+          ) : (
+            <form id="store-form" onSubmit={submit}>
+              <Fld id="store-name" label="Store name">
+                <input
+                  id="store-name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Andheri"
+                  autoFocus
+                />
+              </Fld>
+              <Fld id="store-address" label="Address">
+                <input
+                  id="store-address"
+                  value={form.addressLine1}
+                  onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
+                  placeholder="Shop 4, Link Road"
+                />
+              </Fld>
+              <Fld id="store-city" label="City">
+                <input
+                  id="store-city"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                />
+              </Fld>
+              <Fld id="store-state" label="State">
+                <input
+                  id="store-state"
+                  value={form.state}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                />
+              </Fld>
+              <Fld id="store-postal" label="PIN code">
+                <input
+                  id="store-postal"
+                  value={form.postalCode}
+                  onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
+                />
+              </Fld>
+              {/* Same-state only for V1 (migration 0046): a shop in another state
+                  needs its own GST registration and makes an inter-store transfer
+                  a taxable supply. Say so rather than letting an owner set one up
+                  and discover the gap at filing time. */}
+              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, lineHeight: 1.5 }}>
+                All your shops must be in the same state for now. A shop in another state needs its own GST
+                registration, which this build does not handle yet.
+              </p>
+              {formError ? (
+                <div role="alert" style={{ color: 'var(--danger, #b42318)', fontSize: 13, marginTop: 10 }}>
+                  {formError}
+                </div>
+              ) : null}
+            </form>
+          )}
         </Modal>
       )}
     </>
