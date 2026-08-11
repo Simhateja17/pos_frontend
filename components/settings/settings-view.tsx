@@ -8,6 +8,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, Fld, ListRow, PageHead } from '@/components/couture/ui'
 import type { BarcodeLabelFormat } from '@/components/barcode-label'
 import { ErrorState, LoadingState } from '@/components/couture/states'
+import { getActiveStoreId } from '@/lib/store-context'
 
 type Settings = {
   businessName: string
@@ -72,10 +73,22 @@ export function SettingsView() {
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
+
+    // Combined dashboards use the sentinel `all`, but settings contain
+    // store-specific tax and place-of-supply values. Do not send a request
+    // that the backend must reject; guide the owner to choose a shop first.
+    if (getActiveStoreId() === 'all') {
+      setLoading(false)
+      setLoadError('Settings apply to one store. Open a specific store from Stores before continuing.')
+      return
+    }
+
     const { data, error } = await apiClient.GET('/settings', { headers: await authHeaders() })
     setLoading(false)
     if (error || !data) {
-      setLoadError('We couldn’t load your store settings. Check your connection and try again.')
+      const serverError = error as { error?: unknown } | undefined
+      const serverMessage = typeof serverError?.error === 'string' ? serverError.error : null
+      setLoadError(serverMessage ?? 'We couldn’t load your store settings. Check your connection and try again.')
       return
     }
     const typed = data as Settings
@@ -206,6 +219,13 @@ export function SettingsView() {
         <PageHead title="Settings" sub="Store configuration" />
         <Card>
           <ErrorState message={loadError ?? 'Settings are unavailable.'} onRetry={() => void load()} />
+          {getActiveStoreId() === 'all' ? (
+            <div style={{ padding: '0 24px 24px', textAlign: 'center' }}>
+              <Link className="btn btn-sm btn-pri" href="/app/stores">
+                Open Stores
+              </Link>
+            </div>
+          ) : null}
         </Card>
       </>
     )
