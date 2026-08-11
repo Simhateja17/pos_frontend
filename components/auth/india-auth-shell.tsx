@@ -107,8 +107,8 @@ export function IndiaAuthShell({ mode, children }: AuthShellProps) {
           </div>
         </div>
         <p className={styles.brandFooter}>
-          Ambel Retail Technologies<br />
-          GST: 27ABCDE1234F1Z5
+          Couture Services Private Limited<br />
+          GST: 37AAMCC4557F1ZF
         </p>
       </aside>
       <section className={styles.formCanvas}>
