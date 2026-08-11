@@ -114,7 +114,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
 
   const selected = useMemo<Plan | undefined>(() => catalog?.plans.find((plan) => plan.key === selectedKey), [catalog, selectedKey])
   const quote = selected?.[cycle]
-  const available = Boolean(selected?.providerConfigured[cycle])
+  const available = selected?.key === 'free' || Boolean(selected?.providerConfigured[cycle])
 
   function selectPlan(key: string) {
     setSelectedKey(key)
@@ -136,17 +136,13 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     if (!selected || !quote) return
     setError(null)
     setMessage(null)
-    if (region === 'IN' && selected.key === 'free') {
-      setMessage('The Free plan has no payment step. Create or continue your account to use the Free entitlement.')
-      return
-    }
     setPaying(true)
     try {
       const headers = await authHeaders()
       const currentAttemptKey = attemptKey ?? crypto.randomUUID()
       setAttemptKey(currentAttemptKey)
       window.sessionStorage.setItem(attemptStorageKey, currentAttemptKey)
-      if (region === 'IN' && selected.key !== 'free') {
+      if (region === 'IN') {
         // Persist the plan selection only for an unfinished onboarding record.
         // Once onboarding is complete, billing owns the new plan choice and the
         // old step-save endpoint correctly returns 409 for required steps. That
@@ -164,7 +160,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
             // new Standard/Professional/Premium keys until the integrator
             // refreshes the onboarding contract.
             body: {
-              trialPlan: selected.key === 'standard' ? 'starter' : 'growth',
+              trialPlan: selected.key === 'standard' || selected.key === 'free' ? 'starter' : 'growth',
               billingCycle: cycle,
             },
           })
@@ -183,6 +179,12 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       })
       if (createError || !data) {
         throw new Error(providerError(createError, response.status === 403 ? 'Only the account owner can start a subscription.' : 'We could not start this subscription.'))
+      }
+
+      if (selected.key === 'free') {
+        window.sessionStorage.removeItem(attemptStorageKey)
+        router.push(successPath)
+        return
       }
 
       await loadCheckoutScript()
@@ -236,7 +238,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         <button type="button" className={styles.back} onClick={() => router.back()}>← Back</button>
         <header className={styles.header}>
           <h1>{title ?? 'Choose your subscription plan.'}</h1>
-          <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices shown include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
+          <p>{subtitle ?? (region === 'IN' ? 'Choose a plan to activate your store. The Free plan has no payment step; paid prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
           <div className={styles.mode} role="group" aria-label="Billing cycle">
             <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => { setCycle('monthly'); setAttemptKey(null) }}>Monthly</button>
             <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => { setCycle('annual'); setAttemptKey(null) }}>Annual</button>
@@ -269,7 +271,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                       <div className={styles.quoteRow}><span>{region === 'IN' ? 'Plan amount before GST' : 'Plan amount'}</span><strong>{money(planQuote.baseAmountMinor, plan.currency, region)}</strong></div>
                       <div className={styles.quoteRow}><span>{planQuote.taxLabel}</span><strong>{money(planQuote.taxAmountMinor, plan.currency, region)}</strong></div>
                       <div className={`${styles.quoteRow} ${styles.quoteTotal}`}><span>Total payable</span><strong>{money(planQuote.totalAmountMinor, plan.currency, region)}</strong></div>
-                      {!plan.providerConfigured[cycle] && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
+                      {!plan.providerConfigured[cycle] && plan.key !== 'free' && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
                     </div>}
                   </article>
                 )
@@ -283,7 +285,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                   ? 'Opening secure checkout…'
                   : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate →`}
             </button>
-            <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
+            <p className={styles.legal}>{selected?.key === 'free' ? 'The Free plan has no payment step. Ambel POS activates its server-side entitlement once your account is ready.' : 'Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.'}</p>
             <EntitlementUsagePanel region={region} />
           </>
         )}
