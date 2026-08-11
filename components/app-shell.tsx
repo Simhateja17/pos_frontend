@@ -298,16 +298,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
-
-        <div className="sb-foot">
-          <div className="sys-pill">
-            <b>
-              <span className="dot" style={contextError ? { background: 'var(--danger)', boxShadow: '0 0 0 3px var(--danger-soft)' } : undefined} />
-              {isContextLoading ? 'Connecting…' : contextError ? 'Store context unavailable' : 'Store context connected'}
-            </b>
-            <p>{contextError ? 'Retry from the notice above' : storeFull}</p>
-          </div>
-        </div>
       </aside>
 
       <div className="main">
