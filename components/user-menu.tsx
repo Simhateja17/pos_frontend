@@ -11,9 +11,9 @@ import styles from './user-menu.module.css'
 import { setActiveStoreId } from '@/lib/store-context'
 
 function initials(name?: string | null) {
-  if (!name?.trim()) return '—'
+  if (!name?.trim()) return '-'
   const parts = name.trim().split(/\s+/)
-  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '—'
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '-'
 }
 
 export function UserMenu({

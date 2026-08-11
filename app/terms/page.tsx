@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Terms of Service — Ambel POS" };
+export const metadata = { title: "Terms of Service | Ambel POS" };
 
 export default function TermsPage() {
   return (
@@ -24,12 +24,12 @@ export default function TermsPage() {
           <h2>3. Your responsibilities</h2>
           <ul>
             <li>Keep your account credentials secure and restrict staff access using role-based permissions.</li>
-            <li>Ensure GST and other tax data entered into the platform is accurate — Ambel POS assists with compliance but does not file returns on your behalf unless you use our filing add-on.</li>
+            <li>Ensure GST and other tax data entered into the platform is accurate. Ambel POS assists with compliance but does not file returns on your behalf unless you use our filing add-on.</li>
             <li>Do not use the platform for unlawful transactions or to circumvent tax obligations.</li>
           </ul>
 
           <h2>4. AI Copilot</h2>
-          <p>Copilot suggestions are generated from your store&apos;s data and are provided for assistance only. Actions proposed by Copilot require your explicit approval before they take effect — you remain responsible for reviewing them before confirming.</p>
+          <p>Copilot suggestions are generated from your store&apos;s data and are provided for assistance only. Actions proposed by Copilot require your explicit approval before they take effect. You remain responsible for reviewing them before confirming.</p>
 
           <h2>5. Service availability</h2>
           <p>We target 99.98% uptime for cloud sync; core billing continues offline regardless of connectivity. Scheduled maintenance is communicated in advance where possible.</p>

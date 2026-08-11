@@ -76,11 +76,11 @@ const CLEAR_CART_CONFIRM = (n: number) =>
 const TAX_DISCLOSURE =
   'This is a pre-charge estimate from the current cart. The server validates price, discounts, tax, stock, tender, and the final total when you charge.'
 const GENERIC_CHARGE_FAILURE =
-  'Something went wrong completing this sale. Nothing was charged — try again.'
+  'Something went wrong completing this sale. Nothing was charged. Try again.'
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
 
 function variantAttributes(v: Variant): string {
-  return [v.size, v.color, v.material].filter(Boolean).join(' / ') || '—'
+  return [v.size, v.color, v.material].filter(Boolean).join(' / ') || '-'
 }
 
 function money(n: number): string {
@@ -516,7 +516,7 @@ function CheckoutPageInner() {
     if (Math.abs(diff) > 0.001) {
       const direction = diff > 0 ? 'over' : 'under'
       setChargeError(
-        `Tender entries must match the current cart estimate (₹${money(total)}). Currently ₹${money(paymentSum)} — ₹${money(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
+        `Tender entries must match the current cart estimate (₹${money(total)}). Currently ₹${money(paymentSum)}, ₹${money(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
       )
       return
     }
@@ -556,7 +556,7 @@ function CheckoutPageInner() {
         })
         await refreshQueueCount()
         setQueuedMessage(
-          `Sale queued offline — ${inr(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
+          `Sale queued offline: ${inr(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
         )
         setCart([])
         setCartDiscountMode('none')
@@ -596,7 +596,7 @@ function CheckoutPageInner() {
   }
 
   function onChargeSuccess(sale: SaleResponse) {
-    setSuccessMessage(`Sale complete — ₹${sale.totalAmount} charged and recorded by the server.`)
+    setSuccessMessage(`Sale complete: ₹${sale.totalAmount} charged and recorded by the server.`)
 
     // Enrich the persisted sale's lines with the cart's product names for
     // receipt display — the sale response itself only carries variantId
@@ -673,7 +673,7 @@ function CheckoutPageInner() {
             </span>
           ) : (
             <span className="badge b-amber">
-              <span className="dot-a" /> Offline — sales are queued
+              <span className="dot-a" /> Offline, sales are queued
             </span>
           )
         }

@@ -166,7 +166,7 @@ export default function NewProductPage() {
       setIsSubmitting(false)
       setError(
         (requestError as { error?: string } | undefined)?.error ??
-          'Something went wrong saving this product — try again.',
+          'Something went wrong saving this product. Try again.',
       )
       return
     }
@@ -243,7 +243,7 @@ export default function NewProductPage() {
         <Card>
           <CardHead
             title="Variants"
-            sub="One row per thing you actually sell. The same product can be sold loose and pre-packed — add a row for each."
+            sub="One row per thing you actually sell. The same product can be sold loose and pre-packed, so add a row for each."
             right={
               <button type="button" className="btn btn-sm" onClick={addRow}>
                 <Plus size={14} /> Add variant

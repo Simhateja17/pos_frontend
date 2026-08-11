@@ -86,7 +86,7 @@ export function PurchasesView() {
       products.flatMap((product) =>
         product.variants.map((variant) => ({
           id: variant.id,
-          label: `${product.name} — ${variant.sku}`,
+          label: `${product.name} · ${variant.sku}`,
         })),
       ),
     [products],
@@ -237,17 +237,17 @@ export function PurchasesView() {
         items={[
           {
             label: 'Open orders',
-            value: orders ? String(openOrders.length) : '—',
+            value: orders ? String(openOrders.length) : '-',
             meta: orders ? 'sent or partially received' : 'Loading…',
           },
           {
             label: 'Value on order',
-            value: orders ? money(openValue) : '—',
+            value: orders ? money(openValue) : '-',
             meta: 'at ordered unit cost',
           },
           {
             label: 'Awaiting receipt',
-            value: orders ? String(openOrders.filter((po) => po.status === 'partial').length) : '—',
+            value: orders ? String(openOrders.filter((po) => po.status === 'partial').length) : '-',
             meta: 'partially delivered',
           },
         ]}
@@ -297,7 +297,7 @@ export function PurchasesView() {
                 <tr key={po.id}>
                   <td className="t-mono t-strong">{po.poNumber}</td>
                   <td>{po.supplierName}</td>
-                  <td className="t-sub">{po.expectedDate ?? '—'}</td>
+                  <td className="t-sub">{po.expectedDate ?? '-'}</td>
                   <td className="num">{ordered}</td>
                   <td className="num t-sub">
                     {received}/{ordered}
@@ -351,7 +351,7 @@ export function PurchasesView() {
 
             {suppliers.length === 0 ? (
               <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
-                You have no suppliers yet. Add a supplier first — a purchase order has to be raised against one.
+                You have no suppliers yet. Add a supplier first. A purchase order has to be raised against one.
               </div>
             ) : (
               <>
@@ -455,7 +455,7 @@ export function PurchasesView() {
               </div>
             )}
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 13, lineHeight: 1.5 }}>
-              Enter what actually arrived. A part delivery is fine — the rest stays outstanding on this order. The unit
+              Enter what actually arrived. A part delivery is fine. The rest stays outstanding on this order. The unit
               cost you enter here is what updates each item&apos;s average cost.
             </div>
 

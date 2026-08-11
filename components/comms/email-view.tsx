@@ -85,7 +85,7 @@ export function EmailView() {
         { label: 'Sent', value: String(log.counts.sent + log.counts.delivered), meta: 'Handed to the email provider' },
         { label: 'Failed', value: String(log.counts.failed), meta: log.counts.failed > 0 ? 'These customers did not get an email' : 'None failed' },
         { label: 'Bounced', value: String(log.counts.bounced), meta: 'Address rejected or reported as spam' },
-        { label: 'Suppressed', value: String(log.counts.suppressed), meta: 'Not sent — address is on the do-not-email list' },
+        { label: 'Suppressed', value: String(log.counts.suppressed), meta: 'Not sent, address is on the do-not-email list' },
       ]
     : []
 
@@ -148,7 +148,7 @@ export function EmailView() {
                     <td>
                       <Badge tone={STATUS_TONE[entry.status] ?? 'grey'}>{entry.status}</Badge>
                     </td>
-                    <td className="t-sub">{entry.errorMessage ?? '—'}</td>
+                    <td className="t-sub">{entry.errorMessage ?? '-'}</td>
                   </tr>
                 ))}
               </DataTable>
@@ -175,7 +175,7 @@ export function EmailView() {
                     <td>
                       <Badge tone={entry.reason === 'unsubscribed' ? 'grey' : 'red'}>{entry.reason}</Badge>
                     </td>
-                    <td className="t-sub">{entry.detail ?? '—'}</td>
+                    <td className="t-sub">{entry.detail ?? '-'}</td>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
                     <td style={{ textAlign: 'right' }}>
                       <button

@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Careers — Ambel POS" };
+export const metadata = { title: "Careers | Ambel POS" };
 
 const PERKS = [
   ["Remote-friendly", "Work from Bengaluru, or remotely from anywhere in India."],

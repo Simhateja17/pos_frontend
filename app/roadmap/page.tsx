@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Roadmap — Ambel POS" };
+export const metadata = { title: "Roadmap | Ambel POS" };
 
 const COLUMNS: [string, string, [string, string][]][] = [
   [

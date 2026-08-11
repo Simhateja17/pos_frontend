@@ -161,7 +161,7 @@ export function SuppliersView() {
         items={[
           {
             label: 'Active suppliers',
-            value: suppliers ? String(activeCount) : '—',
+            value: suppliers ? String(activeCount) : '-',
             meta: suppliers ? `${suppliers.length} total on file` : 'Loading…',
           },
           {
@@ -227,11 +227,11 @@ export function SuppliersView() {
                   </button>
                 </td>
                 <td className="t-sub">
-                  {supplier.contactName ?? '—'}
+                  {supplier.contactName ?? '-'}
                   {supplier.phone ? <div className="t-mono t-sub">{supplier.phone}</div> : null}
                 </td>
                 <td className="num">{supplier.leadTimeDays} days</td>
-                <td className="t-sub">{supplier.paymentTerms ?? '—'}</td>
+                <td className="t-sub">{supplier.paymentTerms ?? '-'}</td>
                 <td>
                   <Badge tone={supplier.isActive ? 'green' : 'grey'}>{supplier.isActive ? 'Active' : 'Inactive'}</Badge>
                 </td>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { UserMenu } from '@/components/user-menu'
 import {
@@ -262,12 +263,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="sb-brand">
           <div className="sb-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <rect x="3" y="3" width="7.4" height="7.4" rx="2.4" />
-              <rect x="13.6" y="3" width="7.4" height="7.4" rx="2.4" />
-              <rect x="3" y="13.6" width="7.4" height="7.4" rx="2.4" />
-              <rect x="13.6" y="13.6" width="7.4" height="7.4" rx="2.4" />
-            </svg>
+            <AmbelMark size={38} />
           </div>
           <div>
             <h1>Ambel POS</h1>

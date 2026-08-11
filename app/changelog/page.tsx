@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Changelog — Ambel POS" };
+export const metadata = { title: "Changelog | Ambel POS" };
 
 const ENTRIES: [string, string, string, string][] = [
   ["Jan 2026", "NEW", "AI Copilot for Inventory", "Copilot now proposes reorder quantities using Prophet-based forecasting, with the data basis shown before you approve any purchase order."],
@@ -36,7 +36,7 @@ export default function ChangelogPage() {
           Changelog
         </div>
         <h1>What&apos;s new in<br /><em>Ambel POS.</em></h1>
-        <p>Shipped features, improvements and fixes — updated as we release them.</p>
+        <p>Shipped features, improvements and fixes, updated as we release them.</p>
       </section>
 
       <section className="content-section">

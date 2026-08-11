@@ -26,7 +26,7 @@ const DETAIL_TABS: readonly { label: string; value: DetailTab }[] = [
 const LOAD_ERROR = "Couldn't load this supplier. Check your connection and try again."
 
 function variantLabel(row: { size: string | null; color: string | null; material: string | null }) {
-  return [row.size, row.color, row.material].filter(Boolean).join(' / ') || '—'
+  return [row.size, row.color, row.material].filter(Boolean).join(' / ') || '-'
 }
 
 export default function SupplierDetailPage() {
@@ -354,7 +354,7 @@ export default function SupplierDetailPage() {
             {linkedError && <ErrorState message={linkedError} onRetry={() => void loadLinkedProducts()} />}
             {!linkedError && linkedProducts && linkedProducts.length === 0 && (
               <EmptyState
-                icon={<Badge tone="grey">—</Badge>}
+                icon={<Badge tone="grey">-</Badge>}
                 title="No products linked"
                 body="Add the products you buy from this supplier, filtered by category or picked one at a time."
                 action={
@@ -373,9 +373,9 @@ export default function SupplierDetailPage() {
                       <div className="t-sub">{variantLabel(row)}</div>
                     </td>
                     <td className="num">{row.leadTimeDays} days</td>
-                    <td className="num t-sub">{row.unitCost ? `₹${row.unitCost}` : '—'}</td>
-                    <td className="t-sub">{row.supplierSku ?? '—'}</td>
-                    <td className="num t-sub">{row.minOrderQty ?? '—'}</td>
+                    <td className="num t-sub">{row.unitCost ? `₹${row.unitCost}` : '-'}</td>
+                    <td className="t-sub">{row.supplierSku ?? '-'}</td>
+                    <td className="num t-sub">{row.minOrderQty ?? '-'}</td>
                     <td>{row.isPrimary && <Badge tone="green">Primary</Badge>}</td>
                     <td>
                       <button className="btn btn-sm" onClick={() => void handleUnlink(row)}>
@@ -501,7 +501,7 @@ export default function SupplierDetailPage() {
                 </Fld>
               </div>
               <p className="t-sub" style={{ fontSize: 11.5, marginTop: 4 }}>
-                Applied the same to every product selected above — edit an individual product's lead time later from
+                Applied the same to every product selected above. Edit an individual product's lead time later from
                 its own detail page if one of them differs.
               </p>
             </form>

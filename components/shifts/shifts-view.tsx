@@ -266,9 +266,9 @@ export function ShiftsView() {
               <DataTable cols={['Counter', 'Cashier', 'Opened', { label: 'Opening cash', align: 'right' }]} minWidth={620}>
                 {openShifts.map((shift) => (
                   <tr key={shift.id}>
-                    <td className="t-strong">{shift.terminalName ?? '—'}</td>
+                    <td className="t-strong">{shift.terminalName ?? '-'}</td>
                     <td>
-                      {shift.staffName ?? '—'}
+                      {shift.staffName ?? '-'}
                       {currentTerminal && shift.terminalId === currentTerminal.id && (
                         <span style={{ marginLeft: 8 }}>
                           <Badge tone="blue">This counter</Badge>
@@ -364,7 +364,7 @@ function OpenRegister({
           <form onSubmit={onSubmit} style={{ maxWidth: 460 }}>
             {currentTerminal.cashMode === 'none' ? (
               <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--soft)', color: 'var(--ink-2)', fontSize: 13 }}>
-                Opening cash: <b>₹0.00</b> — this is a no-cash counter.
+                Opening cash: <b>₹0.00</b>. This is a no-cash counter.
               </div>
             ) : (
               <Fld id="starting-cash" label="Opening cash count">
@@ -537,10 +537,10 @@ function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
             const expected = Number(shift.countedCash ?? 0) - varianceValue
             return (
               <tr key={shift.id}>
-                <td className="t-strong">{shift.terminalName ?? '—'}</td>
-                <td>{shift.staffName ?? '—'}</td>
+                <td className="t-strong">{shift.terminalName ?? '-'}</td>
+                <td>{shift.staffName ?? '-'}</td>
                 <td className="t-sub">{stamp(shift.openedAt)}</td>
-                <td className="t-sub">{shift.closedAt ? stamp(shift.closedAt) : '—'}</td>
+                <td className="t-sub">{shift.closedAt ? stamp(shift.closedAt) : '-'}</td>
                 <td className="num">{money(String(expected))}</td>
                 <td className="num">{money(shift.countedCash ?? '0')}</td>
                 <td className="num" style={{ textAlign: 'right' }}>

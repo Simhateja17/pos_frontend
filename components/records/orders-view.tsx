@@ -92,7 +92,7 @@ export function OrdersView() {
   }, [isCashier, range, router, search, status])
 
   const metrics: KpiItem[] = [
-    { label: 'Matching Invoices', value: data ? String(data.total) : '—', meta: 'Server-filtered records' },
+    { label: 'Matching Invoices', value: data ? String(data.total) : '-', meta: 'Server-filtered records' },
     { label: 'Held Bills', value: <UnavailableValue />, meta: 'No held-bill aggregate is available' },
     { label: 'Paid Sales', value: <UnavailableValue />, meta: 'No sales aggregate is available' },
     { label: 'Cancelled / Refunded', value: <UnavailableValue />, meta: 'No aggregate is available' },
@@ -193,7 +193,7 @@ export function OrdersView() {
                     {timeOnly.format(created)}
                     <div className="t-sub">{dateShort.format(created)}</div>
                   </td>
-                  <td>{sale.payments.map((p) => p.method).join(', ') || '—'}</td>
+                  <td>{sale.payments.map((p) => p.method).join(', ') || '-'}</td>
                   <td>
                     <span className={`badge b-${STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'}`}>{sale.status}</span>
                   </td>

@@ -2,10 +2,10 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "About — Ambel POS" };
+export const metadata = { title: "About | Ambel POS" };
 
 const VALUES = [
-  ["Built for Indian retail", "Every workflow — GST, HSN codes, UPI settlement, DLT-compliant WhatsApp — is designed around how Indian retailers actually operate, not adapted from a Western template."],
+  ["Built for Indian retail", "Every workflow, from GST and HSN codes to UPI settlement and DLT-compliant WhatsApp, is designed around how Indian retailers actually operate, not adapted from a Western template."],
   ["Offline is not optional", "Internet drops. Billing shouldn't. Every core workflow works offline-first and syncs the moment connectivity returns."],
   ["AI that shows its work", "Our Copilot proposes actions with the data behind them, and always asks before it touches your store."],
   ["Ship with retailers, not at them", "Roadmap priorities come from store owners and cashiers using the product daily, not from a boardroom."],
@@ -33,8 +33,8 @@ export default function AboutPage() {
       <section className="content-section">
         <div className="content-wrap content-prose">
           <h2>Our story</h2>
-          <p>Ambel POS was founded by two former retail-tech engineers who watched a Jaipur boutique owner run billing on one app, inventory on a spreadsheet, and GST filing through a CA — every month, by hand. We built the first version of Ambel POS over a weekend to fix that one store's workflow. Three years later, it runs 2,400+ stores across India.</p>
-          <p>We&apos;re headquartered in Bengaluru with team members across Jaipur, Mumbai and Pune — the same cities where our earliest customers opened their doors to us.</p>
+          <p>Ambel POS was founded by two former retail-tech engineers who watched a Jaipur boutique owner run billing on one app, inventory on a spreadsheet, and GST filing through a CA. Every month, by hand. We built the first version of Ambel POS over a weekend to fix that one store's workflow. Three years later, it runs 2,400+ stores across India.</p>
+          <p>We&apos;re headquartered in Bengaluru with team members across Jaipur, Mumbai and Pune, the same cities where our earliest customers opened their doors to us.</p>
           <h2>What we believe</h2>
         </div>
         <div className="features-grid" style={{ marginTop: 24 }}>

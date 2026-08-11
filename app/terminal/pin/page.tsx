@@ -1,13 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Banknote, ChevronRight, LockKeyhole, Monitor, Settings, Users } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -192,10 +192,10 @@ export default function PinPadPage() {
       // The 401 body's `error` field is UI-SPEC-exact copy from the backend
       // (01-06) — read verbatim, no frontend string duplication. The backend
       // returns exactly one of these two UI-SPEC-exact strings:
-      //   "Incorrect PIN — try again."
+      //   "Incorrect PIN. Try again."
       //   "Too many attempts. Ask a manager to unlock this terminal."
       const message =
-        (error as { error?: string } | undefined)?.error ?? 'Incorrect PIN — try again.'
+        (error as { error?: string } | undefined)?.error ?? 'Incorrect PIN. Try again.'
       setPinError(message)
       setPin('')
       return
@@ -262,7 +262,7 @@ export default function PinPadPage() {
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#DCE6F2] bg-white shadow-sm">
-              <Image src="/logo.png" alt="Ambel POS" width={28} height={28} className="object-contain" />
+              <AmbelMark size={28} title="Ambel POS" />
             </div>
             <div>
               <p className="text-sm font-semibold text-[#172033]">Ambel POS</p>

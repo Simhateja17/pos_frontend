@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Ambel POS — India's Most Complete Retail Suite",
+  title: "Ambel POS | India's Most Complete Retail Suite",
 };
 
 export const viewport = {

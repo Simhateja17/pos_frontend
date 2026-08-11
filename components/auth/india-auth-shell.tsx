@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Check } from 'lucide-react'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import { supabase } from '@/lib/supabase/client'
 import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import styles from './india-auth.module.css'
@@ -54,17 +55,17 @@ export const establishIndiaSession = establishSession
 const content = {
   signup: {
     heading: <>One platform.<br />Every store detail.</>,
-    description: 'From GST billing to loyalty rewards — built for Indian retail.',
+    description: 'From GST billing to loyalty rewards, built for Indian retail.',
     benefits: [
       'GST-native invoicing from day 1',
-      'Offline billing — works without internet',
+      'Offline billing, works without internet',
       'AI Copilot reads your live store data',
       '22 integrated modules, one subscription',
     ],
   },
   login: {
     heading: <>Welcome back to your store.</>,
-    description: 'Billing, inventory, loyalty and compliance — all in one place.',
+    description: 'Billing, inventory, loyalty and compliance, all in one place.',
     benefits: [
       '2,400+ stores across India',
       '₹18 Cr+ GMV processed monthly',
@@ -78,8 +79,8 @@ export function BrandMark() {
   return (
     <div className={styles.mark}>
       <span className={styles.markBox}>
-        {/* The legacy prototype uses this exact shipped brand asset. */}
-        <img src="/logo.png" alt="" />
+        {/* Inverse tone: the brand panel behind this is deep navy. */}
+        <AmbelMark size={40} tone="inverse" />
       </span>
       <span className={styles.markName}>Ambel POS</span>
     </div>

@@ -255,8 +255,8 @@ export function TerminalsView() {
             </Fld>
             <Fld id="terminal-mode" label="Cash handling">
               <select id="terminal-mode" value={cashMode} onChange={(e) => setCashMode(e.target.value as 'cash' | 'none')}>
-                <option value="cash">Cash counter — count opening cash</option>
-                <option value="none">No cash drawer — opening cash is ₹0.00</option>
+                <option value="cash">Cash counter, count opening cash</option>
+                <option value="none">No cash drawer, opening cash is ₹0.00</option>
               </select>
             </Fld>
             <p className="t-sub" style={{ fontSize: 12 }}>

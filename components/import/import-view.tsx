@@ -117,7 +117,7 @@ export function ImportView() {
           ? { ...mapping, target: target === '' ? null : target, reason: 'Set by you.', confidence: 'high' }
           : // A target can only be used once, so choosing it here clears it elsewhere.
             target !== '' && mapping.target === target
-            ? { ...mapping, target: null, reason: 'Cleared — that field is now mapped to another column.', confidence: 'low' }
+            ? { ...mapping, target: null, reason: 'Cleared. That field is now mapped to another column.', confidence: 'low' }
             : mapping,
       ),
     )
@@ -331,7 +331,7 @@ export function ImportView() {
               <Sparkles size={13} style={{ display: 'inline', marginRight: 4, verticalAlign: -2 }} />
               We read the file on the server and propose which column is which. You review and correct every mapping
               before anything is saved.
-              {kind === 'sales' && ' Import your catalog first — sales lines are matched to products by SKU.'}
+              {kind === 'sales' && ' Import your catalog first: sales lines are matched to products by SKU.'}
             </p>
             {error && <p style={{ marginTop: 12, fontSize: 12.5, color: 'var(--red, #b42318)' }}>{error}</p>}
           </CardPad>

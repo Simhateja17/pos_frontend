@@ -114,7 +114,7 @@ export function CategorySelect({
         >
           {matches.length === 0 && !canCreate && (
             <div className="t-sub" style={{ padding: '10px 12px' }}>
-              No categories yet — type a name to create one.
+              No categories yet. Type a name to create one.
             </div>
           )}
 

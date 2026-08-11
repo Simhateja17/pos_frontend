@@ -251,10 +251,10 @@ export function MembersView({ firstPinSetup = false }: { firstPinSetup?: boolean
               <DataTable cols={['Staff', 'Counter', 'Logged in', 'Logged out', 'Status']} minWidth={780}>
                 {sessions.slice(0, 50).map((session) => (
                   <tr key={session.id}>
-                    <td className="t-strong">{session.staffName ?? '—'}</td>
-                    <td>{session.terminalName ?? '—'}</td>
+                    <td className="t-strong">{session.staffName ?? '-'}</td>
+                    <td>{session.terminalName ?? '-'}</td>
                     <td className="t-sub">{new Date(session.loggedInAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                    <td className="t-sub">{session.loggedOutAt ? new Date(session.loggedOutAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</td>
+                    <td className="t-sub">{session.loggedOutAt ? new Date(session.loggedOutAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</td>
                     <td>
                       <Badge tone={session.loggedOutAt ? 'grey' : 'green'}>
                         {session.loggedOutAt ? session.logoutReason ?? 'Ended' : 'Active'}

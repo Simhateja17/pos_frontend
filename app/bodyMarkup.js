@@ -6,7 +6,7 @@ export const BODY = `<div id="route-bar"></div>
   <aside class="sidebar">
     <div class="sb-brand">
       <div class="sb-logo">
-        <img src="/logo.png" alt="Ambel POS" style="max-width:68%;max-height:68%;width:auto;height:auto;object-fit:contain;display:block" />
+        <svg viewBox="0 0 120 120" role="img" aria-label="Ambel POS" style="width:38px;height:38px;display:block;stroke:none"><rect width="120" height="120" rx="34" fill="#4285F4"/><path d="M60 0L107 94L75.95 94L60 49.2L44.05 94L13 94Z" fill="#FFFFFF"/><rect x="26" y="85" width="68" height="9" rx="4.5" fill="#4285F4"/></svg>
       </div>
       <div><h1>Ambel POS</h1><p>Retail operations suite</p></div>
     </div>

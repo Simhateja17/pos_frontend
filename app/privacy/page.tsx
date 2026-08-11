@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Privacy Policy — Ambel POS" };
+export const metadata = { title: "Privacy Policy | Ambel POS" };
 
 export default function PrivacyPage() {
   return (
@@ -16,11 +16,11 @@ export default function PrivacyPage() {
           <p className="legal-updated">Last updated: January 1, 2026</p>
 
           <h2>1. What we collect</h2>
-          <p>Ambel POS collects the information you provide when creating an account (name, email, phone, business details) and the operational data your store generates while using the product — transactions, inventory, customer records and staff activity. We also collect basic device and usage analytics to keep the app fast and reliable.</p>
+          <p>Ambel POS collects the information you provide when creating an account (name, email, phone, business details) and the operational data your store generates while using the product: transactions, inventory, customer records and staff activity. We also collect basic device and usage analytics to keep the app fast and reliable.</p>
 
           <h2>2. How we use it</h2>
           <ul>
-            <li>To operate core features — billing, inventory, reports and GST filing exports.</li>
+            <li>To operate core features: billing, inventory, reports and GST filing exports.</li>
             <li>To power AI Copilot suggestions, always scoped to your own store&apos;s data.</li>
             <li>To send service notifications (invoices, sync status, renewal reminders).</li>
             <li>To improve reliability, performance and fraud detection.</li>
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           <p>Data is encrypted in transit and at rest, hosted on infrastructure located in India, with role-based access controls and audit logging on every account. Offline billing data is encrypted locally and synced once connectivity returns.</p>
 
           <h2>5. Your rights</h2>
-          <p>You can request an export or deletion of your account data at any time by writing to <a href="mailto:privacy@Ambel.in">privacy@Ambel.in</a>. Certain records — such as GST invoices — are retained as required by Indian tax law even after account closure.</p>
+          <p>You can request an export or deletion of your account data at any time by writing to <a href="mailto:privacy@Ambel.in">privacy@Ambel.in</a>. Certain records, such as GST invoices, are retained as required by Indian tax law even after account closure.</p>
 
           <h2>6. Changes to this policy</h2>
           <p>We&apos;ll notify account owners by email at least 14 days before any material change to this policy takes effect.</p>

@@ -120,7 +120,7 @@ export function SettingsView() {
       setProfileError(
         (error as { error?: string }).error === 'Only the owner can change store settings'
           ? 'Only the store owner can change these details.'
-          : 'That could not be saved — try again.',
+          : 'That could not be saved. Try again.',
       )
       return
     }
@@ -149,7 +149,7 @@ export function SettingsView() {
       setTaxError(
         (error as { error?: string }).error === 'Only the owner can change store settings'
           ? 'Only the store owner can change these details.'
-          : 'That could not be saved — try again.',
+          : 'That could not be saved. Try again.',
       )
       return
     }
@@ -294,7 +294,7 @@ export function SettingsView() {
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Must match your GST registration. Changing it here does not amend your registration — file Form GST
+              Must match your GST registration. Changing it here does not amend your registration. File Form GST
               REG-14 on the GST portal first, then update it here to match.
             </p>
 
@@ -366,7 +366,7 @@ export function SettingsView() {
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Same rule as the name above — this must match what is on file with the GST portal.
+              Same rule as the name above: this must match what is on file with the GST portal.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>

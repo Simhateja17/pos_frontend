@@ -96,11 +96,11 @@ export function InventoryView() {
   const critical = lowStock.filter((item) => item.quantity === 0).length
 
   const metrics: KpiItem[] = [
-    { label: 'Low Stock', value: loading ? '—' : String(lowStock.length), meta: 'At or below reorder threshold' },
-    { label: 'Out of Stock', value: loading ? '—' : String(critical), meta: critical > 0 ? 'Needs immediate reorder' : 'None currently' },
+    { label: 'Low Stock', value: loading ? '-' : String(lowStock.length), meta: 'At or below reorder threshold' },
+    { label: 'Out of Stock', value: loading ? '-' : String(critical), meta: critical > 0 ? 'Needs immediate reorder' : 'None currently' },
     {
       label: 'Total SKUs',
-      value: catalogLoading ? '—' : String(products.reduce((sum, p) => sum + p.variants.length, 0)),
+      value: catalogLoading ? '-' : String(products.reduce((sum, p) => sum + p.variants.length, 0)),
       meta: catalogLoading ? '' : `${products.length} product${products.length === 1 ? '' : 's'}`,
     },
     { label: 'Inventory Value', value: <UnavailableValue />, meta: 'Cost basis is not persisted' },
@@ -224,7 +224,7 @@ export function InventoryView() {
                         <LowStockBadge quantity={firstVariant.currentStock} threshold={firstVariant.reorderThreshold} />
                       </div>
                     </td>
-                    <td className="t-sub t-mono">{firstVariant.barcode ?? '—'}</td>
+                    <td className="t-sub t-mono">{firstVariant.barcode ?? '-'}</td>
                     <td className="num">{priceLabel(firstVariant.price, firstVariant.unitOfMeasure)}</td>
                     <td className="num">
                       {firstVariant.currentStock}
@@ -248,7 +248,7 @@ export function InventoryView() {
                           <LowStockBadge quantity={variant.currentStock} threshold={variant.reorderThreshold} />
                         </div>
                       </td>
-                      <td className="t-sub t-mono">{variant.barcode ?? '—'}</td>
+                      <td className="t-sub t-mono">{variant.barcode ?? '-'}</td>
                       <td className="num">{priceLabel(variant.price, variant.unitOfMeasure)}</td>
                       <td className="num">
                         {variant.currentStock}
@@ -293,7 +293,7 @@ export function InventoryView() {
                   <td className="t-mono t-strong">{item.sku}</td>
                   <td>{item.productName}</td>
                   <td className="t-sub">
-                    {[item.size, item.color, item.material].filter(Boolean).join(' · ') || '—'}
+                    {[item.size, item.color, item.material].filter(Boolean).join(' · ') || '-'}
                   </td>
                   <td className="num t-strong" style={{ textAlign: 'right' }}>
                     {item.quantity}

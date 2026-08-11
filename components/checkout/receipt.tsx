@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 const EMAIL_FAILURE_COPY =
-  "Couldn't send the receipt email. The sale is saved — try emailing it again from the receipt lookup."
+  "Couldn't send the receipt email. The sale is saved. Try emailing it again from the receipt lookup."
 
 export interface ReceiptLine {
   variantId: string
@@ -110,7 +110,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           <hr />
           {sale.lines.map((line) => (
             <div key={line.variantId} className="receipt-line">
-              {line.quantity} x {line.name ?? line.variantId} — ${line.lineTotal}
+              {line.quantity} x {line.name ?? line.variantId}: ${line.lineTotal}
             </div>
           ))}
           <hr />

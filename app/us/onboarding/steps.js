@@ -31,16 +31,16 @@ export const STEPS = [
           <div class="choice-group">
             <label class="choice">
               <input type="radio" name="plan" value="essentials">
-              <div class="choice-body"><b>Essentials — $29/mo</b><span>1 location · 2 registers · sales tax automation, digital receipts, offline billing &amp; email support</span></div>
+              <div class="choice-body"><b>Essentials · $29/mo</b><span>1 location · 2 registers · sales tax automation, digital receipts, offline billing &amp; email support</span></div>
             </label>
             <label class="choice">
               <input type="radio" name="plan" value="professional" checked>
-              <div class="choice-body"><b>Professional — $79/mo</b><span>Up to 5 locations · everything in Essentials plus omnichannel (Shopify) sync, BOPIS &amp; ship-from-store, advanced reports and phone support</span></div>
+              <div class="choice-body"><b>Professional · $79/mo</b><span>Up to 5 locations · everything in Essentials plus omnichannel (Shopify) sync, BOPIS &amp; ship-from-store, advanced reports and phone support</span></div>
               <span class="choice-tag">Most popular</span>
             </label>
             <label class="choice">
               <input type="radio" name="plan" value="enterprise">
-              <div class="choice-body"><b>Enterprise — Custom</b><span>Unlimited locations &amp; registers · custom reporting and API, dedicated account manager and 99.98% uptime SLA</span></div>
+              <div class="choice-body"><b>Enterprise · Custom</b><span>Unlimited locations &amp; registers · custom reporting and API, dedicated account manager and 99.98% uptime SLA</span></div>
             </label>
           </div>
           <div class="form-hint" style="margin-top:10px;">Annual billing is charged upfront through Razorpay.</div>
@@ -105,12 +105,12 @@ export const STEPS = [
 
         <div class="form-row">
           <div class="form-group">
-            <label>EIN (Federal Tax ID)<div class="form-hint">9 digits — format 12-3456789</div></label>
+            <label>EIN (Federal Tax ID)<div class="form-hint">9 digits, format 12-3456789</div></label>
             <input type="text" placeholder="12-3456789" required>
           </div>
           <div class="form-group">
             <label>State sales tax permit #<div class="form-hint">From your state's revenue department</div></label>
-            <input type="text" placeholder="Optional — add later" >
+            <input type="text" placeholder="Optional, add later" >
           </div>
         </div>
 
@@ -142,7 +142,7 @@ export const STEPS = [
         <div class="ctx-card">
           <div class="ctx-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
           <h4>Why we ask for your EIN</h4>
-          <p>Your Employer Identification Number lets us auto-populate sales tax filings and verify your business with payment processors — no paperwork later.</p>
+          <p>Your Employer Identification Number lets us auto-populate sales tax filings and verify your business with payment processors, with no paperwork later.</p>
         </div>
         <div class="ctx-card">
           <h4>What you'll need handy</h4>
@@ -169,18 +169,18 @@ export const STEPS = [
           Step 3 of 8
         </div>
         <h1>Where do you owe sales tax?</h1>
-        <p class="subtitle">The US has no national sales tax — rates are set by 13,000+ state, county, and city jurisdictions. Tell us where you have nexus and we handle the math.</p>
+        <p class="subtitle">The US has no national sales tax. Rates are set by 13,000+ state, county, and city jurisdictions. Tell us where you have nexus and we handle the math.</p>
 
         <div class="form-group">
           <label>Home state (physical nexus)</label>
           <select required>
             <option value="">Select your home state...</option>
-            <option selected>Texas — 6.25% state base</option>
-            <option>California — 7.25% state base</option>
-            <option>New York — 4.00% state base</option>
-            <option>Florida — 6.00% state base</option>
-            <option>Colorado — 2.90% state base</option>
-            <option>Washington — 6.50% state base</option>
+            <option selected>Texas · 6.25% state base</option>
+            <option>California · 7.25% state base</option>
+            <option>New York · 4.00% state base</option>
+            <option>Florida · 6.00% state base</option>
+            <option>Colorado · 2.90% state base</option>
+            <option>Washington · 6.50% state base</option>
           </select>
         </div>
 
@@ -205,7 +205,7 @@ export const STEPS = [
         <div class="form-group">
           <label>Tax-exempt &amp; resale sales</label>
           <div class="choice-group">
-            <label class="choice"><input type="checkbox" checked><div class="choice-body"><b>Accept resale certificates</b><span>For wholesale buyers — store cert on file, skip tax</span></div></label>
+            <label class="choice"><input type="checkbox" checked><div class="choice-body"><b>Accept resale certificates</b><span>For wholesale buyers: store cert on file, skip tax</span></div></label>
             <label class="choice"><input type="checkbox"><div class="choice-body"><b>Clothing tax holidays</b><span>Auto-apply state sales-tax-free weekends</span></div></label>
           </div>
         </div>
@@ -228,7 +228,7 @@ export const STEPS = [
         </div>
         <div class="ctx-card">
           <h4>After <em>Wayfair</em> (2018)</h4>
-          <p>The Supreme Court ruled states can tax online sales even without a physical store. Most states now enforce economic nexus thresholds — we track yours so you stay compliant.</p>
+          <p>The Supreme Court ruled states can tax online sales even without a physical store. Most states now enforce economic nexus thresholds, and we track yours so you stay compliant.</p>
         </div>
       </div>
     `,
@@ -326,7 +326,7 @@ export const STEPS = [
           Step 5 of 8
         </div>
         <h1>Bring in your products</h1>
-        <p class="subtitle">Import your catalog with sizes, colors, costs, and UPC barcodes — or start fresh and add as you go.</p>
+        <p class="subtitle">Import your catalog with sizes, colors, costs, and UPC barcodes, or start fresh and add as you go.</p>
 
         <div class="form-group">
           <label>How do you want to import?</label>
@@ -341,8 +341,8 @@ export const STEPS = [
         <div class="form-group">
           <label>Do you sell items in size / color / material variants?</label>
           <div class="choice-group">
-            <label class="choice"><input type="radio" name="variants" value="yes" checked><div class="choice-body"><b>Yes — track variants</b><span>Each size + color is its own SKU with separate stock counts</span></div></label>
-            <label class="choice"><input type="radio" name="variants" value="no"><div class="choice-body"><b>No — simple products</b><span>One SKU per item</span></div></label>
+            <label class="choice"><input type="radio" name="variants" value="yes" checked><div class="choice-body"><b>Yes, track variants</b><span>Each size + color is its own SKU with separate stock counts</span></div></label>
+            <label class="choice"><input type="radio" name="variants" value="no"><div class="choice-body"><b>No, simple products</b><span>One SKU per item</span></div></label>
           </div>
         </div>
 
@@ -405,7 +405,7 @@ export const STEPS = [
     label: "Channels & BOPIS",
     help: {
       title: "One stock pool",
-      text: "Store and online share the same inventory — no overselling across channels.",
+      text: "Store and online share the same inventory, so no overselling across channels.",
     },
     body: `
       <form data-onboarding-form>
@@ -429,7 +429,7 @@ export const STEPS = [
         <div class="form-group">
           <label>Fulfillment options for online orders</label>
           <div class="choice-group">
-            <label class="choice"><input type="checkbox" checked><div class="choice-body"><b>BOPIS — buy online, pick up in store</b><span>Reserve stock, notify customer, stage at pickup counter</span></div><span class="choice-tag">Popular</span></label>
+            <label class="choice"><input type="checkbox" checked><div class="choice-body"><b>BOPIS: buy online, pick up in store</b><span>Reserve stock, notify customer, stage at pickup counter</span></div><span class="choice-tag">Popular</span></label>
             <label class="choice"><input type="checkbox"><div class="choice-body"><b>Ship from store</b><span>Fulfill web orders from shelf inventory</span></div></label>
             <label class="choice"><input type="checkbox"><div class="choice-body"><b>Curbside pickup</b><span>Customer checks in from the parking lot</span></div></label>
             <label class="choice"><input type="checkbox"><div class="choice-body"><b>Local same-day delivery</b><span>Within a set radius of your store</span></div></label>
@@ -510,7 +510,7 @@ export const STEPS = [
           <label>Permission model</label>
           <div class="choice-group">
             <label class="choice"><input type="radio" name="roles" value="tiered" checked><div class="choice-body"><b>Manager + Cashier</b><span>Cashiers ring sales; managers handle refunds, discounts, voids &amp; reports</span></div><span class="choice-tag">Recommended</span></label>
-            <label class="choice"><input type="radio" name="roles" value="advanced"><div class="choice-body"><b>Full role control</b><span>Owner, Manager, Cashier, Stockroom — set access per person</span></div></label>
+            <label class="choice"><input type="radio" name="roles" value="advanced"><div class="choice-body"><b>Full role control</b><span>Owner, Manager, Cashier, Stockroom: set access per person</span></div></label>
             <label class="choice"><input type="radio" name="roles" value="flat"><div class="choice-body"><b>Everyone equal</b><span>All staff share the same access</span></div></label>
           </div>
         </div>
@@ -526,7 +526,7 @@ export const STEPS = [
         </div>
 
         <div class="form-group">
-          <label>Invite your team (optional)<div class="form-hint">We'll email them a setup link — you can also add them later</div></label>
+          <label>Invite your team (optional)<div class="form-hint">We'll email them a setup link, and you can also add them later</div></label>
           <input type="email" placeholder="manager@yourstore.com, cashier@yourstore.com">
         </div>
 
@@ -549,7 +549,7 @@ export const STEPS = [
         <div class="ctx-card accent">
           <div class="ctx-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
           <h4>Per-cashier insights</h4>
-          <p>See sales, average ticket, and conversion by employee — handy for scheduling and commission.</p>
+          <p>See sales, average ticket, and conversion by employee, handy for scheduling and commission.</p>
         </div>
       </div>
     `,

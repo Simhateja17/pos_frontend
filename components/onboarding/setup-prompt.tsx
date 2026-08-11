@@ -51,7 +51,7 @@ export function SetupPrompt() {
     <Card>
       <CardHead
         title="Finish setting up"
-        sub="Your till already works — these make it more useful"
+        sub="Your till already works, these make it more useful"
         right={
           <span className="badge b-blue">
             {tasks.length} of {SETUP_TASKS.length}

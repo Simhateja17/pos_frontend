@@ -67,7 +67,7 @@ const SUPPLIER_LINK_EMPTY_STATE =
 const IDENTITY_LOCK_NOTICE =
   "Size, color, and material can't be changed once stock has moved for this variant. Price and reorder threshold can still be edited anytime."
 const CASHIER_ADJUST_ERROR = 'Only managers and owners can adjust stock.'
-const GENERIC_MOVEMENT_ERROR = 'Something went wrong recording this stock movement — try again.'
+const GENERIC_MOVEMENT_ERROR = 'Something went wrong recording this stock movement. Try again.'
 const HISTORY_EMPTY_STATE = 'No stock movements yet. Receive stock to get started.'
 const LOAD_ERROR = "Couldn't load this variant. Check your connection and try again."
 
@@ -79,7 +79,7 @@ const REASON_LABELS: Record<ReasonCode, string> = {
 }
 
 function variantAttributes(variant: Variant) {
-  return [variant.size, variant.color, variant.material].filter(Boolean).join(' / ') || '—'
+  return [variant.size, variant.color, variant.material].filter(Boolean).join(' / ') || '-'
 }
 
 function movementTypeLabel(type: StockMovement['movementType']) {
@@ -334,7 +334,7 @@ export default function VariantDetailPage() {
     }
 
     setReceiveOpen(false)
-    setSuccessMessage(`Stock received — ${receiveQty} units added to ${variantAttributes(variant)}`)
+    setSuccessMessage(`Stock received: ${receiveQty} units added to ${variantAttributes(variant)}`)
     setReceiveQty('')
     await Promise.all([loadVariant(), loadHistory()])
   }
@@ -375,7 +375,7 @@ export default function VariantDetailPage() {
     }
 
     setAdjustOpen(false)
-    setSuccessMessage(`Adjustment recorded — ${variantAttributes(variant)} updated`)
+    setSuccessMessage(`Adjustment recorded: ${variantAttributes(variant)} updated`)
     setAdjustQty('')
     setAdjustReason('damage')
     setAdjustNote('')
@@ -416,7 +416,7 @@ export default function VariantDetailPage() {
     }
 
     setTransferOpen(false)
-    setSuccessMessage(`Transfer recorded — ${variantAttributes(variant)} updated`)
+    setSuccessMessage(`Transfer recorded: ${variantAttributes(variant)} updated`)
     setTransferQty('')
     await Promise.all([loadVariant(), loadHistory()])
   }
@@ -530,7 +530,7 @@ export default function VariantDetailPage() {
                     maxLength={14}
                     value={editBarcode}
                     onChange={(e) => setEditBarcode(e.target.value)}
-                    placeholder="Scan or type — leave blank if none"
+                    placeholder="Scan or type, or leave blank if none"
                   />
                 </Fld>
                 <Fld id="edit-unit" label="Sold by">
@@ -589,7 +589,7 @@ export default function VariantDetailPage() {
             {supplierLinkError && <ErrorState message={supplierLinkError} onRetry={() => void loadSupplierLinks()} />}
             {!supplierLinkError && supplierProducts && supplierProducts.length === 0 && (
               <EmptyState
-                icon={<Badge tone="grey">—</Badge>}
+                icon={<Badge tone="grey">-</Badge>}
                 title="No suppliers linked"
                 body={SUPPLIER_LINK_EMPTY_STATE}
                 action={
@@ -605,9 +605,9 @@ export default function VariantDetailPage() {
                   <tr key={link.id}>
                     <td className="t-strong">{link.supplierName}</td>
                     <td className="num">{link.leadTimeDays} days</td>
-                    <td className="num t-sub">{link.unitCost ? `₹${link.unitCost}` : '—'}</td>
-                    <td className="t-sub">{link.supplierSku ?? '—'}</td>
-                    <td className="num t-sub">{link.minOrderQty ?? '—'}</td>
+                    <td className="num t-sub">{link.unitCost ? `₹${link.unitCost}` : '-'}</td>
+                    <td className="t-sub">{link.supplierSku ?? '-'}</td>
+                    <td className="num t-sub">{link.minOrderQty ?? '-'}</td>
                     <td>{link.isPrimary && <Badge tone="green">Primary</Badge>}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

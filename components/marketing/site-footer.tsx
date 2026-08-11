@@ -1,10 +1,6 @@
-const LOGO = (
-  <img
-    src="/logo.png"
-    alt="Ambel POS"
-    style={{ maxWidth: "68%", maxHeight: "68%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
-  />
-);
+import { AmbelMark } from "@/components/brand/ambel-mark";
+
+const LOGO = <AmbelMark size={38} />;
 
 const COLUMNS: [string, [string, string][]][] = [
   [
@@ -45,7 +41,7 @@ export default function SiteFooter() {
             <div className="nav-logo-mark">{LOGO}</div>
             <span className="nav-logo-text">Ambel POS</span>
           </div>
-          <p>India&apos;s most complete retail suite — GST-native, AI-powered, offline-first.</p>
+          <p>India&apos;s most complete retail suite: GST-native, AI-powered, offline-first.</p>
         </div>
         {COLUMNS.map(([title, links]) => (
           <div className="footer-col" key={title}>

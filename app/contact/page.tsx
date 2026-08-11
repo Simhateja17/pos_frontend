@@ -23,7 +23,7 @@ export default function ContactPage() {
           Contact us
         </div>
         <h1>Let&apos;s talk about<br /><em>your store.</em></h1>
-        <p>Questions about pricing, a demo request, or feedback on the product — our team usually replies within one business day.</p>
+        <p>Questions about pricing, a demo request, or feedback on the product? Our team usually replies within one business day.</p>
       </section>
 
       <section className="content-section">
@@ -42,7 +42,7 @@ export default function ContactPage() {
           <div>
             {submitted ? (
               <div className="feat-card" style={{ padding: 32 }}>
-                <div className="feat-h">Thanks — message sent.</div>
+                <div className="feat-h">Thanks, message sent.</div>
                 <p className="feat-p">We&apos;ve received your note and will get back to you within one business day.</p>
               </div>
             ) : (

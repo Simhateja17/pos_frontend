@@ -506,7 +506,7 @@ export function commitAuthenticatedImport(id: string, body: CommitImportRequest)
         body,
         headers: await authorizationHeader(),
       }),
-    'That import could not be applied. Nothing was changed — please retry.',
+    'That import could not be applied. Nothing was changed. Please retry.',
   )
 }
 

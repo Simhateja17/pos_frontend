@@ -2,7 +2,7 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Blog — Ambel POS" };
+export const metadata = { title: "Blog | Ambel POS" };
 
 const POSTS: [string, string, string, string, string][] = [
   ["GST", "#0A2348", "GSTR-1 filing checklist for multi-store retailers in 2026", "Jan 18, 2026 · 6 min read", "M"],

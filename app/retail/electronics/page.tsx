@@ -1,7 +1,7 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
-export const metadata = { title: "Electronics POS — Ambel POS" };
+export const metadata = { title: "Electronics POS | Ambel POS" };
 
 export default function Page() {
   return (
@@ -16,7 +16,7 @@ export default function Page() {
         ["0.02%", "Warranty mismatch rate"],
       ]}
       features={[
-        { title: "IMEI & Serial Capture", body: "Scan or enter serial/IMEI at the point of sale — automatically linked to the invoice for warranty claims." },
+        { title: "IMEI & Serial Capture", body: "Scan or enter serial/IMEI at the point of sale, automatically linked to the invoice for warranty claims." },
         { title: "Warranty & AMC Tracking", body: "Track manufacturer warranty windows and AMC renewals per unit, with alerts before coverage lapses." },
         { title: "High-value Approval Flow", body: "Manager approval gates for big-ticket discounts, protecting margin on high-value electronics." },
         { title: "EMI & Card Settlement", body: "Reconcile EMI, card and UPI settlements against PSP reports with automatic UTR matching." },

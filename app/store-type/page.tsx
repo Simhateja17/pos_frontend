@@ -48,7 +48,7 @@ export default function StoreTypePage() {
     } catch {
       // Seeding is a convenience, not a gate — a failure must not trap the
       // owner on this screen. They can add categories from the app instead.
-      setMessage('We couldn’t set up your starter categories — you can add them from Categories later.')
+      setMessage('We couldn’t set up your starter categories. You can add them from Categories later.')
     }
 
     setSaving(false)
@@ -97,7 +97,7 @@ export default function StoreTypePage() {
             cursor: 'pointer',
           }}
         >
-          Skip — I’ll set up categories myself
+          Skip, I’ll set up categories myself
         </button>
       </div>
     </main>

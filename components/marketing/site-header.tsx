@@ -2,13 +2,9 @@
 
 import { useEffect } from "react";
 
-const LOGO = (
-  <img
-    src="/logo.png"
-    alt="Ambel POS"
-    style={{ maxWidth: "68%", maxHeight: "68%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
-  />
-);
+import { AmbelMark } from "@/components/brand/ambel-mark";
+
+const LOGO = <AmbelMark size={38} />;
 
 export default function SiteHeader({ authenticated = false }: { authenticated?: boolean }) {
   useEffect(() => {

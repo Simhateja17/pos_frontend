@@ -3,15 +3,15 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { PricingGrid } from "@/components/marketing/pricing-plans";
 
-export const metadata = { title: "Pricing — Ambel POS" };
+export const metadata = { title: "Pricing | Ambel POS" };
 
 const FAQ: [string, string][] = [
   ["Is there a setup fee?", "No. Every plan includes onboarding, catalog import and hardware pairing support at no extra cost."],
-  ["Can I switch plans later?", "Yes — upgrade or downgrade at any time. Changes apply from your next billing cycle, and we prorate upgrades made mid-cycle."],
+  ["Can I switch plans later?", "Yes. Upgrade or downgrade at any time. Changes apply from your next billing cycle, and we prorate upgrades made mid-cycle."],
   ["Do you charge per transaction?", "No. All plans are flat monthly or annual fees regardless of how many bills you process."],
   ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
   ["Is GST filing included?", "GSTR-1 ready reports and exports are included on every plan. Direct filing to the GST portal is available as an add-on."],
-  ["Do you offer discounts for annual billing?", "Yes — paying annually saves 2 months compared to monthly billing on Starter and Growth."],
+  ["Do you offer discounts for annual billing?", "Yes. Paying annually saves 2 months compared to monthly billing on Starter and Growth."],
 ];
 
 export default function PricingPage() {

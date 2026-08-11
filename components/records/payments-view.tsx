@@ -54,9 +54,9 @@ export function PaymentsView() {
 
   const summary = data?.summary
   const metrics: KpiItem[] = [
-    { label: 'Collected', value: summary ? money.format(Number(summary.collectedAmount)) : '—', meta: 'Server-calculated' },
-    { label: 'Refunded', value: summary ? money.format(Number(summary.refundedAmount)) : '—', meta: 'Server-calculated' },
-    { label: 'Net Collected', value: summary ? money.format(Number(summary.netAmount)) : '—', meta: 'Server-calculated' },
+    { label: 'Collected', value: summary ? money.format(Number(summary.collectedAmount)) : '-', meta: 'Server-calculated' },
+    { label: 'Refunded', value: summary ? money.format(Number(summary.refundedAmount)) : '-', meta: 'Server-calculated' },
+    { label: 'Net Collected', value: summary ? money.format(Number(summary.netAmount)) : '-', meta: 'Server-calculated' },
     { label: 'Settlement', value: <UnavailableValue />, meta: 'No settlement endpoint is available' },
   ]
 

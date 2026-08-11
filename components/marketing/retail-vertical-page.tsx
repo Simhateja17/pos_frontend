@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
@@ -32,7 +34,9 @@ export default function RetailVerticalPage({
       </section>
 
       <div className="stats-band" style={{ marginBottom: 0 }}>
-        <div className="stats-inner" style={{ gridTemplateColumns: `repeat(${stats.length},1fr)` }}>
+        {/* a custom property, not an inline grid-template — an inline template
+            would outrank the mobile media queries and keep N columns on phones */}
+        <div className="stats-inner" style={{ "--stat-cols": stats.length } as CSSProperties}>
           {stats.map(([num, label]) => (
             <div className="stat-item" key={label}>
               <div className="stat-num">{num}</div>
