@@ -328,7 +328,7 @@
 }
 
 @media print {
-  :global(body) * {
+  :global(body) *:not(.printRoot):not(.printRoot *) {
     visibility: hidden;
   }
 
