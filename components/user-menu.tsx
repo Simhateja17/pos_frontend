@@ -8,6 +8,7 @@ import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import type { AppContext } from '@/lib/api/authenticated-client'
 import styles from './user-menu.module.css'
+import { setActiveStoreId } from '@/lib/store-context'
 
 function initials(name?: string | null) {
   if (!name?.trim()) return '—'
@@ -50,6 +51,7 @@ export function UserMenu({
       // if the cashier-session request cannot reach the server.
     }
     if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
+    setActiveStoreId(null)
     await supabase.auth.signOut()
     router.push('/login')
   }

@@ -1,6 +1,6 @@
 import type { components, paths } from './schema'
 import { apiClient } from './client'
-import { supabase } from '@/lib/supabase/client'
+import { authHeaders } from '@/lib/api/auth-headers'
 
 export type AppContext = components['schemas']['AppContext']
 export type BillingStatus = components['schemas']['BillingStatus']
@@ -11,8 +11,13 @@ export type SaleList = components['schemas']['SaleList']
 export type CustomerList = components['schemas']['CustomerList']
 export type PaymentRead = components['schemas']['PaymentRead']
 export type Store = components['schemas']['Store']
+export type StoreList = components['schemas']['StoreList']
 export type CreateStoreRequest = components['schemas']['CreateStoreRequest']
 export type UpdateStoreRequest = components['schemas']['UpdateStoreRequest']
+export type StockTransfer = components['schemas']['StockTransfer']
+export type CreateStockTransferRequest = components['schemas']['CreateStockTransferRequest']
+export type ReceiveStockTransferRequest = components['schemas']['ReceiveStockTransferRequest']
+export type TransferDestination = components['schemas']['TransferDestinationList'][number]
 export type Supplier = components['schemas']['Supplier']
 export type CreateSupplierRequest = components['schemas']['CreateSupplierRequest']
 export type UpdateSupplierRequest = components['schemas']['UpdateSupplierRequest']
@@ -62,24 +67,18 @@ export class AuthenticatedRequestError extends Error {
 }
 
 async function authorizationHeader() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession()
-
-  if (error || !session?.access_token) {
+  const headers = await authHeaders()
+  if (!headers) {
     throw new AuthenticatedRequestError('unauthenticated', 'Your session has expired. Sign in again to continue.')
   }
-
-  const headers: Record<string, string> = { Authorization: `Bearer ${session.access_token}` }
-
-  // On a shared till the PIN-switched cashier is the acting identity; the
-  // shell's /context call must read as them, not the logged-in device owner.
-  const operatorToken =
-    typeof window !== 'undefined' ? window.sessionStorage.getItem('operatorToken') : null
-  if (operatorToken) headers['X-Operator-Token'] = operatorToken
-
   return headers
+}
+
+function apiErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'error' in error && typeof error.error === 'string') {
+    return error.error
+  }
+  return fallback
 }
 
 export async function getAuthenticatedNotifications(): Promise<NotificationList> {
@@ -197,7 +196,7 @@ async function authenticatedRead<T>(
     const { data, error, response } = await request()
     if (response.status === 401) throw new AuthenticatedRequestError('unauthenticated', 'Your session has expired. Sign in again to continue.')
     if (response.status === 403) throw new AuthenticatedRequestError('forbidden', 'Your account cannot access these store records.')
-    if (error || !data) throw new AuthenticatedRequestError('unavailable', message)
+    if (error || !data) throw new AuthenticatedRequestError('unavailable', apiErrorMessage(error, message))
     return data
   } catch (error) {
     if (error instanceof AuthenticatedRequestError) throw error
@@ -233,12 +232,11 @@ export function getAuthenticatedPayments(query: PaymentRecordQuery): Promise<Pay
  * or cashier receives only their own. The client does not filter — doing so
  * here would be a UI convenience masquerading as a permission.
  */
-export async function getAuthenticatedStores(): Promise<Store[]> {
-  const payload = await authenticatedRead(
+export function getAuthenticatedStores(): Promise<StoreList> {
+  return authenticatedRead(
     async () => apiClient.GET('/stores', { headers: await authorizationHeader() }),
     'Store records are unavailable right now. Please retry.',
   )
-  return payload.stores
 }
 
 export function createAuthenticatedStore(body: CreateStoreRequest): Promise<Store> {
@@ -257,6 +255,42 @@ export function updateAuthenticatedStore(storeId: string, body: UpdateStoreReque
         headers: await authorizationHeader(),
       }),
     'That store could not be saved. Please retry.',
+  )
+}
+
+export function getAuthenticatedTransfers(): Promise<StockTransfer[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/transfers', { headers: await authorizationHeader() }),
+    'Stock transfers are unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedTransferDestinations(): Promise<TransferDestination[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/transfers/destinations', { headers: await authorizationHeader() }),
+    'Transfer destinations are unavailable right now. Please retry.',
+  )
+}
+
+export function createAuthenticatedTransfer(body: CreateStockTransferRequest): Promise<StockTransfer> {
+  return authenticatedRead(
+    async () => apiClient.POST('/transfers', { body, headers: await authorizationHeader() }),
+    'That stock transfer could not be sent. Please retry.',
+  )
+}
+
+export function receiveAuthenticatedTransfer(
+  transferId: string,
+  body: ReceiveStockTransferRequest,
+): Promise<StockTransfer> {
+  return authenticatedRead(
+    async () =>
+      apiClient.POST('/transfers/{transferId}/receive', {
+        params: { path: { transferId } },
+        body,
+        headers: await authorizationHeader(),
+      }),
+    'That transfer receipt could not be saved. Please retry.',
   )
 }
 

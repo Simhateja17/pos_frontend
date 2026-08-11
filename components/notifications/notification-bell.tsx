@@ -47,6 +47,7 @@ export function NotificationBell() {
 
   const unread = list?.unreadCount ?? 0
   const recent = list?.notifications.slice(0, 6) ?? []
+  const digests = list?.dailyDigest.slice(0, 3) ?? []
 
   return (
     <div ref={wrapRef} style={{ position: 'relative' }}>
@@ -64,10 +65,22 @@ export function NotificationBell() {
       {open && (
         <div className={styles.panel} role="dialog" aria-label="Notifications">
           <div className={styles.panelHead}>Notifications</div>
-          {recent.length === 0 ? (
+          {recent.length === 0 && digests.length === 0 ? (
             <div className={styles.empty}>Nothing yet — you're all caught up.</div>
           ) : (
-            recent.map((n) => (
+            <>
+            {digests.map((digest) => (
+              <Link
+                key={`${digest.date}:${digest.storeId}`}
+                href="/app/notifications"
+                className={styles.item}
+                onClick={() => setOpen(false)}
+              >
+                <div className={styles.itemTitle}>{digest.storeName} · {digest.date}</div>
+                <div className={styles.itemBody}>{digest.totalCount} alert{digest.totalCount === 1 ? '' : 's'} · {digest.sampleTitles.join(', ')}</div>
+              </Link>
+            ))}
+            {recent.map((n) => (
               <Link
                 key={n.id}
                 href={n.link ?? '/app/notifications'}
@@ -77,7 +90,8 @@ export function NotificationBell() {
                 <div className={styles.itemTitle}>{n.title}</div>
                 <div className={styles.itemBody}>{n.body}</div>
               </Link>
-            ))
+            ))}
+            </>
           )}
           <Link href="/app/notifications" className={styles.viewAll} onClick={() => setOpen(false)}>
             View all

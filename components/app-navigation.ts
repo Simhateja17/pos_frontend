@@ -83,6 +83,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Purchases', href: '/app/purchases', icon: Warehouse },
       { label: 'Suppliers', href: '/app/suppliers', icon: Truck },
       { label: 'Stores', href: '/app/stores', icon: Store, ownerOnly: true },
+      { label: 'Transfers', href: '/app/transfers', icon: RefreshCw },
     ],
   },
   {
@@ -144,4 +145,15 @@ export function cashierCanAccessAppPath(pathname: string): boolean {
       (item) => item.cashierAccessible && (pathname === item.href || pathname.startsWith(`${item.href}/`)),
     ),
   )
+}
+
+export function roleCanAccessAppPath(role: 'owner' | 'manager' | 'cashier', pathname: string): boolean {
+  const candidates = APP_NAVIGATION.flatMap((group) => group.items)
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)
+  const matched = candidates[0]
+  if (!matched) return role !== 'cashier'
+  if (matched.ownerOnly) return role === 'owner'
+  if (role === 'cashier') return Boolean(matched.cashierAccessible)
+  return true
 }

@@ -2516,6 +2516,193 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List transfers sent from or awaiting receipt at the active store. Manager or owner only. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Store transfers */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockTransferList"];
+                    };
+                };
+                /** @description Manager or owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** @description Send stock from the active store. The negative source ledger movements and transfer record commit atomically and are idempotent by clientTransferId. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateStockTransferRequest"];
+                };
+            };
+            responses: {
+                /** @description Transfer sent */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockTransfer"];
+                    };
+                };
+                /** @description Invalid transfer */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Store or variant not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient stock */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers/destinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List other active shops in this business that can receive stock from the active store. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Transfer destinations */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TransferDestinationList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers/{transferId}/receive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Confirm the exact quantity that arrived at the active destination store. Positive destination movements and discrepancies commit atomically and are idempotent by clientReceiveId. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    transferId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReceiveStockTransferRequest"];
+                };
+            };
+            responses: {
+                /** @description Transfer received */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockTransfer"];
+                    };
+                };
+                /** @description Every line must be counted exactly once */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Transfer not found at this destination store */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Transfer already received or not receivable */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stores/{storeId}": {
         parameters: {
             query?: never;
@@ -4669,6 +4856,13 @@ export interface components {
                 businessName: string;
                 locality: string | null;
             };
+            store: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                locality: string | null;
+                combinedTaxRatePercent: string;
+            } | null;
             onboarding: {
                 step: number;
                 completed: boolean;
@@ -5025,6 +5219,7 @@ export interface components {
             color: string | null;
             material: string | null;
             price: string;
+            isTaxable: boolean;
             reorderThreshold: number;
             identityLocked: boolean;
             currentStock: number;
@@ -5371,6 +5566,62 @@ export interface components {
             includedInPlan: number;
             additionalPurchased: number;
         } | null;
+        StockTransferList: components["schemas"]["StockTransfer"][];
+        StockTransfer: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            clientTransferId: string;
+            /** Format: uuid */
+            clientReceiveId: string | null;
+            /** Format: uuid */
+            fromStoreId: string;
+            fromStoreName: string;
+            /** Format: uuid */
+            toStoreId: string;
+            toStoreName: string;
+            /** @enum {string} */
+            status: "sent" | "received" | "cancelled";
+            note: string | null;
+            sentAt: string;
+            receivedAt: string | null;
+            lines: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                variantId: string;
+                sku: string;
+                quantitySent: string;
+                quantityReceived: string | null;
+                discrepancy: string | null;
+            }[];
+        };
+        TransferDestinationList: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        }[];
+        CreateStockTransferRequest: {
+            /** Format: uuid */
+            clientTransferId: string;
+            /** Format: uuid */
+            toStoreId: string;
+            note?: string;
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                quantitySent: number;
+            }[];
+        };
+        ReceiveStockTransferRequest: {
+            /** Format: uuid */
+            clientReceiveId: string;
+            lines: {
+                /** Format: uuid */
+                transferLineId: string;
+                quantityReceived: number;
+            }[];
+        };
         CreateStoreRequest: {
             name: string;
             addressLine1?: string;
@@ -5439,6 +5690,7 @@ export interface components {
             notifications: components["schemas"]["Notification"][];
             unreadCount: number;
             byStore: components["schemas"]["StoreUnreadCount"][];
+            dailyDigest: components["schemas"]["NotificationDigest"][];
             businessWideUnreadCount: number;
         };
         Notification: {
@@ -5460,6 +5712,15 @@ export interface components {
             storeId: string;
             storeName: string;
             unreadCount: number;
+        };
+        NotificationDigest: {
+            date: string;
+            /** Format: uuid */
+            storeId: string;
+            storeName: string;
+            totalCount: number;
+            unreadCount: number;
+            sampleTitles: string[];
         };
         StoreSettings: {
             businessName: string;
