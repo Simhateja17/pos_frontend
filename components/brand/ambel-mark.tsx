@@ -12,14 +12,18 @@
  * without a clip path.
  */
 
+import styles from './ambel-mark.module.css'
+
 const TILE = '#4285F4'
 const PAPER = '#FFFFFF'
 
 /**
  * The tile carries the same ramp as the primary hero button
- * (--brand-dark → --brand-1 → --brand-2 on a 120deg diagonal). It is painted in
- * userSpaceOnUse coordinates so the base band samples the same ramp as the tile
- * behind it instead of restarting the gradient inside its own bounding box.
+ * (--brand-dark → --brand-1 → --brand-2 on a 120deg diagonal), and now the same
+ * motion: the stops animate on the 6s gradShift cycle that sweeps that button
+ * (see ambel-mark.module.css). It is painted in userSpaceOnUse coordinates so
+ * the base band samples the same ramp as the tile behind it instead of
+ * restarting the gradient inside its own bounding box.
  *
  * The id is a constant: every brand-tone mark on a page declares an identical
  * gradient, so duplicate defs resolve to the same paint. The inverse tone stays
@@ -56,9 +60,9 @@ export function AmbelMark({ size = 38, tone = 'brand', className, title }: Ambel
       {tone !== 'inverse' && (
         <defs>
           <linearGradient id={TILE_GRADIENT_ID} gradientUnits="userSpaceOnUse" x1="8" y1="30" x2="112" y2="90">
-            <stop offset="0" stopColor="#06337A" />
-            <stop offset="0.5" stopColor="#0058BA" />
-            <stop offset="1" stopColor="#6C9FFF" />
+            <stop offset="0" stopColor="#06337A" className={styles.stopDark} />
+            <stop offset="0.5" stopColor="#0058BA" className={styles.stopMid} />
+            <stop offset="1" stopColor="#6C9FFF" className={styles.stopLight} />
           </linearGradient>
         </defs>
       )}

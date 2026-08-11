@@ -181,7 +181,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         subscription_id: data.razorpaySubscriptionId,
         name: 'Ambel POS',
         description: `${selected.name} · ${cycle === 'annual' ? 'Annual' : 'Monthly'} subscription`,
-        theme: { color: '#0f5ec7' },
+        theme: { color: '#0058BA' },
         modal: { ondismiss: () => setMessage('Checkout was closed. Your payment attempt is saved; you can reopen it without creating a duplicate subscription.') },
         handler: async (checkout: CheckoutResponse) => {
           try {
@@ -239,13 +239,18 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                 const planQuote = plan[cycle]
                 const planAmount = cycle === 'annual' ? Math.round(planQuote.totalAmountMinor / 12) : planQuote.totalAmountMinor
                 return (
-                  <article key={plan.key} className={`${styles.card} ${selectedKey === plan.key ? styles.cardSelected : ''}`}>
+                  <article
+                    key={plan.key}
+                    className={[styles.card, plan.popular ? styles.cardFeatured : '', selectedKey === plan.key ? styles.cardSelected : ''].filter(Boolean).join(' ')}
+                  >
                     <button type="button" className={styles.cardButton} onClick={() => selectPlan(plan.key)} aria-pressed={selectedKey === plan.key}>
                       {plan.popular && <span className={styles.popular}>Most popular</span>}
+                      {/* Order mirrors the marketing pricing grid: plan label, price,
+                          billing note, then the one-line pitch above the features. */}
                       <h2 className={styles.name}>{plan.name}</h2>
-                      <p className={styles.description}>{plan.description}</p>
                       <div className={styles.price}><strong>{money(planAmount, plan.currency, region)}</strong><span>/mo equivalent</span></div>
                       <p className={styles.annualNote}>{cycle === 'annual' ? `Billed ${money(planQuote.totalAmountMinor, plan.currency, region)} annually` : 'Billed every month'}</p>
+                      <p className={styles.description}>{plan.description}</p>
                       <ul className={styles.features}>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
                     </button>
                     {selectedKey === plan.key && <div className={styles.quote} aria-label="Payment summary">

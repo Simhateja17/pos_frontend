@@ -53,11 +53,11 @@ export default function SiteFooter() {
         ))}
       </div>
       <div className="footer-bottom">
-        <span>© 2026 Ambel Retail Technologies Pvt. Ltd.</span>
+        <span>© 2026 Couture Services Private Limited</span>
         <div style={{ display: "flex", gap: 20 }}>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
-          <span>GST: 27ABCDE1234F1Z5</span>
+          <span>GST: 37AAMCC4557F1ZF</span>
         </div>
       </div>
     </footer>
