@@ -1,11 +1,18 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
-import { type CustomerList, getAuthenticatedCustomers } from '@/lib/api/authenticated-client'
-import { Card, CardHead, DataTable, PageHead, SearchField } from '@/components/couture/ui'
+import { Card, CardHead, DataTable, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { Pagination } from './orders-view'
+import {
+  createCustomer,
+  getCustomerRecords,
+  type CustomerList,
+  type CustomerWrite,
+} from '@/components/customers/api'
+import { CustomerForm } from '@/components/customers/customer-form'
 
 const dateOnly = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' })
 
@@ -15,13 +22,16 @@ export function CustomersView() {
   const [cursor, setCursor] = useState<string | undefined>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const load = useCallback(
     async (nextCursor?: string) => {
       setLoading(true)
       setError(null)
       try {
-        setData(await getAuthenticatedCustomers({ search: search || undefined, cursor: nextCursor, limit: 25 }))
+        setData(await getCustomerRecords(search || undefined, nextCursor))
         setCursor(nextCursor)
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : 'Customer records are unavailable right now.')
@@ -37,13 +47,32 @@ export function CustomersView() {
     return () => window.clearTimeout(timer)
   }, [load])
 
+  function openCreate() {
+    setFormError(null)
+    setFormOpen(true)
+  }
+
+  async function saveCustomer(body: CustomerWrite) {
+    setSaving(true)
+    setFormError(null)
+    try {
+      await createCustomer(body)
+      setFormOpen(false)
+      await load()
+    } catch (cause) {
+      setFormError(cause instanceof Error ? cause.message : 'That customer could not be saved.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <>
       <PageHead
         title="Customers"
-        sub="Profiles, purchase history and loyalty"
+        sub="Profiles, billing identity and purchase history"
         actions={
-          <button className="btn" disabled title="Customer creation is not available on this route">
+          <button className="btn btn-pri" onClick={openCreate}>
             <Plus size={15} /> New customer
           </button>
         }
@@ -69,19 +98,25 @@ export function CustomersView() {
         {!loading && !error && data?.items.length === 0 && (
           <EmptyState
             title={search ? 'No customers match this search' : 'No customers yet'}
-            body="Customers are created during billing. Their profiles appear here once the server records them."
+            body="Create a profile when a shopper wants billing details saved. Walk-in checkout can still remain anonymous."
+            action={<button className="btn btn-pri" onClick={openCreate}><Plus size={15} /> Create customer</button>}
           />
         )}
 
         {!loading && !error && data && data.items.length > 0 && (
-          <DataTable cols={['Customer', 'Phone', 'Email', 'Created', 'Profile']} minWidth={760}>
+          <DataTable cols={['Customer', 'Phone', 'Email', 'GSTIN', 'Created', 'Profile']} minWidth={900}>
             {data.items.map((customer) => (
               <tr key={customer.id}>
-                <td className="t-strong">{customer.name ?? 'Unnamed customer'}</td>
+                <td className="t-strong">{customer.billingName ?? customer.name ?? 'Unnamed customer'}</td>
                 <td className="t-mono t-sub">{customer.phone ?? '-'}</td>
                 <td className="t-sub">{customer.email ?? '-'}</td>
+                <td className="t-mono t-sub">{customer.gstin ?? '-'}</td>
                 <td className="t-mono t-sub">{dateOnly.format(new Date(customer.createdAt))}</td>
-                <td className="t-sub">Not available</td>
+                <td>
+                  <Link className="btn btn-sm" href={`/app/customers/${customer.id}`}>
+                    View profile
+                  </Link>
+                </td>
               </tr>
             ))}
           </DataTable>
@@ -98,6 +133,18 @@ export function CustomersView() {
           />
         )}
       </Card>
+
+      {formOpen && (
+        <Modal title="New customer" onClose={() => !saving && setFormOpen(false)}>
+          <CustomerForm
+            customer={null}
+            onSave={saveCustomer}
+            onCancel={() => setFormOpen(false)}
+            saving={saving}
+            serverError={formError}
+          />
+        </Modal>
+      )}
     </>
   )
 }
