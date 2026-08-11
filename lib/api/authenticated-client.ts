@@ -56,6 +56,24 @@ export type SaleRecordQuery = NonNullable<paths['/sales/records']['get']['parame
 export type CustomerRecordQuery = NonNullable<paths['/customers/records']['get']['parameters']['query']>
 export type PaymentRecordQuery = NonNullable<paths['/sales/payments']['get']['parameters']['query']>
 
+/**
+ * Keep the shell tolerant during a rolling deploy. Older backends return the
+ * notifications array but predate the owner dailyDigest field; normalizing at
+ * the API boundary prevents a missing optional field from crashing every app
+ * page that renders the notification bell.
+ */
+function normalizeNotificationList(data: NotificationList): NotificationList {
+  const payload = data as NotificationList & {
+    notifications?: unknown
+    dailyDigest?: unknown
+  }
+  return {
+    ...data,
+    notifications: Array.isArray(payload.notifications) ? payload.notifications as NotificationList['notifications'] : [],
+    dailyDigest: Array.isArray(payload.dailyDigest) ? payload.dailyDigest as NotificationList['dailyDigest'] : [],
+  }
+}
+
 export class AuthenticatedRequestError extends Error {
   constructor(
     public readonly kind: 'unauthenticated' | 'forbidden' | 'network' | 'unavailable',
@@ -95,7 +113,7 @@ export async function getAuthenticatedNotifications(): Promise<NotificationList>
       throw new AuthenticatedRequestError('unavailable', 'Notifications are unavailable right now. Please retry.')
     }
 
-    return data
+    return normalizeNotificationList(data)
   } catch (error) {
     if (error instanceof AuthenticatedRequestError) throw error
 
