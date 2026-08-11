@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { FolderTree, Monitor, UserCog } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FolderTree, Monitor, Store as StoreIcon, UserCog } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, Fld, ListRow, PageHead } from '@/components/couture/ui'
 import type { BarcodeLabelFormat } from '@/components/barcode-label'
 import { ErrorState, LoadingState } from '@/components/couture/states'
-import { getActiveStoreId } from '@/lib/store-context'
+import { getActiveStoreId, setActiveStoreId } from '@/lib/store-context'
+import { getAuthenticatedStores, type Store } from '@/lib/api/authenticated-client'
 
 type Settings = {
   businessName: string
@@ -26,6 +28,7 @@ type Settings = {
   combinedTaxRatePercent: string
   discountThresholdPercent: string
   barcodeLabelFormat: BarcodeLabelFormat
+  editableFields: Record<string, boolean>
 }
 
 /**
@@ -50,6 +53,7 @@ const BUSINESS_TYPE_LABELS: Record<NonNullable<Settings['businessType']>, string
 }
 
 export function SettingsView() {
+  const router = useRouter()
   const [settings, setSettings] = useState<Settings | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -69,17 +73,27 @@ export function SettingsView() {
   const [labelError, setLabelError] = useState<string | null>(null)
   const [labelSaved, setLabelSaved] = useState(false)
   const [savingLabel, setSavingLabel] = useState(false)
+  const [stores, setStores] = useState<Store[]>([])
+  const [storePickerError, setStorePickerError] = useState<string | null>(null)
+  const [replayingTour, setReplayingTour] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
 
     // Combined dashboards use the sentinel `all`, but settings contain
-    // store-specific tax and place-of-supply values. Do not send a request
-    // that the backend must reject; guide the owner to choose a shop first.
+    // store-specific address, tax and place-of-supply values. Show the picker
+    // before making a settings request so the API never has to guess a shop.
     if (getActiveStoreId() === 'all') {
+      try {
+        const payload = await getAuthenticatedStores()
+        setStores(payload.stores.filter((store) => store.isActive))
+        setStorePickerError(null)
+      } catch (cause) {
+        setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+      }
       setLoading(false)
-      setLoadError('Settings apply to one store. Open a specific store from Stores before continuing.')
+      setLoadError('choose_store')
       return
     }
 
@@ -99,6 +113,29 @@ export function SettingsView() {
     setLabelFormat(typed.barcodeLabelFormat)
   }, [])
 
+  function canEdit(field: string): boolean {
+    if (!settings) return false
+    // The metadata is server-owned. The fallback keeps an older rolling
+    // backend from making company fields writable by accident.
+    return settings.editableFields?.[field] ?? ['addressLine1', 'addressLine2', 'city', 'state', 'postalCode', 'placeOfSupply', 'combinedTaxRatePercent'].includes(field)
+  }
+
+  function chooseStore(storeId: string) {
+    setActiveStoreId(storeId)
+    setLoadError(null)
+    void load()
+  }
+
+  async function replayTour() {
+    setReplayingTour(true)
+    const result = await apiClient.PATCH('/setup/tour', {
+      body: { status: 'in_progress', lastStep: 'dashboard', seenSteps: [] },
+      headers: await authHeaders(),
+    })
+    setReplayingTour(false)
+    if (!result.error) router.push('/app/dashboard#guided-tour')
+  }
+
   useEffect(() => {
     void load()
   }, [load])
@@ -110,20 +147,12 @@ export function SettingsView() {
     setProfileSaved(false)
     setSavingProfile(true)
 
+    const body: Record<string, unknown> = {}
+    for (const field of ['businessName', 'tradeName', 'addressLine1', 'addressLine2', 'city', 'state', 'postalCode', 'gstStatus', 'gstin', 'pan', 'placeOfSupply'] as const) {
+      if (canEdit(field)) body[field] = form[field]
+    }
     const { data, error } = await apiClient.PATCH('/settings', {
-      body: {
-        businessName: form.businessName,
-        tradeName: form.tradeName,
-        addressLine1: form.addressLine1,
-        addressLine2: form.addressLine2,
-        city: form.city,
-        state: form.state,
-        postalCode: form.postalCode,
-        gstStatus: form.gstStatus,
-        gstin: form.gstin,
-        pan: form.pan,
-        placeOfSupply: form.placeOfSupply,
-      },
+      body: body as never,
       headers: await authHeaders(),
     })
 
@@ -131,7 +160,7 @@ export function SettingsView() {
 
     if (error) {
       setProfileError(
-        (error as { error?: string }).error === 'Only the owner can change store settings'
+        (error as { error?: string }).error === 'Only the owner can change these settings'
           ? 'Only the store owner can change these details.'
           : 'That could not be saved. Try again.',
       )
@@ -139,6 +168,7 @@ export function SettingsView() {
     }
 
     setSettings(data as Settings)
+    setForm(data as Settings)
     setProfileSaved(true)
   }
 
@@ -148,11 +178,10 @@ export function SettingsView() {
     setTaxSaved(false)
     setSavingTax(true)
 
+    const body: Record<string, unknown> = { combinedTaxRatePercent: Number(taxRate) }
+    if (canEdit('discountThresholdPercent')) body.discountThresholdPercent = Number(discountThreshold)
     const { data, error } = await apiClient.PATCH('/settings', {
-      body: {
-        combinedTaxRatePercent: Number(taxRate),
-        discountThresholdPercent: Number(discountThreshold),
-      },
+      body: body as never,
       headers: await authHeaders(),
     })
 
@@ -160,7 +189,7 @@ export function SettingsView() {
 
     if (error) {
       setTaxError(
-        (error as { error?: string }).error === 'Only the owner can change store settings'
+        (error as { error?: string }).error === 'Only the owner can change these settings'
           ? 'Only the store owner can change these details.'
           : 'That could not be saved. Try again.',
       )
@@ -169,6 +198,7 @@ export function SettingsView() {
 
     const typed = data as Settings
     setSettings(typed)
+    setForm(typed)
     setTaxRate(typed.combinedTaxRatePercent)
     setDiscountThreshold(typed.discountThresholdPercent)
     setTaxSaved(true)
@@ -181,7 +211,7 @@ export function SettingsView() {
     setSavingLabel(true)
 
     const { data, error } = await apiClient.PATCH('/settings', {
-      body: { barcodeLabelFormat: labelFormat },
+      body: { barcodeLabelFormat: labelFormat } as never,
       headers: await authHeaders(),
     })
 
@@ -189,7 +219,7 @@ export function SettingsView() {
 
     if (error) {
       setLabelError(
-        (error as { error?: string }).error === 'Only the owner can change store settings'
+        (error as { error?: string }).error === 'Only the owner can change these settings'
           ? 'Only the store owner can change these details.'
           : 'That could not be saved — try again.',
       )
@@ -198,6 +228,7 @@ export function SettingsView() {
 
     const typed = data as Settings
     setSettings(typed)
+    setForm(typed)
     setLabelFormat(typed.barcodeLabelFormat)
     setLabelSaved(true)
   }
@@ -213,19 +244,37 @@ export function SettingsView() {
     )
   }
 
+  if (loadError === 'choose_store') {
+    return (
+      <>
+        <PageHead title="Settings" sub="Choose a store" />
+        <Card>
+          <CardHead title="Which store do you want to configure?" sub="Address, tax and place-of-supply settings belong to one store." />
+          <CardPad>
+            {storePickerError ? <ErrorState message={storePickerError} onRetry={() => void load()} /> : null}
+            {!storePickerError && stores.length === 0 ? <LoadingState label="Loading stores" /> : null}
+            {stores.map((store) => (
+              <ListRow
+                key={store.id}
+                icon={<StoreIcon size={17} strokeWidth={1.85} />}
+                title={store.name}
+                sub={[store.city, store.state].filter(Boolean).join(' · ') || 'Address not set'}
+                action={<button className="btn btn-sm btn-pri" onClick={() => chooseStore(store.id)}>Open settings</button>}
+              />
+            ))}
+          </CardPad>
+        </Card>
+      </>
+    )
+  }
+
   if (loadError || !settings || !form) {
     return (
       <>
         <PageHead title="Settings" sub="Store configuration" />
         <Card>
           <ErrorState message={loadError ?? 'Settings are unavailable.'} onRetry={() => void load()} />
-          {getActiveStoreId() === 'all' ? (
-            <div style={{ padding: '0 24px 24px', textAlign: 'center' }}>
-              <Link className="btn btn-sm btn-pri" href="/app/stores">
-                Open Stores
-              </Link>
-            </div>
-          ) : null}
+          {getActiveStoreId() === 'all' ? <div style={{ padding: '0 24px 24px', textAlign: 'center' }}><Link className="btn btn-sm btn-pri" href="/app/stores">Open Stores</Link></div> : null}
         </Card>
       </>
     )
@@ -234,6 +283,10 @@ export function SettingsView() {
   return (
     <>
       <PageHead title="Settings" sub="Store configuration" />
+
+      <Card>
+        <CardHead title="Guided tour" sub="Replay the back-office tour for this staff member and store." right={<button className="btn btn-sm" onClick={() => void replayTour()} disabled={replayingTour}>{replayingTour ? 'Starting…' : 'Replay guided tour'}</button>} />
+      </Card>
 
       <Card>
         <CardHead title="Staff, Counters & Categories" sub="Managed on their own screens" />
@@ -280,9 +333,11 @@ export function SettingsView() {
               : 'Business type not set'
           }
           right={
-            <Link className="btn btn-sm" href="/store-type">
-              {settings.businessType ? 'Change & add categories' : 'Set business type'}
-            </Link>
+            canEdit('businessType') ? (
+              <Link className="btn btn-sm" href="/store-type">
+                {settings.businessType ? 'Change & add categories' : 'Set business type'}
+              </Link>
+            ) : <span className="t-sub" style={{ fontSize: 12 }}>Owner only</span>
           }
         />
         <CardPad>
@@ -301,6 +356,7 @@ export function SettingsView() {
                 <input
                   id="settings-business-name"
                   required
+                  disabled={!canEdit('businessName')}
                   value={form.businessName}
                   onChange={(e) => setForm({ ...form, businessName: e.target.value })}
                 />
@@ -308,6 +364,7 @@ export function SettingsView() {
               <Fld id="settings-trade-name" label="Trade / brand name">
                 <input
                   id="settings-trade-name"
+                  disabled={!canEdit('tradeName')}
                   value={form.tradeName ?? ''}
                   onChange={(e) => setForm({ ...form, tradeName: e.target.value || null })}
                 />
@@ -322,6 +379,7 @@ export function SettingsView() {
               <input
                 id="settings-address1"
                 required
+                disabled={!canEdit('addressLine1')}
                 value={form.addressLine1}
                 onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
               />
@@ -329,6 +387,7 @@ export function SettingsView() {
             <Fld id="settings-address2" label="Address line 2">
               <input
                 id="settings-address2"
+                disabled={!canEdit('addressLine2')}
                 value={form.addressLine2 ?? ''}
                 onChange={(e) => setForm({ ...form, addressLine2: e.target.value || null })}
               />
@@ -338,6 +397,7 @@ export function SettingsView() {
                 <input
                   id="settings-city"
                   required
+                  disabled={!canEdit('city')}
                   value={form.city}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
                 />
@@ -346,6 +406,7 @@ export function SettingsView() {
                 <input
                   id="settings-state"
                   required
+                  disabled={!canEdit('state')}
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
                 />
@@ -354,6 +415,7 @@ export function SettingsView() {
                 <input
                   id="settings-postal-code"
                   required
+                  disabled={!canEdit('postalCode')}
                   value={form.postalCode}
                   onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
                 />
@@ -364,6 +426,7 @@ export function SettingsView() {
               <Fld id="settings-gst-status" label="GST registration">
                 <select
                   id="settings-gst-status"
+                  disabled={!canEdit('gstStatus')}
                   value={form.gstStatus ?? ''}
                   onChange={(e) =>
                     setForm({ ...form, gstStatus: (e.target.value || null) as Settings['gstStatus'] })
@@ -379,6 +442,7 @@ export function SettingsView() {
                 <input
                   id="settings-gstin"
                   maxLength={15}
+                  disabled={!canEdit('gstin')}
                   value={form.gstin ?? ''}
                   onChange={(e) => setForm({ ...form, gstin: e.target.value || null })}
                   placeholder="Leave blank if not registered"
@@ -394,6 +458,7 @@ export function SettingsView() {
                 <input
                   id="settings-pan"
                   maxLength={10}
+                  disabled={!canEdit('pan')}
                   value={form.pan ?? ''}
                   onChange={(e) => setForm({ ...form, pan: e.target.value || null })}
                 />
@@ -401,6 +466,7 @@ export function SettingsView() {
               <Fld id="settings-place-of-supply" label="Place of supply">
                 <input
                   id="settings-place-of-supply"
+                  disabled={!canEdit('placeOfSupply')}
                   value={form.placeOfSupply ?? ''}
                   onChange={(e) => setForm({ ...form, placeOfSupply: e.target.value || null })}
                 />
@@ -408,7 +474,7 @@ export function SettingsView() {
             </div>
 
             <button type="submit" className="btn btn-pri" disabled={savingProfile} style={{ marginTop: 6 }}>
-              {savingProfile ? 'Saving…' : 'Save business profile'}
+              {savingProfile ? 'Saving…' : canEdit('businessName') ? 'Save business profile' : 'Save store details'}
             </button>
           </form>
         </CardPad>
@@ -436,6 +502,7 @@ export function SettingsView() {
                   max="100"
                   step="0.01"
                   required
+                  disabled={!canEdit('combinedTaxRatePercent')}
                   value={taxRate}
                   onChange={(e) => setTaxRate(e.target.value)}
                 />
@@ -448,6 +515,7 @@ export function SettingsView() {
                   max="100"
                   step="0.01"
                   required
+                  disabled={!canEdit('discountThresholdPercent')}
                   value={discountThreshold}
                   onChange={(e) => setDiscountThreshold(e.target.value)}
                 />
@@ -457,7 +525,7 @@ export function SettingsView() {
               Discounts above this percentage need manager or owner approval at checkout.
             </p>
 
-            <button type="submit" className="btn btn-pri" disabled={savingTax}>
+            <button type="submit" className="btn btn-pri" disabled={savingTax || !canEdit('combinedTaxRatePercent')}>
               {savingTax ? 'Saving…' : 'Save tax & discounts'}
             </button>
           </form>
@@ -481,6 +549,7 @@ export function SettingsView() {
               <select
                 id="settings-barcode-format"
                 value={labelFormat}
+                disabled={!canEdit('barcodeLabelFormat')}
                 onChange={(e) => setLabelFormat(e.target.value as BarcodeLabelFormat)}
               >
                 {BARCODE_FORMAT_OPTIONS.map((option) => (
@@ -496,7 +565,7 @@ export function SettingsView() {
                 ' Variants without one still print as Code 128 of the SKU, and the label screen says which.'}
             </p>
 
-            <button type="submit" className="btn btn-pri" disabled={savingLabel}>
+            <button type="submit" className="btn btn-pri" disabled={savingLabel || !canEdit('barcodeLabelFormat')}>
               {savingLabel ? 'Saving…' : 'Save label format'}
             </button>
           </form>

@@ -31,7 +31,7 @@ const LOAD_ERROR = "We couldn't load team members. Check your connection and try
 const roleLabel = (role: Role) => `${role[0].toUpperCase()}${role.slice(1)}`
 const ROLE_TONE: Record<Role, BadgeTone> = { owner: 'gold', manager: 'blue', cashier: 'grey' }
 
-export function MembersView({ firstPinSetup = false }: { firstPinSetup?: boolean }) {
+export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' }: { firstPinSetup?: boolean; returnTo?: string }) {
   const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
   const [sessions, setSessions] = useState<StaffSession[]>([])
@@ -67,12 +67,12 @@ export function MembersView({ firstPinSetup = false }: { firstPinSetup?: boolean
     setLoading(false)
     if (membersResult.error || !membersResult.data) { setLoadError(LOAD_ERROR); return }
     if (firstPinSetup && membersResult.data.some((member) => member.isActive && member.pinConfigured)) {
-      router.replace('/terminal/pin')
+      router.replace(returnTo)
       return
     }
     setMembers(membersResult.data)
     if (!sessionsResult.error && sessionsResult.data) setSessions(sessionsResult.data)
-  }, [firstPinSetup, router])
+  }, [firstPinSetup, returnTo, router])
   useEffect(() => { void load() }, [load])
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setInviting(true); setInviteError(null)
@@ -91,7 +91,7 @@ export function MembersView({ firstPinSetup = false }: { firstPinSetup?: boolean
       return
     }
     setInviteOpen(false); setInviteName(''); setInviteEmail(''); setTemporaryPin(''); setInviteRole('cashier'); setAccessMode('pin')
-    if (firstPinSetup) router.push('/terminal/pin')
+    if (firstPinSetup) router.push(returnTo)
     else void load()
   }
   async function changeRole() {
@@ -125,7 +125,7 @@ export function MembersView({ firstPinSetup = false }: { firstPinSetup?: boolean
       return
     }
     setResetTarget(null); setResetPin('')
-    if (firstPinSetup) router.push('/terminal/pin')
+    if (firstPinSetup) router.push(returnTo)
     else void load()
   }
 

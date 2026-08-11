@@ -26,6 +26,7 @@ import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
 import { apiClient, REGISTER_LOCKED_EVENT } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { ACTIVE_STORE_CHANGED_EVENT } from '@/lib/store-context'
+import { GuidedTour } from '@/components/onboarding/guided-tour'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -383,6 +384,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
 
+        {/*
+         * Keep the tour at the shell level so it survives route changes. It
+         * is a coachmark (there is deliberately no backdrop), which lets the
+         * user open a tour destination and still click/type in its fields.
+         */}
+        <GuidedTour />
         <main className={`content ${styles.content}`}>{children}</main>
       </div>
     </div>

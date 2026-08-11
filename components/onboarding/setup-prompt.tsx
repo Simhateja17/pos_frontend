@@ -2,76 +2,54 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ListChecks } from 'lucide-react'
+import { ArrowRight, ListChecks } from 'lucide-react'
 import { Card, CardHead, CardPad, ListRow } from '@/components/couture/ui'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
-import { SETUP_TASKS, setupTaskForStep, type SetupTask } from '@/components/onboarding/setup-tasks'
+import type { components } from '@/lib/api/schema'
+
+type SetupState = components['schemas']['SetupState']
 
 /**
- * ONBOARD-01 — the index of setup work still outstanding.
- *
- * This replaces the old "finish later" wizard links. Each row now points at the
- * screen that actually owns the data rather than a standalone form, and a task
- * is only listed when its screen exists. Renders nothing until the server
- * confirms there is something outstanding.
+ * Compact dashboard projection of the same server-derived `/setup` response.
+ * No localStorage flags or client-side checkboxes are used here; changing the
+ * active store causes the shell to reload this store's readiness state.
  */
 export function SetupPrompt() {
-  const [tasks, setTasks] = useState<SetupTask[] | null>(null)
+  const [state, setState] = useState<SetupState | null>(null)
 
   useEffect(() => {
     let active = true
-    ;(async () => {
-      try {
-        const headers = await authHeaders()
-        if (!headers) return
-        const { data } = await apiClient.GET('/onboarding', {
-          headers,
-        })
-        if (!active || !data) return
-        // pendingSteps still includes steps whose screen does not exist yet;
-        // those are filtered out rather than shown as work the owner can't do.
-        setTasks(
-          data.pendingSteps
-            .map(setupTaskForStep)
-            .filter((task): task is SetupTask => task !== undefined),
-        )
-      } catch {
-        // A failed lookup means we say nothing rather than guess at setup state.
-      }
+    void (async () => {
+      const headers = await authHeaders()
+      if (!headers) return
+      const result = await apiClient.GET('/setup', { headers })
+      if (active && result.data && !result.data.complete) setState(result.data)
     })()
-    return () => {
-      active = false
-    }
+    return () => { active = false }
   }, [])
 
-  if (!tasks || tasks.length === 0) return null
+  if (!state) return null
+  const pending = state.steps.filter((step) => !step.complete).slice(0, 3)
 
   return (
     <Card>
       <CardHead
         title="Finish setting up"
-        sub="Your till already works, these make it more useful"
-        right={
-          <span className="badge b-blue">
-            {tasks.length} of {SETUP_TASKS.length}
-          </span>
-        }
+        sub={`${state.completionPercentage}% complete · ${state.store.name}`}
+        right={<Link className="btn btn-sm btn-ghost" href="/app/setup">Open guided setup <ArrowRight size={14} /></Link>}
       />
       <CardPad style={{ paddingTop: 4 }}>
-        {tasks.map((task) => (
+        {pending.map((step) => (
           <ListRow
-            key={task.step}
+            key={step.id}
             icon={<ListChecks size={17} strokeWidth={1.85} />}
-            title={task.title}
-            sub={task.description}
-            action={
-              <Link className="btn btn-sm btn-ghost" href={task.href}>
-                Set up
-              </Link>
-            }
+            title={step.title}
+            sub={step.reason ?? step.description}
+            action={step.actionHref ? <Link className="btn btn-sm btn-ghost" href={step.actionHref}>Set up</Link> : undefined}
           />
         ))}
+        {state.steps.length > pending.length ? <p className="t-sub" style={{ margin: '8px 0 0' }}>Open guided setup to see every step and its dependencies.</p> : null}
       </CardPad>
     </Card>
   )

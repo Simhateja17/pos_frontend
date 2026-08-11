@@ -586,6 +586,259 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read server-derived, per-store setup readiness. Owners and managers may use this before terminal pairing; derived steps cannot be marked complete by the client. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Guided setup state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SetupState"];
+                    };
+                };
+                /** @description A specific store must be selected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner or manager role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/setup/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Persist one explicit optional setup decision for the active store. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetupResolutionRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated setup state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SetupState"];
+                    };
+                };
+                /** @description Invalid decision or store scope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner or manager role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/setup/scanner-test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Verify a keyboard-wedge scanner against one exact indexed SKU/barcode lookup. The input is never persisted and no sale/cart is created. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ScannerTestRequest"];
+                };
+            };
+            responses: {
+                /** @description Scanner test result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ScannerTestResponse"];
+                    };
+                };
+                /** @description Invalid scanner input or store scope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner or manager role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/setup/tour": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read guided-tour progress for the acting owner or manager in the active store. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tour progress */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TourProgress"];
+                    };
+                };
+                /** @description A specific store must be selected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner or manager role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Save resumable guided-tour progress for the acting owner or manager. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TourProgressRequest"];
+                };
+            };
+            responses: {
+                /** @description Tour progress saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TourProgress"];
+                    };
+                };
+                /** @description Invalid tour progress or store scope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner or manager role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
     "/auth/otp/request": {
         parameters: {
             query?: never;
@@ -3325,7 +3578,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Store settings — business identity, GST fields, tax rate and discount threshold. Readable by any staff role. */
+        /** @description Read settings for one selected store. Owners may choose any active store; managers are fixed to their assigned store. */
         get: {
             parameters: {
                 query?: never;
@@ -3344,6 +3597,20 @@ export interface paths {
                         "application/json": components["schemas"]["StoreSettings"];
                     };
                 };
+                /** @description A specific store must be selected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner or manager role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         put?: never;
@@ -3351,7 +3618,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Update store settings. Owner-only. Legal name/GSTIN/PAN are not amended with the government by this call — see UI copy. */
+        /** @description Update settings for one selected store. Managers may edit store address, locality, place of supply and tax rate; company identity and policy fields are owner-only. */
         patch: {
             parameters: {
                 query?: never;
@@ -3381,7 +3648,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Only the owner can change store settings */
+                /** @description The submitted fields are owner-only or the caller is not management */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -5108,6 +5375,96 @@ export interface components {
             };
         };
         CompleteOnboardingRequest: Record<string, never>;
+        SetupState: {
+            store: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                addressLine1: string | null;
+                addressLine2: string | null;
+                city: string | null;
+                state: string | null;
+                postalCode: string | null;
+            };
+            steps: components["schemas"]["SetupStep"][];
+            complete: boolean;
+            completionPercentage: number;
+            /** @enum {string|null} */
+            nextAction: "store_profile" | "owner_pin" | "team" | "products" | "counter" | "device_pairing" | "scanner" | null;
+            storeReady: boolean;
+            billingBlockers: string[];
+            decisions: {
+                /** @enum {string|null} */
+                teamMode: "staffed" | "solo_owner" | null;
+                /** @enum {string|null} */
+                scannerChoice: "verified" | "no_scanner" | "configure_later" | null;
+                /** Format: date-time */
+                scannerVerifiedAt: string | null;
+                /** Format: uuid */
+                scannerVariantId: string | null;
+            };
+            tour: components["schemas"]["TourProgress"];
+        };
+        SetupStep: {
+            id: components["schemas"]["SetupStepId"];
+            title: string;
+            description: string;
+            status: components["schemas"]["SetupStepStatus"];
+            complete: boolean;
+            required: boolean;
+            skippable: boolean;
+            billingBlocking: boolean;
+            dependsOn: components["schemas"]["SetupStepId"][];
+            actionHref: string | null;
+            reason: string | null;
+        };
+        /** @enum {string} */
+        SetupStepId: "store_profile" | "owner_pin" | "team" | "products" | "counter" | "device_pairing" | "scanner";
+        /** @enum {string} */
+        SetupStepStatus: "complete" | "incomplete" | "blocked" | "unavailable";
+        TourProgress: {
+            status: components["schemas"]["TourStatus"];
+            lastStep: string | null;
+            seenSteps: string[];
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            skippedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+        };
+        /** @enum {string} */
+        TourStatus: "not_started" | "in_progress" | "completed" | "skipped";
+        SetupResolutionRequest: {
+            /** @enum {string} */
+            decision: "team_mode";
+            value: components["schemas"]["SetupTeamMode"];
+        } | {
+            /** @enum {string} */
+            decision: "scanner_choice";
+            /** @enum {string} */
+            value: "no_scanner" | "configure_later";
+        };
+        /** @enum {string} */
+        SetupTeamMode: "staffed" | "solo_owner";
+        ScannerTestResponse: {
+            /** @enum {string} */
+            status: "verified" | "no_match";
+            matched: boolean;
+            /** Format: uuid */
+            variantId: string | null;
+            sku: string | null;
+            productName: string | null;
+            message: string;
+        };
+        ScannerTestRequest: {
+            scannedValue: string;
+        };
+        TourProgressRequest: {
+            status: components["schemas"]["TourStatus"];
+            lastStep?: string | null;
+            seenSteps?: string[];
+        };
         OtpRequestRequest: {
             /** Format: email */
             email: string;
@@ -5740,6 +6097,23 @@ export interface components {
             combinedTaxRatePercent: string;
             discountThresholdPercent: string;
             barcodeLabelFormat: components["schemas"]["BarcodeLabelFormat"];
+            editableFields: {
+                businessName: boolean;
+                tradeName: boolean;
+                addressLine1: boolean;
+                addressLine2: boolean;
+                city: boolean;
+                state: boolean;
+                postalCode: boolean;
+                gstStatus: boolean;
+                gstin: boolean;
+                pan: boolean;
+                placeOfSupply: boolean;
+                businessType: boolean;
+                combinedTaxRatePercent: boolean;
+                discountThresholdPercent: boolean;
+                barcodeLabelFormat: boolean;
+            };
         };
         /** @enum {string} */
         BarcodeLabelFormat: "code128" | "ean13" | "upca" | "qr";
@@ -5755,6 +6129,8 @@ export interface components {
             gstStatus?: "regular" | "composition" | "unregistered" | null;
             gstin?: string | null;
             pan?: string | null;
+            /** @enum {string|null} */
+            businessType?: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
             placeOfSupply?: string | null;
             combinedTaxRatePercent?: number;
             discountThresholdPercent?: number;

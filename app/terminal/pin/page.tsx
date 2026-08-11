@@ -33,6 +33,11 @@ type ManagementIntent =
   | { type: 'manage' }
   | { type: 'pair'; terminalId: string; terminalName: string }
 
+function safeReturnTo(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null
+  return value
+}
+
 const DIGIT_GRID = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'backspace'] as const
 const ROLE_LABEL: Record<Staff['role'], string> = { owner: 'Owner', manager: 'Manager', cashier: 'Cashier' }
 const ROLE_BADGE_CLASS: Record<Staff['role'], string> = {
@@ -45,6 +50,10 @@ const GENERIC_LOAD_ERROR = "Couldn't load team members. Check your connection an
 
 export default function PinPadPage() {
   const router = useRouter()
+  const [returnTo, setReturnTo] = useState<string | null>(null)
+  useEffect(() => {
+    setReturnTo(safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')))
+  }, [])
   const [staff, setStaff] = useState<Staff[]>([])
   const [terminals, setTerminals] = useState<Terminal[]>([])
   const [currentTerminal, setCurrentTerminal] = useState<Terminal | null>(null)
@@ -154,7 +163,7 @@ export default function PinPadPage() {
 
   async function continueAfterPinAuthentication() {
     if (managementIntent?.type === 'manage') {
-      router.replace('/app/settings/terminals')
+      router.replace(returnTo || '/app/settings/terminals')
       return
     }
 
@@ -164,11 +173,17 @@ export default function PinPadPage() {
       setManagementIntent(null)
       setSelectedStaffId(null)
       setPin('')
-      if (paired) await loadStaff()
+      if (paired) {
+        if (returnTo) router.replace(returnTo)
+        else await loadStaff()
+      }
       return
     }
 
-    router.replace('/app/shifts')
+    // A management flow can arrive here after pairing a browser from guided
+    // setup. Preserve that return path only after a successful PIN switch;
+    // ordinary register entry still opens the shift screen.
+    router.replace(returnTo || '/app/shifts')
   }
 
   async function submitPin(nextPin: string) {

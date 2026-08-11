@@ -114,6 +114,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
   {
     label: 'System',
     items: [
+      { label: 'Guided Setup', href: '/app/setup', icon: Rocket },
       { label: 'Import Data', href: '/app/import', icon: Upload },
       { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw },
       { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb },

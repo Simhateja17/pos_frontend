@@ -21,8 +21,14 @@ type Terminal = {
   activeCashierName?: string | null
 }
 
+function safeReturnTo(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null
+  return value
+}
+
 export function TerminalsView() {
   const router = useRouter()
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   const [terminals, setTerminals] = useState<Terminal[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +53,7 @@ export function TerminalsView() {
   }, [])
 
   useEffect(() => {
+    setReturnTo(safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')))
     void load()
   }, [load])
 
@@ -138,7 +145,7 @@ export function TerminalsView() {
     // The server interrupts any operator session attached to the old or
     // replaced counter. Do not send that now-invalid token on the refresh.
     sessionStorage.removeItem('operatorToken')
-    router.push('/terminal/pin')
+    router.push(returnTo ? `/terminal/pin?returnTo=${encodeURIComponent(returnTo)}` : '/terminal/pin')
   }
 
   return (

@@ -52,7 +52,7 @@ export default function StoreTypePage() {
     }
 
     setSaving(false)
-    router.push('/onboarding/complete')
+    router.push('/app/setup')
   }
 
   return (
@@ -86,7 +86,7 @@ export default function StoreTypePage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/onboarding/complete')}
+          onClick={() => router.push('/app/setup')}
           style={{
             display: 'block',
             margin: '14px auto 0',
