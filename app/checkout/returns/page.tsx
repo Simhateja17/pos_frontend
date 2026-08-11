@@ -1,9 +1,11 @@
 'use client'
 
 import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { getAuthenticatedTaxInvoiceForSale, type TaxDocument } from '@/lib/api/authenticated-client'
 import { Card, CardHead, CardPad, Checkbox, DataTable, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState } from '@/components/couture/states'
 
@@ -20,7 +22,7 @@ type Sale = {
     lineTotal: string
   }[]
   payments: {
-    method: 'cash' | 'card' | 'check'
+    method: 'cash' | 'card' | 'check' | 'upi'
     direction: 'payment' | 'refund'
     amount: string
     referenceCode: string | null
@@ -29,7 +31,11 @@ type Sale = {
 
 type ReturnResponse = {
   saleId: string
+  returnReferenceId: string
   refundTotal: string
+  creditNoteId: string
+  creditNoteNumber: string
+  idempotent: boolean
 }
 
 const LOOKUP_TABS = [
@@ -64,14 +70,18 @@ function ReturnsPageInner() {
   const [customerSearch, setCustomerSearch] = useState('')
   const [matches, setMatches] = useState<Sale[]>([])
   const [sale, setSale] = useState<Sale | null>(null)
+  const [taxInvoice, setTaxInvoice] = useState<TaxDocument | null>(null)
+  const [isLoadingTaxInvoice, setIsLoadingTaxInvoice] = useState(false)
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [hasSearched, setHasSearched] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successAmount, setSuccessAmount] = useState<string | null>(null)
+  const [creditNote, setCreditNote] = useState<{ id: string; number: string } | null>(null)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const [reason, setReason] = useState('')
+  const [returnReferenceId, setReturnReferenceId] = useState<string>(() => crypto.randomUUID())
 
   useEffect(() => {
     if (requestedShiftId) {
@@ -84,6 +94,28 @@ function ReturnsPageInner() {
       .catch(() => setShiftId(null))
   }, [requestedShiftId])
 
+  useEffect(() => {
+    if (!sale) {
+      setTaxInvoice(null)
+      return
+    }
+    let active = true
+    setIsLoadingTaxInvoice(true)
+    void getAuthenticatedTaxInvoiceForSale(sale.id)
+      .then((invoice) => {
+        if (active) setTaxInvoice(invoice)
+      })
+      .catch(() => {
+        if (active) setTaxInvoice(null)
+      })
+      .finally(() => {
+        if (active) setIsLoadingTaxInvoice(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [sale])
+
   const selectedLines = useMemo(
     () =>
       sale?.lines
@@ -91,9 +123,14 @@ function ReturnsPageInner() {
         .map((line) => ({
           saleLineItemId: line.id,
           quantity: quantities[line.id],
-          amount: (Number(line.lineTotal) / line.quantity) * quantities[line.id],
+          amount: (() => {
+            const invoiceLine = taxInvoice?.lines.find((candidate) => candidate.saleLineItemId === line.id)
+            return invoiceLine
+              ? (Number(invoiceLine.lineTotal) / Number(invoiceLine.quantity)) * quantities[line.id]
+              : (Number(line.lineTotal) / line.quantity) * quantities[line.id]
+          })(),
         })) ?? [],
-    [quantities, sale],
+    [quantities, sale, taxInvoice],
   )
   const refundTotal = selectedLines.reduce((sum, line) => sum + line.amount, 0)
   const originalPayments =
@@ -103,8 +140,11 @@ function ReturnsPageInner() {
   function selectSale(selected: Sale) {
     setSale(selected)
     setSuccessAmount(null)
+    setCreditNote(null)
     setIsConfirmationOpen(false)
     setError(null)
+    setTaxInvoice(null)
+    setReturnReferenceId(crypto.randomUUID())
     setQuantities(Object.fromEntries(selected.lines.map((line) => [line.id, 0])))
   }
 
@@ -165,6 +205,7 @@ function ReturnsPageInner() {
     const headers = await authHeaders()
     const result = await apiClient.POST('/returns', {
       body: {
+        returnReferenceId,
         saleId: sale.id,
         shiftId,
         reason,
@@ -187,6 +228,7 @@ function ReturnsPageInner() {
       return
     }
     setSuccessAmount(response.refundTotal)
+    setCreditNote(response.creditNoteId && response.creditNoteNumber ? { id: response.creditNoteId, number: response.creditNoteNumber } : null)
     setIsConfirmationOpen(false)
   }
 
@@ -321,9 +363,12 @@ function ReturnsPageInner() {
       {sale && (
         <form onSubmit={requestRefund}>
           <Card style={{ marginTop: 18 }}>
-            <CardHead title="Select items to return" sub={`Receipt ${sale.id}`} />
+          <CardHead
+            title="Select items to return"
+            sub={taxInvoice ? `GST invoice ${taxInvoice.documentNumber}` : isLoadingTaxInvoice ? 'Loading GST invoice…' : `Receipt ${sale.id}`}
+          />
             <CardPad>
-              <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', { label: 'Estimated refund', align: 'right' }]}>
+              <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', { label: 'Estimated refund incl. GST', align: 'right' }]}>
                 {sale.lines.map((line) => {
                   const quantity = quantities[line.id] ?? 0
                   return (
@@ -368,6 +413,13 @@ function ReturnsPageInner() {
                   )
                 })}
               </DataTable>
+              {isLoadingTaxInvoice ? (
+                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>Loading the immutable GST invoice snapshot…</p>
+              ) : !taxInvoice ? (
+                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--warning)' }}>
+                  The GST invoice snapshot could not be loaded. The server will recalculate and confirm the refund amount before recording it.
+                </p>
+              ) : null}
 
               <div
                 style={{
@@ -436,6 +488,11 @@ function ReturnsPageInner() {
             <p style={{ fontWeight: 700, color: '#0f8f63', fontSize: 14 }}>
               Refund of ₹{successAmount} recorded by the server.
             </p>
+            {creditNote ? (
+              <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
+                Credit note <Link href={`/app/documents/${creditNote.id}`} style={{ fontWeight: 700 }}>{creditNote.number}</Link> is linked to the original invoice.
+              </p>
+            ) : null}
             <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
               Return processed. Start a new sale to complete the exchange.
             </p>
@@ -473,7 +530,7 @@ function ReturnsPageInner() {
           }
         >
           <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-            Refund ₹{money(refundTotal)} for invoice {sale.id}? This sends the selected {selectedLines.length} line
+            Refund ₹{money(refundTotal)} for invoice {taxInvoice?.documentNumber ?? sale.id}? This sends the selected {selectedLines.length} line
             {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
             {originalMethods.join(', ')}), records “{reason}”, and returns approved units to stock.
           </p>

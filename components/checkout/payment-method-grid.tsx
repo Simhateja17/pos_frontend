@@ -1,9 +1,9 @@
 'use client'
 
-import { Banknote, CreditCard, ReceiptText } from 'lucide-react'
+import { Banknote, CreditCard, QrCode, ReceiptText } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-export type TenderMethod = 'cash' | 'card' | 'check'
+export type TenderMethod = 'cash' | 'card' | 'check' | 'upi'
 
 export interface TenderRow {
   method: TenderMethod
@@ -15,20 +15,18 @@ const METHOD_LABELS: Record<TenderMethod, string> = {
   cash: 'Cash',
   card: 'Card',
   check: 'Check',
+  upi: 'UPI',
 }
 
 const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
   cash: <Banknote size={16} strokeWidth={1.85} />,
   card: <CreditCard size={16} strokeWidth={1.85} />,
   check: <ReceiptText size={16} strokeWidth={1.85} />,
+  upi: <QrCode size={16} strokeWidth={1.85} />,
 }
 
-/**
- * Only the tender methods with a real Phase 3 backend contract are offered.
- * The prototype also showed UPI/Wallet/Split/Gift tiles; those are deliberately
- * not rendered because no contract accepts them yet.
- */
-const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'check']
+/** These are the persisted POS tender methods. UPI records an external UPI reference; it is not a gateway capture. */
+const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi', 'check']
 
 export function PaymentMethodGrid({
   selected,
@@ -131,14 +129,15 @@ export function PaymentMethodGrid({
               placeholder="₹0.00"
             />
 
-            {row.method === 'card' && (
+            {(row.method === 'card' || row.method === 'upi') && (
               <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
-                <span>Approval code</span>
+                <span>{row.method === 'upi' ? 'UPI transaction/reference code' : 'Approval code'}</span>
                 <input
                   value={row.referenceCode ?? ''}
                   disabled={disabled}
                   onChange={(e) => onRowChange(index, { ...row, referenceCode: e.target.value })}
-                  placeholder="Code from the card terminal"
+                  placeholder={row.method === 'upi' ? 'UPI reference from the customer app' : 'Code from the card terminal'}
+                  required
                 />
               </label>
             )}

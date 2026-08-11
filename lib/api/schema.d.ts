@@ -2120,7 +2120,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    method?: "cash" | "card" | "check";
+                    method?: "cash" | "card" | "check" | "upi";
                     status?: "completed" | "refunded";
                     from?: string;
                     to?: string;
@@ -2227,12 +2227,23 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Return processed */
+                /** @description Existing return replayed idempotently */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReturnResponse"];
+                    };
+                };
+                /** @description Return processed and credit note created */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ReturnResponse"];
+                    };
                 };
                 /** @description Invalid request, over-return, refund-sum mismatch, or refund method not used on the original sale */
                 400: {
@@ -5013,6 +5024,267 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tax-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List immutable, tenant-scoped GST tax invoices and credit notes. The response is a document snapshot and never recalculates historical values from current catalogue or tax settings. */
+        get: {
+            parameters: {
+                query?: {
+                    documentType?: components["schemas"]["TaxDocumentType"];
+                    from?: string;
+                    to?: string;
+                    customerId?: string;
+                    documentNumber?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tax document summaries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxDocumentList"];
+                    };
+                };
+                /** @description Invalid tax document filters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tax-documents/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create or return the immutable GST tax invoice for a completed sale. Number allocation and the document snapshot are committed atomically and the operation is idempotent per sale. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateTaxInvoiceRequest"];
+                };
+            };
+            responses: {
+                /** @description Tax invoice */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxDocument"];
+                    };
+                };
+                /** @description Invalid invoice request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sale not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tax-documents/invoices/sale/{saleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the immutable tax invoice for a sale, creating the snapshot lazily if an older completed sale has not received one yet. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    saleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tax invoice */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxDocument"];
+                    };
+                };
+                /** @description Invalid sale id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sale or tax invoice not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tax-documents/invoices/{invoiceId}/credit-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List credit-note snapshots linked to a tax invoice. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invoiceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Credit-note summaries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxDocumentSummary"][];
+                    };
+                };
+                /** @description Invalid invoice id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Tax invoice not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tax-documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read one immutable GST tax-document snapshot, including its line and payment snapshots. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    documentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tax document */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxDocument"];
+                    };
+                };
+                /** @description Invalid document id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Tax document not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5757,7 +6029,7 @@ export interface components {
         };
         PaymentInput: {
             /** @enum {string} */
-            method: "cash" | "card" | "check";
+            method: "cash" | "card" | "check" | "upi";
             amount: string;
             referenceCode?: string;
         };
@@ -5781,6 +6053,8 @@ export interface components {
         };
         CreateReturnRequest: {
             /** Format: uuid */
+            returnReferenceId: string;
+            /** Format: uuid */
             saleId: string;
             /** Format: uuid */
             shiftId: string;
@@ -5790,12 +6064,7 @@ export interface components {
                 saleLineItemId: string;
                 quantity: number;
             }[];
-            refundPayments: {
-                /** @enum {string} */
-                method: "cash" | "card" | "check";
-                amount: string;
-                referenceCode?: string;
-            }[];
+            refundPayments: components["schemas"]["PaymentInput"][];
         };
         CustomerList: {
             items: components["schemas"]["Customer"][];
@@ -6523,6 +6792,161 @@ export interface components {
             providerMessageId?: string;
             /** Format: uuid */
             logId?: string;
+        };
+        ReturnResponse: {
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            returnReferenceId: string;
+            refundedLines?: {
+                /** Format: uuid */
+                saleLineItemId: string;
+                quantity: number;
+                refundAmount: string;
+            }[];
+            refundTotal: string;
+            /** Format: uuid */
+            creditNoteId: string;
+            creditNoteNumber: string;
+            idempotent: boolean;
+        };
+        TaxDocumentList: {
+            items: components["schemas"]["TaxDocumentSummary"][];
+            total: number;
+            nextCursor: string | null;
+        };
+        TaxDocumentSummary: {
+            /** Format: uuid */
+            id: string;
+            documentType: components["schemas"]["TaxDocumentType"];
+            financialYear: string;
+            sequenceNumber: string;
+            documentNumber: string;
+            /** Format: date-time */
+            documentDate: string;
+            /** Format: uuid */
+            tenantId: string;
+            /** Format: uuid */
+            storeId: string;
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            customerId: string | null;
+            /** Format: uuid */
+            returnReferenceId: string | null;
+            /** Format: uuid */
+            originalDocumentId: string | null;
+            originalDocumentNumber: string | null;
+            seller: components["schemas"]["TaxPartySnapshot"];
+            buyer: components["schemas"]["TaxPartySnapshot"] | null;
+            placeOfSupply: components["schemas"]["PlaceOfSupplySnapshot"];
+            payments: components["schemas"]["TaxPaymentSnapshot"][];
+            subtotal: string;
+            discountTotal: string;
+            taxableTotal: string;
+            cgstTotal: string;
+            sgstTotal: string;
+            igstTotal: string;
+            cessTotal: string;
+            roundingAmount: string;
+            grandTotal: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        TaxDocumentType: "tax_invoice" | "credit_note";
+        TaxPartySnapshot: {
+            legalName: string | null;
+            tradeName: string | null;
+            gstin: string | null;
+            pan: string | null;
+            addressLine1: string | null;
+            addressLine2: string | null;
+            city: string | null;
+            state: string | null;
+            stateCode: string | null;
+            postalCode: string | null;
+            country: string | null;
+            phone: string | null;
+            email: string | null;
+        };
+        PlaceOfSupplySnapshot: {
+            state: string | null;
+            stateCode: string | null;
+            isInterState: boolean;
+        };
+        TaxPaymentSnapshot: {
+            method: string;
+            /** @enum {string} */
+            direction: "payment" | "refund";
+            amount: string;
+            referenceCode: string | null;
+        };
+        TaxDocument: {
+            /** Format: uuid */
+            id: string;
+            documentType: components["schemas"]["TaxDocumentType"];
+            financialYear: string;
+            sequenceNumber: string;
+            documentNumber: string;
+            /** Format: date-time */
+            documentDate: string;
+            /** Format: uuid */
+            tenantId: string;
+            /** Format: uuid */
+            storeId: string;
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            customerId: string | null;
+            /** Format: uuid */
+            returnReferenceId: string | null;
+            /** Format: uuid */
+            originalDocumentId: string | null;
+            originalDocumentNumber: string | null;
+            seller: components["schemas"]["TaxPartySnapshot"];
+            buyer: components["schemas"]["TaxPartySnapshot"] | null;
+            placeOfSupply: components["schemas"]["PlaceOfSupplySnapshot"];
+            payments: components["schemas"]["TaxPaymentSnapshot"][];
+            subtotal: string;
+            discountTotal: string;
+            taxableTotal: string;
+            cgstTotal: string;
+            sgstTotal: string;
+            igstTotal: string;
+            cessTotal: string;
+            roundingAmount: string;
+            grandTotal: string;
+            lines: components["schemas"]["TaxDocumentLine"][];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        TaxDocumentLine: {
+            /** Format: uuid */
+            saleLineItemId: string | null;
+            /** Format: uuid */
+            originalLineId: string | null;
+            /** Format: uuid */
+            variantId: string | null;
+            description: string;
+            sku: string | null;
+            hsnSac: string | null;
+            unit: string;
+            quantity: string;
+            unitPrice: string;
+            grossValue: string;
+            discountValue: string;
+            taxableValue: string;
+            gstRate: string;
+            cgstAmount: string;
+            sgstAmount: string;
+            igstAmount: string;
+            cessAmount: string;
+            lineTotal: string;
+        };
+        CreateTaxInvoiceRequest: {
+            /** Format: uuid */
+            saleId: string;
         };
     };
     responses: never;

@@ -26,6 +26,21 @@ export interface ReceiptSale {
   taxAmount: string
   totalAmount: string
   lines: ReceiptLine[]
+  payments?: {
+    method: 'cash' | 'card' | 'check' | 'upi'
+    direction: 'payment' | 'refund'
+    amount: string
+    referenceCode: string | null
+  }[]
+}
+
+type ReceiptPayment = NonNullable<ReceiptSale['payments']>[number]
+
+const PAYMENT_LABELS: Record<ReceiptPayment['method'], string> = {
+  cash: 'Cash',
+  card: 'Card',
+  check: 'Check',
+  upi: 'UPI',
 }
 
 export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessName: string }) {
@@ -34,6 +49,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
   const [email, setEmail] = useState('')
   const [emailStatus, setEmailStatus] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
+  const payments = sale.payments ?? []
 
   async function handleEmailReceipt() {
     setIsSending(true)
@@ -74,6 +90,13 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         <Button type="button" onClick={() => printFn()} style={{ minHeight: 44 }}>
           Print receipt
         </Button>
+        <a
+          href={`/app/documents?saleId=${encodeURIComponent(sale.id)}`}
+          className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm font-medium"
+          style={{ borderColor: '#CBD5E1', color: '#0F766E' }}
+        >
+          Open GST invoice
+        </a>
         <Input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -95,6 +118,17 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           {emailStatus}
         </p>
       )}
+      <div className="mt-4 border-t pt-3 text-sm" style={{ borderColor: '#E2E8F0' }}>
+        <p className="font-semibold text-slate-700">Payment recorded</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {payments.map((payment, index) => (
+            <span key={`${payment.method}-${index}`} className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+              {PAYMENT_LABELS[payment.method]} ₹{payment.amount}
+              {payment.referenceCode ? ` · ${payment.referenceCode}` : ''}
+            </span>
+          ))}
+        </div>
+      </div>
       <p className="mt-3 text-xs text-muted-foreground">
         WhatsApp receipt delivery is unavailable for this store. Print or email the confirmed receipt instead.
       </p>
@@ -110,14 +144,20 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           <hr />
           {sale.lines.map((line) => (
             <div key={line.variantId} className="receipt-line">
-              {line.quantity} x {line.name ?? line.variantId}: ${line.lineTotal}
+              {line.quantity} x {line.name ?? line.variantId}: ₹{line.lineTotal}
             </div>
           ))}
           <hr />
-          <div className="receipt-line receipt-bold">Subtotal: ${sale.subtotal}</div>
-          <div className="receipt-line receipt-bold">Discount: ${sale.discountAmount}</div>
-          <div className="receipt-line receipt-bold">Sales tax: ${sale.taxAmount}</div>
-          <div className="receipt-total">Total paid: ${sale.totalAmount}</div>
+          <div className="receipt-line receipt-bold">Subtotal: ₹{sale.subtotal}</div>
+          <div className="receipt-line receipt-bold">Discount: ₹{sale.discountAmount}</div>
+          <div className="receipt-line receipt-bold">GST: ₹{sale.taxAmount}</div>
+          {payments.map((payment, index) => (
+            <div key={`${payment.method}-${index}`} className="receipt-line">
+              {PAYMENT_LABELS[payment.method]}: ₹{payment.amount}
+              {payment.referenceCode ? ` (${payment.referenceCode})` : ''}
+            </div>
+          ))}
+          <div className="receipt-total">Total paid: ₹{sale.totalAmount}</div>
         </div>
       </div>
     </section>

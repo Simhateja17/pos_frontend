@@ -10,6 +10,10 @@ export type DashboardRange = components['schemas']['DashboardRange']
 export type SaleList = components['schemas']['SaleList']
 export type CustomerList = components['schemas']['CustomerList']
 export type PaymentRead = components['schemas']['PaymentRead']
+export type TaxDocument = components['schemas']['TaxDocument']
+export type TaxDocumentSummary = components['schemas']['TaxDocumentSummary']
+export type TaxDocumentList = components['schemas']['TaxDocumentList']
+export type CreateTaxInvoiceRequest = components['schemas']['CreateTaxInvoiceRequest']
 export type Store = components['schemas']['Store']
 export type StoreList = components['schemas']['StoreList']
 export type CreateStoreRequest = components['schemas']['CreateStoreRequest']
@@ -55,6 +59,7 @@ export type CreateEmailSuppressionRequest = components['schemas']['CreateEmailSu
 export type SaleRecordQuery = NonNullable<paths['/sales/records']['get']['parameters']['query']>
 export type CustomerRecordQuery = NonNullable<paths['/customers/records']['get']['parameters']['query']>
 export type PaymentRecordQuery = NonNullable<paths['/sales/payments']['get']['parameters']['query']>
+export type TaxDocumentListQuery = NonNullable<paths['/tax-documents']['get']['parameters']['query']>
 
 /**
  * Keep the shell tolerant during a rolling deploy. Older backends return the
@@ -240,6 +245,50 @@ export function getAuthenticatedPayments(query: PaymentRecordQuery): Promise<Pay
   return authenticatedRead(
     async () => apiClient.GET('/sales/payments', { params: { query }, headers: await authorizationHeader() }),
     'Payment records are unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedTaxDocuments(query: TaxDocumentListQuery = {}): Promise<TaxDocumentList> {
+  return authenticatedRead(
+    async () => apiClient.GET('/tax-documents', { params: { query }, headers: await authorizationHeader() }),
+    'GST documents are unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedTaxDocument(documentId: string): Promise<TaxDocument> {
+  return authenticatedRead(
+    async () => apiClient.GET('/tax-documents/{documentId}', {
+      params: { path: { documentId } },
+      headers: await authorizationHeader(),
+    }),
+    'That GST document is unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedTaxInvoiceForSale(saleId: string): Promise<TaxDocument> {
+  return authenticatedRead(
+    async () => apiClient.GET('/tax-documents/invoices/sale/{saleId}', {
+      params: { path: { saleId } },
+      headers: await authorizationHeader(),
+    }),
+    'The GST invoice for this sale is unavailable right now. Please retry.',
+  )
+}
+
+export function createAuthenticatedTaxInvoice(body: CreateTaxInvoiceRequest): Promise<TaxDocument> {
+  return authenticatedRead(
+    async () => apiClient.POST('/tax-documents/invoices', { body, headers: await authorizationHeader() }),
+    'The GST invoice could not be created right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedCreditNotes(invoiceId: string): Promise<TaxDocumentSummary[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/tax-documents/invoices/{invoiceId}/credit-notes', {
+      params: { path: { invoiceId } },
+      headers: await authorizationHeader(),
+    }),
+    'Credit notes for this invoice are unavailable right now. Please retry.',
   )
 }
 

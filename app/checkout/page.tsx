@@ -66,6 +66,12 @@ type SaleResponse = {
   totalAmount: string
   businessName?: string | null
   lines: { variantId: string; quantity: number; unitPrice: string; lineTotal: string }[]
+  payments?: {
+    method: TenderMethod
+    direction: 'payment' | 'refund'
+    amount: string
+    referenceCode: string | null
+  }[]
 }
 
 const SCAN_PLACEHOLDER = 'Scan barcode or search by name…'
@@ -461,7 +467,7 @@ function CheckoutPageInner() {
   }
 
   function handleAddTenderRow() {
-    const availableMethods: TenderMethod[] = ['cash', 'card', 'check']
+    const availableMethods: TenderMethod[] = ['cash', 'card', 'upi', 'check']
     const next = availableMethods.find((m) => !tenderRows.some((r) => r.method === m))
     if (!next) return
     setTenderMethods([...tenderMethods, next])
@@ -611,6 +617,7 @@ function CheckoutPageInner() {
       discountAmount: sale.discountAmount,
       taxAmount: sale.taxAmount,
       totalAmount: sale.totalAmount,
+      payments: sale.payments ?? [],
       lines: sale.lines.map((line) => ({
         ...line,
         name: cartByVariantId.get(line.variantId)?.name,

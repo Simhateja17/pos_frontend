@@ -2,7 +2,6 @@ import {
   BadgeIndianRupee,
   BarChart3,
   Bell,
-  BookText,
   Boxes,
   FolderTree,
   ClipboardList,
@@ -100,7 +99,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Payments', href: '/app/payments', icon: BadgeIndianRupee },
       { label: 'Expenses', href: '/app/expenses', icon: Wallet },
       { label: 'Receivables', href: '/app/receivables', icon: ReceiptText },
-      { label: 'Credit / Debit Notes', href: '/app/credit-notes', icon: BookText },
+      { label: 'GST Documents', href: '/app/documents', icon: ReceiptText, cashierAccessible: true },
     ],
   },
   {
