@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders as sharedAuthHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
+import { EntitlementUsagePanel } from './entitlement-usage-panel'
 import styles from './subscription-checkout.module.css'
 
 type Region = 'IN' | 'US'
@@ -77,7 +78,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const router = useRouter()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [cycle, setCycle] = useState<Cycle>('annual')
-  const [selectedKey, setSelectedKey] = useState(initialPlanKey ?? (region === 'IN' ? 'growth' : 'professional'))
+  const [selectedKey, setSelectedKey] = useState(initialPlanKey ?? (region === 'IN' ? 'professional' : 'professional'))
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -135,13 +136,17 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     if (!selected || !quote) return
     setError(null)
     setMessage(null)
+    if (region === 'IN' && selected.key === 'free') {
+      setMessage('The Free plan has no payment step. Create or continue your account to use the Free entitlement.')
+      return
+    }
     setPaying(true)
     try {
       const headers = await authHeaders()
       const currentAttemptKey = attemptKey ?? crypto.randomUUID()
       setAttemptKey(currentAttemptKey)
       window.sessionStorage.setItem(attemptStorageKey, currentAttemptKey)
-      if (region === 'IN' && (selected.key === 'starter' || selected.key === 'growth')) {
+      if (region === 'IN' && selected.key !== 'free') {
         // Persist the plan selection only for an unfinished onboarding record.
         // Once onboarding is complete, billing owns the new plan choice and the
         // old step-save endpoint correctly returns 409 for required steps. That
@@ -154,7 +159,14 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
           const selection = await apiClient.PUT('/onboarding/steps/{step}', {
             params: { path: { step: 1 } },
             headers,
-            body: { trialPlan: selected.key, billingCycle: cycle },
+            // onboarding_data.1 is a compatibility record. The subscription
+            // row and its entitlement snapshot remain the authority for the
+            // new Standard/Professional/Premium keys until the integrator
+            // refreshes the onboarding contract.
+            body: {
+              trialPlan: selected.key === 'standard' ? 'starter' : 'growth',
+              billingCycle: cycle,
+            },
           })
           if (selection.error) {
             const alreadyComplete = selection.response.status === 409
@@ -263,11 +275,16 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                 )
               })}
             </div>
-            <div className={styles.enterprise}>Need a custom rollout? <a href="mailto:sales@Ambel.in">Contact sales for Enterprise</a>.</div>
+            <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:sales@Ambel.in">Contact sales</a>.</div>
             <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || !available || paying}>
-              {paying ? 'Opening secure checkout…' : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate →`}
+              {selected?.key === 'free'
+                ? 'Continue with Free →'
+                : paying
+                  ? 'Opening secure checkout…'
+                  : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate →`}
             </button>
             <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
+            <EntitlementUsagePanel region={region} />
           </>
         )}
       </div>
