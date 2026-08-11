@@ -16,6 +16,8 @@ const currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: '
 
 const GROUPS = [
   { label: 'Sales', value: 'sales' },
+  { label: 'Payments', value: 'payments' },
+  { label: 'Purchases', value: 'purchases' },
   { label: 'Stock', value: 'stock' },
   { label: 'Staff', value: 'staff' },
 ] as const
@@ -42,7 +44,7 @@ function cell(value: string | number | null, money: boolean): string {
 function toCsv(report: ReportTable): string {
   const escape = (value: unknown) => {
     const text = value === null || value === undefined ? '' : String(value)
-    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
   }
   const lines = [report.columns.map((column) => escape(column.label)).join(',')]
   for (const row of report.rows) {
@@ -120,7 +122,7 @@ export function ReportsView() {
     <>
       <PageHead
         title="Reports"
-        sub="Sales, stock and staff activity over a date range"
+        sub="Sales, payments, purchases, stock and staff activity over a date range"
         actions={
           <button
             className="btn btn-grad"

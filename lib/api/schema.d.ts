@@ -6427,11 +6427,11 @@ export interface components {
                 title: string;
                 description: string;
                 /** @enum {string} */
-                group: "sales" | "stock" | "staff";
+                group: "sales" | "payments" | "purchases" | "stock" | "staff";
             }[];
         };
         /** @enum {string} */
-        ReportKind: "sales-by-day" | "sales-by-product" | "sales-by-category" | "sales-by-staff" | "stock-valuation" | "stock-movements" | "staff-exceptions";
+        ReportKind: "sales-by-day" | "sales-by-product" | "sales-by-category" | "sales-by-staff" | "payments-by-method" | "refunds-by-method" | "shift-tender-reconciliation" | "purchases-by-supplier" | "goods-received-by-day" | "purchase-cost-by-product" | "stock-valuation" | "stock-movements" | "staff-exceptions";
         ReportTable: {
             id: string;
             title: string;
