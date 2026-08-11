@@ -78,15 +78,24 @@ export function NotificationsView() {
       <Card>
         {loading && <LoadingState label="Loading notifications" />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
-        {!loading && !error && list && list.notifications.length === 0 && (
+        {!loading && !error && list && list.notifications.length === 0 && list.dailyDigest.length === 0 && (
           <EmptyState
             icon={<Bell size={24} strokeWidth={1.8} />}
             title="Nothing yet"
             body="Purchase orders, low-stock alerts and setup reminders will show up here as they happen."
           />
         )}
-        {!loading && !error && list && list.notifications.length > 0 && (
+        {!loading && !error && list && (list.notifications.length > 0 || list.dailyDigest.length > 0) && (
           <div style={{ padding: '4px 0' }}>
+            {list.dailyDigest.map((digest) => (
+              <ListRow
+                key={`${digest.date}:${digest.storeId}`}
+                icon={<Boxes size={17} strokeWidth={1.85} />}
+                tone="amber"
+                title={`${digest.storeName} · ${digest.date}`}
+                sub={`${digest.totalCount} alert${digest.totalCount === 1 ? '' : 's'} · ${digest.sampleTitles.join(', ')}`}
+              />
+            ))}
             {list.notifications.map((n) => {
               const Icon = ICON_BY_TYPE[n.type]
               const row = (

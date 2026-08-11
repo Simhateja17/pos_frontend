@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import { getActiveStoreId } from '@/lib/store-context'
 
 /**
  * The headers every authenticated request needs.
@@ -29,6 +30,9 @@ export async function authHeaders(): Promise<Record<string, string> | undefined>
   const operatorToken =
     typeof window !== 'undefined' ? window.sessionStorage.getItem('operatorToken') : null
   if (operatorToken) headers['X-Operator-Token'] = operatorToken
+
+  const storeId = getActiveStoreId()
+  if (storeId) headers['X-Store-Id'] = storeId
 
   return headers
 }

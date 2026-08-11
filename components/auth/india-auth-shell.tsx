@@ -4,6 +4,7 @@ import { AmbelMark } from '@/components/brand/ambel-mark'
 import { supabase } from '@/lib/supabase/client'
 import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import styles from './india-auth.module.css'
+import { setActiveStoreId } from '@/lib/store-context'
 
 type AuthShellProps = {
   mode: 'signup' | 'login'
@@ -32,6 +33,10 @@ export async function establishSession(session: BackendSession) {
   }
 
   try {
+    // A tab can be reused after signing out of another business. Store scope
+    // belongs to the authenticated business, so never carry an old UUID into
+    // the newly established session.
+    setActiveStoreId(null)
     await getAuthenticatedAppContext()
     return { ok: true as const }
   } catch {

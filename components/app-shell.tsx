@@ -11,6 +11,7 @@ import {
   APP_NAVIGATION,
   cashierCanAccessAppPath,
   navigationForRole,
+  roleCanAccessAppPath,
   type AppNavItem,
 } from '@/components/app-navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -24,6 +25,7 @@ import styles from '@/components/app-shell.module.css'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
 import { apiClient, REGISTER_LOCKED_EVENT } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { ACTIVE_STORE_CHANGED_EVENT } from '@/lib/store-context'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -136,6 +138,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [deviceGate, loadContext])
 
   useEffect(() => {
+    const reload = () => void loadContext()
+    window.addEventListener(ACTIVE_STORE_CHANGED_EVENT, reload)
+    return () => window.removeEventListener(ACTIVE_STORE_CHANGED_EVENT, reload)
+  }, [loadContext])
+
+  useEffect(() => {
     if (pathname === '/app' || deviceGate !== 'ready') return
     void getAuthenticatedBillingStatus()
       .then((status) => {
@@ -148,8 +156,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [deviceGate, pathname, router])
 
   useEffect(() => {
-    if (context?.staff.role === 'cashier' && !cashierCanAccessAppPath(pathname)) {
-      router.replace('/app/billing')
+    if (context?.staff.role && !roleCanAccessAppPath(context.staff.role, pathname)) {
+      router.replace(context.staff.role === 'cashier' ? '/app/billing' : '/app/dashboard')
     }
   }, [context?.staff.role, pathname, router])
 
@@ -208,7 +216,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const cashierIsRedirecting =
     context?.staff.role === 'cashier' && !cashierCanAccessAppPath(pathname)
-  if (deviceGate !== 'ready' || isContextLoading || cashierIsRedirecting) {
+  const roleIsRedirecting = Boolean(
+    context?.staff.role && !roleCanAccessAppPath(context.staff.role, pathname),
+  )
+  if (deviceGate !== 'ready' || isContextLoading || cashierIsRedirecting || roleIsRedirecting) {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--muted)' }}>
         Opening register…
@@ -223,7 +234,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isCashier = context?.staff.role === 'cashier'
 
   const storeFull = context
-    ? [context.tenant.businessName, context.tenant.locality].filter(Boolean).join(' · ')
+    ? context.store
+      ? [context.store.name, context.store.locality].filter(Boolean).join(' · ')
+      : `${context.tenant.businessName} · All stores`
     : isContextLoading
       ? 'Loading store…'
       : 'Store unavailable'
@@ -233,7 +246,7 @@ export function AppShell({ children }: { children: ReactNode }) {
    * prefers locality. businessName is tenant free-text and is often a full
    * sentence — it stays in the title/tooltip rather than the chip.
    */
-  const storeLabel = context?.tenant.locality?.trim() || context?.tenant.businessName || storeFull
+  const storeLabel = context?.store?.name || (context ? 'All stores' : storeFull)
 
   return (
     <div className="app">

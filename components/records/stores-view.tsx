@@ -1,15 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus, Store as StoreIcon } from 'lucide-react'
 import {
   type Store,
+  type StoreList,
   createAuthenticatedStore,
   getAuthenticatedStores,
   updateAuthenticatedStore,
 } from '@/lib/api/authenticated-client'
 import { Badge, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
+import { setActiveStoreId } from '@/lib/store-context'
 
 type FilterTab = 'all' | 'active' | 'inactive'
 
@@ -41,7 +44,9 @@ function addressOf(store: Store): string | null {
  * belongs to exactly one shop, so this module is not part of their product.
  */
 export function StoresView() {
+  const router = useRouter()
   const [stores, setStores] = useState<Store[] | null>(null)
+  const [allowance, setAllowance] = useState<StoreList['storeAllowance']>(null)
   const [filter, setFilter] = useState<FilterTab>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +61,9 @@ export function StoresView() {
     setLoading(true)
     setError(null)
     try {
-      setStores(await getAuthenticatedStores())
+      const payload = await getAuthenticatedStores()
+      setStores(payload.stores)
+      setAllowance(payload.storeAllowance)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Store records are unavailable right now.')
     } finally {
@@ -69,10 +76,16 @@ export function StoresView() {
   }, [load])
 
   function openCreate() {
+    if (allowance && !allowance.canAddStore) return
     setEditing(null)
     setForm(EMPTY_FORM)
     setFormError(null)
     setFormOpen(true)
+  }
+
+  function openAllStoresDashboard() {
+    setActiveStoreId('all')
+    router.push('/app/dashboard')
   }
 
   function openEdit(store: Store) {
@@ -142,9 +155,19 @@ export function StoresView() {
         title="Stores"
         sub="Every shop in your business"
         actions={
-          <button className="btn btn-pri" onClick={openCreate}>
+          <>
+          <button className="btn" onClick={openAllStoresDashboard}>
+            All-store dashboard
+          </button>
+          <button
+            className="btn btn-pri"
+            onClick={openCreate}
+            disabled={Boolean(allowance && !allowance.canAddStore)}
+            title={allowance && !allowance.canAddStore ? 'Upgrade your plan to add another store' : undefined}
+          >
             <Plus size={15} /> Add store
           </button>
+          </>
         }
       />
 
@@ -154,7 +177,7 @@ export function StoresView() {
           {
             label: 'Active stores',
             value: stores ? String(activeCount) : '—',
-            meta: stores ? `${stores.length} total on file` : 'Loading…',
+            meta: allowance ? `${allowance.used} of ${allowance.limit} plan allowance used` : stores ? `${stores.length} total on file` : 'Loading…',
           },
           {
             // Per-store takings need the dashboard's store scope, which this
@@ -166,8 +189,8 @@ export function StoresView() {
           },
           {
             label: 'Stock in transit',
-            value: <UnavailableValue reason="Store transfers are not yet available in this build" />,
-            meta: 'Needs the transfers screen',
+            value: <UnavailableValue reason="Open a store to review transfers" />,
+            meta: 'Transfers are tracked per sending and receiving shop',
           },
         ]}
       />
@@ -211,7 +234,7 @@ export function StoresView() {
                       cursor: 'pointer',
                       textAlign: 'left',
                     }}
-                    onClick={() => openEdit(store)}
+                    onClick={() => router.push(`/app/stores/${store.id}`)}
                   >
                     {store.name}
                   </button>
@@ -232,6 +255,9 @@ export function StoresView() {
                   )}
                 </td>
                 <td style={{ textAlign: 'right' }}>
+                  <button className="btn btn-sm" onClick={() => openEdit(store)} style={{ marginRight: 8 }}>
+                    Edit
+                  </button>
                   <button className="btn btn-sm" onClick={() => void toggleActive(store)}>
                     {store.isActive ? 'Deactivate' : 'Reactivate'}
                   </button>

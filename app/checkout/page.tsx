@@ -31,6 +31,7 @@ type Variant = {
   color: string | null
   material: string | null
   price: string
+  isTaxable: boolean
   currentStock: number
 }
 
@@ -43,6 +44,10 @@ type Product = {
 type SearchHit = {
   variant: Variant
   productName: string
+}
+
+type Availability = {
+  stores: Array<{ storeId: string; storeName: string; quantity: string; isOwnStore: boolean }>
 }
 
 type Customer = {
@@ -140,6 +145,7 @@ function CheckoutPageInner() {
         apiClient.GET('/terminals/device', { headers: await authHeaders() }),
       ])
       const mine = context.staff.id
+      setTaxRatePercent(Number(context.store?.combinedTaxRatePercent ?? 0))
       const shifts = (shiftsResult.data as OpenShiftEntry[] | undefined) ?? []
       const currentTerminalId = deviceResult.data?.terminal?.id
       setOpenShiftsForStaff(
@@ -159,6 +165,8 @@ function CheckoutPageInner() {
   const [scanQuery, setScanQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchHit[]>([])
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [availabilityByVariant, setAvailabilityByVariant] = useState<Record<string, Availability>>({})
+  const [availabilityLoading, setAvailabilityLoading] = useState<string | null>(null)
 
   // Cart
   const [cart, setCart] = useState<CartLine[]>([])
@@ -208,6 +216,7 @@ function CheckoutPageInner() {
   // new sale (typing in the scan field or adding a new cart line clears it).
   const [completedSale, setCompletedSale] = useState<ReceiptSale | null>(null)
   const [businessName, setBusinessName] = useState('')
+  const [taxRatePercent, setTaxRatePercent] = useState(0)
 
   // OFFLINE-01 — connectivity + outbox state.
   const { isOnline } = useConnectivity()
@@ -248,10 +257,16 @@ function CheckoutPageInner() {
         ? Number(cartDiscountValue || '0')
         : 0
   const discountedSubtotal = Math.max(0, subtotal - cartDiscount)
-  // Client-side total is display-only UX feedback — the server (computeCheckout)
-  // is the sole source of truth for the actual charged amount; tax estimate here
-  // is a simple flat display placeholder, never sent to the server.
-  const preChargeEstimate = discountedSubtotal
+  const taxableSubtotal = cart.reduce(
+    (sum, line) => sum + (line.isTaxable ? Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0') : 0),
+    0,
+  )
+  const taxableShare = subtotal > 0 ? taxableSubtotal / subtotal : 0
+  const discountedTaxableSubtotal = Math.max(0, taxableSubtotal - cartDiscount * taxableShare)
+  // Display/payment preparation mirrors the server Decimal calculation, but
+  // the server remains authoritative and recomputes from persisted prices.
+  const taxEstimate = Math.round(discountedTaxableSubtotal * (taxRatePercent / 100) * 100) / 100
+  const preChargeEstimate = discountedSubtotal + taxEstimate
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
 
@@ -325,10 +340,24 @@ function CheckoutPageInner() {
           unitOfMeasure: hit.variant.unitOfMeasure,
           quantity: 1,
           discountAmount: '0.00',
-          isTaxable: true,
+          isTaxable: hit.variant.isTaxable,
         },
       ]
     })
+  }
+
+  async function checkAvailability(variantId: string) {
+    setAvailabilityLoading(variantId)
+    const { data, error } = await apiClient.GET('/variants/{variantId}/availability', {
+      params: { path: { variantId } },
+      headers: await authHeaders(),
+    })
+    setAvailabilityLoading(null)
+    if (error || !data) {
+      setSearchError('Could not check the other shops right now.')
+      return
+    }
+    setAvailabilityByVariant((current) => ({ ...current, [variantId]: data }))
   }
 
   function handleQuantityChange(variantId: string, quantity: number) {
@@ -773,12 +802,27 @@ function CheckoutPageInner() {
                     <div style={{ minWidth: 0 }}>
                       <div className="t-strong">{hit.productName}</div>
                       <div className="t-sub t-mono">
-                        {hit.variant.sku} · {variantAttributes(hit.variant)}
+                        {hit.variant.sku} · {variantAttributes(hit.variant)} · {hit.variant.currentStock} here
                       </div>
+                      {availabilityByVariant[hit.variant.id] ? (
+                        <div className="t-sub" style={{ marginTop: 4 }}>
+                          {availabilityByVariant[hit.variant.id].stores
+                            .filter((store) => !store.isOwnStore && Number(store.quantity) > 0)
+                            .map((store) => `${store.storeName}: ${store.quantity}`)
+                            .join(' · ') || 'No other shop has stock'}
+                        </div>
+                      ) : null}
                     </div>
-                    <button className="btn btn-sm" type="button" onClick={() => addToCart(hit)}>
-                      + Add
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {hit.variant.currentStock <= 0 ? (
+                        <button className="btn btn-sm" type="button" onClick={() => void checkAvailability(hit.variant.id)} disabled={availabilityLoading === hit.variant.id}>
+                          {availabilityLoading === hit.variant.id ? 'Checking…' : 'Other shops'}
+                        </button>
+                      ) : null}
+                      <button className="btn btn-sm" type="button" onClick={() => addToCart(hit)}>
+                        + Add
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
