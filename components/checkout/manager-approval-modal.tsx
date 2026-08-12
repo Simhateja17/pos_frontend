@@ -50,7 +50,7 @@ export function ManagerApprovalModal({
     })
     setIsSubmitting(false)
     if (apiError || !data) {
-      // Verbatim backend copy (same 01-06 strings the terminal PIN page reads) —
+      // Verbatim backend copy (same 01-06 strings the terminal PIN page reads):
       // "Incorrect PIN. Try again." / "Too many attempts. Ask a manager to unlock this terminal."
       setError((apiError as { error?: string } | undefined)?.error ?? 'Incorrect PIN. Try again.')
       setPin('')

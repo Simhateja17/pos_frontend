@@ -36,7 +36,7 @@ export type AppNavItem = {
   icon: LucideIcon
   /**
    * Product-capability label from the approved design (not store data).
-   * Marks modules that are announced but have no Phase 1-3 backend contract —
+   * Marks modules that are announced but have no Phase 1-3 backend contract:
    * those routes render the explicit unavailable state.
    */
   badge?: 'new'
@@ -46,7 +46,7 @@ export type AppNavItem = {
    * Owner-only module (Phase 8). Stores is the only one: a manager or cashier
    * belongs to exactly one shop and has no business enumerating the others.
    *
-   * This hides the nav entry — it is NOT the permission. The server refuses a
+   * This hides the nav entry: it is NOT the permission. The server refuses a
    * non-owner's store writes regardless of what the sidebar shows.
    */
   ownerOnly?: boolean

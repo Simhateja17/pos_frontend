@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   AMBEL POS — Onboarding step data
+   AMBEL POS: Onboarding step data
    Each step's main body (form + context aside) is kept as
    markup and rendered by the shared shell. Inline handlers
    from the original HTML are replaced with data-nav hooks:

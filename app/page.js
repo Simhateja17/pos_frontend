@@ -321,7 +321,7 @@ export default function LandingPage() {
                 <div className="step-item animate-in" key={i}>
                   <div className="step-num">{i + 1}</div>
                   {/* two spans instead of a <br> so the line break is a CSS
-                      decision — the mobile timeline runs the title on one line */}
+                      decision: the mobile timeline runs the title on one line */}
                   <div className="step-h"><span>{l1}</span>{" "}<span>{l2}</span></div>
                   <p className="step-p">{s[1]}</p>
                 </div>

@@ -99,7 +99,7 @@ export function LoadingState({ label = 'Loading records', rows = 5 }: { label?: 
   )
 }
 
-// --kpi-cols, not an inline grid-template — see the note on KpiRow in ui.tsx.
+// --kpi-cols, not an inline grid-template: see the note on KpiRow in ui.tsx.
 export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
   return (
     <div className="kpi-row" style={{ '--kpi-cols': cols } as CSSProperties} aria-busy="true">
@@ -122,7 +122,7 @@ export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
 
 /**
  * Value shown for a metric the server explicitly reports as unavailable.
- * Deliberately quiet — an unavailable metric must not read as a real figure.
+ * Deliberately quiet: an unavailable metric must not read as a real figure.
  */
 export function UnavailableValue({ reason, text = 'Not tracked yet' }: { reason?: string; text?: string }) {
   return (

@@ -12,7 +12,7 @@ import styles from './notification-bell.module.css'
 
 /**
  * Top-bar bell. Opening the panel marks every unread notification read (V1's
- * only read-state transition — no per-item mark-as-read, per the decision to
+ * only read-state transition: no per-item mark-as-read, per the decision to
  * keep this a lightweight tray rather than a full inbox).
  */
 export function NotificationBell() {
@@ -66,7 +66,7 @@ export function NotificationBell() {
         <div className={styles.panel} role="dialog" aria-label="Notifications">
           <div className={styles.panelHead}>Notifications</div>
           {recent.length === 0 && digests.length === 0 ? (
-            <div className={styles.empty}>Nothing yet — you're all caught up.</div>
+            <div className={styles.empty}>Nothing yet. You're all caught up.</div>
           ) : (
             <>
             {digests.map((digest) => (

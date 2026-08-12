@@ -132,7 +132,7 @@ function CheckoutPageInner() {
 
   /**
    * Which shift this bill charges against is derived from the server, not a
-   * URL param — nothing ever populated one, so Billing always read as "no
+   * URL param: nothing ever populated one, so Billing always read as "no
    * open shift" even with a shift open on the register. Mirrors the same
    * paired-counter pattern shifts-view.tsx uses: a cashier handover continues
    * the counter's open shift, regardless of which staff member opened it.
@@ -158,7 +158,7 @@ function CheckoutPageInner() {
         shifts.filter((s) => s.closedAt === null && (currentTerminalId ? s.terminalId === currentTerminalId : s.staffId === mine)),
       )
     } catch {
-      // The banner already covers "no shift" — a failed lookup reads the
+      // The banner already covers "no shift": a failed lookup reads the
       // same way (Charge stays disabled) rather than a separate error state.
     }
   }, [])
@@ -178,13 +178,13 @@ function CheckoutPageInner() {
   const [cart, setCart] = useState<CartLine[]>([])
 
   /**
-   * OFFLINE-01 — the idempotency key for THIS bill, minted once when the bill
+   * OFFLINE-01: the idempotency key for THIS bill, minted once when the bill
    * begins and held until it is charged or explicitly cleared.
    *
    * This must not be generated at submit time. If it were, a double-click or a
    * user-initiated retry after a timeout would mint a second id, the server
    * would see two distinct sales, and migration 0018's unique index could not
-   * detect the duplicate — the whole guarantee would be defeated by the client.
+   * detect the duplicate: the whole guarantee would be defeated by the client.
    * Reset only in onChargeSuccess() and handleClearCart().
    */
   const [cartSaleId, setCartSaleId] = useState<string>(() => crypto.randomUUID())
@@ -224,7 +224,7 @@ function CheckoutPageInner() {
   const [businessName, setBusinessName] = useState('')
   const [taxRatePercent, setTaxRatePercent] = useState(0)
 
-  // OFFLINE-01 — connectivity + outbox state.
+  // OFFLINE-01: connectivity + outbox state.
   const { isOnline } = useConnectivity()
   const [queuedCount, setQueuedCount] = useState(0)
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null)
@@ -314,7 +314,7 @@ function CheckoutPageInner() {
 
     // CHECK-01: an exact-sku match adds directly to the cart without requiring
     // the cashier to click a result row.
-    // An exact SKU *or* manufacturer barcode adds straight to the cart — a
+    // An exact SKU *or* manufacturer barcode adds straight to the cart: a
     // supermarket cashier scans the maker's EAN, not our own printed SKU.
     const trimmed = query.trim()
     const exactSkuMatch = hits.filter((h) => h.variant.sku === trimmed || h.variant.barcode === trimmed)
@@ -326,7 +326,7 @@ function CheckoutPageInner() {
   }
 
   function addToCart(hit: SearchHit) {
-    // Adding a new cart line starts the next sale — clear the prior receipt.
+    // Adding a new cart line starts the next sale: clear the prior receipt.
     setCompletedSale(null)
     setCart((current) => {
       const existing = current.find((l) => l.variantId === hit.variant.id)
@@ -388,7 +388,7 @@ function CheckoutPageInner() {
       setCart([])
       setCartDiscountMode('none')
       setCartDiscountValue('')
-      // Abandoning this bill starts a new one — a later, unrelated bill must
+      // Abandoning this bill starts a new one: a later, unrelated bill must
       // not reuse the discarded bill's idempotency key.
       setCartSaleId(crypto.randomUUID())
     }
@@ -422,13 +422,13 @@ function CheckoutPageInner() {
 
   function toggleTenderMethod(method: TenderMethod) {
     // Reads current state directly rather than nesting a setTenderRows call
-    // inside setTenderMethods's updater — React Strict Mode double-invokes
+    // inside setTenderMethods's updater: React Strict Mode double-invokes
     // updater functions to check purity, and since the nested call had a
     // side effect (dispatching its own state update), that doubling made
     // every tap add two rows instead of one.
     const alreadySelected = tenderMethods.includes(method)
 
-    // Off split mode, one tap picks exactly one method — tapping the same
+    // Off split mode, one tap picks exactly one method: tapping the same
     // tile again clears it, tapping a different tile replaces it. This is
     // what keeps a single payment down to one tile + one input, instead of
     // both piling up looking like duplicate entries.
@@ -437,7 +437,7 @@ function CheckoutPageInner() {
       setTenderRows(
         alreadySelected
           ? []
-          // A single method covers the whole bill by definition — default
+          // A single method covers the whole bill by definition: default
           // the amount to the current total instead of making the cashier
           // retype a number that's already on screen.
           : [{ method, amount: preChargeEstimate.toFixed(2) }],
@@ -457,7 +457,7 @@ function CheckoutPageInner() {
   function handleToggleSplit(enabled: boolean) {
     setSplitEnabled(enabled)
     // Switching modes with a selection in place is ambiguous (which method
-    // survives?) — clearing it is simpler and safer than guessing.
+    // survives?): clearing it is simpler and safer than guessing.
     setTenderMethods([])
     setTenderRows([])
   }
@@ -528,7 +528,7 @@ function CheckoutPageInner() {
     }
 
     const body: PendingSaleBody = {
-      // Stable for the life of this bill — see cartSaleId's declaration. A
+      // Stable for the life of this bill: see cartSaleId's declaration. A
       // retry of the same bill MUST reuse this id so the server recognises it
       // as a replay rather than a second sale.
       clientSaleId: cartSaleId,
@@ -550,7 +550,7 @@ function CheckoutPageInner() {
 
     setPendingSaleBody(body)
 
-    // OFFLINE-01 — when the server is unreachable the sale is queued locally
+    // OFFLINE-01: when the server is unreachable the sale is queued locally
     // instead of failing at the counter. The same clientSaleId is replayed on
     // sync, so the server records it exactly once (migration 0018).
     if (!isOnline) {
@@ -605,7 +605,7 @@ function CheckoutPageInner() {
     setSuccessMessage(`Sale complete: ₹${sale.totalAmount} charged and recorded by the server.`)
 
     // Enrich the persisted sale's lines with the cart's product names for
-    // receipt display — the sale response itself only carries variantId
+    // receipt display: the sale response itself only carries variantId
     // (no product/variant name join server-side). The Total paid figure and
     // every other money field on the receipt still come directly from
     // `sale`, never recomputed (Pitfall 2).

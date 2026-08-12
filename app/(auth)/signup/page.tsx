@@ -19,7 +19,7 @@ type AccountFields = {
  * ask for all of this a second time on separate "Business Identity" and
  * "GST & Legal Compliance" screens; those are gone.
  *
- * The GST fields are optional and only revealed once a GSTIN is entered —
+ * The GST fields are optional and only revealed once a GSTIN is entered:
  * registration is not mandatory below the ₹40L (goods) / ₹20L (services)
  * turnover threshold, so an unregistered retailer is never asked for them.
  */
@@ -129,7 +129,7 @@ export default function SignupPage() {
           taxId: business.taxId || undefined,
           gstStatus: business.gstStatus || undefined,
           pan: business.pan || undefined,
-          // Derived from the address rather than asked again — for a
+          // Derived from the address rather than asked again: for a
           // single-location retailer the place of supply is the store's state.
           placeOfSupply: business.taxId.trim() ? business.state : undefined,
         },

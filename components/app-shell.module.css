@@ -114,7 +114,7 @@
 
 /*
  * The store pill renders tenant-supplied text. businessName is free-form and
- * can be a full sentence, so it must be bounded and clipped — otherwise it
+ * can be a full sentence, so it must be bounded and clipped: otherwise it
  * pushes the search field and user block out of the topbar entirely.
  */
 .storeSwitch {

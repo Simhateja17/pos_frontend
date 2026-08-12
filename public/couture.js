@@ -1,4 +1,4 @@
-/* ============ ICONS — original Ambel glyph set ============ */
+/* ============ ICONS: original Ambel glyph set ============ */
 const I={
  dash:'<rect x="3" y="3" width="7.5" height="9.5" rx="2.2"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="2.2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2.2"/><rect x="13.5" y="11" width="7.5" height="10" rx="2.2"/>',
  bill:'<path d="M5.5 8.5h13l-1 11a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8z"/><path d="M8.7 8.5V6.2a3.3 3.3 0 0 1 6.6 0v2.3"/><path d="M9.2 12v1M14.8 12v1"/>',
@@ -115,15 +115,15 @@ window.go=go;
 function animateScreen(){
  const root=document.getElementById('screen');
  if(!root)return;
- // 1 — staggered block entrance (outermost blocks only)
+ // 1: staggered block entrance (outermost blocks only)
  const sel='.page-head, .note-strip, .legend, .anno, .kpi, .card, .map-card';
  let cands=[...root.querySelectorAll(sel)];
  const set=new Set(cands);
  cands=cands.filter(el=>{let p=el.parentElement;while(p&&p!==root){if(set.has(p))return false;p=p.parentElement;}return true;});
  cands.forEach((el,i)=>{const d=Math.min(i,16)*0.05;el.style.animation='riseIn .55s var(--ease) '+d.toFixed(2)+'s backwards';});
- // 2 — count-up KPI values
+ // 2: count-up KPI values
  root.querySelectorAll('.kpi .kv').forEach(countUp);
- // 3 — fill progress bars from zero
+ // 3: fill progress bars from zero
  root.querySelectorAll('.bar > i').forEach(b=>{const w=b.style.width;if(!w)return;b.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.width=w;}));});
 }
 function countUp(el){
@@ -203,13 +203,13 @@ SCREENS.map=()=>{
    <div class="li">${flag('EXISTING')} Already live in current build</div>
    <div class="li">${flag('IMPROVE')} Enhancement to an existing screen</div>
    <div class="li">${flag('NEW')} New module / closes a competitor gap</div>
-   <div class="li">${flag('★')} Differentiator — beyond Zoho & Square</div>
+   <div class="li">${flag('★')} Differentiator: beyond Zoho & Square</div>
    <div class="li">${flag('AI')} Prophet / ML-powered</div>
  </div>`;
  const groups=[
   {ico:'dash',t:'Dashboard',f:[
     ['Live KPI bar, Action Center, Counter Performance','EXISTING'],
-    ['Flash-alert row — terminal offline / UPI down / printer paper','IMPROVE'],
+    ['Flash-alert row: terminal offline / UPI down / printer paper','IMPROVE'],
     ['Action Center → full approval inbox (severity · owner · SLA · resolve-in-place)','IMPROVE'],
     ['Per-counter live queue depth widget','★'],
   ]},
@@ -224,11 +224,11 @@ SCREENS.map=()=>{
   ]},
   {ico:'returns',t:'Returns & Exchange',f:[
     ['Returns, refund method, stock reversal, approval, audit trail','EXISTING'],
-    ['Exchange / Swap flow — return + new item, one net payment & receipt','★'],
+    ['Exchange / Swap flow: return + new item, one net payment & receipt','★'],
     ['Formal Credit Note document generation','NEW'],
   ]},
   {ico:'channels',t:'Sales Channels',f:[
-    ['Omnichannel hub — online store, marketplace & social orders','NEW'],
+    ['Omnichannel hub: online store, marketplace & social orders','NEW'],
     ['Real-time channel + store inventory sync','NEW'],
   ]},
   {ico:'challan',t:'Delivery Challan',f:[
@@ -252,11 +252,11 @@ SCREENS.map=()=>{
   ]},
   {ico:'supplier',t:'Suppliers',f:[
     ['Payables, lead time, GSTIN health, ledger','EXISTING'],
-    ['Supplier scorecard — OTIF, fill-rate, price-drift, quality','★'],
+    ['Supplier scorecard: OTIF, fill-rate, price-drift, quality','★'],
   ]},
   {ico:'customer',t:'Customers',f:[
     ['Loyalty tiers, gift cards, segments, lifetime value','EXISTING'],
-    ['Campaign builder — WhatsApp/SMS, consent, audience','IMPROVE'],
+    ['Campaign builder: WhatsApp/SMS, consent, audience','IMPROVE'],
   ]},
   {ico:'wa',t:'WhatsApp Connect',f:[
     ['Verified Business API number + green-tick & quality rating','NEW'],
@@ -277,7 +277,7 @@ SCREENS.map=()=>{
     ['Pending-UPI resolution queue + EOD mismatch report','IMPROVE'],
   ]},
   {ico:'receivable',t:'Receivables',f:[
-    ['Aging — Due vs Overdue for credit/corporate customers','NEW'],
+    ['Aging: Due vs Overdue for credit/corporate customers','NEW'],
     ['WhatsApp/SMS payment reminders','★'],
   ]},
   {ico:'reports',t:'Reports & Analytics',f:[
@@ -288,11 +288,11 @@ SCREENS.map=()=>{
     ['Prophet demand forecast & anomaly detection','AI'],
   ]},
   {ico:'ai',t:'AI Copilot',f:[
-    ['Operational assistant — "why are margins down?", "reorder for weekend"','NEW'],
+    ['Operational assistant: "why are margins down?", "reorder for weekend"','NEW'],
     ['Every recommendation shows data basis + needs approval','★'],
   ]},
   {ico:'onboard',t:'Onboarding & Setup',f:[
-    ['Guided first-run setup — profile, GST, import, hardware, first sale','NEW'],
+    ['Guided first-run setup: profile, GST, import, hardware, first sale','NEW'],
     ['<30-minute completable progress checklist','NEW'],
   ]},
   {ico:'sync',t:'Offline & Sync',f:[
@@ -316,28 +316,28 @@ SCREENS.map=()=>{
  const cards=groups.map(g=>`<div class="map-card"><div class="mc-h"><span class="mc-ico">${ic(g.ico)}</span>${g.t}</div>${g.f.map(f=>`<div class="feat"><div class="fx"><div class="fn">${f[0]}</div></div>${flag(f[1])}</div>`).join('')}</div>`).join('');
  const arrow='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
  const flagship=[
-  {ico:'ai',t:'AI Copilot',d:'Ask "why are margins down?" — every answer shows its data basis and waits for your approval.',badge:'NEW',scr:'copilot'},
+  {ico:'ai',t:'AI Copilot',d:'Ask "why are margins down?" Every answer shows its data basis and waits for your approval.',badge:'NEW',scr:'copilot'},
   {ico:'bill',t:'Cashier ⇄ Manager Mode',d:'One tap hides cost & margin for billing speed, or reveals them for managers. Unique to Ambel.',badge:'★',scr:'billing'},
   {ico:'ai',t:'Prophet Smart Reorder',d:'ML demand forecast surfaces exactly what to reorder before the weekend rush.',badge:'AI',scr:'inventory'},
-  {ico:'inventory',t:'Variant Matrix Editor',d:'Size × colour grid at a glance — tap any cell to adjust stock, set reorder or print labels.',badge:'★',scr:'inventory'},
-  {ico:'swap',t:'One-Receipt Exchange',d:'Return + new item as a single net payment, one GST calc, one receipt — not two transactions.',badge:'★',scr:'returns'},
-  {ico:'supplier',t:'Supplier Scorecard',d:'OTIF, fill-rate & price-drift shown right before you raise a PO — a real negotiation edge.',badge:'★',scr:'suppliers'},
+  {ico:'inventory',t:'Variant Matrix Editor',d:'Size × colour grid at a glance: tap any cell to adjust stock, set reorder or print labels.',badge:'★',scr:'inventory'},
+  {ico:'swap',t:'One-Receipt Exchange',d:'Return + new item as a single net payment, one GST calc, one receipt, not two transactions.',badge:'★',scr:'returns'},
+  {ico:'supplier',t:'Supplier Scorecard',d:'OTIF, fill-rate & price-drift shown right before you raise a PO: a real negotiation edge.',badge:'★',scr:'suppliers'},
   {ico:'payments',t:'PSP Settlement Tracker',d:'India-native: match UTRs across Razorpay, PhonePe, Pine Labs & HDFC to every invoice.',badge:'★',scr:'payments'},
-  {ico:'wa',t:'WhatsApp Connect',d:'Receipts, order updates, payment reminders & broadcasts — all from one verified number.',badge:'NEW',scr:'whatsapp'},
-  {ico:'sync',t:'True Offline Billing',d:'Keep selling when the internet drops — a local queue syncs automatically on reconnect.',badge:'★',scr:'sync'},
+  {ico:'wa',t:'WhatsApp Connect',d:'Receipts, order updates, payment reminders & broadcasts: all from one verified number.',badge:'NEW',scr:'whatsapp'},
+  {ico:'sync',t:'True Offline Billing',d:'Keep selling when the internet drops: a local queue syncs automatically on reconnect.',badge:'★',scr:'sync'},
  ];
  const spotlight=`<div class="spotlight">
-   <div class="spot-head"><span class="sh-ico">${ic('bolt')}</span><div><h3>Flagship features</h3><div class="sh-sub">The unique differentiators — beyond Zoho &amp; Square. Tap any to jump straight in.</div></div></div>
+   <div class="spot-head"><span class="sh-ico">${ic('bolt')}</span><div><h3>Flagship features</h3><div class="sh-sub">The unique differentiators: beyond Zoho &amp; Square. Tap any to jump straight in.</div></div></div>
    <div class="spot-grid">${flagship.map(f=>`<div class="spot-card" onclick="go('${f.scr}')"><div class="sc-top"><span class="sc-ico">${ic(f.ico)}</span>${flag(f.badge)}</div><div class="sc-title">${f.t}</div><div class="sc-desc">${f.d}</div><div class="sc-open">Open ${arrow}</div></div>`).join('')}</div>
  </div>`;
  return hero('Ambel POS · Feature Integration Map',
    'Everything we&rsquo;re building, mapped onto the live product',
-   'A clickable spec derived from the Zoho &amp; Square competitive reports. Every module below opens a high-fidelity mock — new and enhanced features are badged and annotated so you know exactly what goes where.',
+   'A clickable spec derived from the Zoho &amp; Square competitive reports. Every module below opens a high-fidelity mock: new and enhanced features are badged and annotated so you know exactly what goes where.',
    `<span class="hero-btn solid" onclick="go('dashboard')">${ic('dash')} Start tour</span><span class="hero-btn" onclick="go('billing')">${ic('bolt')} Open Billing</span>`,
    [{v:'22',l:'Modules'},{v:'40+',l:'New features'},{v:'2',l:'Stores live'},{v:'₹4.84 L',l:'Sales today'}])
    + spotlight
    + legend
-   + `<div class="section-label" style="margin:4px 0 14px">All modules — full integration map</div>`
+   + `<div class="section-label" style="margin:4px 0 14px">All modules: full integration map</div>`
    + `<div class="grid" style="grid-template-columns:repeat(3,1fr)">${cards}</div>`;
 };
 /* ============ DASHBOARD ============ */
@@ -352,9 +352,9 @@ SCREENS.dashboard=()=>{
  ],6);
  const inbox=[
    ['returns','b-amber','2 refunds awaiting approval','RET-1143 · ₹1,499 · Karan Singh','Review','High','Pooja','12 min'],
-   ['payments','b-amber','Counter 3 cash variance —₹100','Reason pending · Meera Desai','Resolve','Med','Meera','past due'],
+   ['payments','b-amber','Counter 3 cash variance: ₹100','Reason pending · Meera Desai','Resolve','Med','Meera','past due'],
    ['purchase','b-blue','PO-2026-0186 due today','Aravind Mills · 180 units · 0 received','Receive','Med','Karan','today'],
-   ['inventory','b-red','COU-FRG-1108 out of stock','Banarasi Dupatta · last sold 12 hrs ago','Raise PO','High','Karan','—'],
+   ['inventory','b-red','COU-FRG-1108 out of stock','Banarasi Dupatta · last sold 12 hrs ago','Raise PO','High','Karan','N/A'],
  ];
  const inboxRows=inbox.map(r=>`<div class="lrow">
    <div class="lico ${r[1]}">${ic(r[0])}</div>
@@ -458,8 +458,8 @@ SCREENS.billing=()=>{
           ${mgrStrip}
           <table><thead><tr>${headCols}</tr></thead><tbody>${rows}</tbody></table>
           <div class="card-pad" style="border-top:1px solid var(--border-soft)">
-            <div class="section-label">Quick add — tap to add to cart</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">${suggest.map(p=>`<span class="badge b-blue" style="padding:7px 11px;cursor:pointer" onclick="addToCart('${p.sku}')">+ ${p.name.split(' — ')[0]} · ${money(p.price)}</span>`).join('')||'<span class="t-sub">All catalog items are in the cart.</span>'}</div>
+            <div class="section-label">Quick add: tap to add to cart</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">${suggest.map(p=>`<span class="badge b-blue" style="padding:7px 11px;cursor:pointer" onclick="addToCart('${p.sku}')">+ ${p.name.split(' · ')[0]} · ${money(p.price)}</span>`).join('')||'<span class="t-sub">All catalog items are in the cart.</span>'}</div>
             <div class="section-label" style="margin-top:16px">Build a combo on the fly ${flag('★')}</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="badge b-grey" style="padding:7px 11px">Any 3 Kurtas → ₹3,000</span><span class="badge b-grey" style="padding:7px 11px">Buy 2 get accessory free</span><button class="btn btn-sm">${ic('plus')} New combo</button></div>
           </div>
@@ -518,9 +518,9 @@ SCREENS.orders=()=>{
 /* ============ REGISTER + DAILY CLOSE ============ */
 SCREENS.register=()=>{
  const rows=[
-  ['REG-0501-C1','Counter 1','Riya Sharma','10:04 → —','₹5,000','₹18,420','₹18,380','−₹40','b-green','Open'],
-  ['REG-0501-C2','Counter 2','Aarav Pillai','10:00 → —','₹5,000','₹22,840','₹22,840','—','b-green','Open'],
-  ['REG-0501-C3','Counter 3','Meera Desai','12:08 → —','₹5,000','₹9,120','₹9,020','−₹100','b-amber','Mismatch'],
+  ['REG-0501-C1','Counter 1','Riya Sharma','10:04 → N/A','₹5,000','₹18,420','₹18,380','−₹40','b-green','Open'],
+  ['REG-0501-C2','Counter 2','Aarav Pillai','10:00 → N/A','₹5,000','₹22,840','₹22,840','N/A','b-green','Open'],
+  ['REG-0501-C3','Counter 3','Meera Desai','12:08 → N/A','₹5,000','₹9,120','₹9,020','−₹100','b-amber','Mismatch'],
  ].map((r,i)=>`<tr class="${i===2?'sel':''}"><td class="t-mono t-strong">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="t-sub t-mono">${r[3]}</td><td class="num">${r[4]}</td><td class="num">${r[5]}</td><td class="num">${r[6]}</td><td class="num" style="color:${r[7].includes('−')?'var(--danger)':'var(--muted)'}">${r[7]}</td><td><span class="badge ${r[8]}">${r[9]}</span></td></tr>`).join('');
  return head('Register / Cash Drawer','Cashier shifts, cash reconciliation & end-of-day close',`<button class="btn" data-act="cashinout">${ic('payments')} Cash in / out</button><button class="btn-pri btn" data-act="openregister">${ic('bolt')} Open Register</button>`)
   + kpis([{l:'Open Registers',v:'3 of 3',m:'All counters operational'},{l:'Cash on Hand',v:'₹50,240',m:'+₹15,000 opening · ₹35,240 sales'},{l:'Variance Today',v:'−₹140',m:'<span class="dn">2 counters affected</span>'},{l:'Expenses from Drawer',v:'₹4,200',m:'3 entries · 1 awaiting receipt'}],4)
@@ -562,7 +562,7 @@ SCREENS.returns=()=>{
 
 /* ============ SALES CHANNELS ============ */
 SCREENS.channels=()=>{
- const ch=[['Storefront (POS)','In-store','b-green','Live','₹4.84 L','342'],['Ambel Online','Website','b-green','Live','₹1.92 L','86'],['Instagram Shop','Social','b-amber','Syncing','₹38 K','12'],['Amazon / Flipkart','Marketplace','b-grey','Not connected','—','—'],['Pickup & Delivery','Fulfilment','b-green','Live','₹64 K','21']];
+ const ch=[['Storefront (POS)','In-store','b-green','Live','₹4.84 L','342'],['Ambel Online','Website','b-green','Live','₹1.92 L','86'],['Instagram Shop','Social','b-amber','Syncing','₹38 K','12'],['Amazon / Flipkart','Marketplace','b-grey','Not connected','N/A','N/A'],['Pickup & Delivery','Fulfilment','b-green','Live','₹64 K','21']];
  return head('Sales Channels','Omnichannel orders & real-time inventory sync '+flag('NEW'),`<button class="btn-pri btn" data-act="connectchannel">${ic('plus')} Connect channel</button>`)
   
   + kpis([{l:'Channels Live',v:'4 of 5',m:'1 syncing · 1 to connect'},{l:'Online Orders Today',v:'119',m:'web + social + marketplace'},{l:'Omni Revenue',v:'₹7.78 L',m:'across all channels'},{l:'Stock Sync',v:'Real-time',m:'last sync 12s ago'}],4)
@@ -572,7 +572,7 @@ SCREENS.channels=()=>{
 /* ============ DELIVERY CHALLAN ============ */
 SCREENS.challan=()=>{
  const rows=DB.challans.map(r=>`<tr><td class="t-mono t-strong">${r.no}</td><td>${r.party}</td><td class="t-sub">${r.purpose}</td><td class="num">${r.qty}</td><td><span class="badge ${r.status[0]}">${r.status[1]}</span></td><td></td><td class="t-mono">${r.inv}</td></tr>`).join('');
- return head('Delivery Challan','Goods dispatched before invoicing — B2B & inter-branch '+flag('NEW'),`<button class="btn-pri btn" data-act="newchallan">${ic('plus')} New Challan</button>`)
+ return head('Delivery Challan','Goods dispatched before invoicing: B2B & inter-branch '+flag('NEW'),`<button class="btn-pri btn" data-act="newchallan">${ic('plus')} New Challan</button>`)
   
   + kpis([{l:'Open Challans',v:'7',m:'awaiting invoice/return'},{l:'Dispatched Today',v:'3',m:'152 units'},{l:'Pending Invoice',v:'4',m:'convert when delivered'},{l:'Approval Orders',v:'2',m:'goods on trial'}],4)
   + `<div class="card"><div class="card-h">${tabs(['All','Dispatched','Invoiced','Returned'],'All')}</div>${dataTable(['Challan #','Party','Purpose','Qty','Status','','Invoice'],rows)}</div>`;
@@ -580,7 +580,7 @@ SCREENS.challan=()=>{
 /* ============ INVENTORY ============ */
 SCREENS.inventory=()=>{
  const stat=p=>p.stock===0?['b-red','Out of stock']:p.stock<=p.reorder?['b-amber','Low stock']:p.expiry?['b-amber','Near expiry']:['b-green','In stock'];
- const rows=DB.products.map(p=>{const s=stat(p);return `<tr><td class="t-mono t-strong">${p.sku}</td><td>${p.name}</td><td class="t-sub">${p.cat}</td><td class="num t-strong">${p.stock}</td><td class="num" style="color:var(--muted)">${p.reorder}</td><td class="t-sub">${p.expiry||'—'}</td><td class="num">${money(p.price*p.stock)}</td><td><span class="badge ${s[0]}">${s[1]}</span></td></tr>`;}).join('');
+ const rows=DB.products.map(p=>{const s=stat(p);return `<tr><td class="t-mono t-strong">${p.sku}</td><td>${p.name}</td><td class="t-sub">${p.cat}</td><td class="num t-strong">${p.stock}</td><td class="num" style="color:var(--muted)">${p.reorder}</td><td class="t-sub">${p.expiry||'N/A'}</td><td class="num">${money(p.price*p.stock)}</td><td><span class="badge ${s[0]}">${s[1]}</span></td></tr>`;}).join('');
  const sizes=['XS','S','M','L','XL'],colors=['Indigo','Maroon','Black'];
  let matrix='<table style="text-align:center"><thead><tr><th>Colour \\ Size</th>'+sizes.map(s=>`<th style="text-align:center">${s}</th>`).join('')+'</tr></thead><tbody>';
  const data={Indigo:[4,12,84,30,8],Maroon:[0,6,12,9,2],Black:[10,22,40,18,5]};
@@ -594,7 +594,7 @@ SCREENS.inventory=()=>{
        <div class="card">
          <div class="card-h"><div><h3>Smart reorder ${flag('AI')}</h3><div class="ch-sub">Prophet forecast · next 14 days</div></div></div>
          <div class="card-pad">
-           ${[['Banarasi Dupatta','Forecast 48 · stock 0 · lead 7d','Create PO','b-red'],['Silk Saree — Maroon','Forecast 26 · stock 12','Create PO','b-amber'],['Cotton Kurta — Indigo','Forecast 60 · stock 84 · healthy','—','b-green']].map(r=>`<div class="lrow"><div class="lico ${r[3]}">${ic('inventory')}</div><div style="flex:1"><div class="lt">${r[0]}</div><div class="ls">${r[1]}</div></div>${r[2]!=='—'?`<button class="btn btn-sm btn-ghost">${r[2]}</button>`:'<span class="badge b-green">OK</span>'}</div>`).join('')}
+           ${[['Banarasi Dupatta','Forecast 48 · stock 0 · lead 7d','Create PO','b-red'],['Silk Saree · Maroon','Forecast 26 · stock 12','Create PO','b-amber'],['Cotton Kurta · Indigo','Forecast 60 · stock 84 · healthy','N/A','b-green']].map(r=>`<div class="lrow"><div class="lico ${r[3]}">${ic('inventory')}</div><div style="flex:1"><div class="lt">${r[0]}</div><div class="ls">${r[1]}</div></div>${r[2]!=='N/A'?`<button class="btn btn-sm btn-ghost">${r[2]}</button>`:'<span class="badge b-green">OK</span>'}</div>`).join('')}
            <div class="section-label" style="margin-top:14px">Import preview ${flag('NEW')}</div>
            <div style="border:1px solid var(--border-soft);border-radius:10px;overflow:hidden">
              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:#FAFBFC;font-size:12px"><span>products.csv · 412 rows</span><span><span class="badge b-green">408 valid</span> <span class="badge b-red">4 errors</span></span></div>
@@ -723,7 +723,7 @@ SCREENS.suppliers=()=>{
 /* ============ CUSTOMERS ============ */
 SCREENS.customers=()=>{
  const tierB={Gold:'b-gold',Silver:'b-grey',Bronze:'b-grey'};
- const rows=DB.customers.map((c,i)=>`<tr class="${i===0?'sel':''}"><td class="t-strong">${c.name}</td><td class="t-mono t-sub">${c.phone}</td><td><span class="badge ${tierB[c.tier]||'b-grey'}">${c.tier}</span></td><td class="num">${c.pts.toLocaleString('en-IN')}</td><td class="num">${money(c.spend)}</td><td class="t-sub">${c.last||'—'}</td></tr>`).join('');
+ const rows=DB.customers.map((c,i)=>`<tr class="${i===0?'sel':''}"><td class="t-strong">${c.name}</td><td class="t-mono t-sub">${c.phone}</td><td><span class="badge ${tierB[c.tier]||'b-grey'}">${c.tier}</span></td><td class="num">${c.pts.toLocaleString('en-IN')}</td><td class="num">${money(c.spend)}</td><td class="t-sub">${c.last||'N/A'}</td></tr>`).join('');
  return head('Customers','CRM, loyalty, gift cards, segments & campaigns',`<button class="btn" data-act="exportcustomers">${ic('reports')} Export</button><button class="btn-pri btn" data-act="addcustomer">${ic('plus')} Add Customer</button>`)
   + kpis([{l:'Total Customers',v:String(DB.customers.length),m:'live count'},{l:'Loyalty Members',v:'2,840',m:'68% of base'},{l:'Gift Card Balance',v:'₹84,500',m:'122 active cards'},{l:'Active Campaigns',v:'3',m:'Diwali · Bridal · Loyalty 2x'},{l:'Repeat Rate',v:'48%',m:'<span class="up">▲ 4% MoM</span>'},{l:'Inactive (90D+)',v:'612',m:'re-engage candidates'}],6)
   + `<div class="split-2">
@@ -750,7 +750,7 @@ SCREENS.staff=()=>{
  const perms=['Billing','Refunds ≤₹5K','Discounts','Void bill','Open register','Stock adjust','Reports','Settings'];
  const rolesP={Admin:[1,1,1,1,1,1,1,1],Manager:[1,1,1,1,1,1,1,0],Cashier:[1,1,0,0,1,0,0,0],Floor:[1,0,0,0,0,0,0,0]};
  let matrix='<table style="text-align:center;font-size:12px"><thead><tr><th style="text-align:left">Permission</th>'+Object.keys(rolesP).map(r=>`<th style="text-align:center">${r}</th>`).join('')+'</tr></thead><tbody>';
- perms.forEach((p,i)=>{matrix+=`<tr><td style="text-align:left;font-weight:600">${p}</td>`+Object.keys(rolesP).map(r=>`<td>${rolesP[r][i]?`<span style="color:var(--success)">${ic('check',15)}</span>`:'<span style="color:var(--muted-2)">—</span>'}</td>`).join('')+'</tr>'});
+ perms.forEach((p,i)=>{matrix+=`<tr><td style="text-align:left;font-weight:600">${p}</td>`+Object.keys(rolesP).map(r=>`<td>${rolesP[r][i]?`<span style="color:var(--success)">${ic('check',15)}</span>`:'<span style="color:var(--muted-2)">N/A</span>'}</td>`).join('')+'</tr>'});
  matrix+='</tbody></table>';
  return head('Staff','Roster, shifts, roles, permissions & incentives',`<button class="btn" data-act="scheduleshift">Schedule Shift</button><button class="btn-pri btn" data-act="addstaff">${ic('plus')} Add Staff</button>`)
   + kpis([{l:'Active Staff',v:String(DB.staff.length),m:'3 on shift now'},{l:'Late Clock-ins',v:'2',m:'this week'},{l:'Open Shifts',v:'1',m:'Evening · Counter 1'},{l:'Cash Variance',v:'−₹140',m:'2 cashiers'},{l:'Commission Due',v:'₹18,400',m:'this cycle',flag:'★'},{l:'Top Coach Score',v:'92',m:'Aarav · AI',flag:'AI'}],6)
@@ -764,7 +764,7 @@ SCREENS.staff=()=>{
              <div style="border:1px solid var(--border-soft);border-radius:10px;padding:12px"><div class="ls">Commission earned</div><div class="num" style="font-size:22px;font-weight:700;margin-top:3px">₹6,240</div><div class="ls">5.5% above-target sales</div></div>
              <div style="border:1px solid var(--border-soft);border-radius:10px;padding:12px"><div class="ls">AI coach score</div><div class="num" style="font-size:22px;font-weight:700;margin-top:3px;color:var(--brand-1)">92</div><div class="ls">speed · variance · attach</div></div>
            </div>
-           <div style="background:var(--brand-soft);border-radius:10px;padding:12px;margin-top:12px;display:flex;gap:10px">${ic('ai',18)}<div style="font-size:12.5px"><b>Live nudge on POS:</b> "Aarav's avg bill this hour is ₹4,200 — suggest accessories to your next 3 customers to hit ₹4,800 target."</div></div>
+           <div style="background:var(--brand-soft);border-radius:10px;padding:12px;margin-top:12px;display:flex;gap:10px">${ic('ai',18)}<div style="font-size:12.5px"><b>Live nudge on POS:</b> "Aarav's avg bill this hour is ₹4,200: suggest accessories to your next 3 customers to hit ₹4,800 target."</div></div>
          </div>
        </div>
      </div>`;
@@ -776,7 +776,7 @@ SCREENS.payments=()=>{
   ['PAY-99820','INV-24850','Anika Kapoor','UPI','T+0','b-green','Captured','₹4,280'],
   ['PAY-99817','INV-24847','Saanvi Iyer','Split (Card+UPI)','T+0','b-green','Captured','₹12,400'],
   ['PAY-99816','INV-24846','Walk-in','UPI','T+0','b-amber','Pending','₹2,100'],
-  ['PAY-99813','INV-24842','Aditya Sharma','UPI','—','b-red','Failed','₹2,850'],
+  ['PAY-99813','INV-24842','Aditya Sharma','UPI','N/A','b-red','Failed','₹2,850'],
  ].map((r,i)=>`<tr class="${i===0?'sel':''}"><td class="t-mono t-strong">${r[0]}</td><td class="t-mono t-sub">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="t-sub">${r[4]}</td><td><span class="badge ${r[5]}">${r[6]}</span></td><td class="num t-strong" style="text-align:right">${r[7]}</td></tr>`).join('');
  const psp=[['Razorpay','UPI + Card','₹3.12 L','T+0','b-green','Settled'],['PhonePe','UPI QR','₹84,200','T+0','b-amber','Expected 8 PM'],['Pine Labs','Card terminal','₹1.62 L','T+1','b-blue','Batch 23:00'],['HDFC','UPI','₹38,400','T+1','b-green','Settled']];
  return head('Payments','Collection, settlement & reconciliation',`<button class="btn">Export</button><button class="btn-pri btn" data-act="runsettlement">${ic('sync')} Run Settlement</button>`)
@@ -804,7 +804,7 @@ SCREENS.expenses=()=>{
 
 /* ============ RECEIVABLES ============ */
 SCREENS.receivables=()=>{
- const rows=[['Reliance Trends','₹2,64,000','₹64,000','₹2,00,000','b-red','45+ overdue'],['Lifestyle Corp','₹1,12,000','₹1,12,000','—','b-green','Current'],['Pothys Silks','₹48,000','—','₹48,000','b-amber','15–30 overdue']];
+ const rows=[['Reliance Trends','₹2,64,000','₹64,000','₹2,00,000','b-red','45+ overdue'],['Lifestyle Corp','₹1,12,000','₹1,12,000','N/A','b-green','Current'],['Pothys Silks','₹48,000','N/A','₹48,000','b-amber','15–30 overdue']];
  const aging=[['Current','₹3.1 L',62,'#10B981'],['1–30 days','₹98 K',20,'#F59E0B'],['31–60 days','₹52 K',11,'#F59E0B'],['60+ days','₹34 K',7,'#EF4444']];
  return head('Receivables','Outstanding from credit & corporate customers '+flag('NEW'),`<button class="btn">${ic('wa')} Send reminders ${flag('★')}</button><button class="btn-pri btn">Export aging</button>`)
   
@@ -899,7 +899,7 @@ SCREENS.copilot=()=>{
           <div style="align-self:flex-end;background:var(--brand-1);color:#fff;border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:13px;max-width:80%">Which SKUs should I reorder before the weekend?</div>
           <div style="background:#F6F7F9;border-radius:14px 14px 14px 4px;padding:13px 15px;font-size:13px;max-width:90%">
             Based on Prophet forecast + current stock + supplier lead times, 3 SKUs will stock out before Sunday:
-            <div style="margin-top:10px">${[['Banarasi Dupatta','forecast 48 · stock 0 · lead 7d'],['Silk Saree — Maroon','forecast 26 · stock 12'],['Embroidered Lehenga (L)','forecast 14 · stock 7']].map(r=>`<div class="lrow" style="padding:8px 0"><div class="lico b-amber" style="width:30px;height:30px">${ic('inventory')}</div><div style="flex:1"><div class="lt" style="font-size:12.5px">${r[0]}</div><div class="ls">${r[1]}</div></div></div>`).join('')}</div>
+            <div style="margin-top:10px">${[['Banarasi Dupatta','forecast 48 · stock 0 · lead 7d'],['Silk Saree · Maroon','forecast 26 · stock 12'],['Embroidered Lehenga (L)','forecast 14 · stock 7']].map(r=>`<div class="lrow" style="padding:8px 0"><div class="lico b-amber" style="width:30px;height:30px">${ic('inventory')}</div><div style="flex:1"><div class="lt" style="font-size:12.5px">${r[0]}</div><div class="ls">${r[1]}</div></div></div>`).join('')}</div>
             <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-sm btn-pri">Approve & draft 3 POs</button><button class="btn btn-sm">Show data basis</button></div>
           </div>
         </div>
@@ -916,12 +916,12 @@ const OB_STEPS=[
  {tag:'STEP 2 · GST & TAX',h:'Configure your taxes.',sub:'Map your product slabs, HSN/SAC codes and round-off rules so every bill is GST-compliant from the first sale.',ic:'reports'},
  {tag:'STEP 3 · IMPORT CATALOG',h:'Bring in your products.',sub:'Upload a CSV, scan barcodes or add products one by one. Ambel validates HSN, duplicate SKUs and GST slabs before import.',ic:'inventory'},
  {tag:'STEP 4 · OPEN REGISTER',h:'Open your cash drawer.',sub:'Set your opening float for each counter. Ambel tracks every rupee in and out from this baseline automatically.',ic:'register'},
- {tag:'STEP 5 · PAIR HARDWARE',h:'Connect your devices.',sub:'Thermal printer, barcode scanner and cash drawer — pair in seconds. Test each device before you go live.',ic:'hardware'},
+ {tag:'STEP 5 · PAIR HARDWARE',h:'Connect your devices.',sub:'Thermal printer, barcode scanner and cash drawer: pair in seconds. Test each device before you go live.',ic:'hardware'},
  {tag:'STEP 6 · FIRST TRANSACTION',h:'Ring your first sale.',sub:'Run a test bill, verify the GST breakdown, print a receipt and confirm your payment methods are working.',ic:'bill'},
  {tag:'STEP 7 · INVITE TEAM',h:'Bring in your team.',sub:'Add cashiers, managers and floor staff. Assign roles, set permissions and schedule their first shift.',ic:'staff'},
 ];
 const OB_CONTENT=[
- // Step 0 — Business Profile
+ // Step 0: Business Profile
  ()=>`<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
    <label class="fld"><span>Legal business name</span><input type="text" value="Ambel Retail Pvt Ltd"></label>
    <label class="fld"><span>Store display name</span><input type="text" value="Ambel · Bandra"></label>
@@ -935,10 +935,10 @@ const OB_CONTENT=[
    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Receipt options</div>
    ${[['Print GSTIN on receipt',1],['Show HSN per line item',1],['Email invoice copy to customer',0]].map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft)"><div style="flex:1;font-size:13.5px">${t[0]}</div>${tg(t[1])}</div>`).join('')}
  </div>`,
- // Step 1 — GST & Tax
+ // Step 1: GST & Tax
  ()=>`<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
    <label class="fld"><span>Default GST slab</span><select><option>5%</option><option>12%</option><option>18%</option><option>28%</option><option>Exempt</option></select></label>
-   <label class="fld"><span>Composition scheme</span><select><option>No — Regular taxpayer</option><option>Yes — Composition</option></select></label>
+   <label class="fld"><span>Composition scheme</span><select><option>No, regular taxpayer</option><option>Yes, composition</option></select></label>
    <label class="fld"><span>Price display</span><select><option>Exclusive of GST</option><option>Inclusive of GST</option></select></label>
    <label class="fld"><span>Round-off rule</span><select><option>Nearest ₹1</option><option>Nearest ₹0.50</option><option>No rounding</option></select></label>
    <label class="fld"><span>Place of supply</span><select><option>Maharashtra (27)</option><option>Delhi (07)</option><option>Karnataka (29)</option><option>Tamil Nadu (33)</option></select></label>
@@ -948,7 +948,7 @@ const OB_CONTENT=[
    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Compliance options</div>
    ${[['Auto-pick GST slab from HSN',1],['Block sale if HSN is missing',0],['Warn on incomplete GSTIN',1],['Auto-generate GSTR-1 snapshot daily',1]].map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft)"><div style="flex:1;font-size:13.5px">${t[0]}</div>${tg(t[1])}</div>`).join('')}
  </div>`,
- // Step 2 — Import Catalog
+ // Step 2: Import Catalog
  ()=>`<div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)" onmouseenter="this.style.borderColor='var(--brand-2)'" onmouseleave="this.style.borderColor='var(--border)'">
    <div style="width:52px;height:52px;background:var(--brand-soft);border-radius:14px;display:grid;place-items:center;margin:0 auto 14px;color:var(--brand-1)">${ic('inventory',26)}</div>
    <div style="font-family:var(--display);font-size:16px;font-weight:700;margin-bottom:6px">Drop your products.csv here</div>
@@ -961,7 +961,7 @@ const OB_CONTENT=[
    ${DB.products.slice(0,3).map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--border-soft);font-size:13px"><div style="flex:1"><b>${p.name}</b> <span style="color:var(--muted);font-size:12px">· ${p.sku} · ${p.cat}</span></div><span class="badge b-green">${money(p.price)}</span></div>`).join('')}
  </div>
  <div style="background:var(--success-soft);border-radius:10px;padding:10px 14px;font-size:13px;color:#0f8f63"><b>${DB.products.length} products</b> ready in catalog · 0 HSN issues</div>`,
- // Step 3 — Open Register
+ // Step 3: Open Register
  ()=>`<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
    ${['Counter 1','Counter 2','Counter 3'].map((c,i)=>`<div style="border:1.5px solid ${i===0?'var(--brand-1)':'var(--border-soft)'};border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;${i===0?'background:var(--brand-soft)':''}" onclick="this.closest('.grid').querySelectorAll('div').forEach(d=>{d.style.borderColor='var(--border-soft)';d.style.background='';});this.style.borderColor='var(--brand-1)';this.style.background='var(--brand-soft)'">
      <div style="font-family:var(--display);font-weight:700;margin-bottom:4px">${c}</div>
@@ -971,8 +971,8 @@ const OB_CONTENT=[
  <label class="fld" style="margin-bottom:14px"><span>Opening float ₹</span><input type="number" value="5000" style="font-family:var(--mono)"></label>
  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Register options</div>
  ${[['Allow cash billing offline',1],['Auto-open drawer on each payment',1],['Require manager PIN for voids',1],['Block sale over ₹10,000 offline',1]].map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft)"><div style="flex:1;font-size:13.5px">${t[0]}</div>${tg(t[1])}</div>`).join('')}`,
- // Step 4 — Pair Hardware
- ()=>`${[['Thermal Printer · 80mm','Cloud connected','b-green','Connected','Test print'],['Barcode Scanner','USB · Counter 1','b-green','Connected','Test scan'],['Cash Drawer','Auto-open on pay','b-amber','Not tested','Test open'],['Card Terminal','Pine Labs · C-1','b-red','Offline','Reconnect'],['Weighing Scale','Not paired','b-grey','—','Pair now']].map(d=>`
+ // Step 4: Pair Hardware
+ ()=>`${[['Thermal Printer · 80mm','Cloud connected','b-green','Connected','Test print'],['Barcode Scanner','USB · Counter 1','b-green','Connected','Test scan'],['Cash Drawer','Auto-open on pay','b-amber','Not tested','Test open'],['Card Terminal','Pine Labs · C-1','b-red','Offline','Reconnect'],['Weighing Scale','Not paired','b-grey','N/A','Pair now']].map(d=>`
    <div style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border-soft)">
      <div style="width:38px;height:38px;border-radius:10px;background:var(--bg-2);display:grid;place-items:center;color:var(--brand-1)">${ic('hardware')}</div>
      <div style="flex:1"><div style="font-weight:600;font-size:13.5px">${d[0]}</div><div style="font-size:12px;color:var(--muted)">${d[1]}</div></div>
@@ -980,14 +980,14 @@ const OB_CONTENT=[
      <button class="btn btn-sm" onclick="toast('${d[4]} triggered')">${d[4]}</button>
    </div>`).join('')}
  <button class="btn-pri btn" style="width:100%;justify-content:center;margin-top:14px" data-act="pairdevice">${ic('plus')} Pair new device</button>`,
- // Step 5 — First Transaction
+ // Step 5: First Transaction
  ()=>`<div style="background:var(--brand-soft);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:16px;border:1.5px solid rgba(0,88,186,.14)">
    <div style="font-family:var(--display);font-size:15px;font-weight:700;color:var(--brand-1);margin-bottom:6px">Test transaction checklist</div>
    <div style="font-size:13px;color:var(--muted)">Complete these steps to verify your setup is working end-to-end.</div>
  </div>
  ${[['Add a product to the cart',1],['Apply a 5% discount',0],['Switch payment to UPI',1],['Charge ₹100 test bill',0],['Verify GST breakdown on receipt',0],['Print receipt on cloud printer',0]].map((c,i)=>`<div class="cl" style="padding:12px 0;border-bottom:1px solid var(--border-soft)">${cb(c[1])}<span style="font-size:13.5px;${c[1]?'color:var(--muted);text-decoration:line-through':''}">${c[0]}</span></div>`).join('')}
  <button class="btn-grad btn" style="width:100%;justify-content:center;margin-top:16px" onclick="go('billing');toast('Opening billing for test transaction…')">${ic('bolt')} Open billing for test</button>`,
- // Step 6 — Invite Team
+ // Step 6: Invite Team
  ()=>`<div style="margin-bottom:14px">
    ${DB.staff.slice(0,3).map((s,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft)">
      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;color:#fff">${s.name.split(' ').map(w=>w[0]).join('')}</div>
@@ -1054,7 +1054,7 @@ SCREENS.sync=()=>{
 
 /* ============ HARDWARE ============ */
 SCREENS.hardware=()=>{
- const dev=[['Thermal printer · 80mm','Cloud printer','b-amber','Paper low','Test print'],['Barcode scanner','USB · Counter 1','b-green','Connected','Test scan'],['Cash drawer','Auto-open on pay','b-green','Connected','Test open'],['Card terminal','Pine Labs · C-2','b-red','Offline 4 min','Reconnect'],['Weighing scale','Not paired','b-grey','—','Pair']];
+ const dev=[['Thermal printer · 80mm','Cloud printer','b-amber','Paper low','Test print'],['Barcode scanner','USB · Counter 1','b-green','Connected','Test scan'],['Cash drawer','Auto-open on pay','b-green','Connected','Test open'],['Card terminal','Pine Labs · C-2','b-red','Offline 4 min','Reconnect'],['Weighing scale','Not paired','b-grey','N/A','Pair']];
  return head('Hardware & Devices','Pairing, health & device tests '+flag('NEW'),`<button class="btn-pri btn" data-act="pairdevice">${ic('plus')} Pair device</button>`)
   
   + kpis([{l:'Devices Paired',v:'4 of 5',m:'1 to pair'},{l:'Healthy',v:'3',m:'scanner · drawer · scale-pending'},{l:'Needs Attention',v:'2',m:'<span class="dn">printer · terminal</span>'},{l:'Last Self-Test',v:'08:55',m:'auto on register open'}],4)
@@ -1068,7 +1068,7 @@ SCREENS.cfd=()=>{
   + `<div style="display:flex;justify-content:center;margin-top:8px"><div style="width:560px;max-width:100%;border:10px solid #1a1f2b;border-radius:20px;overflow:hidden;box-shadow:var(--shadow-lg)">
       <div style="background:var(--brand-grad);color:#fff;padding:22px 24px"><div style="font-size:13px;opacity:.85">Welcome back</div><div style="font-size:24px;font-weight:700">Anika Kapoor · <span style="font-size:14px;background:rgba(255,255,255,.2);padding:3px 9px;border-radius:8px">Gold</span></div></div>
       <div style="background:#fff;padding:22px 24px">
-        ${[['Cotton Kurta — Indigo (M) × 2','₹3,148'],['Leather Belt — Tan','₹1,007'],['Lakmé Lip · Berry','₹382']].map(r=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:15px"><span>${r[0]}</span><span class="num">${r[1]}</span></div>`).join('')}
+        ${[['Cotton Kurta · Indigo (M) × 2','₹3,148'],['Leather Belt · Tan','₹1,007'],['Lakmé Lip · Berry','₹382']].map(r=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:15px"><span>${r[0]}</span><span class="num">${r[1]}</span></div>`).join('')}
         <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;color:var(--muted)"><span>GST (CGST+SGST)</span><span class="num">₹478</span></div>
         <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;color:var(--success)"><span>Loyalty discount</span><span class="num">−₹250</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0 4px;border-top:2px solid var(--ink);margin-top:6px"><b style="font-size:18px">Total payable</b><b class="num" style="font-size:30px">₹8,525</b></div>
@@ -1120,7 +1120,7 @@ const SETTING_DEF={
  'Notifications':{ic:'bell',sub:'Email, SMS, WhatsApp & in-app alerts',fields:[['Alert email','ops@Ambel.in'],['WhatsApp sender','+91 90000 12345'],['Low-stock threshold','At reorder level'],['Daily summary at','21:30']],toggles:[['Stock-out alerts',1],['Payment failure alerts',1],['Late clock-in alerts',1],['Daily GST summary',1],['Marketing opt-ins only (DND-safe)',1]]},
  'API & Webhooks':{ic:'api',sub:'Connect ERP, loyalty apps & e-commerce',fields:[['Live API key','sk_live_••••••4f2a'],['Webhook URL','https://erp.Ambel.in/hooks'],['Rate limit','600 req/min'],['API version','2026-04']],toggles:[['order.created webhook',1],['inventory.updated webhook',1],['payment.settled webhook',0]]},
  'Integration Marketplace':{ic:'supplier',sub:'Tally, WhatsApp, Razorpay, Shiprocket…',fields:[],apps:[['Tally','Accounting sync','b-green','Connected'],['WhatsApp Business','Campaigns & receipts','b-green','Connected'],['Razorpay','Payments','b-green','Connected'],['Shiprocket','Logistics','b-amber','Disconnected'],['Zoho Books','Accounting','b-amber','Disconnected'],['Shopify','E-commerce','b-grey','Available']]},
- 'Document Vault':{ic:'doc',sub:'GST, FSSAI & lease per store / supplier',fields:[],docs:[['GST Registration Certificate','Ambel Retail · valid','b-green'],['FSSAI License','Beauty counter · exp 2027','b-green'],['Shop & Establishment','Bandra · valid','b-green'],['Lease Agreement — Bandra','exp Mar 2028','b-green'],['Supplier GST — HUL','missing','b-red']]},
+ 'Document Vault':{ic:'doc',sub:'GST, FSSAI & lease per store / supplier',fields:[],docs:[['GST Registration Certificate','Ambel Retail · valid','b-green'],['FSSAI License','Beauty counter · exp 2027','b-green'],['Shop & Establishment','Bandra · valid','b-green'],['Lease Agreement · Bandra','exp Mar 2028','b-green'],['Supplier GST: HUL','missing','b-red']]},
  'Audit Log':{ic:'reports',sub:'Who did what, when & from which counter',fields:[],log:[['Pooja Menon','Approved refund RET-1143','C-1 · 14:42'],['Aarav Pillai','Opened register REG-0501-C2','C-2 · 10:00'],['Riya Sharma','Voided bill INV-24846','C-1 · 14:11'],['System','Auto-generated GSTR-1 snapshot','Cloud · 02:00'],['Karan B.','Edited GST slab on 3 SKUs','Web · Yesterday']]},
  'Modules':{ic:'inventory',sub:'Toggle inventory, loyalty & gift cards',fields:[],toggles:[['Inventory & stock',1],['Loyalty & points',1],['Gift cards',1],['Sales channels',1],['Delivery challan',1],['Receivables',1],['AI Copilot',1],['Customer-facing display',1],['Offline mode',1]]},
  'Store Preferences':{ic:'channels',sub:'Currency, language, SKU & invoice rules',fields:[['Currency','INR ₹'],['Language','English (en-IN)'],['Timezone','Asia/Kolkata'],['SKU format','COU-XXX-0000'],['Financial year start','April'],['Week starts','Monday']],toggles:[['Barcode auto-generate',1],['Negative stock block',1],['Multi-store price sync',0]]},
@@ -1157,13 +1157,13 @@ window.setBillingMode=setBillingMode;
 const DB={
  seq:24851,
  products:[
-  {sku:'COU-DSL-2410',name:'Cotton Kurta — Indigo (M)',cat:'Mens Ethnic',price:1499,gst:5,cost:900,supplier:'Fabindia Mills',stock:84,reorder:30},
-  {sku:'COU-WTC-0871',name:'Silk Saree — Maroon',cat:'Womens Ethnic',price:4400,gst:5,cost:2900,supplier:'Banaras Weaves',stock:12,reorder:20},
-  {sku:'COU-ACC-3392',name:'Leather Belt — Tan (32)',cat:'Accessories',price:899,gst:12,cost:520,supplier:'Hidesign Co.',stock:48,reorder:25},
+  {sku:'COU-DSL-2410',name:'Cotton Kurta · Indigo (M)',cat:'Mens Ethnic',price:1499,gst:5,cost:900,supplier:'Fabindia Mills',stock:84,reorder:30},
+  {sku:'COU-WTC-0871',name:'Silk Saree · Maroon',cat:'Womens Ethnic',price:4400,gst:5,cost:2900,supplier:'Banaras Weaves',stock:12,reorder:20},
+  {sku:'COU-ACC-3392',name:'Leather Belt · Tan (32)',cat:'Accessories',price:899,gst:12,cost:520,supplier:'Hidesign Co.',stock:48,reorder:25},
   {sku:'COU-COS-0912',name:'Lakmé Lip · Berry',cat:'Beauty',price:449,gst:18,cost:300,supplier:'HUL Distribution',stock:22,reorder:15,expiry:'12 Aug 2026'},
   {sku:'COU-DEN-5520',name:"Men's Slim Denim (32)",cat:'Mens Western',price:1999,gst:12,cost:1150,supplier:'Aravind Mills',stock:36,reorder:20},
   {sku:'COU-WMS-0044',name:'Embroidered Lehenga (S)',cat:'Womens Ethnic',price:8400,gst:5,cost:5200,supplier:'Surat Ambel',stock:7,reorder:10},
-  {sku:'COU-FRG-1108',name:'Banarasi Dupatta — Gold',cat:'Womens Ethnic',price:2600,gst:5,cost:1700,supplier:'Banaras Weaves',stock:0,reorder:15},
+  {sku:'COU-FRG-1108',name:'Banarasi Dupatta · Gold',cat:'Womens Ethnic',price:2600,gst:5,cost:1700,supplier:'Banaras Weaves',stock:0,reorder:15},
  ],
  customers:[
   {name:'Anika Kapoor',phone:'+91 98201 11420',tier:'Gold',pts:1840,spend:142500,last:'Today 14:42'},
@@ -1173,15 +1173,15 @@ const DB={
  suppliers:[
   {name:'Fabindia Mills',gstin:'27ABCDE1234F1Z5',terms:'Net 30',lead:'4d',pay:184500,status:['b-green','Active']},
   {name:'Aravind Mills',gstin:'07PQRST3322M5R8',terms:'Net 45',lead:'6d',pay:156000,status:['b-amber','Late']},
-  {name:'HUL Distribution',gstin:'—',terms:'Net 7',lead:'2d',pay:12400,status:['b-red','GST missing']},
+  {name:'HUL Distribution',gstin:'N/A',terms:'Net 7',lead:'2d',pay:12400,status:['b-red','GST missing']},
  ],
  orders:[
-  {inv:'INV-24850',cust:'Anika Kapoor',cashier:'Riya S. · C-1',time:'14:42',method:'UPI',status:'Paid',amount:4280,lines:[['Cotton Kurta — Indigo (M)',2,2998],['Leather Belt — Tan',1,899],['Lakmé Lip · Berry',1,383]]},
+  {inv:'INV-24850',cust:'Anika Kapoor',cashier:'Riya S. · C-1',time:'14:42',method:'UPI',status:'Paid',amount:4280,lines:[['Cotton Kurta · Indigo (M)',2,2998],['Leather Belt · Tan',1,899],['Lakmé Lip · Berry',1,383]]},
   {inv:'INV-24849',cust:'Walk-in',cashier:'Riya S. · C-1',time:'14:39',method:'Cash',status:'Paid',amount:1240,lines:[['Lakmé Lip · Berry',2,766],['Hair serum',1,474]]},
-  {inv:'INV-24848',cust:'Rohit Mehra',cashier:'Aarav P. · C-2',time:'14:31',method:'Card',status:'Paid',amount:8650,lines:[['Embroidered Lehenga (S)',1,8400],['Leather Belt — Tan',1,250]]},
-  {inv:'INV-24847',cust:'Saanvi Iyer',cashier:'Aarav P. · C-2',time:'14:18',method:'Split',status:'Paid',amount:12400,lines:[['Silk Saree — Maroon',2,8800],['Banarasi Dupatta — Gold',1,2600],['Leather Belt — Tan',1,1000]]},
+  {inv:'INV-24848',cust:'Rohit Mehra',cashier:'Aarav P. · C-2',time:'14:31',method:'Card',status:'Paid',amount:8650,lines:[['Embroidered Lehenga (S)',1,8400],['Leather Belt · Tan',1,250]]},
+  {inv:'INV-24847',cust:'Saanvi Iyer',cashier:'Aarav P. · C-2',time:'14:18',method:'Split',status:'Paid',amount:12400,lines:[['Silk Saree · Maroon',2,8800],['Banarasi Dupatta · Gold',1,2600],['Leather Belt · Tan',1,1000]]},
   {inv:'INV-24846',cust:'Walk-in',cashier:'Riya S. · C-1',time:'14:09',method:'UPI',status:'Held',amount:2100,lines:[["Men's Slim Denim (32)",1,1999],['Misc',1,101]]},
-  {inv:'INV-24845',cust:'Vikram Joshi',cashier:'Meera D. · C-3',time:'13:58',method:'Card',status:'Refunded',amount:3450,lines:[['Silk Saree — Maroon',1,3450]]},
+  {inv:'INV-24845',cust:'Vikram Joshi',cashier:'Meera D. · C-3',time:'13:58',method:'Card',status:'Refunded',amount:3450,lines:[['Silk Saree · Maroon',1,3450]]},
  ],
  cart:{custIdx:0,method:'UPI',redeem:false,lines:[{sku:'COU-DSL-2410',qty:2},{sku:'COU-ACC-3392',qty:1},{sku:'COU-COS-0912',qty:1}]},
  oFilter:{date:'Today',method:'',status:'',q:''},
@@ -1201,12 +1201,12 @@ const DB={
   {ref:'EXC-0204',inv:'INV-24710',cust:'Anjali Rao',items:'Lehenga (M) → (L)',reason:'Size swap',method:'Net ₹0',status:['b-blue','Exchange'],amount:0},
  ],
  challans:[
-  {no:'DC-2026-0042',party:'Lifestyle Corp',purpose:'Inter-branch → Pune',qty:'24 units',status:['b-amber','Dispatched'],inv:'—'},
+  {no:'DC-2026-0042',party:'Lifestyle Corp',purpose:'Inter-branch → Pune',qty:'24 units',status:['b-amber','Dispatched'],inv:'N/A'},
   {no:'DC-2026-0041',party:'Reliance Trends',purpose:'B2B bulk order',qty:'120 units',status:['b-green','Invoiced'],inv:'INV-24788'},
-  {no:'DC-2026-0040',party:'Pothys Silks',purpose:'Approval order',qty:'8 units',status:['b-blue','Returned'],inv:'—'},
+  {no:'DC-2026-0040',party:'Pothys Silks',purpose:'Approval order',qty:'8 units',status:['b-blue','Returned'],inv:'N/A'},
  ],
  notes:[
-  {no:'CN-2026-018',type:'Credit',party:'Karan Singh',reason:'Return — size issue',amount:1499,status:['b-green','Issued']},
+  {no:'CN-2026-018',type:'Credit',party:'Karan Singh',reason:'Return: size issue',amount:1499,status:['b-green','Issued']},
   {no:'CN-2026-017',type:'Credit',party:'Reliance Trends',reason:'Bulk price adjustment',amount:12000,status:['b-amber','Draft']},
   {no:'DN-2026-004',type:'Debit',party:'Forest Essentials',reason:'Supplier short-supply',amount:3200,status:['b-blue','Sent']},
  ],
@@ -1252,7 +1252,7 @@ function billSearch(q){
  box.innerHTML=hits.length?hits.map(p=>`<div class="res-row" onclick="addToCart('${p.sku}')"><div><div class="t-strong" style="font-size:13px">${p.name}</div><div class="t-sub t-mono">${p.sku} · ${p.stock} in stock</div></div><div style="display:flex;align-items:center;gap:10px"><span class="num">${money(p.price)}</span><span class="btn btn-sm btn-pri" style="height:28px">Add</span></div></div>`).join(''):`<div class="res-row" style="color:var(--muted)">No match for "${q}"</div>`;
 }
 function charge(){
- if(!DB.cart.lines.length){toast('Cart is empty — add items first');return;}
+ if(!DB.cart.lines.length){toast('Cart is empty: add items first');return;}
  const c=cartCalc();
  const inv='INV-'+(DB.seq++);
  const cust=DB.cart.custIdx!=null?DB.customers[DB.cart.custIdx]:null;
@@ -1332,11 +1332,11 @@ const val=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
 
 /* ---- create forms (real inserts) ---- */
 function addCustomerForm(){openModal('Add customer',fld('c_name','Full name',{ph:'e.g. Neha Verma'})+fld('c_phone','Phone',{ph:'+91 …'})+fld('c_tier','Tier',{type:'select',options:['Bronze','Silver','Gold']}),'Add customer','saveCustomer');}
-function saveCustomer(){const n=val('c_name');if(!n){toast('Name is required');return;}DB.customers.unshift({name:n,phone:val('c_phone')||'—',tier:val('c_tier')||'Bronze',pts:0,spend:0,last:'Just now'});closeModal();toast(n+' added');go('customers');}
+function saveCustomer(){const n=val('c_name');if(!n){toast('Name is required');return;}DB.customers.unshift({name:n,phone:val('c_phone')||'N/A',tier:val('c_tier')||'Bronze',pts:0,spend:0,last:'Just now'});closeModal();toast(n+' added');go('customers');}
 function addSupplierForm(){openModal('Add supplier',fld('s_name','Supplier name')+fld('s_gstin','GSTIN',{ph:'27ABCDE…'})+fld('s_terms','Payment terms',{type:'select',options:['Net 7','Net 15','Net 30','Net 45','Advance 50%']}),'Add supplier','saveSupplier');}
-function saveSupplier(){const n=val('s_name');if(!n){toast('Name is required');return;}DB.suppliers.unshift({name:n,gstin:val('s_gstin')||'—',terms:val('s_terms'),lead:'—',pay:0,status:['b-green','Active']});closeModal();toast(n+' added');go('suppliers');}
+function saveSupplier(){const n=val('s_name');if(!n){toast('Name is required');return;}DB.suppliers.unshift({name:n,gstin:val('s_gstin')||'N/A',terms:val('s_terms'),lead:'N/A',pay:0,status:['b-green','Active']});closeModal();toast(n+' added');go('suppliers');}
 function addInventoryForm(){openModal('Add inventory item',fld('i_name','Product name')+fld('i_sku','SKU',{ph:'COU-…'})+fld('i_cat','Category',{type:'select',options:['Mens Ethnic','Womens Ethnic','Mens Western','Accessories','Beauty']})+`<div style="display:flex;gap:10px">${fld('i_price','Price ₹',{type:'number'})}${fld('i_stock','Opening stock',{type:'number'})}</div>`,'Add item','saveInventory');}
-function saveInventory(){const n=val('i_name');if(!n){toast('Name is required');return;}DB.products.unshift({sku:val('i_sku')||('COU-'+Math.floor(Math.random()*9000+1000)),name:n,cat:val('i_cat'),price:+val('i_price')||0,gst:5,cost:Math.round((+val('i_price')||0)*0.6),supplier:'—',stock:+val('i_stock')||0,reorder:10});closeModal();toast(n+' added to inventory');go('inventory');}
+function saveInventory(){const n=val('i_name');if(!n){toast('Name is required');return;}DB.products.unshift({sku:val('i_sku')||('COU-'+Math.floor(Math.random()*9000+1000)),name:n,cat:val('i_cat'),price:+val('i_price')||0,gst:5,cost:Math.round((+val('i_price')||0)*0.6),supplier:'N/A',stock:+val('i_stock')||0,reorder:10});closeModal();toast(n+' added to inventory');go('inventory');}
 function createPOForm(){openModal('Create purchase order',fld('po_sup','Supplier',{type:'select',options:DB.suppliers.map(s=>s.name)})+fld('po_item','Item',{type:'select',options:DB.products.map(p=>p.name)})+fld('po_qty','Quantity',{type:'number',ph:'e.g. 60'}),'Create PO','savePO');}
 function savePO(){const po='PO-2026-0'+(191+Math.floor(Math.random()*9));closeModal();toast(po+' created for '+val('po_sup'));}
 window.addCustomerForm=addCustomerForm;window.saveCustomer=saveCustomer;window.addSupplierForm=addSupplierForm;window.saveSupplier=saveSupplier;window.addInventoryForm=addInventoryForm;window.saveInventory=saveInventory;window.createPOForm=createPOForm;window.savePO=savePO;
@@ -1348,37 +1348,37 @@ function addStaffForm(){openModal('Add staff member',
   +fld('st_role','Role',{type:'select',options:['Cashier','Senior Cashier','Manager','Floor staff','Admin']})
   +row2(fld('st_shift','Shift',{type:'select',options:['Morning','Mid','Evening']}),fld('st_reg','Register',{type:'select',options:['Counter 1','Counter 2','Counter 3','Unassigned']}))
   +fld('st_phone','Phone',{ph:'+91 …'}),'Add staff','saveStaff');}
-function saveStaff(){const n=val('st_name');if(!n){toast('Name is required');return;}DB.staff.unshift({name:n,role:val('st_role'),shift:val('st_shift'),reg:val('st_reg'),clock:'—',status:['b-grey','Off shift']});closeModal();toast(n+' added to team');go('staff');}
+function saveStaff(){const n=val('st_name');if(!n){toast('Name is required');return;}DB.staff.unshift({name:n,role:val('st_role'),shift:val('st_shift'),reg:val('st_reg'),clock:'N/A',status:['b-grey','Off shift']});closeModal();toast(n+' added to team');go('staff');}
 
 function addExpenseForm(){openModal('Add expense',
   fld('ex_cat','Category',{type:'select',options:['Rent','Utilities','Cleaning','Staff snacks','Maintenance','Marketing','Logistics','Misc']})
   +fld('ex_payee','Paid to',{ph:'Vendor / person'})
   +row2(fld('ex_amt','Amount ₹',{type:'number',ph:'0'}),fld('ex_src','Source',{type:'select',options:['Petty cash','Bank','Card','UPI']})),'Add expense','saveExpense');}
-function saveExpense(){const a=+val('ex_amt')||0;if(!a){toast('Amount is required');return;}const id='EXP-'+(2209+Math.floor(Math.random()*40));DB.expenses.unshift({id,cat:val('ex_cat'),payee:val('ex_payee')||'—',amt:a,source:val('ex_src'),status:['b-amber','Pending']});closeModal();toast(id+' recorded');go('expenses');}
+function saveExpense(){const a=+val('ex_amt')||0;if(!a){toast('Amount is required');return;}const id='EXP-'+(2209+Math.floor(Math.random()*40));DB.expenses.unshift({id,cat:val('ex_cat'),payee:val('ex_payee')||'N/A',amt:a,source:val('ex_src'),status:['b-amber','Pending']});closeModal();toast(id+' recorded');go('expenses');}
 
 function newReturnForm(){openModal('New return',
   fld('rt_inv','Original invoice',{type:'select',options:DB.orders.map(o=>o.inv+' · '+o.cust)})
   +fld('rt_item','Item returned',{ph:'e.g. 1× Cotton Kurta (L)'})
   +fld('rt_reason','Reason',{type:'select',options:['Size issue','Colour mismatch','Defective','Changed mind','Wrong item']})
   +row2(fld('rt_method','Refund method',{type:'select',options:['Store credit','Card refund','UPI refund','Cash']}),fld('rt_amt','Amount ₹',{type:'number',ph:'0'})),'Create return','saveReturn');}
-function saveReturn(){const it=val('rt_item');if(!it){toast('Item is required');return;}const ref='RET-'+(1144+Math.floor(Math.random()*60));DB.returns.unshift({ref,inv:(val('rt_inv')||'—').split(' · ')[0],cust:(val('rt_inv')||'— · Walk-in').split(' · ')[1]||'Walk-in',items:it,reason:val('rt_reason'),method:val('rt_method'),status:['b-amber','Pending'],amount:+val('rt_amt')||0});closeModal();toast(ref+' created · awaiting approval');go('returns');}
+function saveReturn(){const it=val('rt_item');if(!it){toast('Item is required');return;}const ref='RET-'+(1144+Math.floor(Math.random()*60));DB.returns.unshift({ref,inv:(val('rt_inv')||'N/A').split(' · ')[0],cust:(val('rt_inv')||'N/A · Walk-in').split(' · ')[1]||'Walk-in',items:it,reason:val('rt_reason'),method:val('rt_method'),status:['b-amber','Pending'],amount:+val('rt_amt')||0});closeModal();toast(ref+' created · awaiting approval');go('returns');}
 function newExchangeForm(){openModal('New exchange',
   fld('ex_inv','Original invoice',{type:'select',options:DB.orders.map(o=>o.inv+' · '+o.cust)})
   +fld('ex_out','Returning item',{ph:'e.g. Lehenga (M)'})
   +fld('ex_in','New item',{ph:'e.g. Lehenga (L)'})
   +`<div style="background:var(--brand-soft);border-radius:10px;padding:11px;margin-top:4px;font-size:12.5px;color:var(--muted)">One net payment · single GST recalculation · one receipt.</div>`,'Create exchange','saveExchange');}
-function saveExchange(){const o=val('ex_out');if(!o){toast('Returning item required');return;}const ref='EXC-'+('0'+(205+Math.floor(Math.random()*40))).slice(-4);DB.returns.unshift({ref,inv:(val('ex_inv')||'—').split(' · ')[0],cust:(val('ex_inv')||'— · Walk-in').split(' · ')[1]||'Walk-in',items:o+' → '+val('ex_in'),reason:'Size swap',method:'Net ₹0',status:['b-blue','Exchange'],amount:0});closeModal();toast(ref+' exchange created');go('returns');}
+function saveExchange(){const o=val('ex_out');if(!o){toast('Returning item required');return;}const ref='EXC-'+('0'+(205+Math.floor(Math.random()*40))).slice(-4);DB.returns.unshift({ref,inv:(val('ex_inv')||'N/A').split(' · ')[0],cust:(val('ex_inv')||'N/A · Walk-in').split(' · ')[1]||'Walk-in',items:o+' → '+val('ex_in'),reason:'Size swap',method:'Net ₹0',status:['b-blue','Exchange'],amount:0});closeModal();toast(ref+' exchange created');go('returns');}
 
 function newChallanForm(){openModal('New delivery challan',
   fld('dc_party','Party',{ph:'Customer / branch'})
   +fld('dc_purpose','Purpose',{type:'select',options:['B2B bulk order','Inter-branch transfer','Approval order','Job work']})
   +row2(fld('dc_qty','Quantity (units)',{type:'number',ph:'0'}),fld('dc_item','Item',{type:'select',options:DB.products.map(p=>p.name)})),'Create challan','saveChallan');}
-function saveChallan(){const p=val('dc_party');if(!p){toast('Party is required');return;}const no='DC-2026-00'+(43+Math.floor(Math.random()*50));DB.challans.unshift({no,party:p,purpose:val('dc_purpose'),qty:(val('dc_qty')||'0')+' units',status:['b-amber','Dispatched'],inv:'—'});closeModal();toast(no+' dispatched');go('challan');}
+function saveChallan(){const p=val('dc_party');if(!p){toast('Party is required');return;}const no='DC-2026-00'+(43+Math.floor(Math.random()*50));DB.challans.unshift({no,party:p,purpose:val('dc_purpose'),qty:(val('dc_qty')||'0')+' units',status:['b-amber','Dispatched'],inv:'N/A'});closeModal();toast(no+' dispatched');go('challan');}
 
 function newNoteForm(){openModal('New credit / debit note',
   fld('nt_type','Note type',{type:'select',options:['Credit note (to customer)','Debit note (to supplier)']})
   +fld('nt_party','Party',{ph:'Customer / supplier'})
-  +fld('nt_reason','Reason',{type:'select',options:['Return — size issue','Bulk price adjustment','Supplier short-supply','Damaged goods','Goodwill credit']})
+  +fld('nt_reason','Reason',{type:'select',options:['Return: size issue','Bulk price adjustment','Supplier short-supply','Damaged goods','Goodwill credit']})
   +fld('nt_amt','Amount ₹',{type:'number',ph:'0'}),'Create note','saveNote');}
 function saveNote(){const p=val('nt_party');if(!p){toast('Party is required');return;}const type=val('nt_type').startsWith('Credit')?'Credit':'Debit';const no=(type==='Credit'?'CN':'DN')+'-2026-0'+(19+Math.floor(Math.random()*60));DB.notes.unshift({no,type,party:p,reason:val('nt_reason'),amount:+val('nt_amt')||0,status:['b-amber','Draft']});closeModal();toast(no+' drafted');go('creditnotes');}
 
@@ -1386,7 +1386,7 @@ function connectChannelForm(){openModal('Connect a channel',
   fld('cc_ch','Channel',{type:'select',options:['Amazon','Flipkart','Instagram Shop','Myntra','WhatsApp Catalog','Ambel Online (web)']})
   +fld('cc_acct','Account / seller ID',{ph:'e.g. Ambel-seller'})
   +`<div style="display:flex;gap:10px;align-items:center;margin-top:6px"><div style="flex:1;font-size:13px">Sync one stock pool in real-time</div>${tg(1)}</div>`,'Connect','doConnectChannel');}
-function doConnectChannel(){const ch=val('cc_ch');closeModal();toast(ch+' connecting — stock sync starting…');go('channels');}
+function doConnectChannel(){const ch=val('cc_ch');closeModal();toast(ch+' connecting: stock sync starting…');go('channels');}
 
 function newBroadcastForm(){openModal('New WhatsApp broadcast',
   fld('wb_aud','Audience',{type:'select',options:['Gold tier (612)','Lapsed 90D+ (248)','All opted-in (2,140)','Walk-ins this month (388)','B2B / corporate (24)']})
@@ -1398,7 +1398,7 @@ function newTemplateForm(){openModal('New message template',
   fld('wt_name','Template name',{ph:'e.g. Back-in-stock alert'})
   +fld('wt_cat','Category',{type:'select',options:['Utility (transactional)','Marketing (promotional)','Authentication (OTP)']})
   +`<label class="fld"><span>Body</span><textarea id="wt_body" rows="3" style="resize:vertical;font-family:inherit" placeholder="Use {name}, {amount}, {link} as variables">Namaste {name}! {item} is back in stock at Ambel Bandra. Reply YES to reserve yours.</textarea></label>`
-  +`<div class="t-sub" style="margin-top:2px">Submitted to Meta &amp; DLT for approval — usually live within a few hours.</div>`,'Submit for approval','doNewTemplate');}
+  +`<div class="t-sub" style="margin-top:2px">Submitted to Meta &amp; DLT for approval; usually live within a few hours.</div>`,'Submit for approval','doNewTemplate');}
 function doNewTemplate(){const n=val('wt_name');if(!n){toast('Template name is required');return;}closeModal();toast('"'+n+'" submitted for approval');go('whatsapp');}
 window.newBroadcastForm=newBroadcastForm;window.doNewBroadcast=doNewBroadcast;window.newTemplateForm=newTemplateForm;window.doNewTemplate=doNewTemplate;
 
@@ -1416,7 +1416,7 @@ function doScheduleReport(){closeModal();toast(val('sr_type')+' scheduled · '+v
 function runSettlement(){openModal('Run settlement · 03 May',
   `<div class="t-sub" style="margin-bottom:12px">Match captured payments to bank settlement by tender.</div>
    <table style="font-size:13px"><thead><tr><th>Tender</th><th style="text-align:right">Captured</th><th style="text-align:right">Settled</th><th></th></tr></thead><tbody>
-   ${[['UPI · Razorpay','₹2,18,000','₹2,18,000','b-green','Matched'],['Card · Pine Labs','₹1,62,000','₹1,62,000','b-green','Matched'],['UPI · PhonePe','₹84,200','—','b-amber','Expected 8 PM'],['Cash · Drawer','₹35,240','₹35,240','b-green','Counted']].map(r=>`<tr><td class="t-strong">${r[0]}</td><td class="num" style="text-align:right">${r[1]}</td><td class="num" style="text-align:right">${r[2]}</td><td style="text-align:right"><span class="badge ${r[3]}">${r[4]}</span></td></tr>`).join('')}
+   ${[['UPI · Razorpay','₹2,18,000','₹2,18,000','b-green','Matched'],['Card · Pine Labs','₹1,62,000','₹1,62,000','b-green','Matched'],['UPI · PhonePe','₹84,200','N/A','b-amber','Expected 8 PM'],['Cash · Drawer','₹35,240','₹35,240','b-green','Counted']].map(r=>`<tr><td class="t-strong">${r[0]}</td><td class="num" style="text-align:right">${r[1]}</td><td class="num" style="text-align:right">${r[2]}</td><td style="text-align:right"><span class="badge ${r[3]}">${r[4]}</span></td></tr>`).join('')}
    </tbody></table>
    <div style="display:flex;justify-content:space-between;border-top:2px solid var(--ink);margin-top:8px;padding-top:10px"><b>Total settled</b><b class="num" style="font-size:17px">₹4,15,240</b></div>`,'Confirm settlement','doSettlement');}
 function doSettlement(){closeModal();toast('Settlement confirmed · UTRs matched');}
@@ -1442,7 +1442,7 @@ function launchPreview(){openModal('Customer display · live preview',
   `<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border)">
      <div style="background:var(--brand-grad);color:#fff;padding:18px 20px"><div style="font-size:12px;opacity:.85">Welcome back</div><div style="font-size:20px;font-weight:700">Anika Kapoor · <span style="font-size:12px;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:7px">Gold</span></div></div>
      <div style="background:#fff;padding:18px 20px">
-       ${[['Cotton Kurta — Indigo (M) × 2','₹3,148'],['Leather Belt — Tan','₹1,007'],['Lakmé Lip · Berry','₹382']].map(r=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);font-size:14px"><span>${r[0]}</span><span class="num">${r[1]}</span></div>`).join('')}
+       ${[['Cotton Kurta · Indigo (M) × 2','₹3,148'],['Leather Belt · Tan','₹1,007'],['Lakmé Lip · Berry','₹382']].map(r=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);font-size:14px"><span>${r[0]}</span><span class="num">${r[1]}</span></div>`).join('')}
        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 2px;border-top:2px solid var(--ink);margin-top:6px"><b style="font-size:15px">Total payable</b><b class="num" style="font-size:24px">₹8,525</b></div>
        <div style="background:var(--success-soft);color:#0f8f63;border-radius:9px;padding:9px;text-align:center;font-size:13px;font-weight:600;margin-top:10px">★ Earns 170 points</div>
      </div>
@@ -1505,7 +1505,7 @@ document.addEventListener('click',e=>{
  if(el=e.target.closest('.tg')){el.classList.toggle('on');return;}
  if(el=e.target.closest('.cl')){const b=el.querySelector('.cb');if(b){b.classList.toggle('on');b.innerHTML=b.classList.contains('on')?_CHECK:'';}return;}
  if(el=e.target.closest('button.btn, .switch-app')){
-   if(!el.getAttribute('onclick')&&!el.getAttribute('data-act')){const l=(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,42);toast((l||'Action')+' — not wired in this prototype');}
+   if(!el.getAttribute('onclick')&&!el.getAttribute('data-act')){const l=(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,42);toast((l||'Action')+': not wired in this prototype');}
  }
 });
 
@@ -1594,7 +1594,7 @@ function af(id,label,opts){
   return '<label class="af" style="width:'+w+'"><span>'+label+star+'</span><input type="'+type+'" id="d_'+id+'" placeholder="'+ph+'" value="'+v+'" oninput="AUTH.d[\''+id+'\']=this.value">'+hintD+'</label>';
 }
 
-/* country-code selector for phone fields — India (+91) & US (+1).
+/* country-code selector for phone fields: India (+91) & US (+1).
    Custom dropdown with inline SVG flags (emoji flags don't render on Windows). */
 var CC_LIST=[['+91','India'],['+1','United States']];
 function ccFlag(c){
@@ -1715,7 +1715,7 @@ splash: function(){
     +'<div class="a-mark" style="margin-bottom:28px;justify-content:center"><div class="a-icon">'+POSSVG+'</div><div class="a-mname" style="font-size:20px">Ambel POS</div></div>'
     +'<div style="display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:100px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:22px">✦ India\'s most complete retail suite</div>'
     +'<h1 style="font-family:\'Space Grotesk\',sans-serif;font-size:clamp(34px,5vw,62px);font-weight:800;letter-spacing:-.04em;line-height:1;margin-bottom:14px;text-align:center">Retail, reimagined.<br>For every Indian store.</h1>'
-    +'<p style="font-size:16px;color:rgba(255,255,255,.7);max-width:420px;line-height:1.6;margin-bottom:36px;text-align:center">GST-native · AI-powered · Offline-first<br>From first bill to GSTR-1 — one POS.</p>'
+    +'<p style="font-size:16px;color:rgba(255,255,255,.7);max-width:420px;line-height:1.6;margin-bottom:36px;text-align:center">GST-native · AI-powered · Offline-first<br>From first bill to GSTR-1: one POS.</p>'
     +'<div style="display:flex;flex-direction:column;gap:12px;width:310px">'
     +'<button class="ab-pri" style="font-size:17px;height:54px;border-radius:14px" onclick="authGo(\'signup\')">Create your store account →</button>'
     +'<button onclick="authGo(\'login\')" style="height:50px;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-family:\'Space Grotesk\',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;transition:all .18s" onmouseover="this.style.background=\'rgba(255,255,255,.15)\'" onmouseout="this.style.background=\'rgba(255,255,255,.08)\'">Sign in to existing account</button>'
@@ -1731,7 +1731,7 @@ login: function(){
   var t=AUTH.loginTab;
   var bp=brandPanel(
     '<h2 style="font-family:\'Space Grotesk\',sans-serif;font-size:28px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:12px">Welcome back to your store.</h2>'
-    +'<p style="font-size:14px;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:28px">Billing, inventory, loyalty and compliance — all in one place.</p>'
+    +'<p style="font-size:14px;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:28px">Billing, inventory, loyalty and compliance: all in one place.</p>'
     +'<div style="display:flex;flex-direction:column;gap:11px">'
     +['2,400+ stores across India','₹18 Cr+ GMV processed monthly','GST-compliant from day one','Works fully offline'].map(function(s){return '<div style="display:flex;align-items:center;gap:9px;font-size:13px;color:rgba(255,255,255,.75)"><span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center;flex-shrink:0">'+CHK+'</span>'+s+'</div>';}).join('')
     +'</div>'
@@ -1753,9 +1753,9 @@ login: function(){
 signup: function(){
   var bp=brandPanel(
     '<h2 style="font-family:\'Space Grotesk\',sans-serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:12px">One platform.<br>Every store detail.</h2>'
-    +'<p style="font-size:14px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:24px">From GST billing to loyalty rewards — built for Indian retail.</p>'
+    +'<p style="font-size:14px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:24px">From GST billing to loyalty rewards: built for Indian retail.</p>'
     +'<div style="display:flex;flex-direction:column;gap:10px">'
-    +['GST-native invoicing from day 1','Offline billing — works without internet','AI Copilot reads your live store data','22 integrated modules, one subscription'].map(function(s){return '<div style="display:flex;align-items:center;gap:9px;font-size:13px;color:rgba(255,255,255,.75)"><span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center;flex-shrink:0">'+CHK+'</span>'+s+'</div>';}).join('')
+    +['GST-native invoicing from day 1','Offline billing: works without internet','AI Copilot reads your live store data','22 integrated modules, one subscription'].map(function(s){return '<div style="display:flex;align-items:center;gap:9px;font-size:13px;color:rgba(255,255,255,.75)"><span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center;flex-shrink:0">'+CHK+'</span>'+s+'</div>';}).join('')
     +'</div>'
   );
   var fp='<div class="a-form"><div class="a-form-inner">'
@@ -1819,8 +1819,8 @@ biztype: function(){
 subscription: function(){
   var billing=AUTH.billing;
   var plans=[
-    {id:'starter',name:'Starter',monthly:999,annual:799,stores:'1 store · 2 counters',desc:'Perfect for single-store kirana or specialty retail.',feats:['Billing & cart — GST-native','UPI, card & cash payments','Inventory (up to 2,000 SKUs)','5 staff accounts','Email & WhatsApp receipts','GST reports & GSTR-1 export']},
-    {id:'growth',name:'Growth',monthly:2499,annual:1999,stores:'Up to 3 stores · unlimited counters',desc:'Most popular for fashion & lifestyle chains.',feats:['Everything in Starter','Loyalty, gift cards & CRM','Sales channels (web + social)','Delivery challan & receivables','AI Copilot — 100 queries/mo','WhatsApp campaigns (DLT)','Staff commissions & coaching','Priority support (4-hr SLA)'],featured:true},
+    {id:'starter',name:'Starter',monthly:999,annual:799,stores:'1 store · 2 counters',desc:'Perfect for single-store kirana or specialty retail.',feats:['Billing & cart: GST-native','UPI, card & cash payments','Inventory (up to 2,000 SKUs)','5 staff accounts','Email & WhatsApp receipts','GST reports & GSTR-1 export']},
+    {id:'growth',name:'Growth',monthly:2499,annual:1999,stores:'Up to 3 stores · unlimited counters',desc:'Most popular for fashion & lifestyle chains.',feats:['Everything in Starter','Loyalty, gift cards & CRM','Sales channels (web + social)','Delivery challan & receivables','AI Copilot: 100 queries/mo','WhatsApp campaigns (DLT)','Staff commissions & coaching','Priority support (4-hr SLA)'],featured:true},
     {id:'enterprise',name:'Enterprise',monthly:null,annual:null,stores:'Unlimited stores & counters',desc:'For large chains, franchises and enterprise retail.',feats:['Everything in Growth','Unlimited AI Copilot queries','Custom report builder & API','Integration marketplace','Franchise management module','Dedicated account manager','99.98% uptime SLA']}
   ];
   return '<div class="a-full" style="background:#F2F4F7;overflow-y:auto;justify-content:flex-start;padding:48px 40px">'
@@ -1884,18 +1884,18 @@ welcome: function(){
 
 /* ========== WIZARD STEP RENDERERS ========== */
 function ob0(){
-  return '<div class="a-shd"><div class="a-shd-tag">Step 01 · Business Identity</div><h2>Tell us about your business.</h2><p>Enter details exactly as registered with the Government of India — these appear on every invoice, tax filing, and compliance document.</p></div>'
+  return '<div class="a-shd"><div class="a-shd-tag">Step 01 · Business Identity</div><h2>Tell us about your business.</h2><p>Enter details exactly as registered with the Government of India: these appear on every invoice, tax filing, and compliance document.</p></div>'
   +'<div class="a-info">ℹ️ Use the legal name as it appears on your GST Registration Certificate or Certificate of Incorporation / Partnership Deed.</div>'
   +af('legalName','Legal business name',{ph:'As on GST / Certificate of Incorporation',req:true})
   +af('tradeName','Trade / brand name',{ph:'Name shown to customers on receipt & display'})
   +'<div class="arow2">'
-  +af('bizType','Business structure',{type:'select',options:[['pvtltd','Private Limited (Pvt Ltd)'],['llp','LLP — Limited Liability Partnership'],['partnership','Partnership Firm'],['proprietorship','Sole Proprietorship'],['public','Public Limited Company'],['huf','HUF — Hindu Undivided Family'],['trust','Trust / Section 8 / NGO']]})
+  +af('bizType','Business structure',{type:'select',options:[['pvtltd','Private Limited (Pvt Ltd)'],['llp','LLP: Limited Liability Partnership'],['partnership','Partnership Firm'],['proprietorship','Sole Proprietorship'],['public','Public Limited Company'],['huf','HUF: Hindu Undivided Family'],['trust','Trust / Section 8 / NGO']]})
   +af('estYear','Year established',{type:'select',options:YEARS})
   +'</div>'
   +(AUTH.d.bizType==='pvtltd'?af('cin','CIN (Company Identification Number)',{ph:'e.g. U52100MH2018PTC000001',hint:'21-character CIN issued by Ministry of Corporate Affairs (MCA)'}):'')
   +(AUTH.d.bizType==='llp'?af('cin','LLPIN (LLP Identification Number)',{ph:'e.g. AAB-1234',hint:'Issued by MCA at time of LLP registration'}):'')
   +'<div class="arow2">'
-  +af('natureBiz','Nature of business',{type:'select',options:[['retailer','Retailer — direct to consumer'],['wholesaler','Wholesaler — B2B only'],['both','Both retail & wholesale'],['mfr_retail','Manufacturer-retailer'],['service','Service + retail (salon, tailor)']]})
+  +af('natureBiz','Nature of business',{type:'select',options:[['retailer','Retailer: direct to consumer'],['wholesaler','Wholesaler: B2B only'],['both','Both retail & wholesale'],['mfr_retail','Manufacturer-retailer'],['service','Service + retail (salon, tailor)']]})
   +af('stores','Number of stores',{type:'select',options:[['1','1 store'],['2','2 stores'],['3','3 stores'],['4','4 stores'],['5','5 stores'],['6-10','6–10 stores'],['11-20','11–20 stores'],['20+','More than 20 stores']]})
   +'</div>';
 }
@@ -1906,7 +1906,7 @@ function ob1(){
   +'<div class="a-slbl">GST Registration type</div>'
   +rdiv('gstStatus','regular','Regular taxpayer','Aggregate turnover > ₹40L (goods) / ₹20L (services). File GSTR-1 & GSTR-3B monthly or quarterly.')
   +rdiv('gstStatus','composition','Composition scheme','Turnover ≤ ₹1.5 Cr. Pay flat 1% on turnover. Cannot charge GST separately or make inter-state supply.')
-  +rdiv('gstStatus','unregistered','Unregistered — below threshold','Below GST threshold. No GSTIN. Limited to B2C local sales only.')
+  +rdiv('gstStatus','unregistered','Unregistered: below threshold','Below GST threshold. No GSTIN. Limited to B2C local sales only.')
   +(!unreg?'<div class="arow2" style="margin-top:14px">'
     +af('gstin','GSTIN (15 characters)',{ph:'e.g. 27AABCU9603R1ZX',req:true,hint:'State code(2) + PAN(10) + Entity no(1) + Z + Check digit(1)'})
     +af('pan','PAN (10 characters)',{ph:'e.g. AABCU9603R',req:true})
@@ -1928,8 +1928,8 @@ function ob1(){
 function ob2(){
   return '<div class="a-shd"><div class="a-shd-tag">Step 03 · Store Setup</div><h2>Configure your store location.</h2><p>These details appear on receipt headers, GSTIN invoice address and multi-store reports. Every store location requires its own entry.</p></div>'
   +af('storeName','Store display name (shown on receipt)',{ph:'e.g. Ambel · Bandra West',req:true,hint:'Appears on every printed receipt, PDF invoice and customer-facing display'})
-  +af('addr1','Address line 1 — Shop no., building, floor',{ph:'e.g. Shop 4, Ground Floor, Hill View Complex',req:true})
-  +af('addr2','Address line 2 — Street, area, landmark',{ph:'e.g. 12 Hill Road, Near Linking Road'})
+  +af('addr1','Address line 1: Shop no., building, floor',{ph:'e.g. Shop 4, Ground Floor, Hill View Complex',req:true})
+  +af('addr2','Address line 2: Street, area, landmark',{ph:'e.g. 12 Hill Road, Near Linking Road'})
   +'<div class="arow3">'
   +af('pincode','PIN code',{ph:'400050',type:'tel'})
   +af('city','City',{ph:'Mumbai',req:true})
@@ -1956,16 +1956,16 @@ function ob3(){
   +af('invPfx','Invoice series prefix',{ph:'INV- or COUR-',hint:'Shown before number: INV-00001'})
   +af('invStart','Start from number',{ph:'1',type:'number',hint:'Enter last invoice no. + 1 for migration'})
   +'</div>'
-  +af('billTerms','Payment terms (credit period)',{type:'select',options:[['0','Immediate — due on issue'],['7','Net 7 days'],['15','Net 15 days'],['30','Net 30 days'],['45','Net 45 days'],['60','Net 60 days']],hint:'Applies to B2B invoices and accounts receivable ageing'})
+  +af('billTerms','Payment terms (credit period)',{type:'select',options:[['0','Immediate: due on issue'],['7','Net 7 days'],['15','Net 15 days'],['30','Net 30 days'],['45','Net 45 days'],['60','Net 60 days']],hint:'Applies to B2B invoices and accounts receivable ageing'})
   +'<div class="a-slbl">GST pricing mode</div>'
-  +rdiv('gstMode','exclusive','Exclusive — MRP excludes GST (shown separately)','MRP ₹100 + 18% GST = Bill ₹118. Standard for B2B and wholesale trade.')
-  +rdiv('gstMode','inclusive','Inclusive — MRP includes GST (Legal Metrology Act)','MRP ₹118 includes 18% GST = ₹100 base + ₹18 tax. Required for retail B2C packaged goods.')
+  +rdiv('gstMode','exclusive','Exclusive: MRP excludes GST (shown separately)','MRP ₹100 + 18% GST = Bill ₹118. Standard for B2B and wholesale trade.')
+  +rdiv('gstMode','inclusive','Inclusive: MRP includes GST (Legal Metrology Act)','MRP ₹118 includes 18% GST = ₹100 base + ₹18 tax. Required for retail B2C packaged goods.')
   +'<div class="a-slbl">Default GST slab for new products</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['5','5%'],['12','12%'],['18','18%'],['28','28%'],['0','Exempt 0%']].map(function(c){return achip('defSlab',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl">Invoice round-off (GST Act Section 170A)</div>'
-  +rdiv('rounding','nearest1','Nearest ₹1 — recommended for retail','₹499.60 → ₹500. Legally permitted. Most common in Indian retail.')
+  +rdiv('rounding','nearest1','Nearest ₹1: recommended for retail','₹499.60 → ₹500. Legally permitted. Most common in Indian retail.')
   +rdiv('rounding','nearest50p','Nearest 50 paise','₹499.60 → ₹499.50')
-  +rdiv('rounding','none','No rounding — exact paise','Collect exact computed amount.')
+  +rdiv('rounding','none','No rounding: exact paise','Collect exact computed amount.')
   +'<div class="a-slbl">Financial year</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['april','April (Indian FY Apr–Mar)'],['jan','January (Calendar year Jan–Dec)']].map(function(c){return achip('fy',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Invoice options</div>'
@@ -1985,7 +1985,7 @@ function ob4(){
   +(AUTH.d.upi?'<div class="a-slbl" style="margin-top:10px">UPI partner</div>'
     +'<div style="display:flex;flex-wrap:wrap">'+[['razorpay','Razorpay'],['phonepe','PhonePe Biz'],['bharatpe','BharatPe'],['paytm','Paytm Biz'],['pinelabs_upi','Pine Labs UPI'],['googlepay','Google Pay Biz']].map(function(c){return achip('upiPsp',c[0],c[1]);}).join('')+'</div>'
     +af('upiVpa','Merchant UPI VPA / Virtual Payment Address',{ph:'e.g. Ambel@hdfcbank',hint:'The VPA your customers see when they scan your QR code. Must match your PSP dashboard exactly.'})
-    +atgl('soundBox',false,'UPI Sound Box / smart speaker','Announces payment confirmation audibly — ideal for noisy retail environments.')
+    +atgl('soundBox',false,'UPI Sound Box / smart speaker','Announces payment confirmation audibly: ideal for noisy retail environments.')
   :'')
   +'<div class="a-slbl">Card / POS terminal</div>'
   +atgl('card',true,'Accept card payments (debit, credit, prepaid)',null)
@@ -1999,19 +1999,19 @@ function ob4(){
   +atgl('giftCard',false,'Gift cards & vouchers','Issue and redeem store gift cards as printed card, QR code or alphanumeric voucher.')
   +atgl('storeCredit',false,'Store credit / customer wallet','Issue store credit instead of cash refunds. Customer redeems on next purchase.')
   +(AUTH.d.storeCredit?af('creditLimit','Max store credit per customer (₹)',{val:'5000',type:'number'}):'')
-  +atgl('split',true,'Split payment — multiple modes in one bill','e.g. ₹2,000 card + ₹500 UPI + loyalty points — all in a single transaction.')
+  +atgl('split',true,'Split payment: multiple modes in one bill','e.g. ₹2,000 card + ₹500 UPI + loyalty points, all in a single transaction.')
   +atgl('advance',false,'Advance / booking deposits','Accept partial payment for orders, custom products or alterations. Balance collected on delivery.');
 }
 
 function ob5(){
-  return '<div class="a-shd"><div class="a-shd-tag">Step 06 · Product Catalog</div><h2>Set up your catalog.</h2><p>Define product structure, barcode format and tracking rules. Your full catalog can be imported after setup — this configures the defaults that apply to every SKU.</p></div>'
+  return '<div class="a-shd"><div class="a-shd-tag">Step 06 · Product Catalog</div><h2>Set up your catalog.</h2><p>Define product structure, barcode format and tracking rules. Your full catalog can be imported after setup: this configures the defaults that apply to every SKU.</p></div>'
   +'<div class="a-slbl">Approximate SKU count</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['under100','< 100'],['100-500','100–500'],['500-2000','500–2,000'],['2000-10000','2,000–10,000'],['10000plus','10,000+']].map(function(c){return achip('skuCount',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Import method</div>'
   +rdiv('importMethod','csv','CSV / Excel file upload','Download our template, map SKU / name / HSN / MRP / cost / opening stock columns, upload. Best for 100+ products.')
-  +rdiv('importMethod','barcode','Barcode scan import','Scan each product — we fetch name, HSN and GST slab from India\'s national product database.')
+  +rdiv('importMethod','barcode','Barcode scan import','Scan each product: we fetch name, HSN and GST slab from India\'s national product database.')
   +rdiv('importMethod','tally','Import from Tally / ERP','Connect Tally Prime via API. Imports stock ledger, HSN mappings and opening stock in one sync.')
-  +rdiv('importMethod','manual','Manual / AI catalog builder','Add one by one or upload product photos — AI generates SKU names, HSN codes and descriptions.')
+  +rdiv('importMethod','manual','Manual / AI catalog builder','Add one by one or upload product photos: AI generates SKU names, HSN codes and descriptions.')
   +'<div class="a-slbl">Default unit of measure</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+['Piece','Kg','Gram','Litre','Ml','Metre','Box','Pack','Set','Pair'].map(function(v){return achip('uom',v.toLowerCase(),v);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Barcode format</div>'
@@ -2023,48 +2023,48 @@ function ob5(){
   +atgl('batch',false,'Batch / Lot number tracking','FMCG & pharma: track batches for product recall, returns and expiry management.')
   +atgl('expiry',false,'Expiry date tracking','Block sale of expired stock automatically. Alert before expiry for timely clearance discounts.')
   +atgl('serial',false,'Serial number tracking','Electronics, mobile phones, jewellery: unique serial/IMEI per unit for warranty and theft tracking.')
-  +atgl('serviceItem',false,'Service items (non-inventory)','Alterations, tailoring, repairs, gift-wrapping: bill as a service — no stock movement created.')
+  +atgl('serviceItem',false,'Service items (non-inventory)','Alterations, tailoring, repairs, gift-wrapping: bill as a service; no stock movement created.')
   +'<div class="a-slbl">Negative stock</div>'
-  +rdiv('negStock','block','Block sale — cannot bill out-of-stock items (recommended)','Forces physical stock count before billing a zero-stock item.')
-  +rdiv('negStock','warn','Warn but allow — cashier can override','Cashier sees alert but can proceed with the sale.')
-  +rdiv('negStock','allow','Allow silently — no warning','Stock goes negative. Only for stores with imprecise physical counts.');
+  +rdiv('negStock','block','Block sale: cannot bill out-of-stock items (recommended)','Forces physical stock count before billing a zero-stock item.')
+  +rdiv('negStock','warn','Warn but allow: cashier can override','Cashier sees alert but can proceed with the sale.')
+  +rdiv('negStock','allow','Allow silently: no warning','Stock goes negative. Only for stores with imprecise physical counts.');
 }
 
 function ob6(){
-  return '<div class="a-shd"><div class="a-shd-tag">Step 07 · Hardware & Devices</div><h2>Set up your devices.</h2><p>Ambel supports cloud print, Bluetooth and LAN hardware. You can also pair devices after setup — each device runs a self-test before going live.</p></div>'
+  return '<div class="a-shd"><div class="a-shd-tag">Step 07 · Hardware & Devices</div><h2>Set up your devices.</h2><p>Ambel supports cloud print, Bluetooth and LAN hardware. You can also pair devices after setup: each device runs a self-test before going live.</p></div>'
   +'<div class="a-slbl">Billing counters</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['5plus','5+']].map(function(c){return achip('counters',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Receipt printer</div>'
-  +rdiv('printer','cloud','Cloud print — WiFi (recommended)','Works with any network-enabled thermal printer. Supports Epson, TVS-E, Star, Bixolon, Posiflex.')
+  +rdiv('printer','cloud','Cloud print: WiFi (recommended)','Works with any network-enabled thermal printer. Supports Epson, TVS-E, Star, Bixolon, Posiflex.')
   +rdiv('printer','lan','LAN / Ethernet (static IP)','Connect via local network. Best for large stores with dedicated LAN printer per counter.')
   +rdiv('printer','bluetooth','Bluetooth wireless','Pair to tablet / phone. 10-metre range. Mobile POS setups.')
-  +rdiv('printer','none','No printer — digital receipts only','Send receipts via WhatsApp, SMS or email. Zero hardware cost.')
+  +rdiv('printer','none','No printer: digital receipts only','Send receipts via WhatsApp, SMS or email. Zero hardware cost.')
   +(AUTH.d.printer!=='none'?'<div class="a-slbl">Paper width</div><div style="display:flex;flex-wrap:wrap">'+[['58','58 mm compact'],['80','80 mm standard']].map(function(c){return achip('paperWidth',c[0],c[1]);}).join('')+'</div>':'')
   +'<div class="a-slbl" style="margin-top:14px">Barcode scanner</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['usb','USB plug-and-play'],['bluetooth','Bluetooth'],['rf','Wireless RF 2.4 GHz'],['none','No scanner']].map(function(c){return achip('scanType',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Cash drawer</div>'
   +'<div style="display:flex;flex-wrap:wrap">'+[['auto','Auto-open on payment'],['manual','Manual'],['none','No cash drawer']].map(function(c){return achip('drawerMode',c[0],c[1]);}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:14px">Card terminal (EDC machine)</div>'
-  +rdiv('cardTermType','pinelabs','Pine Labs — I already have one','Link your Pine Labs TID. Settlement reports sync automatically.')
-  +rdiv('cardTermType','mosambee','Mosambee / Mswipe — I already have one','Connect existing mPOS terminal for settlement sync.')
+  +rdiv('cardTermType','pinelabs','Pine Labs: I already have one','Link your Pine Labs TID. Settlement reports sync automatically.')
+  +rdiv('cardTermType','mosambee','Mosambee / Mswipe: I already have one','Connect existing mPOS terminal for settlement sync.')
   +rdiv('cardTermType','order','I\'ll order a terminal later','We recommend a terminal based on your volume. Deployed in 3–5 working days.')
-  +rdiv('cardTermType','none','No card terminal — UPI & cash only',null)
+  +rdiv('cardTermType','none','No card terminal: UPI & cash only',null)
   +'<div class="a-slbl">Additional devices</div>'
   +atgl('cfd','none','Customer-facing display (CFD)','Android tablet or HDMI screen showing cart total and loyalty points to customer during billing.')
-  +atgl('scaleType','none','Weighing / counting scale','RS-232, USB or Bluetooth scale — weight reads directly into qty field at billing.')
+  +atgl('scaleType','none','Weighing / counting scale','RS-232, USB or Bluetooth scale: weight reads directly into qty field at billing.')
   +atgl('labelPrint',false,'Label / price tag printer','Barcode labels, price tags, shelf labels. Supported: Zebra, TSC, Godex.')
   +atgl('kds',false,'Kitchen Display System (KDS)','For cafes, food courts and food-retail only: orders appear on kitchen screen after billing.');
 }
 
 function ob7(){
-  return '<div class="a-shd"><div class="a-shd-tag">Step 08 · Team & Access Control</div><h2>Secure your store &amp; build your team.</h2><p>Set your admin PIN first — it protects settlements, voids, discounts and settings. Then add your first cashier to start billing today.</p></div>'
+  return '<div class="a-shd"><div class="a-shd-tag">Step 08 · Team & Access Control</div><h2>Secure your store &amp; build your team.</h2><p>Set your admin PIN first: it protects settlements, voids, discounts and settings. Then add your first cashier to start billing today.</p></div>'
   +'<div class="a-info">ℹ️ Your admin PIN is stored only on this device. Choose a PIN only you know. You can always reset it from Settings → Team & Roles.</div>'
-  +'<div class="a-slbl">Admin / owner PIN — this device <span class="ar">*</span></div>'
+  +'<div class="a-slbl">Admin / owner PIN: this device <span class="ar">*</span></div>'
   +'<div class="a-pin-row">'+[0,1,2,3].map(function(i){return '<input type="password" class="a-pin-box" id="admin_pin_'+i+'" maxlength="1" inputmode="numeric" pattern="[0-9]" onkeyup="pinMove(\'admin_pin\','+i+',4,\'adminPin\')">';}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:16px">Confirm PIN <span class="ar">*</span></div>'
   +'<div class="a-pin-row">'+[0,1,2,3].map(function(i){return '<input type="password" class="a-pin-box" id="confirm_pin_'+i+'" maxlength="1" inputmode="numeric" pattern="[0-9]" onkeyup="pinMove(\'confirm_pin\','+i+',4,\'confirmPin\')">';}).join('')+'</div>'
   +'<div class="a-slbl" style="margin-top:18px">Require admin PIN for</div>'
-  +[['pinForDiscount',true,'Discounts — require approval above','% threshold','pinDiscPct','10'],['pinForRefund',true,'All refunds / returns',null,null,null],['pinForVoid',true,'Bill void & cancel',null,null,null],['pinForSettings',true,'Settings & configuration changes',null,null,null]].map(function(row){
+  +[['pinForDiscount',true,'Discounts: require approval above','% threshold','pinDiscPct','10'],['pinForRefund',true,'All refunds / returns',null,null,null],['pinForVoid',true,'Bill void & cancel',null,null,null],['pinForSettings',true,'Settings & configuration changes',null,null,null]].map(function(row){
     var extraInput=row[4]?'<input type="number" id="d_'+row[4]+'" value="'+row[5]+'" style="width:48px;border:1.5px solid #E6E8EB;border-radius:6px;padding:0 6px;height:28px;font-family:\'JetBrains Mono\',monospace;font-size:14px;text-align:center;outline:none;margin:0 4px" oninput="AUTH.d[\''+row[4]+'\']=this.value">':'';
     return '<div class="at-row"><div style="flex:1"><div class="at-l">'+row[2]+extraInput+(row[3]||'')+'</div></div><button class="at-btn'+(AUTH.d[row[0]]?' on':'')+'" onclick="AUTH.d[\''+row[0]+'\']=!AUTH.d[\''+row[0]+'\'];this.classList.toggle(\'on\')"></button></div>';
   }).join('')

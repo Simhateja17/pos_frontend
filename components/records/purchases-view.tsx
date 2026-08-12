@@ -164,7 +164,7 @@ export function PurchasesView() {
     setReceiving(po)
     setReceiptError(null)
     setReceiptNotice(null)
-    // Pre-fill with what is still outstanding — the common case — but every
+    // Pre-fill with what is still outstanding, the common case, but every
     // field stays editable, because partial delivery is normal.
     setReceiptQty(
       Object.fromEntries(

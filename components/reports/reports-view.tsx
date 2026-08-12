@@ -37,7 +37,7 @@ function cell(value: string | number | null, money: boolean): string {
 }
 
 /**
- * CSV of exactly what is on screen — same columns, same rows, unformatted
+ * CSV of exactly what is on screen: same columns, same rows, unformatted
  * numbers so a spreadsheet can total them. Built from the report the server
  * returned, so an export can never disagree with the table above it.
  */

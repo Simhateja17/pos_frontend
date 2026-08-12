@@ -90,7 +90,7 @@ export function PaymentMethodGrid({
             key={`${row.method}-${index}`}
             style={{ border: '1px solid var(--border-soft)', borderRadius: 10, padding: 12, background: '#FAFBFC' }}
           >
-            {/* Only shown once a second method can exist — with a single
+            {/* Only shown once a second method can exist: with a single
                 selected tile above, repeating its icon/label here read as a
                 duplicate entry rather than "the form for that tile". */}
             {splitEnabled && (
@@ -119,7 +119,7 @@ export function PaymentMethodGrid({
               step={0.01}
               value={row.amount}
               disabled={disabled}
-              // Single-method mode always covers the whole bill — the amount
+              // Single-method mode always covers the whole bill: the amount
               // is fixed to the total, so editing it would just get silently
               // overwritten on the next render. Split mode still needs free
               // entry, since amounts genuinely differ per method there.

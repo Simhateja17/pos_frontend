@@ -13,7 +13,7 @@ function Card({
       data-size={size}
       className={cn(
         // Geometry matches the Ambel `.card` contract (globals.css): 12px
-        // radius, quiet 1px border, shallow shadow — not shadcn's ring.
+        // radius, quiet 1px border, shallow shadow: not shadcn's ring.
         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-[12px] border border-[var(--border)] bg-[var(--surface)] py-(--card-spacing) text-sm text-card-foreground shadow-[var(--shadow-sm)] [--card-spacing:--spacing(4.5)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         className
       )}

@@ -111,7 +111,7 @@ export function TerminalsView() {
       headers: await authHeaders(),
     })
     if (requestError) {
-      // The backend refuses to turn off a counter mid-shift and says why —
+      // The backend refuses to turn off a counter mid-shift and says why:
       // surface its wording rather than a generic failure.
       setError((requestError as { error?: string }).error ?? 'That counter could not be updated.')
       return

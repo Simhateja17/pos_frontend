@@ -42,7 +42,7 @@ export default function AcceptInvitePage() {
 
     // Supabase JS v2's client (detectSessionInUrl: true by default) automatically
     // exchanges the invite link's token for a real session on page load. This page
-    // never hand-parses the URL's raw token itself — it only waits for the SDK's
+    // never hand-parses the URL's raw token itself: it only waits for the SDK's
     // own token-exchange result.
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return

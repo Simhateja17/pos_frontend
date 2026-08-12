@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 // Shared layout for the standalone auth surfaces (login, signup, accept-invite).
-// No nav/header — auth pages are standalone focal-point cards per 01-UI-SPEC.md's
+// No nav/header: auth pages are standalone focal-point cards per 01-UI-SPEC.md's
 // Visual Hierarchy section ("The auth card, vertically centered").
 //
 // This wrapper deliberately owns nothing but the page background. It used to

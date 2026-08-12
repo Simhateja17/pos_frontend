@@ -20,7 +20,7 @@ type VariantFormRow = {
   price: string
   reorderThreshold: string
   /** Optional. Written as a 'receive' stock movement after the product is
-   * created — stock is never set directly, only ever added to the append-only
+   * created: stock is never set directly, only ever added to the append-only
    * ledger, same as CSV import already does for its quantityOnHand column. */
   openingStock: string
 }
@@ -171,7 +171,7 @@ export default function NewProductPage() {
       return
     }
 
-    // Stock is never set directly, only ever added to the append-only ledger —
+    // Stock is never set directly, only ever added to the append-only ledger:
     // same as CSV import's quantityOnHand column. The response's variants come
     // back in the same order they were sent, so index-matching is safe here.
     await Promise.all(

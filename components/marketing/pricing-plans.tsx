@@ -60,7 +60,7 @@ export function PricingGrid({ animate = false }: { animate?: boolean }) {
           {p.featured && <div className="price-popular">Most popular</div>}
           <div className="price-plan" style={p.featured ? { color: "rgba(255,255,255,.75)" } : undefined}>{p.name}</div>
           {/* The live price is what centres under the plan name, so the struck list
-              price hangs off it from out of flow — in flow it counts toward the
+              price hangs off it from out of flow: in flow it counts toward the
               centred line's width and shoves the real number off-centre.
               <s> marks it superseded; the sr-only prefix keeps the pair from being
               read out as two unrelated numbers. */}

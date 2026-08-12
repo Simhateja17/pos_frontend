@@ -8,7 +8,7 @@
  * `--border` and `--muted` are renamed to `--sd-border`/`--sd-muted` in those
  * blocks to avoid colliding with the pre-existing prototype tokens of the same
  * name declared in the top-of-file `:root` block above (different color
- * systems that happen to share a name) — see 01-03-SUMMARY.md deviations.
+ * systems that happen to share a name): see 01-03-SUMMARY.md deviations.
  */
 @theme inline {
   --color-background: var(--background);
@@ -140,7 +140,7 @@
 
   /* ---------- Buttons ---------- */
   .btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);white-space:nowrap;transition:all .12s}
-  /* neutral hover only for neutral buttons — the blue variants keep their own
+  /* neutral hover only for neutral buttons: the blue variants keep their own
      fill (a plain .btn:hover here would wipe .btn-grad's background-image) */
   .btn:hover:not(.btn-pri):not(.btn-grad){background:#F8F9FA;border-color:#D7DadE}
   .btn svg{width:15px;height:15px}
@@ -217,7 +217,7 @@
   .split-2{display:grid;grid-template-columns:minmax(0,1fr) var(--split-aside,360px);gap:18px;align-items:stretch;margin-bottom:18px}
   /* descendant (not direct-child) so cards still get a gap when a page wraps
      them in a <form> or other non-.content element, e.g. catalog/new.
-     .split-2/.gap-block are not on the left side here — they already carry
+     .split-2/.gap-block are not on the left side here: they already carry
      their own margin-bottom, so pairing them as a "+" left operand too would
      double the gap on whatever follows them. */
   .content :is(.card,.gap-block) + :is(.card,.split-2,.gap-block){margin-top:18px}
@@ -262,7 +262,7 @@
   .feat .fx .fn{font-size:13px;font-weight:600}
   .feat .fx .fd{font-size:11.5px;color:var(--muted);margin-top:2px}
 
-  /* spotlight — flagship features brief */
+  /* spotlight: flagship features brief */
   .spotlight{margin-bottom:22px}
   .spot-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
   .spot-head .sh-ico{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#06337A,#0058BA);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(0,88,186,.32)}
@@ -324,14 +324,14 @@
   .fld-input:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px var(--brand-soft)}
   /* Payment method chooser grid from the approved billing screen. */
   .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  /* column layout means the base .btn's align/justify swap axes — set both so the
+  /* column layout means the base .btn's align/justify swap axes: set both so the
      icon + label block sits dead centre, not top-aligned */
   .pay-grid .btn{height:54px;flex-direction:column;justify-content:center;align-items:center;gap:3px;font-size:12px;padding:0 8px;line-height:1}
   .sum-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
   .sum-row > span:first-child{color:var(--muted)}
 
   /* ============================================================
-     ANIMATION LAYER — smooth, consistent, blue-theme aware
+     ANIMATION LAYER: smooth, consistent, blue-theme aware
      ============================================================ */
   /* route progress bar on every navigation */
   #route-bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:500;background:linear-gradient(90deg,#0058BA,#6C9FFF);box-shadow:0 0 12px rgba(0,88,186,.55);opacity:0;border-radius:0 3px 3px 0;transition:width .5s var(--ease),opacity .35s}
@@ -340,7 +340,7 @@
   /* staggered block entrance (backwards fill → hover transforms still work after) */
   @keyframes riseIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
 
-  /* animated brand gradient — keeps every blue brand surface alive & identical */
+  /* animated brand gradient: keeps every blue brand surface alive & identical */
   @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   .sb-logo,.btn-grad,.btn-pri{background-image:linear-gradient(120deg,#0058BA 0%,#6C9FFF 50%,#0058BA 100%);background-size:220% 220%;animation:gradShift 7s ease infinite}
   .sb-logo{transition:transform .3s var(--ease-spring),box-shadow .3s}
@@ -592,7 +592,7 @@
   #auth-layer *::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:2px}
 
   /* ============================================================
-     RESPONSIVE — tablet and phone
+     RESPONSIVE: tablet and phone
      ============================================================
      The prototype these classes come from was desktop-only. Everything below
      adapts that same design system down to a 320px viewport; no new visual
@@ -674,7 +674,7 @@
     .toast{max-width:calc(100vw - 28px)}
   }
 
-  /* Legacy prototype auth markup (app/bodyMarkup.js) — fixed 2- and 3-up grids. */
+  /* Legacy prototype auth markup (app/bodyMarkup.js): fixed 2- and 3-up grids. */
   @media(max-width:640px){
     #auth-layer .arow2,#auth-layer .arow3,#auth-layer .a-plan-wrap{grid-template-columns:minmax(0,1fr)}
     #auth-layer .a-cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -693,7 +693,7 @@
     /* UI-SPEC 01-UI-SPEC.md Color section overrides (--sd-* = renamed to avoid
        colliding with the prototype's own --border/--muted tokens above) */
     /* Surface white. This token feeds shadcn primitives (outline button, tabs)
-       and must stay a real surface colour — it was #FFFDF7, a cream, which
+       and must stay a real surface colour: it was #FFFDF7, a cream, which
        leaked onto full-page wrappers using `bg-background`. The app canvas is
        #F5F6F7 and comes from `body`/.content, not from this token. */
     --background:#FFFFFF;
@@ -773,7 +773,7 @@
   }
 }
 
-/* Phase 2 — thermal label print layout (D-07). Screen-only preview is 2x
+/* Phase 2: thermal label print layout (D-07). Screen-only preview is 2x
    the physical size (see labels page, plan 08); this block governs the
    actual browser print output only. */
 .label {
@@ -789,7 +789,7 @@
 .label-name {
   font-family: Inter, sans-serif;
   font-weight: 700;
-  font-size: 9pt; /* print-only exception per UI-SPEC — Sora not guaranteed crisp at thermal-print resolution */
+  font-size: 9pt; /* print-only exception per UI-SPEC: Sora not guaranteed crisp at thermal-print resolution */
 }
 .label-price {
   font-family: Inter, sans-serif;
@@ -818,7 +818,7 @@
   }
 }
 
-/* Phase 3 — receipt print layout (CHECK-06). Off-screen (sr-only on screen),
+/* Phase 3: receipt print layout (CHECK-06). Off-screen (sr-only on screen),
    formatted for an 80mm thermal roll, following the exact same off-screen
    print-container convention as the label-sheet block above. Print typography
    is a deliberate exception to the app's 4-size UI type scale per UI-SPEC:

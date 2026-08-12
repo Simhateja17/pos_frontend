@@ -165,7 +165,7 @@ export function ShiftsView() {
     setBusy(false)
 
     if (result.error || !result.data) {
-      // The backend names the counter and who holds it — show that, not a
+      // The backend names the counter and who holds it: show that, not a
       // generic failure, since the fix is "pick another counter".
       setOpenError((result.error as { error?: string } | undefined)?.error ?? LOAD_ERROR)
       return
@@ -254,7 +254,7 @@ export function ShiftsView() {
             />
           )}
 
-          {/* What every other counter is doing right now — the reason a store
+          {/* What every other counter is doing right now: the reason a store
               running two tills can tell them apart at a glance. */}
           {role && role !== 'cashier' && openShifts.length > 0 && (
             <Card>
@@ -532,7 +532,7 @@ function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
         >
           {shifts.map((shift) => {
             const varianceValue = Number(shift.variance ?? 0)
-            // Expected is not stored on the row — it is counted minus variance,
+            // Expected is not stored on the row: it is counted minus variance,
             // which is the same arithmetic the server used to produce both.
             const expected = Number(shift.countedCash ?? 0) - varianceValue
             return (

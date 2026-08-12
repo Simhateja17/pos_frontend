@@ -33,8 +33,8 @@ const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 /**
  * Nested nav routes (e.g. Inventory `/app/inventory` and Categories
  * `/app/inventory/categories`) both prefix-match a Categories pathname, so
- * picking "any prefix match" highlights both. Only the longest — i.e. most
- * specific — matching href should be marked active.
+ * picking "any prefix match" highlights both. Only the longest: i.e. most
+ * specific: matching href should be marked active.
  */
 function matchedNavHref(pathname: string, items: AppNavItem[] = ALL_NAV_ITEMS): string | undefined {
   let best: string | undefined
@@ -245,7 +245,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   /**
    * The pill mirrors the design's compact "Mumbai · Bandra" store chip, so it
    * prefers locality. businessName is tenant free-text and is often a full
-   * sentence — it stays in the title/tooltip rather than the chip.
+   * sentence: it stays in the title/tooltip rather than the chip.
    */
   const storeLabel = context?.store?.name || (context ? 'All stores' : storeFull)
 

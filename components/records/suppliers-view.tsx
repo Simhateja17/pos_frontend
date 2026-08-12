@@ -135,7 +135,7 @@ export function SuppliersView() {
   )
 
   const activeCount = (suppliers ?? []).filter((s) => s.isActive).length
-  // Average lead time is computed over ACTIVE suppliers only — an inactive
+  // Average lead time is computed over ACTIVE suppliers only: an inactive
   // vendor's lead time should not shift a number the owner reads as "how long
   // my restocks take".
   const activeLeadTimes = (suppliers ?? []).filter((s) => s.isActive).map((s) => s.leadTimeDays)

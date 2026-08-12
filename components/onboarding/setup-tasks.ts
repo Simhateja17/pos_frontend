@@ -9,7 +9,7 @@
  * A task appears here ONLY if its destination screen exists. Steps 4 (Billing &
  * Invoice), 5 (Payment Methods) and 7 (Hardware & Devices) are deliberately
  * absent: they have no real screen yet, so asking for them would be collecting
- * answers nothing consumes — the exact problem the wizard had.
+ * answers nothing consumes: the exact problem the wizard had.
  */
 export type SetupTask = {
   /** Onboarding step number this task's data still saves under. */

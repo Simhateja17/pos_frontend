@@ -9,7 +9,7 @@ export type CategoryOption = { id: string; name: string }
  * Category picker with create-on-the-fly.
  *
  * Categories are real rows the store owns, so this picks one rather than
- * accepting free text — that is what stops "Dairy", "dairy" and "Diary"
+ * accepting free text: that is what stops "Dairy", "dairy" and "Diary"
  * becoming three categories that split every report. A genuinely new name is
  * still one keystroke away, and the server matches it case-insensitively
  * against existing categories before creating anything.

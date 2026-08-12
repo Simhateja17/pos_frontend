@@ -28,7 +28,7 @@ const TONE_BY_TYPE: Record<NotificationType, 'blue' | 'green' | 'amber'> = {
   stock_low: 'amber',
 }
 
-/** "just now" / "12m ago" / "3h ago" / "2d ago" — enough resolution for a notification tray. */
+/** "just now" / "12m ago" / "3h ago" / "2d ago": enough resolution for a notification tray. */
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diffMs / 60000)
@@ -50,7 +50,7 @@ export function NotificationsView() {
     try {
       const data = await getAuthenticatedNotifications()
       setList(data)
-      // Opening this page is also "opening the notification surface" — same
+      // Opening this page is also "opening the notification surface": same
       // mark-all-read semantics as the bell dropdown.
       if (data.unreadCount > 0) {
         await markAuthenticatedNotificationsRead()

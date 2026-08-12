@@ -7,7 +7,7 @@
  * names, so they inherit the design-system CSS already present in
  * `app/globals.css` (all 150 prototype classes are there).
  *
- * Rule: screens compose these. Do not hand-roll Tailwind equivalents — that is
+ * Rule: screens compose these. Do not hand-roll Tailwind equivalents: that is
  * what caused the visual drift from the approved design in the first place.
  */
 import Link from 'next/link'

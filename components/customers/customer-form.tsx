@@ -165,7 +165,7 @@ export function CustomerForm({
         <Fld id="customer-state-code" label="State code">
           <select id="customer-state-code" value={form.stateCode} onChange={(event) => setField('stateCode', event.target.value)}>
             <option value="">Not provided</option>
-            {STATE_CODES.map(([code, name]) => <option key={code} value={code}>{code} — {name}</option>)}
+            {STATE_CODES.map(([code, name]) => <option key={code} value={code}>{code}: {name}</option>)}
           </select>
         </Fld>
         <Fld id="customer-postal-code" label="PIN code">

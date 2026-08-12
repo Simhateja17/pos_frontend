@@ -7,12 +7,12 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import styles from '@/components/india-migration.module.css'
 
 /**
- * "What kind of shop is this?" — restored, with a real job this time.
+ * "What kind of shop is this?" was restored with a real job this time.
  *
  * The original version of this screen was removed because it drove nothing: it
  * promised to configure GST slabs, HSN codes and catalog structure, and no code
- * did any of that. It now does exactly one visible thing — seeds a starter
- * category list the owner can edit — and claims nothing else. It gates no
+ * did any of that. It now does exactly one visible thing: seeds a starter
+ * category list the owner can edit, and claims nothing else. It gates no
  * feature and is skippable.
  */
 const BUSINESS_TYPES = [
@@ -46,7 +46,7 @@ export default function StoreTypePage() {
         })
       }
     } catch {
-      // Seeding is a convenience, not a gate — a failure must not trap the
+      // Seeding is a convenience, not a gate: a failure must not trap the
       // owner on this screen. They can add categories from the app instead.
       setMessage('We couldn’t set up your starter categories. You can add them from Categories later.')
     }

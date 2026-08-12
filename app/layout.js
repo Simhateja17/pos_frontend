@@ -2,6 +2,8 @@ import "./globals.css";
 
 export const metadata = {
   title: "Ambel POS | India's Most Complete Retail Suite",
+  description:
+    "Ultra-fast retail billing, inventory, multi-store management, GST-ready reports, and AI-powered insights for Indian retailers.",
 };
 
 export const viewport = {

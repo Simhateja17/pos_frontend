@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   AMBEL POS  —  Screen Content
+   AMBEL POS: Screen Content
    All 10 screens, helpers, icons, nav data.
    Ported from the original static prototype to an ES module.
    ═══════════════════════════════════════════════ */

@@ -205,7 +205,7 @@ export default function PinPadPage() {
 
     if (error || !data) {
       // The 401 body's `error` field is UI-SPEC-exact copy from the backend
-      // (01-06) — read verbatim, no frontend string duplication. The backend
+      // (01-06): read verbatim, no frontend string duplication. The backend
       // returns exactly one of these two UI-SPEC-exact strings:
       //   "Incorrect PIN. Try again."
       //   "Too many attempts. Ask a manager to unlock this terminal."
@@ -216,7 +216,7 @@ export default function PinPadPage() {
       return
     }
 
-    // Never persist the operator token in localStorage — sessionStorage keeps
+    // Never persist the operator token in localStorage: sessionStorage keeps
     // it scoped to this terminal tab only, cleared on idle-timeout/logout.
     sessionStorage.setItem('operatorToken', data.operatorToken)
 
@@ -538,7 +538,7 @@ export default function PinPadPage() {
 
           {!loadError && !isLoadingStaff && selectedStaffId && !mustChangePin && (
             <div className="flex flex-col items-center gap-5">
-              {/* PIN progress dots — visual feedback only, never renders the digits themselves */}
+              {/* PIN progress dots: visual feedback only, never renders the digits themselves */}
               <div className="flex gap-3 py-1" aria-hidden="true">
                 {[0, 1, 2, 3].map((i) => (
                   <span

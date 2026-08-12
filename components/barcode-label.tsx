@@ -15,13 +15,13 @@ export type BarcodeLabelFormat = 'code128' | 'ean13' | 'upca' | 'qr'
  *
  * CODE128 and QR encode our own SKU, so they work for every variant. EAN-13
  * and UPC-A encode the MANUFACTURER barcode and are fixed-length numeric
- * formats — 13 and 12 digits respectively. A variant with no barcode, or one
+ * formats: 13 and 12 digits respectively. A variant with no barcode, or one
  * of the wrong length, cannot be rendered in them at all.
  *
  * Rather than print nothing (a blank label is worse than a scannable one in
  * the wrong symbology) such a variant falls back to CODE128 on its own SKU.
  * The caller is told via onFallback so the UI can say so plainly, per the
- * "never render invented data" rule — a label silently printing a different
+ * "never render invented data" rule: a label silently printing a different
  * code than the owner selected is exactly that kind of quiet lie.
  */
 function resolveEncoding(

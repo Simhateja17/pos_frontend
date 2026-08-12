@@ -33,7 +33,7 @@ export function DashboardView() {
   const [error, setError] = useState<string | null>(null)
 
   // Only the very first load blanks the page. A range switch keeps the
-  // current figures on screen and shows an inline indicator instead — the
+  // current figures on screen and shows an inline indicator instead: the
   // whole dashboard used to skeleton out on every range click.
   const loadDashboard = useCallback(async (nextRange: DashboardRange, isFirstLoad: boolean) => {
     if (isFirstLoad) setIsLoading(true)
@@ -138,7 +138,7 @@ function DashboardContent({
     },
     {
       // Available since Phase 5: goods receipt now persists a moving-average
-      // cost per variant. Still a union — a tenant whose sold items have never
+      // cost per variant. Still a union: a tenant whose sold items have never
       // been received against a PO genuinely has no cost basis and is told so.
       label: 'Gross Margin',
       value:
@@ -436,7 +436,7 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
 }
 
 /**
- * Compact surface for the ML wedge on the dashboard itself — the full
+ * Compact surface for the ML wedge on the dashboard itself: the full
  * interactive table (recalculate, select, draft PO) stays on the Inventory
  * screen so there's one place suggestions are actually actioned from.
  */

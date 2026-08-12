@@ -1,5 +1,5 @@
 /**
- * Ambel POS brand mark — "H · Counterform".
+ * Ambel POS brand mark: "H · Counterform".
  *
  * The A is the counterform: a solid rounded tile with the letter cut out of it,
  * broken by a full-width base band and a crossbar notch. Because the silhouette

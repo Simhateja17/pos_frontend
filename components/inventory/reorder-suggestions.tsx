@@ -38,7 +38,7 @@ const SKIPPED_LABEL: Record<ReorderSkipped['kind'], string> = {
 const num = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2))
 
 /**
- * The "why", expanded from the stored reason JSON — not hidden behind a
+ * The "why", expanded from the stored reason JSON: not hidden behind a
  * tooltip (ML-03). Every line here is a field the server persisted, so the
  * arithmetic on screen is the arithmetic that produced the number.
  */
@@ -134,7 +134,7 @@ export function ReorderSuggestions() {
   }
 
   /**
-   * Accepted suggestions become a DRAFT purchase order, never a sent one —
+   * Accepted suggestions become a DRAFT purchase order, never a sent one:
    * the owner still decides what actually goes to the supplier. One PO per
    * supplier, since a purchase order is addressed to a single vendor.
    */

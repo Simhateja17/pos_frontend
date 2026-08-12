@@ -34,7 +34,7 @@ export default function RetailVerticalPage({
       </section>
 
       <div className="stats-band" style={{ marginBottom: 0 }}>
-        {/* a custom property, not an inline grid-template — an inline template
+        {/* a custom property, not an inline grid-template: an inline template
             would outrank the mobile media queries and keep N columns on phones */}
         <div className="stats-inner" style={{ "--stat-cols": stats.length } as CSSProperties}>
           {stats.map(([num, label]) => (

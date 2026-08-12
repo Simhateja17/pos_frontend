@@ -69,7 +69,7 @@ function LabelsPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  // The tenant's chosen symbology (0050). Null until settings load — labels
+  // The tenant's chosen symbology (0050). Null until settings load: labels
   // render in code128 meanwhile, which is what every tenant defaults to.
   const [labelFormat, setLabelFormat] = useState<BarcodeLabelFormat | null>(null)
   // Variants that could not be rendered in the chosen format and fell back to
@@ -107,7 +107,7 @@ function LabelsPageContent() {
 
   const loadLabelFormat = useCallback(async () => {
     const { data } = await apiClient.GET('/settings', { headers: await authHeaders() })
-    // A settings failure must not block label printing — fall back to the
+    // A settings failure must not block label printing: fall back to the
     // same code128 default the column itself carries.
     setLabelFormat(((data as { barcodeLabelFormat?: BarcodeLabelFormat } | undefined)
       ?.barcodeLabelFormat) ?? 'code128')
@@ -226,7 +226,7 @@ function LabelsPageContent() {
         </CardPad>
       </Card>
 
-      {/* Actual printable content — natural (1x) scale, hidden on screen via sr-only,
+      {/* Actual printable content: natural (1x) scale, hidden on screen via sr-only,
           made visible in @media print via globals.css's .label-sheet rules. Kept in
           the DOM at all times so contentRef always has content to print. */}
       <div ref={contentRef} className="label-sheet sr-only">

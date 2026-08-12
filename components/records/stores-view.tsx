@@ -38,7 +38,7 @@ function addressOf(store: Store): string | null {
 }
 
 /**
- * Stores — the owner's view of every shop in the business (Phase 8).
+ * Stores: the owner's view of every shop in the business (Phase 8).
  *
  * Owner-only by navigation and by server authorization. A manager or cashier
  * belongs to exactly one shop, so this module is not part of their product.
@@ -135,7 +135,7 @@ export function StoresView() {
       await updateAuthenticatedStore(store.id, { isActive: !store.isActive })
       await load()
     } catch (cause) {
-      // The server refuses deactivating the last active store — surface its
+      // The server refuses deactivating the last active store: surface its
       // reason rather than a generic failure, because the owner needs to know
       // it is a rule and not a glitch.
       setError(cause instanceof Error ? cause.message : 'That store could not be updated.')
@@ -178,7 +178,7 @@ export function StoresView() {
         items={[
           {
             label: 'Active stores',
-            value: stores ? String(activeCount) : '—',
+            value: stores ? String(activeCount) : 'N/A',
             meta: allowance ? `${allowance.used} of ${allowance.limit} plan allowance used` : stores ? `${stores.length} total on file` : 'Loading…',
           },
           {
@@ -210,7 +210,7 @@ export function StoresView() {
           <EmptyState
             icon={<StoreIcon size={24} strokeWidth={1.8} />}
             title={filter === 'all' ? 'No stores yet' : 'No stores match this filter'}
-            body="Every business has at least one shop. Add another when you open a second outlet — stock, staff and sales are tracked separately for each."
+            body="Every business has at least one shop. Add another when you open a second outlet: stock, staff and sales are tracked separately for each."
             action={
               filter === 'all' ? (
                 <button className="btn btn-pri" onClick={openCreate}>

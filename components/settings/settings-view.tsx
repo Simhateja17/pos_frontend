@@ -221,7 +221,7 @@ export function SettingsView() {
       setLabelError(
         (error as { error?: string }).error === 'Only the owner can change these settings'
           ? 'Only the store owner can change these details.'
-          : 'That could not be saved — try again.',
+          : 'That could not be saved. Try again.',
       )
       return
     }

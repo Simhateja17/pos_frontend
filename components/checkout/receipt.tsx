@@ -56,7 +56,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
     setEmailStatus(null)
     const headers = await authHeaders()
 
-    // Real backend call — POST /sales/:id/resend-receipt (03-05) resolves the
+    // Real backend call: POST /sales/:id/resend-receipt (03-05) resolves the
     // target email (the entered address, or the sale's on-file customer
     // email if left blank) and awaits an actual sendReceiptEmail() call. The
     // copy below reflects that call's REAL outcome, never a fabricated one.
@@ -133,7 +133,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         WhatsApp receipt delivery is unavailable for this store. Print or email the confirmed receipt instead.
       </p>
 
-      {/* Off-screen, natural-scale, 80mm-print-ready container — same sr-only
+      {/* Off-screen, natural-scale, 80mm-print-ready container: same sr-only
           pattern as Phase 2's label-sheet container (frontend/app/app/inventory/labels/page.tsx).
           Kept in the DOM at all times so contentRef always has content to print. */}
       <div className="sr-only">

@@ -1,12 +1,12 @@
 /*
- * Animated brand-tile ramp — the SVG counterpart of the hero's "Explore
+ * Animated brand-tile ramp: the SVG counterpart of the hero's "Explore
  * prototype" button (`.btn-hero-pri`, app/landing.css), which sweeps a 120deg
  * #06337A → #0058BA → #6C9FFF ramp at background-size:220% with
  * `gradShift 6s ease infinite`.
  *
  * A CSS gradient shifts by sliding background-position across an oversized
  * image. An SVG <linearGradient> has no equivalent, and its x1/y1/x2/y2 are
- * geometry attributes, not CSS-animatable properties — so the sweep is
+ * geometry attributes, not CSS-animatable properties: so the sweep is
  * reproduced on `stop-color` instead: each stop walks through the colour the
  * button shows at that same point of its box at that same instant.
  *
@@ -15,7 +15,7 @@
  * and 100% shows 54.55%→100%; sampling each window at its start, middle and end
  * gives the three stops below.
  *
- * Keyframes stay at 0/50/100 with `ease` — the same shape as gradShift — so the
+ * Keyframes stay at 0/50/100 with `ease`: the same shape as gradShift: so the
  * mark and the button breathe on one rhythm. Intermediate keyframes would track
  * the colour path a little closer but re-ease at every stop, which reads as a
  * stutter the button does not have.
