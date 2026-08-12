@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
+  const [accountNotFound, setAccountNotFound] = useState(false)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -22,12 +23,17 @@ export default function LoginPage() {
     setError(null)
     setEmailError(null)
     setInfoMessage(null)
+    setAccountNotFound(false)
     setIsSendingOtp(true)
     try {
-      const { error: requestError } = await apiClient.POST('/auth/otp/request', {
+      const { error: requestError, response } = await apiClient.POST('/auth/otp/request', {
         body: { email, purpose: 'login' },
       })
       if (requestError) {
+        if (response.status === 404) {
+          setAccountNotFound(true)
+          return
+        }
         setError('We could not send a code right now. Please try again.')
         return
       }
@@ -85,6 +91,7 @@ export default function LoginPage() {
     setOtp('')
     setError(null)
     setInfoMessage(null)
+    setAccountNotFound(false)
   }
 
   return (
@@ -96,12 +103,17 @@ export default function LoginPage() {
         <button className={`${styles.tab} ${styles.tabActive}`} role="tab" aria-selected type="button">Email address</button>
       </div>
       {error && <div className={styles.alert} role="alert">{error}</div>}
+      {accountNotFound && (
+        <div className={styles.alert} role="alert">
+          No account found with this email. <Link className={styles.link} href="/signup">Create a store account first</Link>.
+        </div>
+      )}
       {infoMessage && <div className={`${styles.alert} ${styles.success}`} role="status">{infoMessage}</div>}
       {!otpSent ? (
         <form onSubmit={handleSendOtp}>
           <label className={styles.field}>
             <span className={styles.label}>Email address<span className={styles.required}>*</span></span>
-            <input className={`${styles.input} ${emailError ? styles.inputError : ''}`} type="email" placeholder="owner@yourstore.com" autoComplete="email" required aria-invalid={Boolean(emailError)} aria-describedby={emailError ? 'login-email-error' : undefined} value={email} onChange={(event) => setEmail(event.target.value)} />
+            <input className={`${styles.input} ${emailError ? styles.inputError : ''}`} type="email" placeholder="owner@yourstore.com" autoComplete="email" required aria-invalid={Boolean(emailError)} aria-describedby={emailError ? 'login-email-error' : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setAccountNotFound(false); setError(null) }} />
             {emailError && <span className={styles.fieldError} id="login-email-error">{emailError}</span>}
           </label>
           <button className={styles.primary} type="submit" disabled={isSendingOtp}>{isSendingOtp ? 'Sending code…' : 'Send code →'}</button>
