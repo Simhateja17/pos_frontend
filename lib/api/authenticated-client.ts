@@ -81,7 +81,7 @@ function normalizeNotificationList(data: NotificationList): NotificationList {
 
 export class AuthenticatedRequestError extends Error {
   constructor(
-    public readonly kind: 'unauthenticated' | 'forbidden' | 'network' | 'unavailable',
+    public readonly kind: 'unauthenticated' | 'forbidden' | 'register_locked' | 'network' | 'unavailable',
     message: string,
   ) {
     super(message)
@@ -150,6 +150,10 @@ export async function getAuthenticatedAppContext(): Promise<AppContext> {
 
     if (response.status === 403) {
       throw new AuthenticatedRequestError('forbidden', 'Your account cannot access this store context.')
+    }
+
+    if (response.status === 423) {
+      throw new AuthenticatedRequestError('register_locked', 'This register requires a staff PIN.')
     }
 
     if (error || !data) {

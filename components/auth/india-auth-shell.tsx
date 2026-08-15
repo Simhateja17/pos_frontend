@@ -2,18 +2,20 @@ import type { ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import { AmbelMark } from '@/components/brand/ambel-mark'
 import { supabase } from '@/lib/supabase/client'
-import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
+import {
+  AuthenticatedRequestError,
+  getAuthenticatedAppContext,
+} from '@/lib/api/authenticated-client'
+import {
+  establishSessionWith,
+  type BackendSession,
+} from '@/lib/auth/session-establishment'
 import styles from './india-auth.module.css'
 import { setActiveStoreId } from '@/lib/store-context'
 
 type AuthShellProps = {
   mode: 'signup' | 'login'
   children: ReactNode
-}
-
-type BackendSession = {
-  accessToken: string
-  refreshToken: string
 }
 
 /**
@@ -23,29 +25,22 @@ type BackendSession = {
  * authentication paths.
  */
 export async function establishSession(session: BackendSession) {
-  const { error } = await supabase.auth.setSession({
-    access_token: session.accessToken,
-    refresh_token: session.refreshToken,
+  return establishSessionWith(session, {
+    installSession: async (nextSession) => supabase.auth.setSession({
+      access_token: nextSession.accessToken,
+      refresh_token: nextSession.refreshToken,
+    }),
+    loadContext: async () => {
+      // A tab can be reused after signing out of another business. Store scope
+      // belongs to the authenticated business, so never carry an old UUID into
+      // the newly established session.
+      setActiveStoreId(null)
+      await getAuthenticatedAppContext()
+    },
+    signOut: () => supabase.auth.signOut(),
+    isRegisterLockedError: (error) =>
+      error instanceof AuthenticatedRequestError && error.kind === 'register_locked',
   })
-
-  if (error) {
-    return { ok: false as const, message: 'We could not start your secure session. Please try again.' }
-  }
-
-  try {
-    // A tab can be reused after signing out of another business. Store scope
-    // belongs to the authenticated business, so never carry an old UUID into
-    // the newly established session.
-    setActiveStoreId(null)
-    await getAuthenticatedAppContext()
-    return { ok: true as const }
-  } catch {
-    // Do not leave a partially usable session around when its tenant context
-    // cannot be verified. The underlying error can contain transport details,
-    // so the UI intentionally receives only safe copy.
-    await supabase.auth.signOut()
-    return { ok: false as const, message: 'We could not open your store context. Please try again.' }
-  }
 }
 
 // Kept as a compatibility alias for the existing India auth screens while

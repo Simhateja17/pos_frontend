@@ -75,6 +75,10 @@ export default function USAuthPage() {
       if (requestError || !data?.session) throw new Error(responseMessage(requestError, 'Invalid or expired code.'))
       const session = await establishSession(data.session)
       if (!session.ok) throw new Error(session.message)
+      if (session.requiresPin) {
+        router.replace('/terminal/pin?returnTo=%2Fus%2Fonboarding%2F1')
+        return
+      }
       router.push('/us/onboarding/1')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Sign-in is unavailable right now.')
@@ -104,6 +108,10 @@ export default function USAuthPage() {
       if (requestError || !data?.session) throw new Error(responseMessage(requestError, 'We could not create your account right now.'))
       const session = await establishSession(data.session)
       if (!session.ok) throw new Error(session.message)
+      if (session.requiresPin) {
+        router.replace('/terminal/pin?returnTo=%2Fus%2Fonboarding%2F1')
+        return
+      }
       router.push('/us/onboarding/1')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'We could not create your account right now.')

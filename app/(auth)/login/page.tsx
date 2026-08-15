@@ -78,6 +78,11 @@ export default function LoginPage() {
         return
       }
 
+      if (sessionResult.requiresPin) {
+        router.replace('/terminal/pin?returnTo=%2Fapp%2Fdashboard')
+        return
+      }
+
       router.push('/app/dashboard')
     } catch {
       setError('Sign-in is unavailable right now. Please try again.')

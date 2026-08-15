@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "generate:api": "./tools/openapi-gen/node_modules/.bin/openapi-typescript ../backend/openapi.json -o lib/api/schema.d.ts",
+    "test:unit": "node --test tests/unit/*.test.cjs",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/app-shell.spec.ts"
   },

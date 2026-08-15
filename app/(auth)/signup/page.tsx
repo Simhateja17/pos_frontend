@@ -165,6 +165,11 @@ export default function SignupPage() {
       }
 
       localStorage.removeItem('couture.signup.draft')
+      if (sessionResult.requiresPin) {
+        router.replace('/terminal/pin?returnTo=%2Fplans')
+        return
+      }
+
       router.push('/plans')
     } catch {
       setError("We couldn't create your account right now. Please try again.")
