@@ -225,8 +225,10 @@ export function InventoryView() {
                       </div>
                     </td>
                     <td className="t-sub t-mono">{firstVariant.barcode ?? '-'}</td>
-                    <td className="num">{priceLabel(firstVariant.price, firstVariant.unitOfMeasure)}</td>
-                    <td className="num">
+                    <td className="num" style={{ textAlign: 'right' }}>
+                      {priceLabel(firstVariant.price, firstVariant.unitOfMeasure)}
+                    </td>
+                    <td className="num" style={{ textAlign: 'right' }}>
                       {firstVariant.currentStock}
                       {unitSuffix(firstVariant.unitOfMeasure) ? ` ${unitSuffix(firstVariant.unitOfMeasure)}` : ''}
                     </td>
@@ -249,8 +251,10 @@ export function InventoryView() {
                         </div>
                       </td>
                       <td className="t-sub t-mono">{variant.barcode ?? '-'}</td>
-                      <td className="num">{priceLabel(variant.price, variant.unitOfMeasure)}</td>
-                      <td className="num">
+                      <td className="num" style={{ textAlign: 'right' }}>
+                        {priceLabel(variant.price, variant.unitOfMeasure)}
+                      </td>
+                      <td className="num" style={{ textAlign: 'right' }}>
                         {variant.currentStock}
                         {unitSuffix(variant.unitOfMeasure) ? ` ${unitSuffix(variant.unitOfMeasure)}` : ''}
                       </td>
