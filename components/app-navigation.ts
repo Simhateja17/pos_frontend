@@ -43,8 +43,8 @@ export type AppNavItem = {
   /** Visible to, and route-authorized for, a PIN-logged cashier. */
   cashierAccessible?: boolean
   /**
-   * Owner-only module (Phase 8). Stores is the only one: a manager or cashier
-   * belongs to exactly one shop and has no business enumerating the others.
+   * Owner-only module. A manager or cashier must not see or enter modules whose
+   * backend contract is entirely owner-gated.
    *
    * This hides the nav entry: it is NOT the permission. The server refuses a
    * non-owner's store writes regardless of what the sidebar shows.
@@ -114,7 +114,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'System',
     items: [
       { label: 'Guided Setup', href: '/app/setup', icon: Rocket },
-      { label: 'Import Data', href: '/app/import', icon: Upload },
+      { label: 'Import Data', href: '/app/import', icon: Upload, ownerOnly: true },
       { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw },
       { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb },
       { label: 'Customer Display', href: '/app/customer-display', icon: Monitor },

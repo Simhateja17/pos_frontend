@@ -5,6 +5,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react'
 import { Barcode, Boxes, Package, Plus, Upload } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { LowStockBadge } from '@/components/low-stock-badge'
@@ -55,6 +56,7 @@ function variantAttributes(variant: Variant) {
 }
 
 export function InventoryView() {
+  const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
   const [lowStock, setLowStock] = useState<LowStockVariant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -89,6 +91,9 @@ export function InventoryView() {
   }, [])
 
   useEffect(() => {
+    void getAuthenticatedAppContext()
+      .then((context) => setRole(context.staff.role))
+      .catch(() => setRole(null))
     void load()
     void loadCatalog()
   }, [load, loadCatalog])
@@ -131,9 +136,11 @@ export function InventoryView() {
             <Link className="btn" href="/app/inventory/labels">
               <Barcode size={15} /> Print labels
             </Link>
-            <Link className="btn" href="/app/import">
-              <Upload size={15} /> Import file
-            </Link>
+            {role === 'owner' && (
+              <Link className="btn" href="/app/import">
+                <Upload size={15} /> Import file
+              </Link>
+            )}
             <Link className="btn btn-pri" href="/app/inventory/catalog/new">
               <Plus size={15} /> Add product
             </Link>
