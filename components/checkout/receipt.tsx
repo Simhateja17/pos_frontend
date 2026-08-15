@@ -43,6 +43,27 @@ const PAYMENT_LABELS: Record<ReceiptPayment['method'], string> = {
   upi: 'UPI',
 }
 
+const INR = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/** Server money strings are printed as-is when they aren't parseable numbers —
+ *  the receipt never substitutes a computed figure for a server one. */
+function money(value: string): string {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? `${INR.format(parsed)}` : value
+}
+
+function formatStamp(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessName: string }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const printFn = useReactToPrint({ contentRef })
@@ -138,26 +159,60 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           Kept in the DOM at all times so contentRef always has content to print. */}
       <div className="sr-only">
         <div ref={contentRef} className="receipt-print">
-          <div className="receipt-line receipt-bold">{businessName}</div>
-          <div className="receipt-line">{new Date(sale.createdAt).toLocaleString()}</div>
-          <div className="receipt-line">Receipt #{sale.id.slice(0, 8)}</div>
-          <hr />
+          <div className="receipt-store">{businessName}</div>
+          <div className="receipt-sub">Tax Invoice</div>
+          <div className="receipt-rule-strong" />
+          <div className="receipt-meta">
+            <span>Receipt #{sale.id.slice(0, 8)}</span>
+            <span>{formatStamp(sale.createdAt)}</span>
+          </div>
+          <div className="receipt-rule" />
+          <div className="receipt-cols">
+            <span>ITEM</span>
+            <span>AMOUNT (INR)</span>
+          </div>
+          <div className="receipt-rule-dashed" />
           {sale.lines.map((line) => (
-            <div key={line.variantId} className="receipt-line">
-              {line.quantity} x {line.name ?? line.variantId}: ₹{line.lineTotal}
+            <div key={line.variantId} className="receipt-item">
+              <div className="receipt-item-name">{line.name ?? line.variantId}</div>
+              <div className="receipt-item-calc">
+                <span>
+                  {line.quantity} × {money(line.unitPrice)}
+                </span>
+                <span className="receipt-amount">{money(line.lineTotal)}</span>
+              </div>
             </div>
           ))}
-          <hr />
-          <div className="receipt-line receipt-bold">Subtotal: ₹{sale.subtotal}</div>
-          <div className="receipt-line receipt-bold">Discount: ₹{sale.discountAmount}</div>
-          <div className="receipt-line receipt-bold">GST: ₹{sale.taxAmount}</div>
+          <div className="receipt-rule-dashed" />
+          <div className="receipt-row">
+            <span>Subtotal</span>
+            <span className="receipt-amount">{money(sale.subtotal)}</span>
+          </div>
+          <div className="receipt-row">
+            <span>Discount</span>
+            <span className="receipt-amount">-{money(sale.discountAmount)}</span>
+          </div>
+          <div className="receipt-row">
+            <span>GST</span>
+            <span className="receipt-amount">{money(sale.taxAmount)}</span>
+          </div>
+          <div className="receipt-rule" />
+          <div className="receipt-total">
+            <span>TOTAL</span>
+            <span className="receipt-amount">{money(sale.totalAmount)}</span>
+          </div>
+          <div className="receipt-rule-strong" />
           {payments.map((payment, index) => (
-            <div key={`${payment.method}-${index}`} className="receipt-line">
-              {PAYMENT_LABELS[payment.method]}: ₹{payment.amount}
-              {payment.referenceCode ? ` (${payment.referenceCode})` : ''}
+            <div key={`${payment.method}-${index}`} className="receipt-row">
+              <span>
+                {PAYMENT_LABELS[payment.method]}
+                {payment.referenceCode ? ` · ${payment.referenceCode}` : ''}
+              </span>
+              <span className="receipt-amount">{money(payment.amount)}</span>
             </div>
           ))}
-          <div className="receipt-total">Total paid: ₹{sale.totalAmount}</div>
+          <div className="receipt-rule-dashed" />
+          <div className="receipt-foot">Thank you for shopping with us</div>
         </div>
       </div>
     </section>
