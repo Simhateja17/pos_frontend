@@ -388,7 +388,7 @@
     margin: 0 18px 6px 0;
   }
 
-  tr {
+  .lines tr {
     page-break-inside: avoid;
     break-inside: avoid;
   }

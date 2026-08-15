@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState, type CSSProperties } from 'react'
+import { Suspense, useCallback, useEffect, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
@@ -170,6 +170,7 @@ function CheckoutPageInner() {
   // Scan / search
   const [scanQuery, setScanQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchHit[]>([])
+  const [activeSearchIndex, setActiveSearchIndex] = useState(-1)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [availabilityByVariant, setAvailabilityByVariant] = useState<Record<string, Availability>>({})
   const [availabilityLoading, setAvailabilityLoading] = useState<string | null>(null)
@@ -201,6 +202,7 @@ function CheckoutPageInner() {
   const [isReturningCustomer, setIsReturningCustomer] = useState(false)
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([])
+  const [activeCustomerSearchIndex, setActiveCustomerSearchIndex] = useState(-1)
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false)
   const [newCustomerName, setNewCustomerName] = useState('')
   const [newCustomerPhone, setNewCustomerPhone] = useState('')
@@ -289,6 +291,7 @@ function CheckoutPageInner() {
 
   async function runSearch(query: string) {
     setSearchError(null)
+    setActiveSearchIndex(-1)
     // Starting to scan/search for the next sale clears the prior receipt.
     setCompletedSale(null)
     if (!query.trim()) {
@@ -319,9 +322,41 @@ function CheckoutPageInner() {
     const trimmed = query.trim()
     const exactSkuMatch = hits.filter((h) => h.variant.sku === trimmed || h.variant.barcode === trimmed)
     if (exactSkuMatch.length === 1) {
-      addToCart(exactSkuMatch[0])
-      setScanQuery('')
+      selectSearchHit(exactSkuMatch[0])
+    }
+  }
+
+  function selectSearchHit(hit: SearchHit) {
+    addToCart(hit)
+    setScanQuery('')
+    setSearchResults([])
+    setActiveSearchIndex(-1)
+  }
+
+  function handleProductSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (searchResults.length > 0 && event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActiveSearchIndex((current) => (current < 0 ? 0 : (current + 1) % searchResults.length))
+      return
+    }
+    if (searchResults.length > 0 && event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveSearchIndex((current) => (current <= 0 ? searchResults.length - 1 : current - 1))
+      return
+    }
+    if (event.key === 'Escape') {
       setSearchResults([])
+      setActiveSearchIndex(-1)
+      return
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      const hit = activeSearchIndex >= 0 ? searchResults[activeSearchIndex] : undefined
+      if (hit) {
+        selectSearchHit(hit)
+      } else {
+        void runSearch(scanQuery)
+      }
     }
   }
 
@@ -396,6 +431,7 @@ function CheckoutPageInner() {
 
   async function runCustomerSearch(query: string) {
     setCustomerSearchQuery(query)
+    setActiveCustomerSearchIndex(-1)
     if (!query.trim()) {
       setCustomerSearchResults([])
       return
@@ -413,6 +449,30 @@ function CheckoutPageInner() {
     setIsReturningCustomer(false)
     setCustomerSearchQuery('')
     setCustomerSearchResults([])
+    setActiveCustomerSearchIndex(-1)
+  }
+
+  function handleCustomerSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (customerSearchResults.length > 0 && event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActiveCustomerSearchIndex((current) => (current < 0 ? 0 : (current + 1) % customerSearchResults.length))
+      return
+    }
+    if (customerSearchResults.length > 0 && event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveCustomerSearchIndex((current) => (current <= 0 ? customerSearchResults.length - 1 : current - 1))
+      return
+    }
+    if (event.key === 'Escape') {
+      setCustomerSearchResults([])
+      setActiveCustomerSearchIndex(-1)
+      return
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      const customer = activeCustomerSearchIndex >= 0 ? customerSearchResults[activeCustomerSearchIndex] : undefined
+      if (customer) selectCustomer(customer)
+    }
   }
 
   function clearCustomer() {
@@ -768,16 +828,16 @@ function CheckoutPageInner() {
                 <input
                   value={scanQuery}
                   aria-label={SCAN_PLACEHOLDER}
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={searchResults.length > 0}
+                  aria-controls="billing-product-search-results"
+                  aria-activedescendant={activeSearchIndex >= 0 ? `billing-product-result-${searchResults[activeSearchIndex]?.variant.id}` : undefined}
                   onChange={(e) => {
                     setScanQuery(e.target.value)
                     runSearch(e.target.value)
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      runSearch(scanQuery)
-                    }
-                  }}
+                  onKeyDown={handleProductSearchKeyDown}
                   placeholder={SCAN_PLACEHOLDER}
                 />
               </div>
@@ -793,10 +853,23 @@ function CheckoutPageInner() {
             )}
 
             {searchResults.length > 0 && (
-              <div className="res-box" style={{ marginTop: 10 }}>
-                {searchResults.map((hit) => (
+              <div id="billing-product-search-results" className="res-box" role="listbox" aria-label="Product search results" style={{ marginTop: 10 }}>
+                {searchResults.map((hit, index) => (
                   <div
                     key={hit.variant.id}
+                    id={`billing-product-result-${hit.variant.id}`}
+                    role="option"
+                    aria-selected={activeSearchIndex === index}
+                    tabIndex={0}
+                    onMouseEnter={() => setActiveSearchIndex(index)}
+                    onClick={() => selectSearchHit(hit)}
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) return
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        selectSearchHit(hit)
+                      }
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -804,6 +877,8 @@ function CheckoutPageInner() {
                       gap: 12,
                       padding: '9px 4px',
                       borderBottom: '1px solid var(--border-soft)',
+                      cursor: 'pointer',
+                      background: activeSearchIndex === index ? 'var(--brand-soft)' : undefined,
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
@@ -822,11 +897,11 @@ function CheckoutPageInner() {
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {hit.variant.currentStock <= 0 ? (
-                        <button className="btn btn-sm" type="button" onClick={() => void checkAvailability(hit.variant.id)} disabled={availabilityLoading === hit.variant.id}>
+                        <button className="btn btn-sm" type="button" onClick={(event) => { event.stopPropagation(); void checkAvailability(hit.variant.id) }} disabled={availabilityLoading === hit.variant.id}>
                           {availabilityLoading === hit.variant.id ? 'Checking…' : 'Other shops'}
                         </button>
                       ) : null}
-                      <button className="btn btn-sm" type="button" onClick={() => addToCart(hit)}>
+                      <button className="btn btn-sm" type="button" onClick={(event) => { event.stopPropagation(); selectSearchHit(hit) }}>
                         + Add
                       </button>
                     </div>
@@ -941,27 +1016,36 @@ function CheckoutPageInner() {
                   style={{ width: '100%', marginTop: 8, height: 38 }}
                   value={customerSearchQuery}
                   aria-label="Search customers"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={customerSearchResults.length > 0}
+                  aria-controls="billing-customer-search-results"
+                  aria-activedescendant={activeCustomerSearchIndex >= 0 ? `billing-customer-result-${customerSearchResults[activeCustomerSearchIndex]?.id}` : undefined}
                   onChange={(e) => runCustomerSearch(e.target.value)}
+                  onKeyDown={handleCustomerSearchKeyDown}
                   placeholder="Search by phone, email, or name…"
                 />
                 {customerSearchResults.length > 0 && (
-                  <div className="res-box" style={{ marginTop: 8 }}>
-                    {customerSearchResults.map((c) => (
+                  <div id="billing-customer-search-results" className="res-box" role="listbox" aria-label="Customer search results" style={{ marginTop: 8 }}>
+                    {customerSearchResults.map((c, index) => (
                       <button
                         key={c.id}
+                        id={`billing-customer-result-${c.id}`}
                         type="button"
                         onClick={() => selectCustomer(c)}
+                        onMouseEnter={() => setActiveCustomerSearchIndex(index)}
                         style={{
                           display: 'block',
                           width: '100%',
                           textAlign: 'left',
                           padding: '8px 4px',
-                          background: 'none',
+                          background: activeCustomerSearchIndex === index ? 'var(--brand-soft)' : 'none',
                           border: 0,
                           borderBottom: '1px solid var(--border-soft)',
                           cursor: 'pointer',
                           fontSize: 13,
                         }}
+                        aria-selected={activeCustomerSearchIndex === index}
                       >
                         <span className="t-strong">{c.name ?? 'Unnamed'}</span>
                         <span className="t-sub"> · {c.phone ?? c.email ?? ''}</span>
