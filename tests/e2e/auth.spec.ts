@@ -60,6 +60,23 @@ test('shows a safe invalid-login error without clearing entered credentials', as
   await expect(page).toHaveURL(/\/login$/)
 })
 
+test('redirects an expired PIN-screen session to login instead of reporting a connection error', async ({ page }) => {
+  for (const endpoint of ['**/terminal/pin/lock', '**/members', '**/terminals/device', '**/terminals']) {
+    await page.route(endpoint, async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Unauthorized' }),
+      })
+    })
+  }
+
+  await page.goto('/terminal/pin')
+
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByText("Couldn't load team members")).toHaveCount(0)
+})
+
 test('guides an unregistered login email to create a store account', async ({ page }) => {
   await page.route('**/api/auth/otp/request', async (route) => {
     await route.fulfill({

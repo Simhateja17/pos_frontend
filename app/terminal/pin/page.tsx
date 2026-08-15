@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Banknote, ChevronRight, LockKeyhole, Monitor, Settings, Users } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { supabase } from '@/lib/supabase/client'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
 import { AmbelMark } from '@/components/brand/ambel-mark'
 import { Button } from '@/components/ui/button'
@@ -86,6 +87,13 @@ export default function PinPadPage() {
 
     setIsLoadingStaff(false)
 
+    if ([staffResult, deviceResult, terminalsResult].some((result) => result.response.status === 401)) {
+      sessionStorage.removeItem('operatorToken')
+      await supabase.auth.signOut({ scope: 'local' })
+      router.replace('/login')
+      return
+    }
+
     if (staffResult.error || !staffResult.data || deviceResult.error || terminalsResult.error || !terminalsResult.data) {
       setLoadError(GENERIC_LOAD_ERROR)
       return
@@ -94,7 +102,7 @@ export default function PinPadPage() {
     setStaff(staffResult.data.filter((member) => member.isActive))
     setCurrentTerminal(deviceResult.data?.terminal ?? null)
     setTerminals(terminalsResult.data.filter((terminal) => terminal.isActive))
-  }, [])
+  }, [router])
 
   useEffect(() => {
     sessionStorage.setItem('registerLocked', 'true')

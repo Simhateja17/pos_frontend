@@ -77,21 +77,9 @@ export default function LandingPage() {
 
   useEffect(() => {
     let active = true;
-    const apiBase = process.env.NODE_ENV === "production"
-      ? "/_backend"
-      : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
-    void fetch(`${apiBase}/auth/session`, { credentials: "include" })
-      .then((response) => response.ok ? response.json() : { authenticated: false })
-      .then((data) => {
-        if (active) setAuthenticated(Boolean(data.authenticated));
-      })
-      .catch(() => {
-        // The Supabase session is retained as a compatibility fallback while
-        // older deployments are rolled forward to the cookie endpoint.
-        void supabase.auth.getSession().then(({ data }) => {
-          if (active) setAuthenticated(Boolean(data.session));
-        });
-      });
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active) setAuthenticated(Boolean(data.session));
+    });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (active) setAuthenticated(Boolean(session));
     });
