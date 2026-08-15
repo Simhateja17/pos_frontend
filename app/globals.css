@@ -808,11 +808,17 @@
     position: absolute;
     top: 0;
     left: 0;
+    /* Named page: this file also defines an @page rule for .receipt-print at
+       80mm. Two unnamed @page rules in the same print job collide and Chrome
+       falls back to the system default paper size for both, which is what
+       broke the receipt's page size. Binding each printable block to its own
+       named page keeps them independent. */
+    page: label;
   }
   .label {
     page-break-after: always;
   }
-  @page {
+  @page label {
     size: 2in 1in;
     margin: 0;
   }
@@ -921,8 +927,9 @@
     position: absolute;
     top: 0;
     left: 0;
+    page: receipt;
   }
-  @page {
+  @page receipt {
     size: 80mm auto;
     margin: 0 4mm;
   }

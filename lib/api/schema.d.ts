@@ -5441,6 +5441,8 @@ export interface components {
                 name: string;
                 locality: string | null;
                 combinedTaxRatePercent: string;
+                /** @enum {string} */
+                taxTreatment: "cgst_sgst" | "igst";
             } | null;
             onboarding: {
                 step: number;

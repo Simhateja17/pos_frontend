@@ -152,6 +152,7 @@ function CheckoutPageInner() {
       ])
       const mine = context.staff.id
       setTaxRatePercent(Number(context.store?.combinedTaxRatePercent ?? 0))
+      setTaxTreatment(context.store?.taxTreatment ?? 'cgst_sgst')
       const shifts = (shiftsResult.data as OpenShiftEntry[] | undefined) ?? []
       const currentTerminalId = deviceResult.data?.terminal?.id
       setOpenShiftsForStaff(
@@ -225,6 +226,7 @@ function CheckoutPageInner() {
   const [completedSale, setCompletedSale] = useState<ReceiptSale | null>(null)
   const [businessName, setBusinessName] = useState('')
   const [taxRatePercent, setTaxRatePercent] = useState(0)
+  const [taxTreatment, setTaxTreatment] = useState<'cgst_sgst' | 'igst'>('cgst_sgst')
 
   // OFFLINE-01: connectivity + outbox state.
   const { isOnline } = useConnectivity()
@@ -274,6 +276,8 @@ function CheckoutPageInner() {
   // Display/payment preparation mirrors the server Decimal calculation, but
   // the server remains authoritative and recomputes from persisted prices.
   const taxEstimate = Math.round(discountedTaxableSubtotal * (taxRatePercent / 100) * 100) / 100
+  const estimatedCgst = taxTreatment === 'cgst_sgst' ? Math.round((taxEstimate / 2) * 100) / 100 : 0
+  const estimatedSgst = taxTreatment === 'cgst_sgst' ? Math.round((taxEstimate - estimatedCgst) * 100) / 100 : 0
   const preChargeEstimate = discountedSubtotal + taxEstimate
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
@@ -1081,8 +1085,29 @@ function CheckoutPageInner() {
                 {Number(cartDiscount) > 0 ? `−${inr(cartDiscount)}` : inr(cartDiscount)}
               </span>
             </div>
+            {taxTreatment === 'cgst_sgst' ? (
+              <>
+                <div className="sum-row">
+                  <span>CGST ({(taxRatePercent / 2).toFixed(2)}% estimate)</span>
+                  <span className="num">{inr(estimatedCgst)}</span>
+                </div>
+                <div className="sum-row">
+                  <span>SGST ({(taxRatePercent / 2).toFixed(2)}% estimate)</span>
+                  <span className="num">{inr(estimatedSgst)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="sum-row">
+                <span>IGST ({taxRatePercent.toFixed(2)}% estimate)</span>
+                <span className="num">{inr(taxEstimate)}</span>
+              </div>
+            )}
             <div className="sum-row">
-              <span>Tax and final total</span>
+              <span>Tax total</span>
+              <span className="num">{inr(taxEstimate)}</span>
+            </div>
+            <div className="sum-row">
+              <span>Final total</span>
               <span className="t-sub">Confirmed by server</span>
             </div>
 
