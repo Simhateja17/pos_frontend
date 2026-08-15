@@ -1,13 +1,13 @@
 .printRoot {
-  color: #18212f;
+  color: var(--ink);
 }
 
 .document {
   margin: 0 auto;
-  background: #fff;
-  border: 1px solid #dbe3ea;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(30, 50, 70, 0.06);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -30,7 +30,7 @@
 
 .header {
   padding: 24px 28px 18px;
-  border-bottom: 1px solid #e5eaf0;
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .thermal .header {
@@ -40,7 +40,7 @@
 
 .eyebrow {
   margin: 0;
-  color: #0f766e;
+  color: var(--brand-1);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .12em;
@@ -60,7 +60,7 @@
 
 .title {
   margin: 5px 0 0;
-  color: #142033;
+  color: var(--ink);
   font-family: var(--display);
   font-size: 24px;
   letter-spacing: -.02em;
@@ -72,7 +72,7 @@
 
 .documentNumber {
   margin: 6px 0 0;
-  color: #0f766e;
+  color: var(--brand-1);
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 700;
@@ -83,7 +83,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px 18px;
   min-width: 220px;
-  color: #536273;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -95,15 +95,15 @@
 }
 
 .meta b {
-  color: #263446;
+  color: var(--ink-2);
 }
 
 .notice {
   margin-top: 12px;
   padding: 9px 11px;
-  border-radius: 8px;
-  background: #f0fdfa;
-  color: #0f5f59;
+  border-radius: var(--r-sm);
+  background: var(--brand-soft);
+  color: var(--brand-1);
   font-size: 12px;
 }
 
@@ -112,7 +112,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   padding: 18px 28px;
-  border-bottom: 1px solid #e5eaf0;
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .thermal .parties {
@@ -126,7 +126,7 @@
 
 .partyLabel {
   margin: 0 0 6px;
-  color: #6b7787;
+  color: var(--muted-2);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .09em;
@@ -135,20 +135,20 @@
 
 .partyName {
   margin: 0 0 5px;
-  color: #1c2a3a;
+  color: var(--ink);
   font-size: 14px;
   font-weight: 750;
 }
 
 .party p {
   margin: 3px 0;
-  color: #536273;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.4;
 }
 
 .party strong {
-  color: #263446;
+  color: var(--ink-2);
 }
 
 .tableWrap {
@@ -169,7 +169,7 @@
 .lines th,
 .lines td {
   padding: 10px 6px;
-  border-bottom: 1px solid #edf0f3;
+  border-bottom: 1px solid var(--border-soft);
   text-align: right;
   vertical-align: top;
   white-space: nowrap;
@@ -183,7 +183,7 @@
 }
 
 .lines th {
-  color: #6b7787;
+  color: var(--muted-2);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: .06em;
@@ -191,7 +191,7 @@
 }
 
 .lines td {
-  color: #334155;
+  color: var(--ink-2);
 }
 
 .lineDescription {
@@ -202,14 +202,14 @@
 
 .lineDescription strong {
   display: block;
-  color: #1f2d3d;
+  color: var(--ink);
   font-weight: 700;
 }
 
 .lineDescription small {
   display: block;
   margin-top: 3px;
-  color: #7a8795;
+  color: var(--muted);
   font-size: 10px;
 }
 
@@ -240,13 +240,13 @@
 
 .paymentBox,
 .totals {
-  border-top: 1px solid #e5eaf0;
+  border-top: 1px solid var(--border-soft);
   padding-top: 12px;
 }
 
 .summaryLabel {
   margin: 0 0 8px;
-  color: #6b7787;
+  color: var(--muted-2);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .09em;
@@ -258,12 +258,12 @@
   justify-content: space-between;
   gap: 12px;
   padding: 5px 0;
-  color: #536273;
+  color: var(--muted);
   font-size: 12px;
 }
 
 .payment span:last-child {
-  color: #263446;
+  color: var(--ink-2);
   font-family: var(--mono);
   text-align: right;
 }
@@ -273,12 +273,12 @@
   justify-content: space-between;
   gap: 14px;
   padding: 4px 0;
-  color: #536273;
+  color: var(--muted);
   font-size: 12px;
 }
 
 .totalRow strong {
-  color: #263446;
+  color: var(--ink-2);
   font-family: var(--mono);
   font-weight: 700;
 }
@@ -286,15 +286,15 @@
 .grand {
   margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid #cfd8e2;
-  color: #0f766e;
+  border-top: 1px solid var(--border);
+  color: var(--brand-1);
   font-size: 15px;
   font-weight: 800;
 }
 
 .footer {
   padding: 0 28px 22px;
-  color: #7a8795;
+  color: var(--muted);
   font-size: 10px;
   line-height: 1.45;
 }
@@ -360,5 +360,36 @@
 
   .thermal {
     width: 80mm;
+  }
+
+  /* Chrome's print paginator treats flex/grid containers as unbreakable
+     atomic blocks: if one doesn't fit the remaining page, the whole
+     container (and everything after it) jumps to a fresh page, leaving the
+     rest of the previous page blank. Flatten every grid/flex section back to
+     plain block flow for print so content paginates normally instead of
+     ballooning a one-line invoice into six mostly-empty pages. */
+  .titleRow,
+  .meta,
+  .parties,
+  .summaryGrid {
+    display: block;
+  }
+
+  .party + .party {
+    margin-top: 14px;
+  }
+
+  .paymentBox + .totals {
+    margin-top: 14px;
+  }
+
+  .meta span {
+    display: inline-block;
+    margin: 0 18px 6px 0;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
