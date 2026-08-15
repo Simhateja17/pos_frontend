@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Banknote, ChevronRight, LockKeyhole, Monitor, Settings, Users } from 'lucide-react'
+import { ArrowLeft, Banknote, ChevronRight, LockKeyhole, LogOut, Monitor, Settings, Users } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { supabase } from '@/lib/supabase/client'
@@ -73,6 +73,24 @@ export default function PinPadPage() {
   const [confirmPin, setConfirmPin] = useState('')
   const [changeError, setChangeError] = useState<string | null>(null)
   const [isChangingPin, setIsChangingPin] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+
+  // Escape hatch for a device stuck here — e.g. team members failed to load,
+  // or this browser is signed into the wrong organisation. Without this, the
+  // only way out is closing the tab, which leaves the org session live.
+  async function signOut() {
+    setSigningOut(true)
+    try {
+      await apiClient.POST('/terminal/pin/logout', { headers: await authHeaders() })
+    } catch {
+      // The organisation sign-out below is still the safe fallback if the
+      // cashier-session request cannot reach the server.
+    }
+    sessionStorage.removeItem('operatorToken')
+    sessionStorage.removeItem('registerLocked')
+    await supabase.auth.signOut()
+    router.replace('/login')
+  }
 
   const loadStaff = useCallback(async () => {
     setIsLoadingStaff(true)
@@ -292,13 +310,23 @@ export default function PinPadPage() {
               <p className="text-xs text-[#64748B]">Secure register access</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => requestManagement({ type: 'manage' })}
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DCE3EC] bg-white px-3 text-sm font-medium text-[#334155] shadow-sm transition hover:border-[#B8C8DC] hover:bg-[#F8FAFC]"
-          >
-            <Settings className="h-4 w-4" /> Manage counters
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => requestManagement({ type: 'manage' })}
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DCE3EC] bg-white px-3 text-sm font-medium text-[#334155] shadow-sm transition hover:border-[#B8C8DC] hover:bg-[#F8FAFC]"
+            >
+              <Settings className="h-4 w-4" /> Manage counters
+            </button>
+            <button
+              type="button"
+              disabled={signingOut}
+              onClick={() => void signOut()}
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DCE3EC] bg-white px-3 text-sm font-medium text-[#334155] shadow-sm transition hover:border-[#B8C8DC] hover:bg-[#F8FAFC] disabled:opacity-60"
+            >
+              <LogOut className="h-4 w-4" /> {signingOut ? 'Logging out…' : 'Log out'}
+            </button>
+          </div>
         </header>
 
         <main className="flex flex-1 items-center justify-center py-8 sm:py-12">
