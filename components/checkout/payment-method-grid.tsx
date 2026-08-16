@@ -26,7 +26,7 @@ const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
 }
 
 /** These are the persisted POS tender methods. UPI records an external UPI reference; it is not a gateway capture. */
-const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi', 'check']
+const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi']
 
 export function PaymentMethodGrid({
   selected,
@@ -85,7 +85,7 @@ export function PaymentMethodGrid({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-        {rows.map((row, index) => (
+        {splitEnabled && rows.map((row, index) => (
           <div
             key={`${row.method}-${index}`}
             style={{ border: '1px solid var(--border-soft)', borderRadius: 10, padding: 12, background: '#FAFBFC' }}
@@ -119,13 +119,8 @@ export function PaymentMethodGrid({
               step={0.01}
               value={row.amount}
               disabled={disabled}
-              // Single-method mode always covers the whole bill: the amount
-              // is fixed to the total, so editing it would just get silently
-              // overwritten on the next render. Split mode still needs free
-              // entry, since amounts genuinely differ per method there.
-              readOnly={!splitEnabled}
               aria-label={`${METHOD_LABELS[row.method]} amount`}
-              onChange={(e) => splitEnabled && onRowChange(index, { ...row, amount: e.target.value })}
+              onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
               placeholder="₹0.00"
             />
 

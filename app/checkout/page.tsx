@@ -531,7 +531,7 @@ function CheckoutPageInner() {
   }
 
   function handleAddTenderRow() {
-    const availableMethods: TenderMethod[] = ['cash', 'card', 'upi', 'check']
+    const availableMethods: TenderMethod[] = ['cash', 'card', 'upi']
     const next = availableMethods.find((m) => !tenderRows.some((r) => r.method === m))
     if (!next) return
     setTenderMethods([...tenderMethods, next])
