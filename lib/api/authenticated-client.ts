@@ -7,6 +7,7 @@ export type BillingStatus = components['schemas']['BillingStatus']
 export type NotificationList = components['schemas']['NotificationList']
 export type Dashboard = components['schemas']['Dashboard']
 export type DashboardRange = components['schemas']['DashboardRange']
+export type Sale = components['schemas']['Sale']
 export type SaleList = components['schemas']['SaleList']
 export type CustomerList = components['schemas']['CustomerList']
 export type PaymentRead = components['schemas']['PaymentRead']
@@ -235,6 +236,13 @@ export function getAuthenticatedSales(query: SaleRecordQuery): Promise<SaleList>
   return authenticatedRead(
     async () => apiClient.GET('/sales/records', { params: { query }, headers: await authorizationHeader() }),
     'Sales records are unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedSale(saleId: string): Promise<Sale> {
+  return authenticatedRead(
+    async () => apiClient.GET('/sales/{saleId}', { params: { path: { saleId } }, headers: await authorizationHeader() }),
+    'That sale is unavailable right now. Please retry.',
   )
 }
 

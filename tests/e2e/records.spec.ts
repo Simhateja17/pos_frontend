@@ -17,12 +17,16 @@ async function routeRecords(page: import('@playwright/test').Page) {
 
 test('renders scoped API records, server money, filter requests, and unavailable exports', async ({ authenticatedPage }) => {
   await routeRecords(authenticatedPage)
+  await authenticatedPage.route(`**/sales/${primarySale.id}`, (route) => route.fulfill({ json: primarySale }))
   await authenticatedPage.goto('/app/orders')
   await authenticatedPage.getByLabel('Search sales').fill('Primary')
   await expect(authenticatedPage.getByText('₹2,500.00')).toBeVisible()
   await expect(authenticatedPage.getByRole('button', { name: 'Export unavailable' })).toBeDisabled()
   await authenticatedPage.getByRole('link', { name: 'View' }).click()
-  await expect(authenticatedPage).toHaveURL(/\/app\/returns\?saleId=/)
+  await expect(authenticatedPage).toHaveURL(`/app/orders/${primarySale.id}`)
+  await expect(authenticatedPage.getByRole('heading', { name: 'Sale 11111111' })).toBeVisible()
+  await expect(authenticatedPage.getByText('₹2,500.00').first()).toBeVisible()
+  await expect(authenticatedPage.getByText('Cash')).toBeVisible()
   await authenticatedPage.goto('/app/customers')
   await expect(authenticatedPage.getByText('Primary Tenant Customer')).toBeVisible()
   await authenticatedPage.goto('/app/payments')
