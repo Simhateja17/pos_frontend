@@ -133,8 +133,7 @@ export function CategoriesView() {
 
         {!loading && !error && categories && categories.length > 0 && (
           <DataTable
-            headerAlign="center"
-            cols={['Category', { label: 'Products', align: 'right' }, '']}
+            cols={['Category', { label: 'Products', align: 'right' }, { label: '', align: 'right' }]}
             minWidth={560}
           >
             {categories.map((category) => (

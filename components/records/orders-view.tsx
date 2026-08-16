@@ -179,8 +179,7 @@ export function OrdersView() {
 
         {!isLoading && !error && data && data.items.length > 0 && (
           <DataTable
-            headerAlign="center"
-            cols={['Bill No.', 'Customer', 'Cashier', 'Time', 'Method', 'Status', { label: 'Amount', align: 'right' }, '']}
+            cols={['Bill No.', 'Customer', 'Cashier', 'Time', 'Method', 'Status', { label: 'Amount', align: 'right' }, { label: '', align: 'right' }]}
             minWidth={900}
           >
             {data.items.map((sale) => {

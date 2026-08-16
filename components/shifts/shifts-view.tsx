@@ -277,7 +277,6 @@ export function ShiftsView() {
                 right={<Badge tone="amber">{openShifts.length} open</Badge>}
               />
               <DataTable
-                headerAlign="center"
                 cols={['Counter', 'Cashier', 'Opened', { label: 'Opening cash', align: 'right' }]}
                 minWidth={620}
               >

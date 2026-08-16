@@ -123,7 +123,7 @@ export function TransfersView() {
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && transfers.length === 0 && <EmptyState title="No transfers yet" body="Send stock to another active shop when it physically leaves this one." />}
         {!loading && transfers.length > 0 && (
-          <DataTable cols={['Route', 'Sent', 'Status', 'Quantities', '']} headerAlign="center" minWidth={760}>
+          <DataTable cols={['Route', 'Sent', 'Status', 'Quantities', { label: '', align: 'right' }]} minWidth={760}>
             {transfers.map((transfer) => (
               <tr key={transfer.id}>
                 <td className="t-strong">{transfer.fromStoreName} <ArrowRight size={13} style={{ verticalAlign: 'middle' }} /> {transfer.toStoreName}</td>

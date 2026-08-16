@@ -177,7 +177,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
         <Card>
           <CardHead title="Members" sub="Active permissions and access actions are applied by the server." />
           <CardPad style={{ paddingTop: 4 }}>
-            <DataTable headerAlign="center" cols={['Name', 'Role', 'Access', 'Status', { label: 'Actions', align: 'right' }]}>
+            <DataTable cols={['Name', 'Role', 'Access', 'Status', { label: 'Actions', align: 'right' }]}>
               {members.map((member) => (
                 <tr key={member.id}>
                   <td>

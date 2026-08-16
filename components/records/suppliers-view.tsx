@@ -205,8 +205,7 @@ export function SuppliersView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['Supplier', 'Contact', 'Lead time', 'Terms', 'Status', '']}
-            headerAlign="center"
+            cols={['Supplier', 'Contact', 'Lead time', 'Terms', 'Status', { label: '', align: 'right' }]}
             minWidth={780}
           >
             {visible.map((supplier) => (

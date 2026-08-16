@@ -230,7 +230,6 @@ export function InventoryView() {
 
         {!catalogLoading && !catalogError && visible.length > 0 && (
           <DataTable
-            headerAlign="center"
             cols={['Product / Variant', 'SKU', 'Barcode', { label: 'Price', align: 'right' }, { label: 'Stock', align: 'right' }]}
             minWidth={860}
           >
@@ -332,7 +331,6 @@ export function InventoryView() {
 
         {!loading && !error && lowStock.length > 0 && (
           <DataTable
-            headerAlign="center"
             cols={['SKU', 'Product', 'Variant', { label: 'Available', align: 'right' }, { label: 'Reorder at', align: 'right' }, 'Status']}
             minWidth={760}
           >

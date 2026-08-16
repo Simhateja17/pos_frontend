@@ -287,8 +287,7 @@ export function PurchasesView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            headerAlign="center"
-            cols={['PO #', 'Supplier', 'Expected', 'Items', 'Received', 'Value', 'Status', '']}
+            cols={['PO #', 'Supplier', 'Expected', 'Items', 'Received', 'Value', 'Status', { label: '', align: 'right' }]}
             minWidth={940}
           >
             {visible.map((po) => {

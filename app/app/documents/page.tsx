@@ -109,7 +109,7 @@ function DocumentsPageInner() {
         ) : null}
         {!isLoading && !error && documents.length > 0 ? (
           <CardPad style={{ paddingTop: 0 }}>
-            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', { label: 'Total', align: 'right' }]} headerAlign="center" minWidth={780}>
+            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', { label: 'Total', align: 'right' }]} minWidth={780}>
               {documents.map((document) => (
                 <tr key={document.id}>
                   <td>
