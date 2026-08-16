@@ -261,7 +261,7 @@ export function DataTable({
   )
 }
 
-function alignRows(rows: ReactNode, aligns: (('right' | 'center') | undefined)[]) {
+function alignRows(rows: ReactNode, aligns: ((CSSProperties['textAlign']) | undefined)[]) {
   return Children.map(rows, (row) => {
     if (!isValidElement(row) || row.type !== 'tr') return row
     const rowEl = row as ReactElement<{ children?: ReactNode }>
