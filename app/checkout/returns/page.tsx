@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react'
+import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
@@ -29,6 +29,13 @@ type Sale = {
   }[]
 }
 
+type CustomerSuggestion = {
+  id: string
+  name: string | null
+  phone: string | null
+  email: string | null
+}
+
 type ReturnResponse = {
   saleId: string
   returnReferenceId: string
@@ -47,7 +54,8 @@ const LOAD_ERROR = "Couldn't load this page. Check your connection and try again
 const NO_MATCH =
   'No matching sale found. Check the receipt number or try searching by customer instead.'
 
-async function responseError(response: Response, fallback: string) {
+async function responseError(response: Response | undefined, fallback: string) {
+  if (!response) return fallback
   try {
     const body = (await response.clone().json()) as { error?: string }
     return body.error ?? fallback
@@ -68,6 +76,8 @@ function ReturnsPageInner() {
   const [lookupTab, setLookupTab] = useState<'receipt' | 'customer'>('receipt')
   const [receiptNumber, setReceiptNumber] = useState('')
   const [customerSearch, setCustomerSearch] = useState('')
+  const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSuggestion[]>([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [matches, setMatches] = useState<Sale[]>([])
   const [sale, setSale] = useState<Sale | null>(null)
   const [taxInvoice, setTaxInvoice] = useState<TaxDocument | null>(null)
@@ -82,6 +92,7 @@ function ReturnsPageInner() {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [returnReferenceId, setReturnReferenceId] = useState<string>(() => crypto.randomUUID())
+  const skipNextCustomerSuggestionFetch = useRef(false)
 
   useEffect(() => {
     if (requestedShiftId) {
@@ -93,6 +104,48 @@ function ReturnsPageInner() {
       .then((result) => setShiftId(result.data?.shift?.id ?? null))
       .catch(() => setShiftId(null))
   }, [requestedShiftId])
+
+  useEffect(() => {
+    const query = customerSearch.trim()
+    if (lookupTab !== 'customer' || query.length < 2) {
+      skipNextCustomerSuggestionFetch.current = false
+      setCustomerSuggestions([])
+      setIsLoadingSuggestions(false)
+      return
+    }
+
+    // Selecting a suggestion fills the field with the full customer name and
+    // immediately performs the sale lookup. Do not start a second suggestion
+    // request for that programmatic field update.
+    if (skipNextCustomerSuggestionFetch.current) {
+      skipNextCustomerSuggestionFetch.current = false
+      setCustomerSuggestions([])
+      setIsLoadingSuggestions(false)
+      return
+    }
+
+    let active = true
+    const timer = window.setTimeout(() => {
+      setIsLoadingSuggestions(true)
+      void authHeaders()
+        .then((headers) => apiClient.GET('/customers', { params: { query: { search: query } }, headers }))
+        .then((result) => {
+          if (!active) return
+          setCustomerSuggestions(result.error ? [] : (result.data ?? []))
+        })
+        .catch(() => {
+          if (active) setCustomerSuggestions([])
+        })
+        .finally(() => {
+          if (active) setIsLoadingSuggestions(false)
+        })
+    }, 250)
+
+    return () => {
+      active = false
+      window.clearTimeout(timer)
+    }
+  }, [customerSearch, lookupTab])
 
   useEffect(() => {
     if (!sale) {
@@ -154,16 +207,31 @@ function ReturnsPageInner() {
     setHasSearched(true)
     setSale(null)
     setMatches([])
-    const headers = await authHeaders()
-    const result = await apiClient.GET('/sales', { params: { query }, headers })
-    setIsLoading(false)
-    if (result.error) {
+    setCustomerSuggestions([])
+    try {
+      const headers = await authHeaders()
+      const result = await apiClient.GET('/sales', { params: { query }, headers })
+      if (result.error) {
+        setError(await responseError(result.response, LOAD_ERROR))
+        return
+      }
+      const found = result.data as Sale[]
+      setMatches(found)
+      if (found.length === 1) selectSale(found[0])
+    } catch {
       setError(LOAD_ERROR)
-      return
+    } finally {
+      setIsLoading(false)
     }
-    const found = result.data as Sale[]
-    setMatches(found)
-    if (found.length === 1) selectSale(found[0])
+  }
+
+  function selectCustomerSuggestion(customer: CustomerSuggestion) {
+    const lookupValue = customer.phone ?? customer.email ?? customer.name ?? ''
+    const displayValue = customer.name ?? lookupValue
+    skipNextCustomerSuggestionFetch.current = displayValue !== customerSearch
+    setCustomerSearch(displayValue)
+    setCustomerSuggestions([])
+    if (lookupValue) void lookup({ customerSearch: lookupValue })
   }
 
   function updateQuantity(lineId: string, maximum: number, next: number) {
@@ -299,8 +367,8 @@ function ReturnsPageInner() {
               <SearchField
                 value={receiptNumber}
                 onChange={setReceiptNumber}
-                placeholder="Receipt number"
-                ariaLabel="Receipt number"
+                placeholder="Receipt or invoice number"
+                ariaLabel="Receipt or invoice number"
                 flex
               />
               <button className="btn btn-pri" type="submit" disabled={!receiptNumber.trim() || isLoading}>
@@ -315,13 +383,66 @@ function ReturnsPageInner() {
                 if (customerSearch.trim()) void lookup({ customerSearch: customerSearch.trim() })
               }}
             >
-              <SearchField
-                value={customerSearch}
-                onChange={setCustomerSearch}
-                placeholder="Customer phone number"
-                ariaLabel="Customer phone number"
-                flex
-              />
+              <div style={{ position: 'relative', flex: 1 }}>
+                <SearchField
+                  value={customerSearch}
+                  onChange={setCustomerSearch}
+                  placeholder="Customer name, phone, or email"
+                  ariaLabel="Customer name, phone, or email"
+                  flex
+                />
+                {(isLoadingSuggestions || customerSuggestions.length > 0) && (
+                  <div
+                    role="listbox"
+                    aria-label="Customer suggestions"
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 6px)',
+                      left: 0,
+                      right: 0,
+                      zIndex: 20,
+                      maxHeight: 280,
+                      overflowY: 'auto',
+                      border: '1px solid var(--border)',
+                      borderRadius: 10,
+                      background: 'var(--surface)',
+                      boxShadow: '0 10px 24px rgba(26, 39, 68, .12)',
+                    }}
+                  >
+                    {isLoadingSuggestions && (
+                      <div role="status" style={{ padding: '10px 12px', fontSize: 12, color: 'var(--muted)' }}>
+                        Searching customers…
+                      </div>
+                    )}
+                    {customerSuggestions.map((customer) => {
+                      const displayName = customer.name ?? customer.phone ?? customer.email ?? 'Unnamed customer'
+                      const details = [customer.phone, customer.email].filter(Boolean).join(' · ')
+                      return (
+                        <button
+                          key={customer.id}
+                          type="button"
+                          role="option"
+                          aria-label={`${displayName}${details ? `, ${details}` : ''}`}
+                          onClick={() => selectCustomerSuggestion(customer)}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            padding: '10px 12px',
+                            border: 0,
+                            borderBottom: '1px solid var(--border)',
+                            background: 'transparent',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <span style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>{displayName}</span>
+                          {details && <span style={{ display: 'block', marginTop: 2, fontSize: 11.5, color: 'var(--muted)' }}>{details}</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
               <button className="btn btn-pri" type="submit" disabled={!customerSearch.trim() || isLoading}>
                 Search
               </button>

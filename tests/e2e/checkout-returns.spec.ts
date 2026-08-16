@@ -49,7 +49,7 @@ test('checkout shows a receipt only after a successful server charge and resend 
 test('returns require an explicit confirmation and report only a server-confirmed refund', async ({ authenticatedPage }, testInfo) => {
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
-  await authenticatedPage.getByPlaceholder('Receipt number').fill('R-100')
+  await authenticatedPage.getByPlaceholder(/receipt or invoice number/i).fill('Q9-202627-0003')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
   await authenticatedPage.getByRole('checkbox').check()
   await authenticatedPage.getByRole('button', { name: 'Review refund' }).click()
@@ -69,7 +69,7 @@ test('returns display the server-confirmed amount only after a successful refund
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.route('**/returns', (route) => route.fulfill({ status: 201, json: { saleId, refundedLines: [{ saleLineItemId: lineId, quantity: 1, refundAmount: '1180.00' }], refundTotal: '1180.00' } }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
-  await authenticatedPage.getByPlaceholder('Receipt number').fill('R-100')
+  await authenticatedPage.getByPlaceholder(/receipt or invoice number/i).fill('Q9-202627-0003')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
   await authenticatedPage.getByRole('checkbox').check()
   await authenticatedPage.getByRole('button', { name: 'Review refund' }).click()
@@ -83,5 +83,32 @@ test('return lookup makes an empty state explicit', async ({ authenticatedPage }
   await authenticatedPage.getByRole('tab', { name: 'By customer' }).click()
   await authenticatedPage.getByPlaceholder(/customer name/i).fill('No match')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
+  await expect(authenticatedPage.getByText(/No matching sale found/i)).toBeVisible()
+})
+
+test('return customer lookup suggests customers before searching their sales', async ({ authenticatedPage }) => {
+  let saleLookupValue: string | null = null
+  await authenticatedPage.route('**/customers?search=*', (route) =>
+    route.fulfill({
+      json: [{
+        id: '41111111-1111-4111-8111-111111111111',
+        name: 'Asha Rao',
+        phone: '+919870000002',
+        email: 'asha@example.test',
+        createdAt: '2026-08-15T09:00:00.000Z',
+      }],
+    }),
+  )
+  await authenticatedPage.route('**/sales?customerSearch=*', (route) => {
+    saleLookupValue = new URL(route.request().url()).searchParams.get('customerSearch')
+    return route.fulfill({ json: [] })
+  })
+
+  await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
+  await authenticatedPage.getByRole('tab', { name: 'By customer' }).click()
+  await authenticatedPage.getByPlaceholder(/customer name, phone, or email/i).fill('Asha')
+  await expect(authenticatedPage.getByRole('listbox', { name: 'Customer suggestions' })).toBeVisible()
+  await authenticatedPage.getByRole('option', { name: /Asha Rao/ }).click()
+  await expect.poll(() => saleLookupValue).toBe('+919870000002')
   await expect(authenticatedPage.getByText(/No matching sale found/i)).toBeVisible()
 })

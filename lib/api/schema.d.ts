@@ -2004,7 +2004,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Look up prior sales by receipt number or customer search for returns compatibility. */
+        /** @description Look up prior sales by a human tax invoice number (or legacy sale UUID) or by customer phone, email, or name for returns compatibility. */
         get: {
             parameters: {
                 query?: {
