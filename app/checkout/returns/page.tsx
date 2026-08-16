@@ -378,8 +378,8 @@ function ReturnsPageInner() {
               <SearchField
                 value={receiptNumber}
                 onChange={setReceiptNumber}
-                placeholder="Bill number"
-                ariaLabel="Bill number"
+                placeholder="Bill Number or Invoice Number"
+                ariaLabel="Bill Number or Invoice Number"
                 flex
               />
               <button className="btn btn-pri" type="submit" disabled={!receiptNumber.trim() || isLoading}>
