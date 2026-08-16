@@ -520,13 +520,13 @@ function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
       ) : (
         <DataTable
           cols={[
-            'Counter',
-            'Cashier',
-            'Opened',
-            'Closed',
-            { label: 'Expected', align: 'right' },
-            { label: 'Counted', align: 'right' },
-            { label: 'Variance', align: 'right' },
+            { label: 'Counter', align: 'center' },
+            { label: 'Cashier', align: 'center' },
+            { label: 'Opened', align: 'center' },
+            { label: 'Closed', align: 'center' },
+            { label: 'Expected', align: 'center' },
+            { label: 'Counted', align: 'center' },
+            { label: 'Variance', align: 'center' },
           ]}
           minWidth={900}
         >
