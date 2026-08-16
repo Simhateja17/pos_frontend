@@ -152,13 +152,23 @@ export function ShiftsView() {
       setOpenError('Pair this device to a counter before opening a shift.')
       return
     }
-    if (currentTerminal.cashMode !== 'none' && (!startingCash || Number(startingCash) < 0)) return
+    const openingCash = startingCash.trim()
+    if (currentTerminal.cashMode !== 'none') {
+      if (!openingCash) {
+        setOpenError('Enter the opening cash amount before opening the register. Enter ₹0 if the drawer is empty.')
+        return
+      }
+      if (!Number.isFinite(Number(openingCash)) || Number(openingCash) < 0) {
+        setOpenError('Enter a valid opening cash amount of ₹0 or more.')
+        return
+      }
+    }
 
     setBusy(true)
     setOpenError(null)
     const result = await apiClient.POST('/shifts', {
       body: {
-        startingCash: currentTerminal.cashMode === 'none' ? '0.00' : Number(startingCash).toFixed(2),
+        startingCash: currentTerminal.cashMode === 'none' ? '0.00' : Number(openingCash).toFixed(2),
       },
       headers: await authHeaders(),
     })
@@ -246,7 +256,10 @@ export function ShiftsView() {
               cashier={cashier}
               currentTerminal={currentTerminal}
               startingCash={startingCash}
-              onStartingCash={setStartingCash}
+              onStartingCash={(value) => {
+                setStartingCash(value)
+                if (openError) setOpenError(null)
+              }}
               onSubmit={openShift}
               busy={busy}
               error={openError}
@@ -376,13 +389,14 @@ function OpenRegister({
                   id="starting-cash"
                   inputMode="decimal"
                   placeholder="₹0.00"
+                  aria-invalid={Boolean(error)}
                   value={startingCash}
                   onChange={(e) => onStartingCash(e.target.value)}
                 />
               </Fld>
             )}
 
-            <button className="btn btn-pri" style={{ marginTop: 6 }} disabled={(currentTerminal.cashMode !== 'none' && !startingCash) || busy}>
+            <button className="btn btn-pri" style={{ marginTop: 6 }} disabled={busy}>
               {busy ? 'Opening register…' : 'Open register'}
             </button>
           </form>

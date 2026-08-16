@@ -31,6 +31,32 @@ test('shift close requires a confirmation and retains the correction view when t
   await testInfo.attach('shift-mobile-rejected-close', { body: await authenticatedPage.screenshot(), contentType: 'image/png' })
 })
 
+test('opening a cash register explains that an opening amount is required', async ({ authenticatedPage }) => {
+  const terminal = {
+    id: '31111111-1111-4111-8111-111111111111',
+    name: 'QA Counter 02',
+    isActive: true,
+    hasOpenShift: false,
+    cashMode: 'cash',
+    isCurrentDevice: true,
+  }
+
+  await authenticatedPage.route('**/shifts', (route) => route.fulfill({ json: [] }))
+  await authenticatedPage.route('**/terminals', (route) => route.fulfill({ json: [terminal] }))
+  await authenticatedPage.route('**/terminals/device', (route) => route.fulfill({ json: { terminal } }))
+  await authenticatedPage.goto('/app/shifts')
+
+  const openButton = authenticatedPage.getByRole('button', { name: 'Open register' })
+  await expect(openButton).toBeEnabled()
+  await openButton.click()
+  await expect(authenticatedPage.getByRole('alert')).toContainText(
+    'Enter the opening cash amount before opening the register. Enter ₹0 if the drawer is empty.',
+  )
+
+  await authenticatedPage.getByLabel('Opening cash count').fill('0')
+  await expect(authenticatedPage.getByRole('alert')).toHaveCount(0)
+})
+
 test('members preserves role denial and explicit destructive removal confirmation', async ({ authenticatedPage }) => {
   await authenticatedPage.route('**/members', (route) => route.fulfill({ json: [{ id: memberId, name: 'Asha Singh', role: 'cashier', isActive: true, createdAt: '2026-07-25T00:00:00.000Z' }] }))
   await authenticatedPage.goto('/app/settings/members')
