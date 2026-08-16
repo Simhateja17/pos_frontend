@@ -891,6 +891,17 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Supabase OTP send cooldown is active */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         delete?: never;

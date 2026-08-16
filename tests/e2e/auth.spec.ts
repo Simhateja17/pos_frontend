@@ -60,6 +60,24 @@ test('shows a safe invalid-login error without clearing entered credentials', as
   await expect(page).toHaveURL(/\/login$/)
 })
 
+test('shows the server-provided OTP cooldown after a rate-limit response', async ({ page }) => {
+  await page.route('**/api/auth/otp/request', async (route) => {
+    await route.fulfill({
+      status: 429,
+      headers: { 'Retry-After': '34' },
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Too many code requests. Please try again in 34 seconds.' }),
+    })
+  })
+  await openLogin(page)
+
+  await page.getByLabel(/^Email address/).fill('owner@example.test')
+  await page.getByRole('button', { name: 'Send code' }).click()
+
+  await expect(page.getByRole('alert')).toContainText('Try again in 34 seconds.')
+  await expect(page.getByRole('button', { name: 'Try again in 34 seconds' })).toBeDisabled()
+})
+
 test('redirects an expired PIN-screen session to login instead of reporting a connection error', async ({ page }) => {
   for (const endpoint of ['**/terminal/pin/lock', '**/members', '**/terminals/device', '**/terminals']) {
     await page.route(endpoint, async (route) => {
