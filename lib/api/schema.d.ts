@@ -5901,6 +5901,7 @@ export interface components {
             color: string | null;
             material: string | null;
             price: string;
+            movingAverageCost: string | null;
             isTaxable: boolean;
             reorderThreshold: number;
             identityLocked: boolean;

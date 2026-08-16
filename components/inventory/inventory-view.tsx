@@ -9,6 +9,7 @@ import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { LowStockBadge } from '@/components/low-stock-badge'
+import { money } from '@/lib/region'
 import { priceLabel, unitSuffix } from '@/lib/units'
 import { ReorderSuggestions } from './reorder-suggestions'
 
@@ -34,6 +35,7 @@ type Variant = {
   color: string | null
   material: string | null
   price: string
+  movingAverageCost: string | null
   reorderThreshold: number
   identityLocked: boolean
   currentStock: number
@@ -53,6 +55,29 @@ const CATALOG_LOAD_ERROR = "Couldn't load your catalog. Check your connection an
 
 function variantAttributes(variant: Variant) {
   return [variant.size, variant.color, variant.material].filter(Boolean).join(' / ')
+}
+
+function inventoryCostSummary(products: Product[]) {
+  return products.reduce(
+    (summary, product) =>
+      product.variants.reduce((next, variant) => {
+        if (variant.movingAverageCost == null) {
+          return { ...next, uncostedVariants: next.uncostedVariants + 1 }
+        }
+
+        const unitCost = Number(variant.movingAverageCost)
+        if (!Number.isFinite(unitCost)) {
+          return { ...next, uncostedVariants: next.uncostedVariants + 1 }
+        }
+
+        return {
+          ...next,
+          value: next.value + unitCost * variant.currentStock,
+          costedVariants: next.costedVariants + 1,
+        }
+      }, summary),
+    { value: 0, costedVariants: 0, uncostedVariants: 0 },
+  )
 }
 
 export function InventoryView() {
@@ -99,6 +124,10 @@ export function InventoryView() {
   }, [load, loadCatalog])
 
   const critical = lowStock.filter((item) => item.quantity === 0).length
+  const inventory = inventoryCostSummary(products)
+  const uncostedMeta = inventory.uncostedVariants > 0
+    ? `${inventory.uncostedVariants} variant${inventory.uncostedVariants === 1 ? '' : 's'} missing cost basis`
+    : 'At moving-average cost'
 
   const metrics: KpiItem[] = [
     { label: 'Low Stock', value: loading ? '-' : String(lowStock.length), meta: 'At or below reorder threshold' },
@@ -108,7 +137,21 @@ export function InventoryView() {
       value: catalogLoading ? '-' : String(products.reduce((sum, p) => sum + p.variants.length, 0)),
       meta: catalogLoading ? '' : `${products.length} product${products.length === 1 ? '' : 's'}`,
     },
-    { label: 'Inventory Value', value: <UnavailableValue />, meta: 'Cost basis is not persisted' },
+    {
+      label: 'Inventory Value',
+      value:
+        catalogLoading
+          ? '-'
+          : inventory.costedVariants === 0
+            ? <UnavailableValue />
+            : money(inventory.value),
+      meta:
+        catalogLoading
+          ? ''
+          : inventory.costedVariants === 0
+            ? 'Cost basis is not persisted'
+            : uncostedMeta,
+    },
   ]
 
   const term = search.trim().toLowerCase()

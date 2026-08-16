@@ -15,6 +15,63 @@ test('inventory renders server low-stock facts and its empty state without previ
   await expect(authenticatedPage.getByText('All stock levels are healthy')).toBeVisible()
 })
 
+test('inventory calculates on-hand value from recorded moving-average cost', async ({ authenticatedPage }) => {
+  await authenticatedPage.route('**/stock-movements/low-stock', (route) => route.fulfill({ json: [] }))
+  await authenticatedPage.route('**/products', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: 'p1',
+          name: 'Cotton Kurta',
+          categoryId: null,
+          category: null,
+          createdAt: '2026-07-25T00:00:00.000Z',
+          variants: [
+            {
+              id: 'v1',
+              productId: 'p1',
+              sku: 'CK-1',
+              barcode: null,
+              unitOfMeasure: 'piece',
+              size: 'M',
+              color: 'Blue',
+              material: null,
+              price: '1000.00',
+              movingAverageCost: '400.00',
+              isTaxable: true,
+              reorderThreshold: 3,
+              identityLocked: false,
+              currentStock: 3,
+              createdAt: '2026-07-25T00:00:00.000Z',
+            },
+            {
+              id: 'v2',
+              productId: 'p1',
+              sku: 'CK-2',
+              barcode: null,
+              unitOfMeasure: 'piece',
+              size: 'L',
+              color: 'Blue',
+              material: null,
+              price: '1000.00',
+              movingAverageCost: null,
+              isTaxable: true,
+              reorderThreshold: 3,
+              identityLocked: false,
+              currentStock: 2,
+              createdAt: '2026-07-25T00:00:00.000Z',
+            },
+          ],
+        },
+      ],
+    }),
+  )
+
+  await authenticatedPage.goto('/app/inventory')
+  await expect(authenticatedPage.getByText('₹1,200.00')).toBeVisible()
+  await expect(authenticatedPage.getByText('1 variant missing cost basis')).toBeVisible()
+})
+
 test('shift close requires a confirmation and retains the correction view when the server rejects it', async ({ authenticatedPage }, testInfo) => {
   await authenticatedPage.addInitScript((id) => window.localStorage.setItem('couture.activeShiftId', id), shiftId)
   await authenticatedPage.route(`**/shifts/${shiftId}/x-report`, (route) => route.fulfill({ json: { shiftId, expectedCash: '1200.00', cashSalesTotal: '1500.00', cardSalesTotal: '800.00', checkSalesTotal: '0.00', refundsTotal: '300.00', saleCount: 4 } }))
