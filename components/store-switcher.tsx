@@ -1,0 +1,127 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { Check, ChevronDown, Store as StoreIcon } from 'lucide-react'
+import { getAuthenticatedStores, type AppContext, type Store } from '@/lib/api/authenticated-client'
+import { setActiveStoreId } from '@/lib/store-context'
+import styles from '@/components/store-switcher.module.css'
+
+export function StoreSwitcher({ context }: { context: AppContext }) {
+  const isOwner = context.staff.role === 'owner'
+  const activeStoreId = context.store?.id ?? 'all'
+  const label = context.store?.name ?? 'All stores'
+  const fullLabel = context.store
+    ? [context.store.name, context.store.locality].filter(Boolean).join(' · ')
+    : `${context.tenant.businessName} · All stores`
+  const [open, setOpen] = useState(false)
+  const [stores, setStores] = useState<Store[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [open])
+
+  async function toggle() {
+    const nextOpen = !open
+    setOpen(nextOpen)
+    if (!nextOpen || stores) return
+
+    setError(null)
+    try {
+      const payload = await getAuthenticatedStores()
+      setStores(payload.stores.filter((store) => store.isActive))
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+    }
+  }
+
+  function selectStore(storeId: string) {
+    if (storeId === activeStoreId) {
+      setOpen(false)
+      return
+    }
+
+    setActiveStoreId(storeId)
+    // Operational views fetch on mount. A full reload guarantees that every
+    // chart, table, and action now uses the newly selected store scope.
+    window.location.reload()
+  }
+
+  if (!isOwner) {
+    return <span className="store-pill active" title={fullLabel}>{label}</span>
+  }
+
+  return (
+    <div className={styles.root} ref={rootRef}>
+      <button
+        type="button"
+        className={`store-pill active ${styles.trigger}`}
+        title={fullLabel}
+        aria-label={`Current store: ${label}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => void toggle()}
+      >
+        <span className={styles.triggerLabel}>{label}</span>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className={styles.menu} role="menu" aria-label="Switch store">
+          <div className={styles.heading}>Switch store</div>
+          <button
+            type="button"
+            role="menuitemradio"
+            aria-checked={activeStoreId === 'all'}
+            className={styles.option}
+            onClick={() => selectStore('all')}
+          >
+            <span className={styles.optionIcon}><StoreIcon size={16} /></span>
+            <span className={styles.optionText}>
+              <strong>All stores</strong>
+              <small>Combined business view</small>
+            </span>
+            {activeStoreId === 'all' ? <Check size={16} className={styles.check} /> : null}
+          </button>
+
+          <div className={styles.divider} />
+          {stores === null && !error ? <div className={styles.status}>Loading stores…</div> : null}
+          {error ? <div className={styles.error}>{error}</div> : null}
+          {stores?.map((store) => (
+            <button
+              key={store.id}
+              type="button"
+              role="menuitemradio"
+              aria-checked={activeStoreId === store.id}
+              className={styles.option}
+              onClick={() => selectStore(store.id)}
+            >
+              <span className={styles.optionIcon}><StoreIcon size={16} /></span>
+              <span className={styles.optionText}>
+                <strong>{store.name}</strong>
+                <small>{[store.city, store.state].filter(Boolean).join(' · ') || 'Store'}</small>
+              </span>
+              {activeStoreId === store.id ? <Check size={16} className={styles.check} /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}

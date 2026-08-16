@@ -7,7 +7,16 @@ test('an unauthenticated India route reports an unavailable session', async ({ p
 
 test('the desktop India shell displays only resolved tenant context', async ({ authenticatedPage, appContext }, testInfo) => {
   await authenticatedPage.goto('/app/dashboard')
-  await expect(authenticatedPage.getByRole('button', { name: `Current store: ${appContext.tenant.businessName}` })).toBeVisible()
+  const storeLabel = appContext.store?.name ?? 'All stores'
+  if (appContext.staff.role === 'owner') {
+    const switcher = authenticatedPage.getByRole('button', { name: `Current store: ${storeLabel}` })
+    await expect(switcher).toBeVisible()
+    await switcher.click()
+    await expect(authenticatedPage.getByRole('menu', { name: 'Switch store' })).toBeVisible()
+    await expect(authenticatedPage.getByRole('menuitemradio', { name: /All stores/ })).toBeVisible()
+  } else {
+    await expect(authenticatedPage.getByTitle(new RegExp(storeLabel))).toBeVisible()
+  }
   await expect(authenticatedPage.getByText(appContext.staff.name ?? 'Staff unavailable')).toBeVisible()
   await testInfo.attach('india-shell-desktop', {
     body: await authenticatedPage.screenshot(),

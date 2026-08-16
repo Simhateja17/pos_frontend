@@ -27,6 +27,7 @@ import { apiClient, REGISTER_LOCKED_EVENT } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { ACTIVE_STORE_CHANGED_EVENT } from '@/lib/store-context'
 import { GuidedTour } from '@/components/onboarding/guided-tour'
+import { StoreSwitcher } from '@/components/store-switcher'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -247,8 +248,6 @@ export function AppShell({ children }: { children: ReactNode }) {
    * prefers locality. businessName is tenant free-text and is often a full
    * sentence: it stays in the title/tooltip rather than the chip.
    */
-  const storeLabel = context?.store?.name || (context ? 'All stores' : storeFull)
-
   return (
     <div className="app">
       {mobileOpen && (
@@ -328,9 +327,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Pinned to the right edge so the cluster does not shift with the breadcrumb width. */}
           <div className={styles.topbarActions}>
             <div className={`store-switch ${styles.storeSwitch}`}>
-              <span className="store-pill active" title={storeFull}>
-                {storeLabel}
-              </span>
+              {context ? (
+                <StoreSwitcher context={context} />
+              ) : (
+                <span className="store-pill active" title={storeFull}>{storeFull}</span>
+              )}
             </div>
 
             {!isCashier && <NotificationBell />}
