@@ -6023,6 +6023,7 @@ export interface components {
             /** Format: uuid */
             createdBy: string | null;
             createdAt: string;
+            invoiceNumber?: string | null;
             lines: components["schemas"]["SaleLineItem"][];
             payments: components["schemas"]["Payment"][];
             businessName?: string | null;

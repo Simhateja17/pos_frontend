@@ -117,7 +117,7 @@ export function OrdersView() {
                     `sales-${range}-${new Date().toISOString().slice(0, 10)}.csv`,
                     ['Invoice', 'Sale ID', 'Customer', 'Created at', 'Payment methods', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total'],
                     data.items.map((sale) => [
-                      sale.id.slice(0, 8).toUpperCase(),
+                      sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase(),
                       sale.id,
                       sale.customerId ? 'Customer linked' : 'Walk-in',
                       sale.createdAt,
@@ -185,9 +185,10 @@ export function OrdersView() {
           >
             {data.items.map((sale) => {
               const created = new Date(sale.createdAt)
+              const invoiceReference = sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase()
               return (
                 <tr key={sale.id}>
-                  <td className="t-mono t-strong">{sale.id.slice(0, 8).toUpperCase()}</td>
+                  <td className="t-mono t-strong">{invoiceReference}</td>
                   <td>{sale.customerId ? 'Customer linked' : 'Walk-in'}</td>
                   <td className="t-sub">Not recorded</td>
                   <td className="t-mono t-sub">

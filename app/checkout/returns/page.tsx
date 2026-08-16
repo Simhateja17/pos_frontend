@@ -85,12 +85,14 @@ function ReturnsPageInner() {
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [hasSearched, setHasSearched] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [lookupMessage, setLookupMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successAmount, setSuccessAmount] = useState<string | null>(null)
   const [creditNote, setCreditNote] = useState<{ id: string; number: string } | null>(null)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const [reason, setReason] = useState('')
+  const [customReason, setCustomReason] = useState('')
   const [returnReferenceId, setReturnReferenceId] = useState<string>(() => crypto.randomUUID())
   const skipNextCustomerSuggestionFetch = useRef(false)
 
@@ -189,6 +191,7 @@ function ReturnsPageInner() {
   const originalPayments =
     sale?.payments.filter((payment) => payment.direction === 'payment') ?? []
   const originalMethods = [...new Set(originalPayments.map((payment) => payment.method))]
+  const effectiveReason = reason === 'Other return reason' ? customReason.trim() : reason
 
   function selectSale(selected: Sale) {
     setSale(selected)
@@ -199,10 +202,17 @@ function ReturnsPageInner() {
     setTaxInvoice(null)
     setReturnReferenceId(crypto.randomUUID())
     setQuantities(Object.fromEntries(selected.lines.map((line) => [line.id, 0])))
+    setReason('')
+    setCustomReason('')
   }
 
-  async function lookup(query: { receiptNumber?: string; customerSearch?: string }) {
+  async function lookup(query: { receiptNumber?: string; customerSearch?: string }, customerName?: string) {
     setIsLoading(true)
+    setLookupMessage(
+      query.customerSearch
+        ? `Looking up sales history for ${customerName ?? query.customerSearch}…`
+        : `Looking up receipt ${query.receiptNumber ?? ''}…`,
+    )
     setError(null)
     setHasSearched(true)
     setSale(null)
@@ -222,6 +232,7 @@ function ReturnsPageInner() {
       setError(LOAD_ERROR)
     } finally {
       setIsLoading(false)
+      setLookupMessage(null)
     }
   }
 
@@ -231,7 +242,7 @@ function ReturnsPageInner() {
     skipNextCustomerSuggestionFetch.current = displayValue !== customerSearch
     setCustomerSearch(displayValue)
     setCustomerSuggestions([])
-    if (lookupValue) void lookup({ customerSearch: lookupValue })
+    if (lookupValue) void lookup({ customerSearch: lookupValue }, displayValue)
   }
 
   function updateQuantity(lineId: string, maximum: number, next: number) {
@@ -261,13 +272,13 @@ function ReturnsPageInner() {
 
   function requestRefund(event: FormEvent) {
     event.preventDefault()
-    if (!sale || !shiftId || !reason || selectedLines.length === 0 || originalPayments.length === 0) return
+    if (!sale || !shiftId || !effectiveReason || selectedLines.length === 0 || originalPayments.length === 0) return
     setError(null)
     setIsConfirmationOpen(true)
   }
 
   async function processRefund() {
-    if (!sale || !shiftId || !reason || selectedLines.length === 0 || originalPayments.length === 0) return
+    if (!sale || !shiftId || !effectiveReason || selectedLines.length === 0 || originalPayments.length === 0) return
     setIsSubmitting(true)
     setError(null)
     const headers = await authHeaders()
@@ -276,7 +287,7 @@ function ReturnsPageInner() {
         returnReferenceId,
         saleId: sale.id,
         shiftId,
-        reason,
+        reason: effectiveReason,
         lines: selectedLines.map(({ saleLineItemId, quantity }) => ({
           saleLineItemId,
           quantity,
@@ -449,6 +460,17 @@ function ReturnsPageInner() {
             </form>
           )}
 
+          {isLoading && lookupMessage && (
+            <p
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+              style={{ marginTop: 18, fontSize: 13, color: 'var(--muted)' }}
+            >
+              {lookupMessage}
+            </p>
+          )}
+
           {hasSearched && !isLoading && matches.length === 0 && !error && (
             <p style={{ marginTop: 18, fontSize: 13, color: 'var(--muted)' }}>{NO_MATCH}</p>
           )}
@@ -564,7 +586,11 @@ function ReturnsPageInner() {
                   <select
                     className="fld-select"
                     value={reason}
-                    onChange={(event) => setReason(event.target.value)}
+                    onChange={(event) => {
+                      const nextReason = event.target.value
+                      setReason(nextReason)
+                      if (nextReason !== 'Other return reason') setCustomReason('')
+                    }}
                     required
                   >
                     <option value="">Select a reason</option>
@@ -575,6 +601,28 @@ function ReturnsPageInner() {
                     <option value="Other return reason">Other</option>
                   </select>
                 </label>
+                {reason === 'Other return reason' && (
+                  <label style={{ display: 'block', marginTop: -2, marginBottom: 14 }}>
+                    <span style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700 }}>
+                      Describe the reason
+                    </span>
+                    <textarea
+                      className="fld-input"
+                      aria-label="Describe the reason"
+                      value={customReason}
+                      onChange={(event) => setCustomReason(event.target.value)}
+                      placeholder="Tell us why this item is being returned"
+                      minLength={2}
+                      maxLength={500}
+                      rows={3}
+                      required
+                      style={{ width: '100%', minHeight: 78, resize: 'vertical' }}
+                    />
+                    <span style={{ display: 'block', marginTop: 5, fontSize: 11.5, color: 'var(--muted)' }}>
+                      This note is saved with the return audit trail.
+                    </span>
+                  </label>
+                )}
                 <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>
                   Refund tender: {originalMethods.join(', ') || 'unavailable'}. The server validates the original sale,
                   return entitlement, and final refund before anything is recorded.
@@ -593,7 +641,7 @@ function ReturnsPageInner() {
                     type="submit"
                     disabled={
                       !shiftId ||
-                      !reason ||
+                      !effectiveReason ||
                       selectedLines.length === 0 ||
                       originalPayments.length === 0 ||
                       isSubmitting ||
@@ -659,7 +707,7 @@ function ReturnsPageInner() {
           <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
             Refund ₹{money(refundTotal)} for invoice {taxInvoice?.documentNumber ?? sale.id}? This sends the selected {selectedLines.length} line
             {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
-            {originalMethods.join(', ')}), records “{reason}”, and returns approved units to stock.
+            {originalMethods.join(', ')}), records “{effectiveReason}”, and returns approved units to stock.
           </p>
         </Modal>
       )}

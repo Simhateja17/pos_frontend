@@ -77,6 +77,22 @@ test('returns display the server-confirmed amount only after a successful refund
   await expect(authenticatedPage.getByRole('alert')).toContainText('Refund of ₹1180.00 recorded by the server.')
 })
 
+test('Other return reasons require operator details before review', async ({ authenticatedPage }) => {
+  await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
+  await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
+  await authenticatedPage.getByPlaceholder(/receipt or invoice number/i).fill('Q9-202627-0003')
+  await authenticatedPage.getByRole('button', { name: 'Search' }).click()
+  await authenticatedPage.getByRole('checkbox').check()
+
+  await authenticatedPage.getByRole('combobox', { name: 'Reason for return' }).selectOption('Other return reason')
+  const reviewButton = authenticatedPage.getByRole('button', { name: 'Review refund' })
+  await expect(authenticatedPage.getByRole('textbox', { name: 'Describe the reason' })).toBeVisible()
+  await expect(reviewButton).toBeDisabled()
+
+  await authenticatedPage.getByRole('textbox', { name: 'Describe the reason' }).fill('Customer reported a fit issue not covered by the preset reasons.')
+  await expect(reviewButton).toBeEnabled()
+})
+
 test('return lookup makes an empty state explicit', async ({ authenticatedPage }) => {
   await authenticatedPage.route('**/sales?customerSearch=*', (route) => route.fulfill({ json: [] }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
@@ -88,6 +104,10 @@ test('return lookup makes an empty state explicit', async ({ authenticatedPage }
 
 test('return customer lookup suggests customers before searching their sales', async ({ authenticatedPage }) => {
   let saleLookupValue: string | null = null
+  let releaseSalesLookup!: () => void
+  const salesLookupReleased = new Promise<void>((resolve) => {
+    releaseSalesLookup = resolve
+  })
   await authenticatedPage.route('**/customers?search=*', (route) =>
     route.fulfill({
       json: [{
@@ -99,8 +119,9 @@ test('return customer lookup suggests customers before searching their sales', a
       }],
     }),
   )
-  await authenticatedPage.route('**/sales?customerSearch=*', (route) => {
+  await authenticatedPage.route('**/sales?customerSearch=*', async (route) => {
     saleLookupValue = new URL(route.request().url()).searchParams.get('customerSearch')
+    await salesLookupReleased
     return route.fulfill({ json: [] })
   })
 
@@ -110,5 +131,7 @@ test('return customer lookup suggests customers before searching their sales', a
   await expect(authenticatedPage.getByRole('listbox', { name: 'Customer suggestions' })).toBeVisible()
   await authenticatedPage.getByRole('option', { name: /Asha Rao/ }).click()
   await expect.poll(() => saleLookupValue).toBe('+919870000002')
+  await expect(authenticatedPage.getByRole('status')).toHaveText('Looking up sales history for Asha Rao…')
+  releaseSalesLookup()
   await expect(authenticatedPage.getByText(/No matching sale found/i)).toBeVisible()
 })
