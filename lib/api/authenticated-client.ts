@@ -537,7 +537,7 @@ export function receiveAuthenticatedPurchaseOrder(
 export function uploadAuthenticatedImport(body: UploadImportRequest): Promise<ImportBatch> {
   return authenticatedRead(
     async () => apiClient.POST('/import/uploads', { body, headers: await authorizationHeader() }),
-    'That file could not be read. Check it is a CSV export and retry.',
+    'That file could not be read. Check it is a CSV or Excel export and retry.',
   )
 }
 

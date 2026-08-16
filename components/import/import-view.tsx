@@ -21,6 +21,16 @@ const KINDS: readonly { label: string; value: ImportKind }[] = [
   { label: 'Sales history', value: 'sales' },
 ]
 
+const IMPORT_FILE_ACCEPT = [
+  '.csv',
+  '.xlsx',
+  '.xls',
+  'text/csv',
+  'text/plain',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+].join(',')
+
 const CONFIDENCE_TONE = { high: 'green', medium: 'amber', low: 'grey' } as const
 
 function fileToBase64(file: File): Promise<string> {
@@ -308,8 +318,8 @@ export function ImportView() {
       ) : (
         <Card>
           <CardHead
-            title="Upload a CSV export"
-            sub="Export from your old system, then drop the file here"
+            title="Upload a CSV or Excel export"
+            sub="Export from your old system, then choose the file here"
             right={<Seg items={KINDS} active={kind} onSelect={setKind} ariaLabel="What kind of file" />}
           />
           <CardPad>
@@ -321,7 +331,7 @@ export function ImportView() {
               {uploading ? 'Reading file…' : `Choose ${kind === 'catalog' ? 'catalog' : 'sales history'} file`}
               <input
                 type="file"
-                accept=".csv,text/csv,text/plain"
+                accept={IMPORT_FILE_ACCEPT}
                 style={{ display: 'none' }}
                 disabled={uploading}
                 onChange={(event) => void onFile(event.target.files?.[0])}
@@ -332,6 +342,9 @@ export function ImportView() {
               We read the file on the server and propose which column is which. You review and correct every mapping
               before anything is saved.
               {kind === 'sales' && ' Import your catalog first: sales lines are matched to products by SKU.'}
+            </p>
+            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
+              Supported files: CSV, XLSX, and XLS. Excel workbooks use the first worksheet with data.
             </p>
             {error && <p style={{ marginTop: 12, fontSize: 12.5, color: 'var(--red, #b42318)' }}>{error}</p>}
           </CardPad>

@@ -292,6 +292,45 @@ export default function PinPadPage() {
     }
   }
 
+  useEffect(() => {
+    if (!selectedStaffId || mustChangePin) return
+
+    function handleKeyboardInput(event: KeyboardEvent) {
+      if (isSubmitting) return
+
+      // `event.key` is a digit for both the number row and the numeric keypad
+      // in browsers. Keep the code fallback for keyboards that expose the
+      // keypad through `event.code` only.
+      const digit = /^[0-9]$/.test(event.key)
+        ? event.key
+        : /^Numpad[0-9]$/.test(event.code)
+          ? event.code.slice(-1)
+          : null
+
+      if (digit) {
+        event.preventDefault()
+        handleDigitPress(digit)
+        return
+      }
+
+      if (event.key === 'Backspace') {
+        event.preventDefault()
+        handleDigitPress('backspace')
+        return
+      }
+
+      // Four digits submit automatically, but Enter also gives keyboard users
+      // an explicit submit path if they have edited the value with Backspace.
+      if (event.key === 'Enter' && pin.length === 4) {
+        event.preventDefault()
+        void submitPin(pin)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyboardInput)
+    return () => window.removeEventListener('keydown', handleKeyboardInput)
+  }, [handleDigitPress, isSubmitting, mustChangePin, pin, selectedStaffId, submitPin])
+
   const pinReadyStaff = staff.filter((member) => member.pinConfigured !== false)
   const managementStaff = pinReadyStaff.filter((member) => member.role === 'owner' || member.role === 'manager')
   const visibleStaff = managementIntent ? managementStaff : pinReadyStaff

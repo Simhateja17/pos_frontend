@@ -4627,7 +4627,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Parse a catalog or sales CSV server-side and stage it for review. Writes nothing to the ledger. Owner-only. */
+        /** @description Parse a catalog or sales CSV/XLS/XLSX server-side and stage it for review. Writes nothing to the ledger. Owner-only. */
         post: {
             parameters: {
                 query?: never;
