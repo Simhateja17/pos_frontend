@@ -216,7 +216,7 @@ export default function NewProductPage() {
         )}
 
         <Card>
-          <CardHead title="Product" sub="What this item is called on the till and on receipts" />
+          <CardHead title="Product" sub="What this item is called on the till and on bills" />
           <CardPad>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
               <Fld id="product-name" label="Product name">

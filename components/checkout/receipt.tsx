@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 const EMAIL_FAILURE_COPY =
-  "Couldn't send the receipt email. The sale is saved. Try emailing it again from the receipt lookup."
+  "Couldn't send the bill email. The bill is saved. Try emailing it again from Bill history."
 
 export interface ReceiptLine {
   variantId: string
@@ -94,29 +94,29 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
       return
     }
 
-    setEmailStatus(`Receipt sent to ${data.email}.`)
+    setEmailStatus(`Bill sent to ${data.email}.`)
   }
 
   return (
-    <section aria-label="Completed sale receipt" className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+    <section aria-label="Completed bill" className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#047857]">Sale confirmed</p>
-          <h2 className="font-heading text-xl font-semibold">Receipt #{sale.id.slice(0, 8)}</h2>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#047857]">Bill confirmed</p>
+          <h2 className="font-heading text-xl font-semibold">Bill #{sale.id.slice(0, 8)}</h2>
           <p className="text-sm text-muted-foreground">₹{sale.totalAmount} recorded by the server.</p>
         </div>
         <span className="rounded-full bg-[#E8F7F0] px-3 py-1 text-sm font-semibold text-[#047857]">Completed</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" onClick={() => printFn()} style={{ minHeight: 44 }}>
-          Print receipt
+          Print bill
         </Button>
         <a
           href={`/app/documents?saleId=${encodeURIComponent(sale.id)}`}
           className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm font-medium"
           style={{ borderColor: '#CBD5E1', color: '#0F766E' }}
         >
-          Open GST invoice
+          Open Tax Invoice
         </a>
         <Input
           value={email}
@@ -131,7 +131,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           disabled={isSending}
           style={{ minHeight: 44 }}
         >
-          Email receipt
+          Email bill
         </Button>
       </div>
       {emailStatus && (
@@ -151,7 +151,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         </div>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        WhatsApp receipt delivery is unavailable for this store. Print or email the confirmed receipt instead.
+        WhatsApp bill delivery is unavailable for this store. Print or email the confirmed bill instead.
       </p>
 
       {/* Off-screen, natural-scale, 80mm-print-ready container: same sr-only
@@ -163,7 +163,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           <div className="receipt-sub">Tax Invoice</div>
           <div className="receipt-rule-strong" />
           <div className="receipt-meta">
-            <span>Receipt #{sale.id.slice(0, 8)}</span>
+            <span>Bill #{sale.id.slice(0, 8)}</span>
             <span>{formatStamp(sale.createdAt)}</span>
           </div>
           <div className="receipt-rule" />

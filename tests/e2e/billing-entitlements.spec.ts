@@ -89,7 +89,7 @@ test.describe('India entitlement UI contract', () => {
 
     await expect(page.getByRole('alert')).toContainText(/50\/50|limit reached/i)
     await expect(page.getByText('Kurta')).toBeVisible()
-    await expect(page.getByRole('region', { name: 'Completed sale receipt' })).toHaveCount(0)
+    await expect(page.getByRole('region', { name: 'Completed bill' })).toHaveCount(0)
     expect(saleRequests).toBe(1)
   })
 })

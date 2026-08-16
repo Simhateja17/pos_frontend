@@ -46,7 +46,7 @@ const NAV=[
  {g:'Sales',items:[
    {id:'dashboard',ic:'dash',t:'Dashboard'},
    {id:'billing',ic:'bill',t:'Billing'},
-   {id:'orders',ic:'orders',t:'Sales / Orders',count:'342'},
+   {id:'orders',ic:'orders',t:'Sales / Bills',count:'342'},
    {id:'register',ic:'register',t:'Register'},
    {id:'returns',ic:'returns',t:'Returns & Exchange',count:'4'},
    {id:'channels',ic:'channels',t:'Sales Channels',badge:'new'},
@@ -224,7 +224,7 @@ SCREENS.map=()=>{
   ]},
   {ico:'returns',t:'Returns & Exchange',f:[
     ['Returns, refund method, stock reversal, approval, audit trail','EXISTING'],
-    ['Exchange / Swap flow: return + new item, one net payment & receipt','★'],
+    ['Exchange / Swap flow: return + new item, one net payment & bill','★'],
     ['Formal Credit Note document generation','NEW'],
   ]},
   {ico:'channels',t:'Sales Channels',f:[
@@ -260,7 +260,7 @@ SCREENS.map=()=>{
   ]},
   {ico:'wa',t:'WhatsApp Connect',f:[
     ['Verified Business API number + green-tick & quality rating','NEW'],
-    ['Receipt, order-update, abandoned-cart & reminder automations','NEW'],
+    ['Bill, order-update, abandoned-cart & reminder automations','NEW'],
     ['Shared team conversations inbox','NEW'],
     ['Consent-checked broadcasts with revenue attribution','★'],
     ['DLT & Meta-approved template library','NEW'],
@@ -320,10 +320,10 @@ SCREENS.map=()=>{
   {ico:'bill',t:'Cashier ⇄ Manager Mode',d:'One tap hides cost & margin for billing speed, or reveals them for managers. Unique to Ambel.',badge:'★',scr:'billing'},
   {ico:'ai',t:'Prophet Smart Reorder',d:'ML demand forecast surfaces exactly what to reorder before the weekend rush.',badge:'AI',scr:'inventory'},
   {ico:'inventory',t:'Variant Matrix Editor',d:'Size × colour grid at a glance: tap any cell to adjust stock, set reorder or print labels.',badge:'★',scr:'inventory'},
-  {ico:'swap',t:'One-Receipt Exchange',d:'Return + new item as a single net payment, one GST calc, one receipt, not two transactions.',badge:'★',scr:'returns'},
+  {ico:'swap',t:'One-Bill Exchange',d:'Return + new item as a single net payment, one GST calc, one bill, not two transactions.',badge:'★',scr:'returns'},
   {ico:'supplier',t:'Supplier Scorecard',d:'OTIF, fill-rate & price-drift shown right before you raise a PO: a real negotiation edge.',badge:'★',scr:'suppliers'},
   {ico:'payments',t:'PSP Settlement Tracker',d:'India-native: match UTRs across Razorpay, PhonePe, Pine Labs & HDFC to every invoice.',badge:'★',scr:'payments'},
-  {ico:'wa',t:'WhatsApp Connect',d:'Receipts, order updates, payment reminders & broadcasts: all from one verified number.',badge:'NEW',scr:'whatsapp'},
+  {ico:'wa',t:'WhatsApp Connect',d:'Bills, order updates, payment reminders & broadcasts: all from one verified number.',badge:'NEW',scr:'whatsapp'},
   {ico:'sync',t:'True Offline Billing',d:'Keep selling when the internet drops: a local queue syncs automatically on reconnect.',badge:'★',scr:'sync'},
  ];
  const spotlight=`<div class="spotlight">
@@ -487,7 +487,7 @@ SCREENS.billing=()=>{
             ${[['Cash','payments'],['Card','payments'],['UPI','payments'],['Wallet','payments'],['Split','swap'],['Gift','payments']].map(p=>`<button class="btn ${DB.cart.method===p[0]?'btn-pri':''}" data-pay="${p[0]}" style="height:54px;flex-direction:column;gap:3px;font-size:12px">${ic(p[1])}${p[0]}</button>`).join('')}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-            <button class="btn" onclick="toast('Receipt sent to cloud printer')">${ic('reports')} Print</button>
+            <button class="btn" onclick="toast('Bill sent to cloud printer')">${ic('reports')} Print</button>
             <button class="btn" style="background:var(--success-soft);border-color:#BBE9D4;color:#0f8f63" onclick="toast('Bill sent on WhatsApp'+(${cust?true:false}?' to ${cust?cust.name:''}':''))">${ic('wa')} WhatsApp ${flag('★')}</button>
           </div>
           <button class="btn-grad btn" style="width:100%;height:46px;margin-top:10px;justify-content:center;font-size:15px" onclick="charge()">${ic('check')} Charge ${money(c.total)}</button>
@@ -504,15 +504,15 @@ SCREENS.orders=()=>{
  const today=DB.orders;
  const paid=today.filter(o=>o.status==='Paid'),held=today.filter(o=>o.status==='Held'),ref=today.filter(o=>o.status==='Refunded');
  const paidSum=paid.reduce((s,o)=>s+o.amount,0);
- return head('Sales / Orders','Invoice and held-bill history',`<button class="btn" data-act="exportorders">${ic('reports')} Export</button><button class="btn-pri btn" data-act="newbill">${ic('plus')} New Bill</button>`)
-  + kpis([{l:'Today Invoices',v:String(today.length),m:'<span class="up">▲ updates as you bill</span>'},{l:'Held Bills',v:String(held.length),m:held.length?'awaiting resume':'none held'},{l:'Paid Sales',v:money(paidSum),m:paid.length+' completed'},{l:'Cancelled / Refunded',v:String(ref.length),m:ref.length+' refunded'}],4)
+ return head('Sales / Bills','Completed and held-bill history',`<button class="btn" data-act="exportorders">${ic('reports')} Export</button><button class="btn-pri btn" data-act="newbill">${ic('plus')} New Bill</button>`)
+  + kpis([{l:'Today Bills',v:String(today.length),m:'<span class="up">▲ updates as you bill</span>'},{l:'Held Bills',v:String(held.length),m:held.length?'awaiting resume':'none held'},{l:'Paid Sales',v:money(paidSum),m:paid.length+' completed'},{l:'Cancelled / Refunded',v:String(ref.length),m:ref.length+' refunded'}],4)
   + `<div class="card"><div class="card-h">${tabs(['Today','Yesterday','Last 7 days','This month','Custom'],'Today')}
        <div style="display:flex;gap:8px;align-items:center">
-         <div class="search" style="width:200px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input oninput="oSearch(this.value)" value="${DB.oFilter.q}" placeholder="Invoice or customer"></div>
+         <div class="search" style="width:200px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input oninput="oSearch(this.value)" value="${DB.oFilter.q}" placeholder="Bill number or customer"></div>
          <select class="fld-select" onchange="setOFilter('method',this.value)"><option value="">All methods</option>${['UPI','Card','Cash','Split'].map(m=>`<option ${DB.oFilter.method===m?'selected':''}>${m}</option>`).join('')}</select>
          <select class="fld-select" onchange="setOFilter('status',this.value)"><option value="">All statuses</option>${['Paid','Held','Refunded'].map(m=>`<option ${DB.oFilter.status===m?'selected':''}>${m}</option>`).join('')}</select>
        </div></div>
-       <table><thead><tr>${['Invoice','Customer','Cashier','Time','Method','Status','Amount',''].map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody id="ord-body">${ordersRows()}</tbody></table></div>`;
+       <table><thead><tr>${['Bill No.','Customer','Cashier','Time','Method','Status','Amount',''].map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody id="ord-body">${ordersRows()}</tbody></table></div>`;
 };
 
 /* ============ REGISTER + DAILY CLOSE ============ */
@@ -542,7 +542,7 @@ SCREENS.returns=()=>{
  return head('Returns & Exchange','Customer returns, refunds, exchanges and stock reversal',`<button class="btn">Filters</button><button class="btn" data-act="newexchange">${ic('swap')} New Exchange ${flag('★')}</button><button class="btn-pri btn" data-act="newreturn">${ic('plus')} New Return</button>`)
   + kpis([{l:'Returns Today',v:'11',m:'₹18,420 refunded · 4 pending'},{l:'Exchanges Today',v:'5',m:'★ one net payment each',flag:'★'},{l:'Pending Approval',v:'4',m:'Manager required > ₹2,000'},{l:'Rejected',v:'2',m:'Out of policy · post-7-day'}],4)
   + `<div class="split-2">
-      <div class="card"><div class="card-h">${tabs(['All','Exchanges','Pending','Approved','Rejected'],'All')}</div>${dataTable(['Ref','Invoice','Customer','Items','Reason','Method','Status','Amount'],rows)}</div>
+      <div class="card"><div class="card-h">${tabs(['All','Exchanges','Pending','Approved','Rejected'],'All')}</div>${dataTable(['Ref','Bill No.','Customer','Items','Reason','Method','Status','Amount'],rows)}</div>
       <div class="card">
         <div class="card-h"><div><h3>Exchange / Swap ${flag('★')}</h3><div class="ch-sub">EXC-0204 · one transaction</div></div></div>
         <div class="card-pad">
@@ -552,7 +552,7 @@ SCREENS.returns=()=>{
           <div class="lrow"><div class="lico b-green">${ic('plus')}</div><div style="flex:1"><div class="lt">Embroidered Lehenga (L)</div><div class="ls">+₹8,400 · reserved</div></div></div>
           <div style="background:var(--brand-soft);border-radius:10px;padding:12px;margin-top:6px">
             <div style="display:flex;justify-content:space-between;font-size:13px"><span>Net payment</span><b class="num">₹0.00</b></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px"><span>Single GST recalculation · one receipt</span><span class="badge b-blue">balanced</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px"><span>Single GST recalculation · one bill</span><span class="badge b-blue">balanced</span></div>
           </div>
           <button class="btn-grad btn" style="width:100%;justify-content:center;margin-top:12px">${ic('swap')} Complete exchange</button>
         </div>
@@ -574,8 +574,8 @@ SCREENS.challan=()=>{
  const rows=DB.challans.map(r=>`<tr><td class="t-mono t-strong">${r.no}</td><td>${r.party}</td><td class="t-sub">${r.purpose}</td><td class="num">${r.qty}</td><td><span class="badge ${r.status[0]}">${r.status[1]}</span></td><td></td><td class="t-mono">${r.inv}</td></tr>`).join('');
  return head('Delivery Challan','Goods dispatched before invoicing: B2B & inter-branch '+flag('NEW'),`<button class="btn-pri btn" data-act="newchallan">${ic('plus')} New Challan</button>`)
   
-  + kpis([{l:'Open Challans',v:'7',m:'awaiting invoice/return'},{l:'Dispatched Today',v:'3',m:'152 units'},{l:'Pending Invoice',v:'4',m:'convert when delivered'},{l:'Approval Orders',v:'2',m:'goods on trial'}],4)
-  + `<div class="card"><div class="card-h">${tabs(['All','Dispatched','Invoiced','Returned'],'All')}</div>${dataTable(['Challan #','Party','Purpose','Qty','Status','','Invoice'],rows)}</div>`;
+  + kpis([{l:'Open Challans',v:'7',m:'awaiting Tax Invoice/return'},{l:'Dispatched Today',v:'3',m:'152 units'},{l:'Pending Tax Invoice',v:'4',m:'convert when delivered'},{l:'Approval Orders',v:'2',m:'goods on trial'}],4)
+  + `<div class="card"><div class="card-h">${tabs(['All','Dispatched','Tax Invoiced','Returned'],'All')}</div>${dataTable(['Challan #','Party','Purpose','Qty','Status','','Tax Invoice'],rows)}</div>`;
 };
 /* ============ INVENTORY ============ */
 SCREENS.inventory=()=>{
@@ -608,7 +608,7 @@ SCREENS.inventory=()=>{
 /* ============ WHATSAPP CONNECT ============ */
 SCREENS.whatsapp=()=>{
  const autos=[
-  ['bill','Receipt on every bill','GST invoice PDF sent the moment a sale is charged',1],
+  ['bill','Bill on every sale','Tax Invoice PDF sent the moment a sale is charged',1],
   ['orders','Order & dispatch updates','Confirmed → packed → out for delivery, with tracking link',1],
   ['customer','Abandoned-cart recovery','Nudge online-channel carts left idle for 2 hours',1],
   ['receivable','Payment reminders','Auto-remind credit customers before & after due date',1],
@@ -619,10 +619,10 @@ SCREENS.whatsapp=()=>{
   ['Anika Kapoor','Is the indigo kurta back in size M?','2 min','b-green','2',1],
   ['Reliance Trends · B2B','Please share the challan for DC-2026-0042','1 hr','b-amber','1',1],
   ['Priya Nair','Can I exchange this for a larger size?','2 hr','b-green','3',1],
-  ['Rohit Mehra','Thanks! Got the invoice 🙏','3 hr','b-grey','',0],
+  ['Rohit Mehra','Thanks! Got the Tax Invoice 🙏','3 hr','b-grey','',0],
  ];
  const tpls=[
-  ['Tax invoice','Utility','Receipt + GST breakdown + PDF','b-green','Approved'],
+  ['Tax invoice','Utility','Bill + GST breakdown + PDF','b-green','Approved'],
   ['Order shipped','Utility','Dispatch confirmation + courier tracking','b-green','Approved'],
   ['Payment reminder','Utility','Outstanding amount + UPI pay link','b-green','Approved'],
   ['Weekend offer','Marketing','Gold-tier 2× points campaign','b-amber','In review'],
@@ -630,7 +630,7 @@ SCREENS.whatsapp=()=>{
  ];
  const funnel=[['Sent','12,840',100,'#0058BA'],['Delivered','12,610',98,'#2B6FDB'],['Read','11,160',87,'#10B981'],['Clicked link','2,980',23,'#6C9FFF'],['Replied','1,240',10,'#F59E0B']];
  const needReply=convos.filter(c=>c[5]).length;
- return head('WhatsApp Connect','Receipts, automations, broadcasts & a shared inbox '+flag('NEW'),`<button class="btn" onclick="toast('Opening WhatsApp settings')">Manage connection</button><button class="btn-pri btn" data-act="newbroadcast">${ic('wa')} New broadcast</button>`)
+ return head('WhatsApp Connect','Bills, automations, broadcasts & a shared inbox '+flag('NEW'),`<button class="btn" onclick="toast('Opening WhatsApp settings')">Manage connection</button><button class="btn-pri btn" data-act="newbroadcast">${ic('wa')} New broadcast</button>`)
   + `<div class="card" style="background:linear-gradient(100deg,#E8F8EF,#F1FBF5);border-color:#BBE9D4;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:16px;padding:15px 18px;flex-wrap:wrap">
         <div style="width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,#1FA855,#25D366);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 16px rgba(31,168,85,.3);flex-shrink:0">${ic('wa',26)}</div>
@@ -782,13 +782,13 @@ SCREENS.payments=()=>{
  return head('Payments','Collection, settlement & reconciliation',`<button class="btn">Export</button><button class="btn-pri btn" data-act="runsettlement">${ic('sync')} Run Settlement</button>`)
   + kpis([{l:'Today Collected',v:'₹4.84 L',m:'342 transactions'},{l:'UPI Settlement',v:'₹2.18 L',m:'expected 8 PM'},{l:'Card Batch',v:'₹1.62 L',m:'closes 23:00 · Pine Labs'},{l:'Pending UPI',v:'4',m:'resolution queue',flag:'IMPROVE'},{l:'Failed',v:'3',m:'<span class="dn">UPI ×2 · card ×1</span>'},{l:'Refund Payouts',v:'₹18.4 K',m:'11 today · 4 pending'}],6)
   + `<div class="split-2">
-      <div class="card"><div class="card-h">${tabs(['All','UPI','Card','Cash','Failed'],'All')}</div>${dataTable(['Payment','Invoice','Customer','Method','Settle','Status','Amount'],rows)}</div>
+      <div class="card"><div class="card-h">${tabs(['All','UPI','Card','Cash','Failed'],'All')}</div>${dataTable(['Payment','Bill','Customer','Method','Settle','Status','Amount'],rows)}</div>
       <div class="card">
         <div class="card-h"><div><h3>PSP settlement tracker ${flag('★')}</h3><div class="ch-sub">By provider · UTR-matched</div></div></div>
         <div class="card-pad" style="padding-top:6px">
           ${psp.map(p=>`<div class="lrow"><div class="lico b-blue">${ic('payments')}</div><div style="flex:1"><div class="lt">${p[0]} <span class="t-sub">· ${p[1]}</span></div><div class="ls">${p[3]} · <span class="num">${p[2]}</span></div></div><span class="badge ${p[4]}">${p[5]}</span></div>`).join('')}
           <div class="section-label" style="margin-top:14px">Reconciliation checklist</div>
-          ${[['Captured at gateway',1],['Posted to ledger',1],['Matched to invoice (UTR)',1],['Settled to bank',0],['EOD mismatch report',0]].map(c=>`<div class="cl">${cb(c[1])}<span style="${c[1]?'color:var(--muted)':''}">${c[0]}</span></div>`).join('')}
+          ${[['Captured at gateway',1],['Posted to ledger',1],['Matched to bill (UTR)',1],['Settled to bank',0],['EOD mismatch report',0]].map(c=>`<div class="cl">${cb(c[1])}<span style="${c[1]?'color:var(--muted)':''}">${c[0]}</span></div>`).join('')}
         </div>
       </div>
     </div>`;
@@ -912,12 +912,12 @@ SCREENS.copilot=()=>{
 /* ============ ONBOARDING WIZARD ============ */
 let OB_STEP=0;
 const OB_STEPS=[
- {tag:'STEP 1 · BUSINESS PROFILE',h:'Set up your store.',sub:'Your store identity, GSTIN and invoice settings go on every receipt, tax document and report.',ic:'settings'},
+ {tag:'STEP 1 · BUSINESS PROFILE',h:'Set up your store.',sub:'Your store identity, GSTIN and invoice settings go on every bill, tax document and report.',ic:'settings'},
  {tag:'STEP 2 · GST & TAX',h:'Configure your taxes.',sub:'Map your product slabs, HSN/SAC codes and round-off rules so every bill is GST-compliant from the first sale.',ic:'reports'},
  {tag:'STEP 3 · IMPORT CATALOG',h:'Bring in your products.',sub:'Upload a CSV, scan barcodes or add products one by one. Ambel validates HSN, duplicate SKUs and GST slabs before import.',ic:'inventory'},
  {tag:'STEP 4 · OPEN REGISTER',h:'Open your cash drawer.',sub:'Set your opening float for each counter. Ambel tracks every rupee in and out from this baseline automatically.',ic:'register'},
  {tag:'STEP 5 · PAIR HARDWARE',h:'Connect your devices.',sub:'Thermal printer, barcode scanner and cash drawer: pair in seconds. Test each device before you go live.',ic:'hardware'},
- {tag:'STEP 6 · FIRST TRANSACTION',h:'Ring your first sale.',sub:'Run a test bill, verify the GST breakdown, print a receipt and confirm your payment methods are working.',ic:'bill'},
+ {tag:'STEP 6 · FIRST TRANSACTION',h:'Ring your first sale.',sub:'Run a test bill, verify the GST breakdown, print the bill and confirm your payment methods are working.',ic:'bill'},
  {tag:'STEP 7 · INVITE TEAM',h:'Bring in your team.',sub:'Add cashiers, managers and floor staff. Assign roles, set permissions and schedule their first shift.',ic:'staff'},
 ];
 const OB_CONTENT=[
@@ -932,8 +932,8 @@ const OB_CONTENT=[
    <label class="fld"><span>Support email</span><input type="text" value="ops@Ambel.in"></label>
  </div>
  <div style="margin-top:16px">
-   <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Receipt options</div>
-   ${[['Print GSTIN on receipt',1],['Show HSN per line item',1],['Email invoice copy to customer',0]].map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft)"><div style="flex:1;font-size:13.5px">${t[0]}</div>${tg(t[1])}</div>`).join('')}
+   <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Bill options</div>
+   ${[['Print GSTIN on bill',1],['Show HSN per line item',1],['Email Tax Invoice copy to customer',0]].map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft)"><div style="flex:1;font-size:13.5px">${t[0]}</div>${tg(t[1])}</div>`).join('')}
  </div>`,
  // Step 1: GST & Tax
  ()=>`<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
@@ -985,7 +985,7 @@ const OB_CONTENT=[
    <div style="font-family:var(--display);font-size:15px;font-weight:700;color:var(--brand-1);margin-bottom:6px">Test transaction checklist</div>
    <div style="font-size:13px;color:var(--muted)">Complete these steps to verify your setup is working end-to-end.</div>
  </div>
- ${[['Add a product to the cart',1],['Apply a 5% discount',0],['Switch payment to UPI',1],['Charge ₹100 test bill',0],['Verify GST breakdown on receipt',0],['Print receipt on cloud printer',0]].map((c,i)=>`<div class="cl" style="padding:12px 0;border-bottom:1px solid var(--border-soft)">${cb(c[1])}<span style="font-size:13.5px;${c[1]?'color:var(--muted);text-decoration:line-through':''}">${c[0]}</span></div>`).join('')}
+ ${[['Add a product to the cart',1],['Apply a 5% discount',0],['Switch payment to UPI',1],['Charge ₹100 test bill',0],['Verify GST breakdown on bill',0],['Print bill on cloud printer',0]].map((c,i)=>`<div class="cl" style="padding:12px 0;border-bottom:1px solid var(--border-soft)">${cb(c[1])}<span style="font-size:13.5px;${c[1]?'color:var(--muted);text-decoration:line-through':''}">${c[0]}</span></div>`).join('')}
  <button class="btn-grad btn" style="width:100%;justify-content:center;margin-top:16px" onclick="go('billing');toast('Opening billing for test transaction…')">${ic('bolt')} Open billing for test</button>`,
  // Step 6: Invite Team
  ()=>`<div style="margin-bottom:14px">
@@ -1288,17 +1288,17 @@ function setOFilter(k,v){DB.oFilter[k]=v;go('orders');}
 function oSearch(v){DB.oFilter.q=v;const t=document.getElementById('ord-body');if(t)t.innerHTML=ordersRows();}
 function ordersRows(){
  const list=ordersFiltered();
- if(!list.length)return `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No orders match your filters.</td></tr>`;
+ if(!list.length)return `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No bills match your filters.</td></tr>`;
  return list.map((o,i)=>`<tr class="${i===0?'sel':''}"><td class="t-mono t-strong">${o.inv}</td><td>${o.cust}</td><td class="t-sub">${o.cashier}</td><td class="t-mono">${o.time}</td><td>${o.method}</td><td><span class="badge ${o.status==='Paid'?'b-green':o.status==='Held'?'b-amber':'b-blue'}">${o.status}</span></td><td class="num t-strong" style="text-align:right">${money(o.amount)}</td><td style="text-align:right"><button class="btn btn-sm" onclick="viewInvoice('${o.inv}')">View</button></td></tr>`).join('');
 }
 function viewInvoice(inv){
  const o=DB.orders.find(x=>x.inv===inv);if(!o)return;
- openModal('Invoice '+o.inv,
+ openModal('Bill '+o.inv,
   `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:12px"><div><div class="t-strong" style="font-size:15px">${o.cust}</div><div class="t-sub">${o.cashier} · ${o.time}</div></div><span class="badge ${o.status==='Paid'?'b-green':o.status==='Held'?'b-amber':'b-blue'}" style="height:fit-content">${o.status}</span></div>
    <table style="font-size:13px"><thead><tr><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>${o.lines.map(l=>`<tr><td>${l[0]}</td><td class="num">${l[1]}</td><td class="num" style="text-align:right">${money(l[2])}</td></tr>`).join('')}</tbody></table>
    <div style="display:flex;justify-content:space-between;border-top:2px solid var(--ink);margin-top:8px;padding-top:10px"><b>Total · ${o.method}</b><b class="num" style="font-size:18px">${money(o.amount)}</b></div>`,
-  'Print receipt','printReceipt');
- window.printReceipt=()=>{toast('Receipt sent to cloud printer');closeModal();};
+  'Print bill','printReceipt');
+window.printReceipt=()=>{toast('Bill sent to cloud printer');closeModal();};
 }
 window.viewInvoice=viewInvoice;window.setOFilter=setOFilter;window.oSearch=oSearch;window.ordersRows=ordersRows;
 
@@ -1310,7 +1310,7 @@ function exportCSV(name,headers,rows){
  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
  toast('Downloaded '+name);
 }
-function exportOrders(){exportCSV('orders.csv',['Invoice','Customer','Cashier','Time','Method','Status','Amount'],ordersFiltered().map(o=>[o.inv,o.cust,o.cashier,o.time,o.method,o.status,o.amount]));}
+function exportOrders(){exportCSV('bills.csv',['Bill No.','Customer','Cashier','Time','Method','Status','Amount'],ordersFiltered().map(o=>[o.inv,o.cust,o.cashier,o.time,o.method,o.status,o.amount]));}
 function exportCustomers(){exportCSV('customers.csv',['Name','Phone','Tier','Points','Lifetime spend'],DB.customers.map(c=>[c.name,c.phone,c.tier,c.pts,c.spend]));}
 function exportSuppliers(){exportCSV('suppliers.csv',['Supplier','GSTIN','Terms','Lead','Payable'],DB.suppliers.map(s=>[s.name,s.gstin,s.terms,s.lead,s.pay]));}
 function exportInventory(){exportCSV('inventory.csv',['SKU','Product','Category','Available','Reorder','Cost','Price','Supplier'],DB.products.map(p=>[p.sku,p.name,p.cat,p.stock,p.reorder,p.cost,p.price,p.supplier]));}
@@ -1357,16 +1357,16 @@ function addExpenseForm(){openModal('Add expense',
 function saveExpense(){const a=+val('ex_amt')||0;if(!a){toast('Amount is required');return;}const id='EXP-'+(2209+Math.floor(Math.random()*40));DB.expenses.unshift({id,cat:val('ex_cat'),payee:val('ex_payee')||'N/A',amt:a,source:val('ex_src'),status:['b-amber','Pending']});closeModal();toast(id+' recorded');go('expenses');}
 
 function newReturnForm(){openModal('New return',
-  fld('rt_inv','Original invoice',{type:'select',options:DB.orders.map(o=>o.inv+' · '+o.cust)})
+  fld('rt_inv','Original Tax Invoice',{type:'select',options:DB.orders.map(o=>o.inv+' · '+o.cust)})
   +fld('rt_item','Item returned',{ph:'e.g. 1× Cotton Kurta (L)'})
   +fld('rt_reason','Reason',{type:'select',options:['Size issue','Colour mismatch','Defective','Changed mind','Wrong item']})
   +row2(fld('rt_method','Refund method',{type:'select',options:['Store credit','Card refund','UPI refund','Cash']}),fld('rt_amt','Amount ₹',{type:'number',ph:'0'})),'Create return','saveReturn');}
 function saveReturn(){const it=val('rt_item');if(!it){toast('Item is required');return;}const ref='RET-'+(1144+Math.floor(Math.random()*60));DB.returns.unshift({ref,inv:(val('rt_inv')||'N/A').split(' · ')[0],cust:(val('rt_inv')||'N/A · Walk-in').split(' · ')[1]||'Walk-in',items:it,reason:val('rt_reason'),method:val('rt_method'),status:['b-amber','Pending'],amount:+val('rt_amt')||0});closeModal();toast(ref+' created · awaiting approval');go('returns');}
 function newExchangeForm(){openModal('New exchange',
-  fld('ex_inv','Original invoice',{type:'select',options:DB.orders.map(o=>o.inv+' · '+o.cust)})
+  fld('ex_inv','Original Tax Invoice',{type:'select',options:DB.orders.map(o=>o.inv+' · '+o.cust)})
   +fld('ex_out','Returning item',{ph:'e.g. Lehenga (M)'})
   +fld('ex_in','New item',{ph:'e.g. Lehenga (L)'})
-  +`<div style="background:var(--brand-soft);border-radius:10px;padding:11px;margin-top:4px;font-size:12.5px;color:var(--muted)">One net payment · single GST recalculation · one receipt.</div>`,'Create exchange','saveExchange');}
+  +`<div style="background:var(--brand-soft);border-radius:10px;padding:11px;margin-top:4px;font-size:12.5px;color:var(--muted)">One net payment · single GST recalculation · one bill.</div>`,'Create exchange','saveExchange');}
 function saveExchange(){const o=val('ex_out');if(!o){toast('Returning item required');return;}const ref='EXC-'+('0'+(205+Math.floor(Math.random()*40))).slice(-4);DB.returns.unshift({ref,inv:(val('ex_inv')||'N/A').split(' · ')[0],cust:(val('ex_inv')||'N/A · Walk-in').split(' · ')[1]||'Walk-in',items:o+' → '+val('ex_in'),reason:'Size swap',method:'Net ₹0',status:['b-blue','Exchange'],amount:0});closeModal();toast(ref+' exchange created');go('returns');}
 
 function newChallanForm(){openModal('New delivery challan',
@@ -1819,7 +1819,7 @@ biztype: function(){
 subscription: function(){
   var billing=AUTH.billing;
   var plans=[
-    {id:'starter',name:'Starter',monthly:999,annual:799,stores:'1 store · 2 counters',desc:'Perfect for single-store kirana or specialty retail.',feats:['Billing & cart: GST-native','UPI, card & cash payments','Inventory (up to 2,000 SKUs)','5 staff accounts','Email & WhatsApp receipts','GST reports & GSTR-1 export']},
+    {id:'starter',name:'Starter',monthly:999,annual:799,stores:'1 store · 2 counters',desc:'Perfect for single-store kirana or specialty retail.',feats:['Billing & cart: GST-native','UPI, card & cash payments','Inventory (up to 2,000 SKUs)','5 staff accounts','Email & WhatsApp bills','GST reports & GSTR-1 export']},
     {id:'growth',name:'Growth',monthly:2499,annual:1999,stores:'Up to 3 stores · unlimited counters',desc:'Most popular for fashion & lifestyle chains.',feats:['Everything in Starter','Loyalty, gift cards & CRM','Sales channels (web + social)','Delivery challan & receivables','AI Copilot: 100 queries/mo','WhatsApp campaigns (DLT)','Staff commissions & coaching','Priority support (4-hr SLA)'],featured:true},
     {id:'enterprise',name:'Enterprise',monthly:null,annual:null,stores:'Unlimited stores & counters',desc:'For large chains, franchises and enterprise retail.',feats:['Everything in Growth','Unlimited AI Copilot queries','Custom report builder & API','Integration marketplace','Franchise management module','Dedicated account manager','99.98% uptime SLA']}
   ];

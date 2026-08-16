@@ -117,7 +117,7 @@ export function TaxDocumentView({ document, initialMode = 'a4' }: { document: Ta
           </div>
           {isCreditNote ? (
             <div className={styles.notice}>
-              This credit note reverses only the returned quantity. Original invoice:{' '}
+              This credit note reverses only the returned quantity. Original Tax Invoice:{' '}
               {document.originalDocumentId ? (
                 <Link href={`/app/documents/${document.originalDocumentId}`}>{text(document.originalDocumentNumber, document.originalDocumentId)}</Link>
               ) : (
@@ -127,7 +127,7 @@ export function TaxDocumentView({ document, initialMode = 'a4' }: { document: Ta
           ) : null}
         </header>
 
-        <section className={styles.parties} aria-label="Invoice parties">
+        <section className={styles.parties} aria-label="Tax Invoice parties">
           <Party label="Supplier" party={document.seller} />
           <Party label="Bill to / recipient" party={document.buyer} />
         </section>

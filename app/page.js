@@ -9,7 +9,7 @@ import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
 import { PricingGrid } from "@/components/marketing/pricing-plans";
 
-const MOCK_SB = ["Dashboard", "Billing", "Sales / Orders", "Inventory", "Customers", "Staff", "Payments", "Reports", "Analytics"];
+const MOCK_SB = ["Dashboard", "Billing", "Sales / Bills", "Inventory", "Customers", "Staff", "Payments", "Reports", "Analytics"];
 const MOCK_KPI = [
   ["Today Sales", "₹4.84 L", true],
   ["Bills", "342", false],
@@ -17,9 +17,9 @@ const MOCK_KPI = [
   ["Margin", "37.4%", false],
 ];
 const MOCK_LIST = [
-  { bg: "#EEF4FF", color: "var(--brand-1)", inv: "INV-24850", who: "Anika Kapoor · UPI", amt: "₹4,280" },
-  { bg: "#FEF3E0", color: "#B45309", inv: "INV-24849", who: "Walk-in · Cash", amt: "₹1,240" },
-  { bg: "#ECFDF5", color: "#0f8f63", inv: "INV-24848", who: "Rohit Mehra · Card", amt: "₹8,650" },
+  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "INV-24850", who: "Anika Kapoor · UPI", amt: "₹4,280" },
+  { bg: "#FEF3E0", color: "#B45309", bill: "INV-24849", who: "Walk-in · Cash", amt: "₹1,240" },
+  { bg: "#ECFDF5", color: "#0f8f63", bill: "INV-24848", who: "Rohit Mehra · Card", amt: "₹8,650" },
 ];
 const MOCK_BARS = [38, 52, 44, 68, 60, 72, 58, 80, 70, 76];
 
@@ -28,7 +28,7 @@ const STEPS = [
   ["GST &\nTax Setup", "Map HSN/SAC codes, configure slabs & round-off"],
   ["Import\nCatalog", "CSV import or manual: 408 products in 4 minutes"],
   ["Pair\nHardware", "Printer, scanner & cash drawer paired in one screen"],
-  ["First\nSale", "Run a test bill, verify receipt, open for the day"],
+  ["First\nSale", "Run a test bill, verify the Tax Invoice, open for the day"],
 ];
 
 const GALLERY = [
@@ -248,7 +248,7 @@ export default function LandingPage() {
                       <div className="ml-dot" style={{ background: "var(--bg-2)", color: r.color }}>
                         <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 2.8h6.7l4.8 4.8V19a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2z" /><path d="M13 2.8V7a1.2 1.2 0 0 0 1.2 1.2H18M8.5 13h7M8.5 16.5h4.5" /></svg>
                       </div>
-                      <div className="ml-text">{r.inv} · {r.who}</div>
+                      <div className="ml-text">{r.bill} · {r.who}</div>
                       <div className="ml-amt">{r.amt}</div>
                       <div className="ml-badge" style={{ background: r.bg, color: r.color }}>Paid</div>
                     </div>

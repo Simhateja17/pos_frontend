@@ -67,7 +67,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
       { label: 'Billing', href: '/app/billing', icon: ShoppingBag, cashierAccessible: true },
-      { label: 'Sales / Orders', href: '/app/orders', icon: ClipboardList, cashierAccessible: true },
+      { label: 'Sales / Bills', href: '/app/orders', icon: ClipboardList, cashierAccessible: true },
       { label: 'Register', href: '/app/shifts', icon: WalletCards, cashierAccessible: true },
       { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw, cashierAccessible: true },
       { label: 'Sales Channels', href: '/app/sales-channels', icon: Radio },

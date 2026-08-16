@@ -26,7 +26,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 }
 
 function titleFor(sale: Sale): string {
-  return `Sale ${sale.id.slice(0, 8).toUpperCase()}`
+  return `Bill ${sale.id.slice(0, 8).toUpperCase()}`
 }
 
 export function SaleDetailView({ saleId }: { saleId: string }) {
@@ -53,8 +53,8 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
   if (loading) {
     return (
       <>
-        <PageHead title="Sale details" actions={<Link className="btn" href="/app/orders"><ArrowLeft size={15} /> Sales / Orders</Link>} />
-        <Card><LoadingState label="Loading sale details" /></Card>
+        <PageHead title="Bill details" actions={<Link className="btn" href="/app/orders"><ArrowLeft size={15} /> Sales / Bills</Link>} />
+        <Card><LoadingState label="Loading bill details" /></Card>
       </>
     )
   }
@@ -62,8 +62,8 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
   if (error || !sale) {
     return (
       <>
-        <PageHead title="Sale details" actions={<Link className="btn" href="/app/orders"><ArrowLeft size={15} /> Sales / Orders</Link>} />
-        <Card><ErrorState message={error ?? 'That sale is unavailable right now.'} onRetry={() => void load()} /></Card>
+        <PageHead title="Bill details" actions={<Link className="btn" href="/app/orders"><ArrowLeft size={15} /> Sales / Bills</Link>} />
+        <Card><ErrorState message={error ?? 'That bill is unavailable right now.'} onRetry={() => void load()} /></Card>
       </>
     )
   }
@@ -81,17 +81,17 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
     <>
       <PageHead
         title={titleFor(sale)}
-        sub={`Persisted sale ${sale.id}`}
-        actions={<Link className="btn" href="/app/orders"><ArrowLeft size={15} /> Sales / Orders</Link>}
+        sub={`Persisted bill ${sale.id}`}
+        actions={<Link className="btn" href="/app/orders"><ArrowLeft size={15} /> Sales / Bills</Link>}
       />
 
       <KpiRow items={metrics} cols={4} />
 
       <div className="split-2">
         <Card>
-          <CardHead title="Sale lines" sub="Line items and amounts returned by the server" />
+          <CardHead title="Bill lines" sub="Line items and amounts returned by the server" />
           {sale.lines.length === 0 ? (
-            <EmptyState title="No line items recorded" body="This sale has no persisted line items." />
+            <EmptyState title="No line items recorded" body="This bill has no persisted line items." />
           ) : (
             <DataTable cols={['Variant', 'Qty', 'Unit price', 'Discount', 'Taxable', { label: 'Line total', align: 'right' }]} minWidth={720}>
               {sale.lines.map((line) => (

@@ -1,9 +1,9 @@
 'use client'
 
-import { Banknote, CreditCard, QrCode, ReceiptText } from 'lucide-react'
+import { Banknote, CreditCard, QrCode } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-export type TenderMethod = 'cash' | 'card' | 'check' | 'upi'
+export type TenderMethod = 'cash' | 'card' | 'upi'
 
 export interface TenderRow {
   method: TenderMethod
@@ -14,14 +14,12 @@ export interface TenderRow {
 const METHOD_LABELS: Record<TenderMethod, string> = {
   cash: 'Cash',
   card: 'Card',
-  check: 'Check',
   upi: 'UPI',
 }
 
 const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
   cash: <Banknote size={16} strokeWidth={1.85} />,
   card: <CreditCard size={16} strokeWidth={1.85} />,
-  check: <ReceiptText size={16} strokeWidth={1.85} />,
   upi: <QrCode size={16} strokeWidth={1.85} />,
 }
 

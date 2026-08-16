@@ -138,7 +138,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
           <EmptyState title="No purchases found" body="Completed sales linked to this customer will appear here. Walk-in sales remain anonymous." />
         )}
         {!historyLoading && !historyError && purchases && purchases.items.length > 0 && (
-          <DataTable cols={['Sale / document', 'Date', 'Store', 'Total', 'Payment', 'Status', 'Actions']} minWidth={980}>
+          <DataTable cols={['Bill / document', 'Date', 'Store', 'Total', 'Payment', 'Status', 'Actions']} minWidth={980}>
             {purchases.items.map((purchase) => (
               <tr key={purchase.id}>
                 <td>
@@ -152,8 +152,8 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
                 <td><Badge tone={purchase.status === 'completed' ? 'green' : 'grey'}>{purchase.status}</Badge></td>
                 <td>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <Link className="btn btn-sm" href={`/app/orders?search=${encodeURIComponent(purchase.id)}`}><ExternalLink size={13} /> Open sale</Link>
-                    <Link className="btn btn-sm" href={`/app/returns?saleId=${encodeURIComponent(purchase.id)}`}>Receipt / return</Link>
+                    <Link className="btn btn-sm" href={`/app/orders?search=${encodeURIComponent(purchase.id)}`}><ExternalLink size={13} /> Open bill</Link>
+                    <Link className="btn btn-sm" href={`/app/returns?saleId=${encodeURIComponent(purchase.id)}`}>Bill / return</Link>
                   </div>
                 </td>
               </tr>

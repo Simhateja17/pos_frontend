@@ -26,7 +26,7 @@ test('checkout retains correction state until the sale API confirms a charge', a
   await testInfo.attach('checkout-desktop-error', { body: await authenticatedPage.screenshot(), contentType: 'image/png' })
 })
 
-test('checkout shows a receipt only after a successful server charge and resend outcome', async ({ authenticatedPage }) => {
+test('checkout shows a bill only after a successful server charge and resend outcome', async ({ authenticatedPage }) => {
   await authenticatedPage.route('**/products?*', (route) => route.fulfill({ json: [{ id: 'p', name: 'Kurta', variants: [{ id: variantId, productId: 'p', sku: 'K-001', size: 'M', color: 'Blue', material: null, price: '1000.00', currentStock: 4 }] }] }))
   await authenticatedPage.route('**/customers?*', (route) => route.fulfill({ json: [{ id: '41111111-1111-4111-8111-111111111111', name: 'Asha', phone: '+919999999999', email: 'asha@example.test' }] }))
   await authenticatedPage.route('**/sales/*/resend-receipt', (route) => route.fulfill({ status: 200, json: { ok: true, email: 'asha@example.test' } }))
@@ -40,16 +40,16 @@ test('checkout shows a receipt only after a successful server charge and resend 
   await authenticatedPage.getByRole('button', { name: 'Cash' }).click()
   await authenticatedPage.getByPlaceholder('₹0.00').fill('2000.00')
   await authenticatedPage.getByRole('button', { name: 'Charge sale' }).click()
-  await expect(authenticatedPage.getByRole('region', { name: 'Completed sale receipt' })).toContainText('₹2360.00 recorded by the server')
+  await expect(authenticatedPage.getByRole('region', { name: 'Completed bill' })).toContainText('₹2360.00 recorded by the server')
   await authenticatedPage.getByPlaceholder('Enter customer email').fill('asha@example.test')
-  await authenticatedPage.getByRole('button', { name: 'Email receipt' }).click()
-  await expect(authenticatedPage.getByText('Receipt sent to asha@example.test.')).toBeVisible()
+  await authenticatedPage.getByRole('button', { name: 'Email bill' }).click()
+  await expect(authenticatedPage.getByText('Bill sent to asha@example.test.')).toBeVisible()
 })
 
 test('returns require an explicit confirmation and report only a server-confirmed refund', async ({ authenticatedPage }, testInfo) => {
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
-  await authenticatedPage.getByPlaceholder(/receipt or invoice number/i).fill('Q9-202627-0003')
+  await authenticatedPage.getByPlaceholder(/bill number/i).fill('Q9-202627-0003')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
   await authenticatedPage.getByRole('checkbox').check()
   await authenticatedPage.getByRole('button', { name: 'Review refund' }).click()
@@ -69,7 +69,7 @@ test('returns display the server-confirmed amount only after a successful refund
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.route('**/returns', (route) => route.fulfill({ status: 201, json: { saleId, refundedLines: [{ saleLineItemId: lineId, quantity: 1, refundAmount: '1180.00' }], refundTotal: '1180.00' } }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
-  await authenticatedPage.getByPlaceholder(/receipt or invoice number/i).fill('Q9-202627-0003')
+  await authenticatedPage.getByPlaceholder(/bill number/i).fill('Q9-202627-0003')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
   await authenticatedPage.getByRole('checkbox').check()
   await authenticatedPage.getByRole('button', { name: 'Review refund' }).click()
@@ -80,7 +80,7 @@ test('returns display the server-confirmed amount only after a successful refund
 test('Other return reasons require operator details before review', async ({ authenticatedPage }) => {
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
-  await authenticatedPage.getByPlaceholder(/receipt or invoice number/i).fill('Q9-202627-0003')
+  await authenticatedPage.getByPlaceholder(/bill number/i).fill('Q9-202627-0003')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
   await authenticatedPage.getByRole('checkbox').check()
 
@@ -99,7 +99,7 @@ test('return lookup makes an empty state explicit', async ({ authenticatedPage }
   await authenticatedPage.getByRole('tab', { name: 'By customer' }).click()
   await authenticatedPage.getByPlaceholder(/customer name/i).fill('No match')
   await authenticatedPage.getByRole('button', { name: 'Search' }).click()
-  await expect(authenticatedPage.getByText(/No matching sale found/i)).toBeVisible()
+  await expect(authenticatedPage.getByText(/No matching bill found/i)).toBeVisible()
 })
 
 test('return customer lookup suggests customers before searching their sales', async ({ authenticatedPage }) => {
@@ -133,5 +133,5 @@ test('return customer lookup suggests customers before searching their sales', a
   await expect.poll(() => saleLookupValue).toBe('+919870000002')
   await expect(authenticatedPage.getByRole('status')).toHaveText('Looking up sales history for Asha Rao…')
   releaseSalesLookup()
-  await expect(authenticatedPage.getByText(/No matching sale found/i)).toBeVisible()
+  await expect(authenticatedPage.getByText(/No matching bill found/i)).toBeVisible()
 })

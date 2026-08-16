@@ -93,7 +93,7 @@ export function EmailView() {
     <>
       <PageHead
         title="Email"
-        sub="Receipts and invoices sent to customers, and who we no longer email"
+        sub="Bills sent to customers, and who we no longer email"
         actions={
           <button className="btn" type="button" onClick={() => setFormOpen(true)}>
             <MailX size={15} /> Stop emailing an address
@@ -134,7 +134,7 @@ export function EmailView() {
               <CardPad>
                 <EmptyState
                   title="No emails yet"
-                  body="Receipts appear here as soon as a sale is completed with a customer email address."
+                  body="Bills appear here as soon as a sale is completed with a customer email address."
                 />
               </CardPad>
             ) : (
@@ -143,7 +143,7 @@ export function EmailView() {
                   <tr key={entry.id}>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
                     <td>{entry.recipient}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{entry.kind}</td>
+                    <td>{entry.kind === 'receipt' ? 'Bill' : entry.kind === 'invoice' ? 'Tax Invoice' : 'Offer'}</td>
                     <td className="t-sub">{entry.subject}</td>
                     <td>
                       <Badge tone={STATUS_TONE[entry.status] ?? 'grey'}>{entry.status}</Badge>
@@ -158,7 +158,7 @@ export function EmailView() {
           <Card>
             <CardHead
               title="Do not email"
-              sub="Unsubscribes stop offers only. Bounces and spam complaints stop everything, including receipts."
+              sub="Unsubscribes stop offers only. Bounces and spam complaints stop everything, including bills."
             />
             {suppressions && suppressions.suppressions.length === 0 ? (
               <CardPad>
@@ -211,7 +211,7 @@ export function EmailView() {
               />
             </Fld>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
-              This records an unsubscribe, which stops offers. Receipts for purchases they make are still sent, because
+              This records an unsubscribe, which stops offers. Bills for purchases they make are still sent, because
               those are not marketing.
             </p>
             {formError && <p style={{ fontSize: 12.5, color: 'var(--red, #b42318)', marginTop: 8 }}>{formError}</p>}

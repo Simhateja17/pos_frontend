@@ -140,7 +140,7 @@ test.describe('GST tax documents', () => {
     })
 
     await authenticatedPage.goto('/checkout/returns?shiftId=71111111-1111-4111-8111-111111111111')
-    await authenticatedPage.getByPlaceholder('Receipt number').fill('R-100')
+    await authenticatedPage.getByPlaceholder('Bill number').fill('R-100')
     await authenticatedPage.getByRole('button', { name: 'Search' }).click()
     await authenticatedPage.getByRole('checkbox').check()
     await authenticatedPage.getByRole('button', { name: 'Review refund' }).click()

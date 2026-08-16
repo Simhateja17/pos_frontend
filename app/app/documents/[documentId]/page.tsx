@@ -47,7 +47,7 @@ export default function TaxDocumentDetailPage() {
   return (
     <>
       <PageHead
-        title={document?.documentType === 'credit_note' ? 'Credit note' : 'GST tax invoice'}
+        title={document?.documentType === 'credit_note' ? 'Credit note' : 'Tax Invoice'}
         sub="Immutable document snapshot"
         actions={<Link className="btn btn-sm" href="/app/documents">Back to documents</Link>}
       />
@@ -57,7 +57,7 @@ export default function TaxDocumentDetailPage() {
 
       {document?.documentType === 'tax_invoice' ? (
         <Card style={{ marginTop: 18 }}>
-          <CardHead title="Linked credit notes" sub="Returns reference this invoice without rewriting it." />
+          <CardHead title="Linked credit notes" sub="Returns reference this Tax Invoice without rewriting it." />
           <CardPad>
             {creditNotes.length === 0 ? (
               <EmptyState title="No credit notes linked" body="A partial return will create a credit note here after the refund commits." />

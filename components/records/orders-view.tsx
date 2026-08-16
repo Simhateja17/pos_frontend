@@ -92,7 +92,7 @@ export function OrdersView() {
   }, [isCashier, range, router, search, status])
 
   const metrics: KpiItem[] = [
-    { label: 'Matching Invoices', value: data ? String(data.total) : '-', meta: 'Server-filtered records' },
+    { label: 'Matching Bills', value: data ? String(data.total) : '-', meta: 'Server-filtered records' },
     { label: 'Held Bills', value: <UnavailableValue />, meta: 'No held-bill aggregate is available' },
     { label: 'Paid Sales', value: <UnavailableValue />, meta: 'No sales aggregate is available' },
     { label: 'Cancelled / Refunded', value: <UnavailableValue />, meta: 'No aggregate is available' },
@@ -101,8 +101,8 @@ export function OrdersView() {
   return (
     <>
       <PageHead
-        title="Sales / Orders"
-        sub="Invoice and held-bill history"
+        title="Sales / Bills"
+        sub="Completed and held-bill history"
         actions={
           <>
             {!isCashier && (
@@ -115,7 +115,7 @@ export function OrdersView() {
                   data &&
                   downloadCsv(
                     `sales-${range}-${new Date().toISOString().slice(0, 10)}.csv`,
-                    ['Invoice', 'Sale ID', 'Customer', 'Created at', 'Payment methods', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total'],
+                    ['Bill No.', 'Sale ID', 'Customer', 'Created at', 'Payment methods', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total'],
                     data.items.map((sale) => [
                       sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase(),
                       sale.id,
@@ -152,7 +152,7 @@ export function OrdersView() {
           }
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <SearchField value={search} onChange={setSearch} placeholder="Invoice or customer" ariaLabel="Search sales" width={200} />
+              <SearchField value={search} onChange={setSearch} placeholder="Bill number or customer" ariaLabel="Search bills" width={200} />
               {!isCashier && (
                 <select className="fld-select" aria-label="Sales status" value={status} onChange={(e) => setStatus(e.target.value)}>
                   <option value="">All statuses</option>
@@ -167,7 +167,7 @@ export function OrdersView() {
         {!isLoading && error && <ErrorState message={error} onRetry={() => void load(cursor)} />}
         {!isLoading && !error && data?.items.length === 0 && (
           <EmptyState
-            title="No orders match this view"
+            title="No bills match this view"
             body="Completed sales appear here as soon as the server records them. Nothing is previewed in the meantime."
             action={
               <Link className="btn btn-pri" href="/app/billing">
@@ -180,15 +180,15 @@ export function OrdersView() {
         {!isLoading && !error && data && data.items.length > 0 && (
           <DataTable
             headerAlign="center"
-            cols={['Invoice', 'Customer', 'Cashier', 'Time', 'Method', 'Status', { label: 'Amount', align: 'right' }, '']}
+            cols={['Bill No.', 'Customer', 'Cashier', 'Time', 'Method', 'Status', { label: 'Amount', align: 'right' }, '']}
             minWidth={900}
           >
             {data.items.map((sale) => {
               const created = new Date(sale.createdAt)
-              const invoiceReference = sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase()
+              const billReference = sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase()
               return (
                 <tr key={sale.id}>
-                  <td className="t-mono t-strong">{invoiceReference}</td>
+                  <td className="t-mono t-strong">{billReference}</td>
                   <td>{sale.customerId ? 'Customer linked' : 'Walk-in'}</td>
                   <td className="t-sub">Not recorded</td>
                   <td className="t-mono t-sub">

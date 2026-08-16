@@ -52,7 +52,7 @@ const LOOKUP_TABS = [
 
 const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
 const NO_MATCH =
-  'No matching sale found. Check the receipt number or try searching by customer instead.'
+  'No matching bill found. Check the bill number or try searching by customer instead.'
 
 async function responseError(response: Response | undefined, fallback: string) {
   if (!response) return fallback
@@ -211,7 +211,7 @@ function ReturnsPageInner() {
     setLookupMessage(
       query.customerSearch
         ? `Looking up sales history for ${customerName ?? query.customerSearch}…`
-        : `Looking up receipt ${query.receiptNumber ?? ''}…`,
+        : `Looking up bill ${query.receiptNumber ?? ''}…`,
     )
     setError(null)
     setHasSearched(true)
@@ -321,7 +321,7 @@ function ReturnsPageInner() {
     <>
       <PageHead
         title="Returns & Exchange"
-        sub="Locate the receipt, choose only the items being returned, and refund the original tender."
+        sub="Locate the bill, choose only the items being returned, and refund the original tender."
       />
 
       {!shiftId && (
@@ -363,7 +363,7 @@ function ReturnsPageInner() {
       )}
 
       <Card>
-        <CardHead title="Sale lookup" sub="Search by receipt number or by the customer attached to the sale." />
+        <CardHead title="Bill lookup" sub="Search by bill number or by the customer attached to the sale." />
         <CardPad>
           <Tabs items={LOOKUP_TABS} active={lookupTab} onSelect={setLookupTab} ariaLabel="Search sales by" />
 
@@ -378,8 +378,8 @@ function ReturnsPageInner() {
               <SearchField
                 value={receiptNumber}
                 onChange={setReceiptNumber}
-                placeholder="Receipt or invoice number"
-                ariaLabel="Receipt or invoice number"
+                placeholder="Bill number"
+                ariaLabel="Bill number"
                 flex
               />
               <button className="btn btn-pri" type="submit" disabled={!receiptNumber.trim() || isLoading}>
@@ -514,7 +514,7 @@ function ReturnsPageInner() {
           <Card style={{ marginTop: 18 }}>
           <CardHead
             title="Select items to return"
-            sub={taxInvoice ? `GST invoice ${taxInvoice.documentNumber}` : isLoadingTaxInvoice ? 'Loading GST invoice…' : `Receipt ${sale.id}`}
+            sub={taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : isLoadingTaxInvoice ? 'Loading Tax Invoice…' : `Bill ${sale.id}`}
           />
             <CardPad>
               <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', { label: 'Estimated refund incl. GST', align: 'right' }]}>
@@ -563,10 +563,10 @@ function ReturnsPageInner() {
                 })}
               </DataTable>
               {isLoadingTaxInvoice ? (
-                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>Loading the immutable GST invoice snapshot…</p>
+                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>Loading the immutable Tax Invoice snapshot…</p>
               ) : !taxInvoice ? (
                 <p style={{ marginTop: 10, fontSize: 12, color: 'var(--warning)' }}>
-                  The GST invoice snapshot could not be loaded. The server will recalculate and confirm the refund amount before recording it.
+                  The Tax Invoice snapshot could not be loaded. The server will recalculate and confirm the refund amount before recording it.
                 </p>
               ) : null}
 
@@ -665,7 +665,7 @@ function ReturnsPageInner() {
             </p>
             {creditNote ? (
               <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
-                Credit note <Link href={`/app/documents/${creditNote.id}`} style={{ fontWeight: 700 }}>{creditNote.number}</Link> is linked to the original invoice.
+                Credit note <Link href={`/app/documents/${creditNote.id}`} style={{ fontWeight: 700 }}>{creditNote.number}</Link> is linked to the original Tax Invoice.
               </p>
             ) : null}
             <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
@@ -705,7 +705,7 @@ function ReturnsPageInner() {
           }
         >
           <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-            Refund ₹{money(refundTotal)} for invoice {taxInvoice?.documentNumber ?? sale.id}? This sends the selected {selectedLines.length} line
+            Refund ₹{money(refundTotal)} for {taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : `bill ${sale.id}`}? This sends the selected {selectedLines.length} line
             {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
             {originalMethods.join(', ')}), records “{effectiveReason}”, and returns approved units to stock.
           </p>

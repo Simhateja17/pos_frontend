@@ -72,11 +72,11 @@ function DocumentsPageInner() {
     return (
       <>
         <PageHead
-          title="GST invoice"
+          title="Tax Invoice"
           sub="This document is created from the completed sale and remains unchanged if catalogue or customer data changes later."
           actions={<Link className="btn btn-sm" href="/app/documents">Back to documents</Link>}
         />
-        {isLoading ? <LoadingState label="Loading GST invoice" rows={7} /> : null}
+        {isLoading ? <LoadingState label="Loading Tax Invoice" rows={7} /> : null}
         {error ? <ErrorState message={error} onRetry={() => void load()} /> : null}
         {selected ? <TaxDocumentView document={selected} /> : null}
       </>
@@ -103,7 +103,7 @@ function DocumentsPageInner() {
           <EmptyState
             icon={<ReceiptText size={24} strokeWidth={1.8} />}
             title="No GST documents yet"
-            body="Complete a sale to create its tax invoice. A credit note appears here after a return is processed."
+            body="Complete a sale to create its Tax Invoice. A credit note appears here after a return is processed."
             action={<Link className="btn btn-pri" href="/app/billing">Open billing</Link>}
           />
         ) : null}
