@@ -230,10 +230,13 @@ export function DataTable({
   cols,
   children,
   minWidth,
+  headerAlign,
 }: {
   cols: readonly (string | { label: string; align?: 'right' | 'center' })[]
   children: ReactNode
   minWidth?: number
+  /** Override the alignment of every column heading for a cohesive table. */
+  headerAlign?: 'left' | 'center' | 'right'
 }) {
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -242,7 +245,7 @@ export function DataTable({
           <tr>
             {cols.map((c, i) => {
               const label = typeof c === 'string' ? c : c.label
-              const align = typeof c === 'string' ? undefined : c.align
+              const align = headerAlign ?? (typeof c === 'string' ? undefined : c.align)
               return (
                 <th key={`${label}-${i}`} style={align ? { textAlign: align } : undefined}>
                   {label}

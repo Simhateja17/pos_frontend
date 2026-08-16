@@ -222,7 +222,7 @@ export function StoresView() {
         )}
 
         {!loading && !error && visible.length > 0 && (
-          <DataTable cols={['Store', 'Address', 'Status', '']} minWidth={720}>
+          <DataTable cols={['Store', 'Address', 'Status', '']} headerAlign="center" minWidth={720}>
             {visible.map((store) => (
               <tr key={store.id}>
                 <td className="t-strong">

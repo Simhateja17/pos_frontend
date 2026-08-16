@@ -132,7 +132,11 @@ export function CategoriesView() {
         )}
 
         {!loading && !error && categories && categories.length > 0 && (
-          <DataTable cols={['Category', { label: 'Products', align: 'right' }, '']} minWidth={560}>
+          <DataTable
+            headerAlign="center"
+            cols={['Category', { label: 'Products', align: 'right' }, '']}
+            minWidth={560}
+          >
             {categories.map((category) => (
               <tr key={category.id}>
                 <td className="t-strong">{category.name}</td>

@@ -263,7 +263,11 @@ export function ShiftsView() {
                 sub="Every counter currently running a drawer"
                 right={<Badge tone="amber">{openShifts.length} open</Badge>}
               />
-              <DataTable cols={['Counter', 'Cashier', 'Opened', { label: 'Opening cash', align: 'right' }]} minWidth={620}>
+              <DataTable
+                headerAlign="center"
+                cols={['Counter', 'Cashier', 'Opened', { label: 'Opening cash', align: 'right' }]}
+                minWidth={620}
+              >
                 {openShifts.map((shift) => (
                   <tr key={shift.id}>
                     <td className="t-strong">{shift.terminalName ?? '-'}</td>

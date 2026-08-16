@@ -179,6 +179,7 @@ export function OrdersView() {
 
         {!isLoading && !error && data && data.items.length > 0 && (
           <DataTable
+            headerAlign="center"
             cols={['Invoice', 'Customer', 'Cashier', 'Time', 'Method', 'Status', { label: 'Amount', align: 'right' }, '']}
             minWidth={900}
           >
@@ -201,7 +202,7 @@ export function OrdersView() {
                     {money.format(Number(sale.totalAmount))}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <Link className="btn btn-sm" href={`/app/returns?saleId=${encodeURIComponent(sale.id)}`}>
+                    <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(sale.id)}`}>
                       View
                     </Link>
                   </td>

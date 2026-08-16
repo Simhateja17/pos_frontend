@@ -208,6 +208,7 @@ export function ReportsView() {
               </CardPad>
             ) : (
               <DataTable
+                headerAlign="center"
                 cols={report.columns.map((column) => ({
                   label: column.label,
                   align: column.align === 'right' ? ('right' as const) : undefined,

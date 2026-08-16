@@ -104,7 +104,7 @@ export function CustomersView() {
         )}
 
         {!loading && !error && data && data.items.length > 0 && (
-          <DataTable cols={['Customer', 'Phone', 'Email', 'GSTIN', 'Created', 'Profile']} minWidth={900}>
+          <DataTable cols={['Customer', 'Phone', 'Email', 'GSTIN', 'Created', 'Profile']} headerAlign="center" minWidth={900}>
             {data.items.map((customer) => (
               <tr key={customer.id}>
                 <td className="t-strong">{customer.billingName ?? customer.name ?? 'Unnamed customer'}</td>

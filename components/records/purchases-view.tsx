@@ -287,6 +287,7 @@ export function PurchasesView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
+            headerAlign="center"
             cols={['PO #', 'Supplier', 'Expected', 'Items', 'Received', 'Value', 'Status', '']}
             minWidth={940}
           >
