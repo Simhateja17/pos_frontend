@@ -74,8 +74,10 @@ test('inventory calculates on-hand value from recorded moving-average cost', asy
 
 test('shift close requires a confirmation and retains the correction view when the server rejects it', async ({ authenticatedPage }, testInfo) => {
   await authenticatedPage.addInitScript((id) => window.localStorage.setItem('couture.activeShiftId', id), shiftId)
-  await authenticatedPage.route(`**/shifts/${shiftId}/x-report`, (route) => route.fulfill({ json: { shiftId, expectedCash: '1200.00', cashSalesTotal: '1500.00', cardSalesTotal: '800.00', checkSalesTotal: '0.00', refundsTotal: '300.00', saleCount: 4 } }))
+  await authenticatedPage.route(`**/shifts/${shiftId}/x-report`, (route) => route.fulfill({ json: { shiftId, expectedCash: '1200.00', cashSalesTotal: '1500.00', cardSalesTotal: '800.00', upiSalesTotal: '450.00', checkSalesTotal: '0.00', refundsTotal: '300.00', saleCount: 4 } }))
   await authenticatedPage.goto('/app/shifts')
+  await expect(authenticatedPage.getByText('UPI sales')).toBeVisible()
+  await expect(authenticatedPage.getByText('₹450.00')).toBeVisible()
   await authenticatedPage.getByLabel('Counted cash').fill('1100.00')
   await authenticatedPage.getByRole('button', { name: 'Close shift and create Z report' }).click()
   await expect(authenticatedPage.getByRole('dialog', { name: 'Close shift and create Z report' })).toBeVisible()

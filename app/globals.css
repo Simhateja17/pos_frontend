@@ -814,6 +814,14 @@
        broke the receipt's page size. Binding each printable block to its own
        named page keeps them independent. */
     page: label;
+    /* Undo the sr-only clipping (width:1px/height:1px/clip-path/overflow)
+       used to hide this container on screen — otherwise it stays visually
+       clamped to a 1px box even once visibility is toggled back on. */
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
   }
   .label {
     page-break-after: always;

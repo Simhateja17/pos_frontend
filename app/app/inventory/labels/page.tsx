@@ -207,9 +207,9 @@ function LabelsPageContent() {
                   as Code 128 of the SKU instead. Add a manufacturer barcode to the variant to change that.
                 </p>
               )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, max-content)', gap: '24px 48px', alignItems: 'start' }}>
                 {selectedRows.map((row) => (
-                  <div key={row.variant.id} style={{ transform: 'scale(2)', transformOrigin: 'top left', margin: '0 4in 1in 0' }}>
+                  <div key={row.variant.id} style={{ transform: 'scale(2)', transformOrigin: 'top left', width: '2in', height: '1in' }}>
                     <BarcodeLabel
                       sku={row.variant.sku}
                       name={variantDisplayName(row)}

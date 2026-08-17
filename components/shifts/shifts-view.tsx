@@ -27,6 +27,7 @@ type XReport = {
   expectedCash: string
   cashSalesTotal: string
   cardSalesTotal: string
+  upiSalesTotal: string
   checkSalesTotal: string
   refundsTotal: string
   saleCount: number
@@ -424,6 +425,7 @@ function ActiveShift({
     ? [
         { label: 'Cash sales', value: money(report.cashSalesTotal), meta: 'Into this drawer' },
         { label: 'Card sales', value: money(report.cardSalesTotal), meta: 'Not in the drawer' },
+        { label: 'UPI sales', value: money(report.upiSalesTotal), meta: 'Not in the drawer' },
         { label: 'Refunds', value: money(report.refundsTotal), meta: 'Cash paid back out' },
         { label: 'Sales completed', value: String(report.saleCount), meta: 'Bills on this shift' },
       ]
@@ -510,6 +512,7 @@ function ClosedSummary({ report }: { report: ZReport }) {
               { label: 'Expected cash', value: money(report.expectedCash) },
               { label: 'Counted cash', value: money(report.countedCash) },
               { label: 'Cash sales', value: money(report.cashSalesTotal) },
+              { label: 'UPI sales', value: money(report.upiSalesTotal) },
               { label: 'Refunds', value: money(report.refundsTotal) },
             ]}
           />

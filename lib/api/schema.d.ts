@@ -6356,6 +6356,7 @@ export interface components {
             expectedCash: string;
             cashSalesTotal: string;
             cardSalesTotal: string;
+            upiSalesTotal: string;
             checkSalesTotal: string;
             refundsTotal: string;
             saleCount: number;
