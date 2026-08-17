@@ -783,7 +783,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 .label-name {
@@ -822,12 +822,19 @@
     margin: 0;
     overflow: visible;
     clip-path: none;
+    /* Two labels per row */
+    display: grid;
+    grid-template-columns: repeat(2, 2in);
   }
   .label {
+    page-break-inside: avoid;
+  }
+  /* Break after every second label (end of a row), not every label. */
+  .label:nth-child(2n) {
     page-break-after: always;
   }
   @page label {
-    size: 2in 1in;
+    size: 4in 1in;
     margin: 0;
   }
 }
