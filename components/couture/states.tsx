@@ -77,23 +77,45 @@ export function ErrorState({ message, onRetry }: { message: ReactNode; onRetry: 
   )
 }
 
+/**
+ * One shimmering placeholder bar: the single source of the skeleton fill, so
+ * tables, KPI tiles and the app shell all pulse with the same rhythm.
+ * `className="sk"` opts it into the reduced-motion rule in globals.css.
+ */
+export function Sk({
+  w,
+  h = 12,
+  r = 6,
+  style,
+}: {
+  w?: number | string
+  h?: number | string
+  r?: number
+  style?: CSSProperties
+}) {
+  return (
+    <div
+      className="sk"
+      aria-hidden="true"
+      style={{
+        width: w,
+        height: h,
+        borderRadius: r,
+        background: 'linear-gradient(90deg,#F1F3F5 25%,#E9ECEF 37%,#F1F3F5 63%)',
+        backgroundSize: '400% 100%',
+        animation: 'shimmer 1.3s ease-in-out infinite',
+        ...style,
+      }}
+    />
+  )
+}
+
 /** Skeleton rows that keep the table's rhythm while loading. */
 export function LoadingState({ label = 'Loading records', rows = 5 }: { label?: string; rows?: number }) {
   return (
     <div aria-label={label} aria-busy="true" style={{ padding: '14px 16px' }}>
       {Array.from({ length: rows }, (_, i) => (
-        <div
-          key={i}
-          className="sk"
-          style={{
-            height: 42,
-            borderRadius: 9,
-            marginBottom: 8,
-            background: 'linear-gradient(90deg,#F1F3F5 25%,#E9ECEF 37%,#F1F3F5 63%)',
-            backgroundSize: '400% 100%',
-            animation: 'shimmer 1.3s ease-in-out infinite',
-          }}
-        />
+        <Sk key={i} h={42} r={9} style={{ marginBottom: 8 }} />
       ))}
     </div>
   )
@@ -105,15 +127,7 @@ export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
     <div className="kpi-row" style={{ '--kpi-cols': cols } as CSSProperties} aria-busy="true">
       {Array.from({ length: cols }, (_, i) => (
         <div key={i} className="kpi">
-          <div
-            style={{
-              height: 58,
-              borderRadius: 8,
-              background: 'linear-gradient(90deg,#F1F3F5 25%,#E9ECEF 37%,#F1F3F5 63%)',
-              backgroundSize: '400% 100%',
-              animation: 'shimmer 1.3s ease-in-out infinite',
-            }}
-          />
+          <Sk h={58} r={8} />
         </div>
       ))}
     </div>

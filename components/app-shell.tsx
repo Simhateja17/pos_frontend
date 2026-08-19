@@ -28,6 +28,8 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { ACTIVE_STORE_CHANGED_EVENT } from '@/lib/store-context'
 import { GuidedTour } from '@/components/onboarding/guided-tour'
 import { StoreSwitcher } from '@/components/store-switcher'
+import { ShellContentSkeleton, ShellNavSkeleton } from '@/components/app-shell-skeleton'
+import { Sk } from '@/components/couture/states'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -58,7 +60,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const drawerRef = useRef<HTMLElement>(null)
 
   const loadContext = useCallback(async () => {
-    setContext(null)
+    // The previous context is deliberately kept while this refetch is in
+    // flight. Context reloads on every route change, and clearing it first
+    // emptied the role-filtered sidebar and the store pill mid-navigation.
     setContextError(null)
     setIsContextLoading(true)
 
@@ -71,6 +75,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         router.replace('/login')
         return
       }
+      // A failed load has no store to speak for, so the stale one goes.
+      setContext(null)
       setContextError(
         error instanceof AuthenticatedRequestError
           ? error
@@ -221,13 +227,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const roleIsRedirecting = Boolean(
     context?.staff.role && !roleCanAccessAppPath(context.staff.role, pathname),
   )
-  if (deviceGate !== 'ready' || isContextLoading || cashierIsRedirecting || roleIsRedirecting) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--muted)' }}>
-        Opening register…
-      </div>
-    )
-  }
+  /*
+   * Gate the page, not the chrome. The register check and the context load run
+   * again on every route change, so returning a bare "Opening register…" screen
+   * here tore the sidebar and topbar down between pages. The shell now stays
+   * mounted and `<main>` shows a skeleton until the route is cleared to render.
+   */
+  const contentReady =
+    deviceGate === 'ready' && !isContextLoading && !cashierIsRedirecting && !roleIsRedirecting
 
   const navigation = navigationForRole(context?.staff.role)
   const visibleNavItems = navigation.flatMap((group) => group.items)
@@ -275,6 +282,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="sb-nav">
+          {/* The menu is role-filtered, so it stays skeletal until context lands. */}
+          {navigation.length === 0 && !contextError && <ShellNavSkeleton />}
           {navigation.map((group) => (
             <div key={group.label}>
               <div className="sb-group">{group.label}</div>
@@ -307,21 +316,36 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
 
           <div className={`crumb ${styles.crumb}`}>
-            Ambel POS / <b>{current}</b>
+            {/* Without the menu there is no label for this route yet, and the
+                fallback would read "Ambel POS / Ambel POS". */}
+            Ambel POS /{' '}
+            {navigation.length === 0 && !contextError ? (
+              <Sk w={92} h={12} r={5} style={{ display: 'inline-block', verticalAlign: '-1px' }} />
+            ) : (
+              <b>{current}</b>
+            )}
           </div>
 
-          {!isCashier && (
+          {/* Cashiers get no search box, so hold its space rather than render one
+              that would vanish the moment the role arrives. */}
+          {!context ? (
             <div className="search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-              <input
-                placeholder="Search orders, products, customers, suppliers…  or type a command"
-                aria-label="Search"
-              />
-              <span className="kbd">⌘K</span>
+              <Sk h={38} r={10} />
             </div>
+          ) : (
+            !isCashier && (
+              <div className="search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M21 21l-4.3-4.3" />
+                </svg>
+                <input
+                  placeholder="Search orders, products, customers, suppliers…  or type a command"
+                  aria-label="Search"
+                />
+                <span className="kbd">⌘K</span>
+              </div>
+            )
           )}
 
           {/* Pinned to the right edge so the cluster does not shift with the breadcrumb width. */}
@@ -329,12 +353,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className={`store-switch ${styles.storeSwitch}`}>
               {context ? (
                 <StoreSwitcher context={context} />
+              ) : isContextLoading ? (
+                <Sk w={150} h={32} r={9} />
               ) : (
                 <span className="store-pill active" title={storeFull}>{storeFull}</span>
               )}
             </div>
 
-            {!isCashier && <NotificationBell />}
+            {/* Held back until the role is known: the bell polls on mount. */}
+            {context && !isCashier && <NotificationBell />}
 
             <UserMenu
               context={context}
@@ -380,8 +407,10 @@ export function AppShell({ children }: { children: ReactNode }) {
          * is a coachmark (there is deliberately no backdrop), which lets the
          * user open a tour destination and still click/type in its fields.
          */}
-        <GuidedTour />
-        <main className={`content ${styles.content}`}>{children}</main>
+        {contentReady && <GuidedTour />}
+        <main className={`content ${styles.content}`} aria-busy={!contentReady || undefined}>
+          {contentReady ? children : <ShellContentSkeleton />}
+        </main>
       </div>
     </div>
   )
