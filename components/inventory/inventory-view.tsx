@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { Barcode, Boxes, Package, Plus, Upload } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
@@ -50,6 +50,8 @@ type Product = {
   variants: Variant[]
 }
 
+type StockFilter = 'all' | 'low' | 'out'
+
 const LOAD_ERROR = "We couldn't load your current stock. Check your connection and try again."
 const CATALOG_LOAD_ERROR = "Couldn't load your catalog. Check your connection and try again."
 
@@ -90,6 +92,8 @@ export function InventoryView() {
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [stockFilter, setStockFilter] = useState<StockFilter>('all')
+  const exceptionsRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -129,9 +133,26 @@ export function InventoryView() {
     ? `${inventory.uncostedVariants} variant${inventory.uncostedVariants === 1 ? '' : 's'} missing cost basis`
     : 'At moving-average cost'
 
+  const toggleStockFilter = (next: Exclude<StockFilter, 'all'>) => {
+    setStockFilter((current) => (current === next ? 'all' : next))
+    exceptionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const metrics: KpiItem[] = [
-    { label: 'Low Stock', value: loading ? '-' : String(lowStock.length), meta: 'At or below reorder threshold' },
-    { label: 'Out of Stock', value: loading ? '-' : String(critical), meta: critical > 0 ? 'Needs immediate reorder' : 'None currently' },
+    {
+      label: 'Low Stock',
+      value: loading ? '-' : String(lowStock.length),
+      meta: 'At or below reorder threshold',
+      onClick: loading || lowStock.length === 0 ? undefined : () => toggleStockFilter('low'),
+      active: stockFilter === 'low',
+    },
+    {
+      label: 'Out of Stock',
+      value: loading ? '-' : String(critical),
+      meta: critical > 0 ? 'Needs immediate reorder' : 'None currently',
+      onClick: loading || critical === 0 ? undefined : () => toggleStockFilter('out'),
+      active: stockFilter === 'out',
+    },
     {
       label: 'Total SKUs',
       value: catalogLoading ? '-' : String(products.reduce((sum, p) => sum + p.variants.length, 0)),
@@ -153,6 +174,10 @@ export function InventoryView() {
             : uncostedMeta,
     },
   ]
+
+  // 'low' keeps every flagged variant so the table matches the Low Stock tile:
+  // out-of-stock variants are a subset of the ones below their reorder threshold.
+  const exceptions = stockFilter === 'out' ? lowStock.filter((item) => item.quantity === 0) : lowStock
 
   const term = search.trim().toLowerCase()
   const visible = term
@@ -313,51 +338,80 @@ export function InventoryView() {
 
       <ReorderSuggestions />
 
-      <Card>
-        <CardHead
-          title="Low-stock exceptions"
-          sub="Server-calculated variants at or below their reorder threshold"
-        />
-
-        {loading && <LoadingState label="Loading inventory" />}
-        {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
-        {!loading && !error && lowStock.length === 0 && (
-          <EmptyState
-            icon={<Boxes size={24} strokeWidth={1.8} />}
-            title="All stock levels are healthy"
-            body="No variant is at or below its reorder threshold right now."
-          />
-        )}
-
-        {!loading && !error && lowStock.length > 0 && (
-          <DataTable
-            cols={['SKU', 'Product', 'Variant', { label: 'Available', align: 'right' }, { label: 'Reorder at', align: 'right' }, 'Status']}
-            minWidth={760}
-          >
-            {lowStock.map((item) => {
-              const out = item.quantity === 0
-              return (
-                <tr key={item.variantId}>
-                  <td className="t-mono t-strong">{item.sku}</td>
-                  <td>{item.productName}</td>
-                  <td className="t-sub">
-                    {[item.size, item.color, item.material].filter(Boolean).join(' · ') || '-'}
-                  </td>
-                  <td className="num t-strong" style={{ textAlign: 'right' }}>
-                    {item.quantity}
-                  </td>
-                  <td className="num" style={{ textAlign: 'right', color: 'var(--muted)' }}>
-                    {item.reorderThreshold}
-                  </td>
-                  <td>
-                    <span className={`badge ${out ? 'b-red' : 'b-amber'}`}>{out ? 'Out of stock' : 'Low stock'}</span>
-                  </td>
-                </tr>
+      <div ref={exceptionsRef} style={{ scrollMarginTop: 16 }}>
+        <Card>
+          <CardHead
+            title={
+              stockFilter === 'out'
+                ? 'Out-of-stock products'
+                : stockFilter === 'low'
+                  ? 'Low-stock products'
+                  : 'Low-stock exceptions'
+            }
+            sub={
+              stockFilter === 'out'
+                ? 'Variants with nothing left on hand'
+                : stockFilter === 'low'
+                  ? 'Every variant at or below its reorder threshold'
+                  : 'Server-calculated variants at or below their reorder threshold'
+            }
+            right={
+              stockFilter === 'all' ? undefined : (
+                <button type="button" className="btn" onClick={() => setStockFilter('all')}>
+                  Show all
+                </button>
               )
-            })}
-          </DataTable>
-        )}
-      </Card>
+            }
+          />
+
+          {loading && <LoadingState label="Loading inventory" />}
+          {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
+          {!loading && !error && lowStock.length === 0 && (
+            <EmptyState
+              icon={<Boxes size={24} strokeWidth={1.8} />}
+              title="All stock levels are healthy"
+              body="No variant is at or below its reorder threshold right now."
+            />
+          )}
+
+          {!loading && !error && lowStock.length > 0 && exceptions.length === 0 && (
+            <EmptyState
+              icon={<Boxes size={24} strokeWidth={1.8} />}
+              title="Nothing is out of stock"
+              body="Every variant below its reorder threshold still has stock on hand."
+            />
+          )}
+
+          {!loading && !error && exceptions.length > 0 && (
+            <DataTable
+              cols={['SKU', 'Product', 'Variant', { label: 'Available', align: 'right' }, { label: 'Reorder at', align: 'right' }, 'Status']}
+              minWidth={760}
+            >
+              {exceptions.map((item) => {
+                const out = item.quantity === 0
+                return (
+                  <tr key={item.variantId}>
+                    <td className="t-mono t-strong">{item.sku}</td>
+                    <td>{item.productName}</td>
+                    <td className="t-sub">
+                      {[item.size, item.color, item.material].filter(Boolean).join(' · ') || '-'}
+                    </td>
+                    <td className="num t-strong" style={{ textAlign: 'right' }}>
+                      {item.quantity}
+                    </td>
+                    <td className="num" style={{ textAlign: 'right', color: 'var(--muted)' }}>
+                      {item.reorderThreshold}
+                    </td>
+                    <td>
+                      <span className={`badge ${out ? 'b-red' : 'b-amber'}`}>{out ? 'Out of stock' : 'Low stock'}</span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </DataTable>
+          )}
+        </Card>
+      </div>
     </>
   )
 }

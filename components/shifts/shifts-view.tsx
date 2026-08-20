@@ -56,7 +56,12 @@ type ShiftHistoryEntry = {
   terminalName: string | null
 }
 const LOAD_ERROR = "We couldn't load this shift. Check your connection and try again."
-const money = (value: string) => `₹${Number(value).toFixed(2)}`
+// A total the API has not sent yet (an older backend without UPI, say) must
+// read as ₹0.00, never ₹NaN.
+const money = (value: string) => {
+  const amount = Number(value)
+  return `₹${(Number.isFinite(amount) ? amount : 0).toFixed(2)}`
+}
 const stamp = (value: string) =>
   new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -84,6 +89,7 @@ export function ShiftsView() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openError, setOpenError] = useState<string | null>(null)
+  const [closeError, setCloseError] = useState<string | null>(null)
   const [closeOpen, setCloseOpen] = useState(false)
 
   const activeShift = currentTerminal
@@ -187,11 +193,39 @@ export function ShiftsView() {
     await load()
   }
 
+  // The drawer count is the one field the server cannot guess, so it is
+  // validated here rather than by disabling the button: a dead button gives
+  // the cashier nothing to act on.
+  function invalidCount() {
+    const counted = countedCash.trim()
+    if (!counted) return 'Enter the counted cash before closing. Enter ₹0 if the drawer is empty.'
+    if (!Number.isFinite(Number(counted)) || Number(counted) < 0)
+      return 'Enter a valid counted cash amount of ₹0 or more.'
+    return null
+  }
+
+  function requestClose() {
+    const problem = invalidCount()
+    if (problem) {
+      setCloseError(problem)
+      return
+    }
+    setCloseError(null)
+    setCloseOpen(true)
+  }
+
   async function closeShift() {
-    if (!activeShift || !countedCash || Number(countedCash) < 0) return
+    if (!activeShift) return
+    const problem = invalidCount()
+    if (problem) {
+      setCloseError(problem)
+      setCloseOpen(false)
+      return
+    }
 
     setBusy(true)
     setError(null)
+    setCloseError(null)
     const result = await apiClient.POST('/shifts/{shiftId}/close', {
       params: { path: { shiftId: activeShift.id } },
       body: { countedCash: Number(countedCash).toFixed(2) },
@@ -200,7 +234,10 @@ export function ShiftsView() {
     setBusy(false)
 
     if (result.error || !result.data) {
-      setError((result.error as { error?: string } | undefined)?.error ?? LOAD_ERROR)
+      // Keep the reason beside the close form: the cashier is at the bottom of
+      // the page and would never see a banner at the top.
+      setCloseError((result.error as { error?: string } | undefined)?.error ?? LOAD_ERROR)
+      setCloseOpen(false)
       return
     }
 
@@ -248,9 +285,13 @@ export function ShiftsView() {
               shift={activeShift}
               report={report}
               countedCash={countedCash}
-              onCountedCash={setCountedCash}
-              onRequestClose={() => setCloseOpen(true)}
+              onCountedCash={(value) => {
+                setCountedCash(value)
+                if (closeError) setCloseError(null)
+              }}
+              onRequestClose={requestClose}
               busy={busy}
+              error={closeError}
             />
           ) : (
             <OpenRegister
@@ -413,6 +454,7 @@ function ActiveShift({
   onCountedCash,
   onRequestClose,
   busy,
+  error,
 }: {
   shift: ShiftHistoryEntry
   report: XReport | null
@@ -420,6 +462,7 @@ function ActiveShift({
   onCountedCash: (value: string) => void
   onRequestClose: () => void
   busy: boolean
+  error: string | null
 }) {
   const metrics: KpiItem[] = report
     ? [
@@ -468,10 +511,17 @@ function ActiveShift({
               id="counted-cash"
               inputMode="decimal"
               placeholder="₹0.00"
+              aria-invalid={Boolean(error)}
               value={countedCash}
               onChange={(e) => onCountedCash(e.target.value)}
             />
           </Fld>
+
+          {error && (
+            <div role="alert" style={{ marginBottom: 10, fontSize: 13, color: 'var(--danger)' }}>
+              {error}
+            </div>
+          )}
 
           {report && countedCash !== '' && (
             <p className="t-sub" style={{ fontSize: 12.5 }}>
@@ -483,7 +533,7 @@ function ActiveShift({
           <button
             className="btn btn-pri"
             style={{ marginTop: 6 }}
-            disabled={!countedCash || !report || busy}
+            disabled={!report || busy}
             onClick={onRequestClose}
           >
             Close shift and create Z report
@@ -507,11 +557,12 @@ function ClosedSummary({ report }: { report: ZReport }) {
         />
         <div style={{ marginTop: 16 }}>
           <KpiRow
-            cols={4}
+            cols={3}
             items={[
               { label: 'Expected cash', value: money(report.expectedCash) },
               { label: 'Counted cash', value: money(report.countedCash) },
               { label: 'Cash sales', value: money(report.cashSalesTotal) },
+              { label: 'Card sales', value: money(report.cardSalesTotal) },
               { label: 'UPI sales', value: money(report.upiSalesTotal) },
               { label: 'Refunds', value: money(report.refundsTotal) },
             ]}

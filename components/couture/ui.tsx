@@ -42,6 +42,10 @@ export type KpiItem = {
   flag?: FlagKind
   /** Optional drill-through destination. When set, the tile renders as a link. */
   href?: string
+  /** In-page drill-through. When set, the tile renders as a button. */
+  onClick?: () => void
+  /** Marks a clickable tile as the one currently driving the view below it. */
+  active?: boolean
 }
 
 /**
@@ -65,16 +69,33 @@ export function KpiRow({ items, cols }: { items: KpiItem[]; cols?: number }) {
             <div className="km">{k.meta ?? ''}</div>
           </>
         )
-        return k.href ? (
-          <Link
-            key={k.label}
-            href={k.href}
-            className={`kpi ${k.lead ? 'lead' : ''}`}
-            style={{ display: 'block', color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}
-          >
-            {body}
-          </Link>
-        ) : (
+        if (k.href) {
+          return (
+            <Link
+              key={k.label}
+              href={k.href}
+              className={`kpi ${k.lead ? 'lead' : ''}`}
+              style={{ display: 'block', color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}
+            >
+              {body}
+            </Link>
+          )
+        }
+        if (k.onClick) {
+          return (
+            <button
+              key={k.label}
+              type="button"
+              onClick={k.onClick}
+              aria-pressed={k.active ?? false}
+              className={`kpi ${k.lead ? 'lead' : ''} ${k.active ? 'is-active' : ''}`}
+              style={{ display: 'block', width: '100%', textAlign: 'left', font: 'inherit', color: 'inherit', cursor: 'pointer' }}
+            >
+              {body}
+            </button>
+          )
+        }
+        return (
           <div key={k.label} className={`kpi ${k.lead ? 'lead' : ''}`}>
             {body}
           </div>
