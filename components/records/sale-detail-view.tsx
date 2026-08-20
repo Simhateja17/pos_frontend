@@ -93,7 +93,7 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
           {sale.lines.length === 0 ? (
             <EmptyState title="No line items recorded" body="This bill has no persisted line items." />
           ) : (
-            <DataTable cols={['Variant', 'Qty', 'Unit price', 'Discount', 'Taxable', { label: 'Line total', align: 'right' }]} minWidth={720}>
+            <DataTable cols={['Variant', 'Qty', 'Unit price', 'Discount', 'Taxable', 'Line total']} minWidth={720}>
               {sale.lines.map((line) => (
                 <tr key={line.id}>
                   <td className="t-mono t-sub" title={line.variantId}>{line.variantId}</td>
@@ -101,7 +101,7 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
                   <td className="num">{money.format(Number(line.unitPrice))}</td>
                   <td className="num">{Number(line.discountAmount) > 0 ? `−${money.format(Number(line.discountAmount))}` : '-'}</td>
                   <td>{line.isTaxable ? 'Yes' : 'No'}</td>
-                  <td className="num t-strong" style={{ textAlign: 'right' }}>{money.format(Number(line.lineTotal))}</td>
+                  <td className="num t-strong">{money.format(Number(line.lineTotal))}</td>
                 </tr>
               ))}
             </DataTable>
@@ -113,13 +113,13 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
           {sale.payments.length === 0 ? (
             <EmptyState title="No payments recorded" body="The server returned no payment rows for this sale." />
           ) : (
-            <DataTable cols={['Method', 'Direction', 'Reference', { label: 'Amount', align: 'right' }]} minWidth={520}>
+            <DataTable cols={['Method', 'Direction', 'Reference', 'Amount']} minWidth={520}>
               {sale.payments.map((payment) => (
                 <tr key={payment.id}>
                   <td>{PAYMENT_LABELS[payment.method]}</td>
                   <td><Badge tone={payment.direction === 'refund' ? 'blue' : 'green'}>{payment.direction}</Badge></td>
                   <td className="t-mono t-sub">{payment.referenceCode ?? '-'}</td>
-                  <td className="num t-strong" style={{ textAlign: 'right' }}>{money.format(Number(payment.amount))}</td>
+                  <td className="num t-strong">{money.format(Number(payment.amount))}</td>
                 </tr>
               ))}
             </DataTable>
