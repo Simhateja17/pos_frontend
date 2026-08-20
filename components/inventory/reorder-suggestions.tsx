@@ -238,9 +238,9 @@ export function ReorderSuggestions() {
             '',
             'SKU',
             'Product',
-            { label: 'In stock', align: 'right' },
-            { label: 'On order', align: 'right' },
-            { label: 'Suggested', align: 'right' },
+            'In stock',
+            'On order',
+            'Suggested',
             'Basis',
             '',
           ]}
@@ -259,13 +259,13 @@ export function ReorderSuggestions() {
                 </td>
                 <td className="t-mono t-strong">{s.sku}</td>
                 <td>{s.productName}</td>
-                <td className="num" style={{ textAlign: 'right' }}>
+                <td className="num">
                   {s.reason.currentStock}
                 </td>
-                <td className="num t-sub" style={{ textAlign: 'right' }}>
+                <td className="num t-sub">
                   {s.reason.onOrder}
                 </td>
-                <td className="num t-strong" style={{ textAlign: 'right' }}>
+                <td className="num t-strong">
                   {s.suggestedQuantity}
                 </td>
                 <td>
@@ -276,7 +276,7 @@ export function ReorderSuggestions() {
                     </Badge>
                   </div>
                 </td>
-                <td style={{ textAlign: 'right' }}>
+                <td>
                   <button className="btn btn-sm" onClick={() => setExpanded((prev) => toggle(prev, s.id))}>
                     {expanded.has(s.id) ? 'Hide why' : 'Why?'}
                   </button>

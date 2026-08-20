@@ -183,8 +183,8 @@
 }
 
 .lines th {
-  color: var(--muted-2);
-  font-size: 9px;
+  color: var(--label-ink);
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: .06em;
   text-transform: uppercase;

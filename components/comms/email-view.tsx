@@ -223,7 +223,7 @@ export function EmailView() {
                     </td>
                     <td className="t-sub">{entry.detail ?? '-'}</td>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td>
                       <button
                         className="btn btn-sm btn-ghost"
                         type="button"

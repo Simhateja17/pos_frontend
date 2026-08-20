@@ -255,7 +255,7 @@ export function InventoryView() {
 
         {!catalogLoading && !catalogError && visible.length > 0 && (
           <DataTable
-            cols={['Product / Variant', 'SKU', 'Barcode', { label: 'Price', align: 'right' }, { label: 'Stock', align: 'right' }]}
+            cols={['Product / Variant', 'SKU', 'Barcode', 'Price', 'Stock']}
             minWidth={860}
           >
             {visible.map((product) => {
@@ -294,10 +294,10 @@ export function InventoryView() {
                       </div>
                     </td>
                     <td className="t-sub t-mono">{firstVariant.barcode ?? '-'}</td>
-                    <td className="num" style={{ textAlign: 'right' }}>
+                    <td className="num">
                       {priceLabel(firstVariant.price, firstVariant.unitOfMeasure)}
                     </td>
-                    <td className="num" style={{ textAlign: 'right' }}>
+                    <td className="num">
                       {firstVariant.currentStock}
                       {unitSuffix(firstVariant.unitOfMeasure) ? ` ${unitSuffix(firstVariant.unitOfMeasure)}` : ''}
                     </td>
@@ -307,7 +307,7 @@ export function InventoryView() {
                       <td style={{ paddingLeft: 28 }}>
                         <Link
                           href={`/app/inventory/catalog/${variant.id}`}
-                          className="t-sub"
+                          className="t-nested"
                           style={{ textDecoration: 'none' }}
                         >
                           {variantAttributes(variant)}
@@ -320,10 +320,10 @@ export function InventoryView() {
                         </div>
                       </td>
                       <td className="t-sub t-mono">{variant.barcode ?? '-'}</td>
-                      <td className="num" style={{ textAlign: 'right' }}>
+                      <td className="num">
                         {priceLabel(variant.price, variant.unitOfMeasure)}
                       </td>
-                      <td className="num" style={{ textAlign: 'right' }}>
+                      <td className="num">
                         {variant.currentStock}
                         {unitSuffix(variant.unitOfMeasure) ? ` ${unitSuffix(variant.unitOfMeasure)}` : ''}
                       </td>
@@ -384,7 +384,7 @@ export function InventoryView() {
 
           {!loading && !error && exceptions.length > 0 && (
             <DataTable
-              cols={['SKU', 'Product', 'Variant', { label: 'Available', align: 'right' }, { label: 'Reorder at', align: 'right' }, 'Status']}
+              cols={['SKU', 'Product', 'Variant', 'Available', 'Reorder at', 'Status']}
               minWidth={760}
             >
               {exceptions.map((item) => {
@@ -396,10 +396,10 @@ export function InventoryView() {
                     <td className="t-sub">
                       {[item.size, item.color, item.material].filter(Boolean).join(' · ') || '-'}
                     </td>
-                    <td className="num t-strong" style={{ textAlign: 'right' }}>
+                    <td className="num t-strong">
                       {item.quantity}
                     </td>
-                    <td className="num" style={{ textAlign: 'right', color: 'var(--muted)' }}>
+                    <td className="num" style={{ color: 'var(--muted)' }}>
                       {item.reorderThreshold}
                     </td>
                     <td>

@@ -13,11 +13,12 @@ import {
   type StockTransfer,
   type TransferDestination,
 } from '@/lib/api/authenticated-client'
-import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
+import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 
 export function TransfersView() {
   const [transfers, setTransfers] = useState<StockTransfer[]>([])
+  const [search, setSearch] = useState('')
   const [destinations, setDestinations] = useState<TransferDestination[]>([])
   const [activeStoreId, setActiveStoreId] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
@@ -110,6 +111,15 @@ export function TransfersView() {
     }
   }
 
+  const term = search.trim().toLowerCase()
+  const visible = transfers.filter((transfer) =>
+    term
+      ? [transfer.fromStoreName, transfer.toStoreName, transfer.status, ...transfer.lines.map((line) => line.sku)].some(
+          (field) => (field ?? '').toLowerCase().includes(term),
+        )
+      : true,
+  )
+
   return (
     <>
       <PageHead
@@ -118,19 +128,24 @@ export function TransfersView() {
         actions={<button className="btn btn-pri" onClick={() => setCreateOpen(true)}><Plus size={15} /> Send stock</button>}
       />
       <Card>
-        <CardHead title="Transfer history" sub={`${transfers.length} transfer${transfers.length === 1 ? '' : 's'}`} />
+        <CardHead
+          title="Transfer history"
+          sub={term ? `${visible.length} shown` : `${transfers.length} transfer${transfers.length === 1 ? '' : 's'}`}
+          right={transfers.length > 0 ? <SearchField value={search} onChange={setSearch} placeholder="Search by shop, SKU or status…" ariaLabel="Search transfers" width={250} /> : undefined}
+        />
         {loading && <LoadingState label="Loading transfers" />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && transfers.length === 0 && <EmptyState title="No transfers yet" body="Send stock to another active shop when it physically leaves this one." />}
-        {!loading && transfers.length > 0 && (
-          <DataTable cols={['Route', 'Sent', 'Status', 'Quantities', { label: '', align: 'right' }]} minWidth={760}>
-            {transfers.map((transfer) => (
+        {!loading && !error && transfers.length > 0 && visible.length === 0 && <EmptyState title="No transfers match this search" body="Check the spelling, or clear the search to see every transfer." />}
+        {!loading && visible.length > 0 && (
+          <DataTable cols={['Route', 'Sent', 'Status', 'Quantities', '']} minWidth={760}>
+            {visible.map((transfer) => (
               <tr key={transfer.id}>
                 <td className="t-strong">{transfer.fromStoreName} <ArrowRight size={13} style={{ verticalAlign: 'middle' }} /> {transfer.toStoreName}</td>
                 <td>{new Date(transfer.sentAt).toLocaleString()}</td>
                 <td><Badge tone={transfer.status === 'received' ? 'green' : 'amber'}>{transfer.status}</Badge></td>
                 <td>{transfer.lines.map((line) => `${line.sku}: ${line.quantitySent}${line.quantityReceived === null ? '' : ` → ${line.quantityReceived}`}`).join(', ')}</td>
-                <td style={{ textAlign: 'right' }}>
+                <td>
                   {transfer.status === 'sent' && transfer.toStoreId === activeStoreId ? <button className="btn btn-sm" onClick={() => openReceive(transfer)}>Receive</button> : null}
                 </td>
               </tr>

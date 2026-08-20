@@ -11,7 +11,7 @@
  * what caused the visual drift from the approved design in the first place.
  */
 import Link from 'next/link'
-import { Children, cloneElement, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from 'react'
+import { type CSSProperties, type ReactNode } from 'react'
 
 /* ---------- page head ---------- */
 
@@ -251,49 +251,32 @@ export function DataTable({
   cols,
   children,
   minWidth,
-  headerAlign,
 }: {
-  cols: readonly (string | { label: string; align?: 'right' | 'center' })[]
+  cols: readonly string[]
   children: ReactNode
   minWidth?: number
-  /** Override the alignment of every column heading for a cohesive table. */
-  headerAlign?: 'left' | 'center' | 'right'
 }) {
-  const aligns = cols.map((c) => headerAlign ?? (typeof c === 'string' ? undefined : c.align))
-
+  /*
+   * Every cell is left-aligned. Columns used to opt into `align: 'right'` for
+   * money and `headerAlign` for headings, which drifted per page: the same
+   * kind of column read centred on Customers, right on Orders. Alignment is
+   * no longer a per-call decision, so a new table cannot reintroduce the
+   * mismatch. Cells keep `.num` for tabular figures.
+   */
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={minWidth ? { minWidth } : undefined}>
         <thead>
           <tr>
-            {cols.map((c, i) => {
-              const label = typeof c === 'string' ? c : c.label
-              return (
-                <th key={`${label}-${i}`} style={aligns[i] ? { textAlign: aligns[i] } : undefined}>
-                  {label}
-                </th>
-              )
-            })}
+            {cols.map((label, i) => (
+              <th key={`${label}-${i}`}>{label}</th>
+            ))}
           </tr>
         </thead>
-        <tbody>{alignRows(children, aligns)}</tbody>
+        <tbody>{children}</tbody>
       </table>
     </div>
   )
-}
-
-function alignRows(rows: ReactNode, aligns: ((CSSProperties['textAlign']) | undefined)[]) {
-  return Children.map(rows, (row) => {
-    if (!isValidElement(row) || row.type !== 'tr') return row
-    const rowEl = row as ReactElement<{ children?: ReactNode }>
-    const cells = Children.map(rowEl.props.children, (cell, i) => {
-      const align = aligns[i]
-      if (!align || !isValidElement(cell)) return cell
-      const cellEl = cell as ReactElement<{ style?: CSSProperties }>
-      return cloneElement(cellEl, { style: { textAlign: align, ...cellEl.props.style } })
-    })
-    return cloneElement(rowEl, undefined, cells)
-  })
 }
 
 /* ---------- list rows ---------- */

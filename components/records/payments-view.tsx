@@ -107,7 +107,7 @@ export function PaymentsView() {
         )}
 
         {!loading && !error && data && data.items.length > 0 && (
-          <DataTable cols={['Payment', 'Bill', 'Method', 'Time', 'Status', { label: 'Amount', align: 'right' }]} minWidth={820}>
+          <DataTable cols={['Payment', 'Bill', 'Method', 'Time', 'Status', 'Amount']} minWidth={820}>
             {data.items.map((payment) => (
               <tr key={payment.id}>
                 <td className="t-mono t-strong">{payment.id.slice(0, 8).toUpperCase()}</td>
@@ -119,7 +119,7 @@ export function PaymentsView() {
                     {payment.direction === 'refund' ? 'Refunded' : 'Collected'}
                   </span>
                 </td>
-                <td className="num t-strong" style={{ textAlign: 'right' }}>
+                <td className="num t-strong">
                   {money.format(Number(payment.amount))}
                 </td>
               </tr>

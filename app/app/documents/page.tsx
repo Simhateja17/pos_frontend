@@ -144,7 +144,7 @@ function DocumentsPageInner() {
         ) : null}
         {!isLoading && !error && visibleDocuments.length > 0 ? (
           <CardPad style={{ paddingTop: 0 }}>
-            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', { label: 'Total', align: 'right' }]} minWidth={780}>
+            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', 'Total']} minWidth={780}>
               {visibleDocuments.map((document) => (
                 <tr key={document.id}>
                   <td>
@@ -157,7 +157,7 @@ function DocumentsPageInner() {
                   <td>{new Date(document.documentDate).toLocaleDateString('en-IN')}</td>
                   <td>{document.financialYear}</td>
                   <td>{buyerName(document)}</td>
-                  <td style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal)}</td>
+                  <td style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal)}</td>
                 </tr>
               ))}
             </DataTable>

@@ -319,7 +319,7 @@ export function ShiftsView() {
                 right={<Badge tone="amber">{openShifts.length} open</Badge>}
               />
               <DataTable
-                cols={['Counter', 'Cashier', 'Opened', { label: 'Opening cash', align: 'right' }]}
+                cols={['Counter', 'Cashier', 'Opened', 'Opening cash']}
                 minWidth={620}
               >
                 {openShifts.map((shift) => (
@@ -591,13 +591,13 @@ function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
       ) : (
         <DataTable
           cols={[
-            { label: 'Counter', align: 'center' },
-            { label: 'Cashier', align: 'center' },
-            { label: 'Opened', align: 'center' },
-            { label: 'Closed', align: 'center' },
-            { label: 'Expected', align: 'center' },
-            { label: 'Counted', align: 'center' },
-            { label: 'Variance', align: 'center' },
+            'Counter',
+            'Cashier',
+            'Opened',
+            'Closed',
+            'Expected',
+            'Counted',
+            'Variance',
           ]}
           minWidth={900}
         >
@@ -614,7 +614,7 @@ function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
                 <td className="t-sub">{shift.closedAt ? stamp(shift.closedAt) : '-'}</td>
                 <td className="num">{money(String(expected))}</td>
                 <td className="num">{money(shift.countedCash ?? '0')}</td>
-                <td className="num" style={{ textAlign: 'right' }}>
+                <td className="num">
                   <Badge tone={varianceValue === 0 ? 'green' : Math.abs(varianceValue) < 1 ? 'amber' : 'red'}>
                     {money(shift.variance ?? '0')}
                   </Badge>
