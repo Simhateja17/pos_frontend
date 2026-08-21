@@ -222,7 +222,7 @@ export function StoresView() {
         )}
 
         {!loading && !error && visible.length > 0 && (
-          <DataTable cols={['Store', 'Address', 'Status', { label: '', align: 'right' }]} minWidth={720}>
+          <DataTable cols={['Store', 'Address', 'Status', '']} minWidth={720}>
             {visible.map((store) => (
               <tr key={store.id}>
                 <td className="t-strong">
@@ -256,7 +256,7 @@ export function StoresView() {
                     <Badge tone="grey">Inactive</Badge>
                   )}
                 </td>
-                <td style={{ textAlign: 'right' }}>
+                <td>
                   <button className="btn btn-sm" onClick={() => openEdit(store)} style={{ marginRight: 8 }}>
                     Edit
                   </button>

@@ -517,7 +517,7 @@ function ReturnsPageInner() {
             sub={taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : isLoadingTaxInvoice ? 'Loading Tax Invoice…' : `Bill ${sale.id}`}
           />
             <CardPad>
-              <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', { label: 'Estimated refund incl. GST', align: 'right' }]}>
+              <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', 'Estimated refund incl. GST']}>
                 {sale.lines.map((line) => {
                   const quantity = quantities[line.id] ?? 0
                   return (
@@ -555,7 +555,7 @@ function ReturnsPageInner() {
                           onChange={(event) => updateQuantity(line.id, line.quantity, Number(event.target.value))}
                         />
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td>
                         ₹{money((Number(line.lineTotal) / line.quantity) * quantity)}
                       </td>
                     </tr>

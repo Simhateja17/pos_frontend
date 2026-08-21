@@ -9,7 +9,7 @@ import {
   getAuthenticatedSuppliers,
   updateAuthenticatedSupplier,
 } from '@/lib/api/authenticated-client'
-import { Badge, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, Tabs } from '@/components/couture/ui'
+import { Badge, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
 
 type FilterTab = 'all' | 'active' | 'inactive'
@@ -35,6 +35,7 @@ export function SuppliersView() {
   const router = useRouter()
   const [suppliers, setSuppliers] = useState<Supplier[] | null>(null)
   const [filter, setFilter] = useState<FilterTab>('all')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -130,9 +131,18 @@ export function SuppliersView() {
     }
   }
 
-  const visible = (suppliers ?? []).filter((s) =>
-    filter === 'all' ? true : filter === 'active' ? s.isActive : !s.isActive,
-  )
+  // Suppliers arrive as one full list, so the search runs client-side over the
+  // fields an owner would type from memory: vendor name, contact and phone.
+  const term = search.trim().toLowerCase()
+  const visible = (suppliers ?? [])
+    .filter((s) => (filter === 'all' ? true : filter === 'active' ? s.isActive : !s.isActive))
+    .filter((s) =>
+      term
+        ? [s.name, s.contactName, s.phone, s.email].some((field) =>
+            (field ?? '').toLowerCase().includes(term),
+          )
+        : true,
+    )
 
   const activeCount = (suppliers ?? []).filter((s) => s.isActive).length
   // Average lead time is computed over ACTIVE suppliers only: an inactive
@@ -183,7 +193,18 @@ export function SuppliersView() {
         <CardHead
           title="Vendor directory"
           sub={suppliers ? `${visible.length} shown` : 'Loading…'}
-          right={<Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter suppliers" />}
+          right={
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                placeholder="Search by name, contact or phone…"
+                ariaLabel="Search suppliers"
+                width={240}
+              />
+              <Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter suppliers" />
+            </div>
+          }
         />
 
         {loading && <LoadingState label="Loading suppliers" />}
@@ -191,10 +212,16 @@ export function SuppliersView() {
         {!loading && !error && visible.length === 0 && (
           <EmptyState
             icon={<Truck size={24} strokeWidth={1.8} />}
-            title={filter === 'all' ? 'No suppliers yet' : 'No suppliers match this filter'}
+            title={
+              term
+                ? 'No suppliers match this search'
+                : filter === 'all'
+                  ? 'No suppliers yet'
+                  : 'No suppliers match this filter'
+            }
             body="Add the vendors you buy stock from. Their lead time feeds the reorder suggestions on the Inventory screen."
             action={
-              filter === 'all' ? (
+              filter === 'all' && !term ? (
                 <button className="btn btn-pri" onClick={openCreate}>
                   <Plus size={15} /> Add supplier
                 </button>
@@ -205,7 +232,7 @@ export function SuppliersView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['Supplier', 'Contact', 'Lead time', 'Terms', 'Status', { label: '', align: 'right' }]}
+            cols={['Supplier', 'Contact', 'Lead time', 'Terms', 'Status', '']}
             minWidth={780}
           >
             {visible.map((supplier) => (

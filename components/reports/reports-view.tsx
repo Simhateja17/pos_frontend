@@ -208,18 +208,12 @@ export function ReportsView() {
               </CardPad>
             ) : (
               <DataTable
-                cols={report.columns.map((column) => ({
-                  label: column.label,
-                  align: column.align === 'right' ? ('right' as const) : undefined,
-                }))}
+                cols={report.columns.map((column) => column.label)}
               >
                 {report.rows.map((row, index) => (
                   <tr key={index}>
                     {report.columns.map((column) => (
-                      <td
-                        key={column.key}
-                        style={column.align === 'right' ? { textAlign: 'right' } : undefined}
-                      >
+                      <td key={column.key}>
                         {cell(row[column.key] ?? null, column.money)}
                       </td>
                     ))}
@@ -228,10 +222,7 @@ export function ReportsView() {
                 {report.totals && (
                   <tr style={{ fontWeight: 600 }}>
                     {report.columns.map((column) => (
-                      <td
-                        key={column.key}
-                        style={column.align === 'right' ? { textAlign: 'right' } : undefined}
-                      >
+                      <td key={column.key}>
                         {report.totals?.[column.key] === undefined
                           ? ''
                           : cell(report.totals[column.key] ?? null, column.money)}

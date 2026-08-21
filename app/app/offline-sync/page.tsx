@@ -118,14 +118,14 @@ export default function OfflineSyncPage() {
         {pending.length === 0 ? (
           <EmptyState title="Nothing queued" body="Sales taken while offline appear here until the server confirms them." />
         ) : (
-          <DataTable cols={['Bill', 'Taken', 'Attempts', 'Last issue', { label: 'Quoted', align: 'right' }, 'Status']} minWidth={780}>
+          <DataTable cols={['Bill', 'Taken', 'Attempts', 'Last issue', 'Quoted', 'Status']} minWidth={780}>
             {pending.map((e) => (
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
                 <td className="num">{e.attempts}</td>
                 <td className="t-sub">{e.lastError ?? '-'}</td>
-                <td className="num t-strong" style={{ textAlign: 'right' }}>{inr.format(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{inr.format(Number(e.estimatedTotal))}</td>
                 <td>
                   <span className={`badge ${e.status === 'sending' ? 'b-blue' : 'b-amber'}`}>
                     {e.status === 'sending' ? 'Sending' : 'Pending'}
@@ -144,14 +144,14 @@ export default function OfflineSyncPage() {
             sub="The server rejected these. They are kept, never discarded automatically."
             right={<span className="badge b-red">{dead.length}</span>}
           />
-          <DataTable cols={['Bill', 'Taken', 'Reason', { label: 'Quoted', align: 'right' }, '']} minWidth={780}>
+          <DataTable cols={['Bill', 'Taken', 'Reason', 'Quoted', '']} minWidth={780}>
             {dead.map((e) => (
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
                 <td className="t-sub">{e.lastError ?? 'Rejected'}</td>
-                <td className="num t-strong" style={{ textAlign: 'right' }}>{inr.format(Number(e.estimatedTotal))}</td>
-                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                <td className="num t-strong">{inr.format(Number(e.estimatedTotal))}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>
                   <button
                     className="btn btn-sm"
                     onClick={async () => {
@@ -189,13 +189,13 @@ export default function OfflineSyncPage() {
             sub="The server's confirmed total differed from the amount quoted offline"
             right={<span className="badge b-amber">{divergent.length}</span>}
           />
-          <DataTable cols={['Bill', 'Synced', { label: 'Quoted', align: 'right' }, { label: 'Confirmed', align: 'right' }, 'Sale']}>
+          <DataTable cols={['Bill', 'Synced', 'Quoted', 'Confirmed', 'Sale']}>
             {divergent.map((e) => (
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.at))}</td>
-                <td className="num" style={{ textAlign: 'right' }}>{inr.format(Number(e.estimatedTotal))}</td>
-                <td className="num t-strong" style={{ textAlign: 'right' }}>{inr.format(Number(e.confirmedTotal))}</td>
+                <td className="num">{inr.format(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{inr.format(Number(e.confirmedTotal))}</td>
                 <td>
                   {e.saleId ? (
                     <Link className="btn btn-sm" href={`/app/orders?search=${encodeURIComponent(e.saleId)}`}>

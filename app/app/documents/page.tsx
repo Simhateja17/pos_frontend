@@ -11,7 +11,7 @@ import {
   type TaxDocumentListQuery,
   type TaxDocumentSummary,
 } from '@/lib/api/authenticated-client'
-import { Card, CardHead, CardPad, DataTable, PageHead, Tabs } from '@/components/couture/ui'
+import { Card, CardHead, CardPad, DataTable, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { TaxDocumentView } from '@/components/documents/tax-document-view'
 
@@ -32,10 +32,27 @@ function documentLabel(document: TaxDocumentSummary): string {
   return document.documentType === 'credit_note' ? 'Credit note' : 'Tax invoice'
 }
 
+function buyerName(document: TaxDocumentSummary): string {
+  return document.buyer?.legalName ?? document.buyer?.tradeName ?? 'Walk-in customer'
+}
+
+/**
+ * The list endpoint filters only by exact document number or customer id, so the
+ * free-text search runs over the documents already loaded on this page.
+ */
+function matchesDocument(document: TaxDocumentSummary, query: string): boolean {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return true
+  return [documentLabel(document), buyerName(document), document.documentNumber, document.financialYear, document.grandTotal]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => value.toLowerCase().includes(needle))
+}
+
 function DocumentsPageInner() {
   const searchParams = useSearchParams()
   const saleId = searchParams.get('saleId')
   const [filter, setFilter] = useState<DocumentFilter>('all')
+  const [search, setSearch] = useState('')
   const [documents, setDocuments] = useState<TaxDocumentSummary[]>([])
   const [selected, setSelected] = useState<TaxDocument | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -68,6 +85,8 @@ function DocumentsPageInner() {
     void load()
   }, [load])
 
+  const visibleDocuments = documents.filter((document) => matchesDocument(document, search))
+
   if (saleId) {
     return (
       <>
@@ -93,6 +112,15 @@ function DocumentsPageInner() {
         <CardHead
           title="Document register"
           sub="Numbers, tax values, and payment modes come from the stored document snapshot."
+          right={
+            <SearchField
+              value={search}
+              onChange={setSearch}
+              placeholder="Search customer or document no…"
+              ariaLabel="Search GST documents"
+              width={260}
+            />
+          }
         />
         <CardPad>
           <Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter GST documents" disabled={isLoading} />
@@ -107,10 +135,17 @@ function DocumentsPageInner() {
             action={<Link className="btn btn-pri" href="/app/billing">Open billing</Link>}
           />
         ) : null}
-        {!isLoading && !error && documents.length > 0 ? (
+        {!isLoading && !error && documents.length > 0 && visibleDocuments.length === 0 ? (
+          <EmptyState
+            icon={<ReceiptText size={24} strokeWidth={1.8} />}
+            title="No documents match this search"
+            body="Only the documents loaded here are searched. Clear the search or switch tabs to look further back."
+          />
+        ) : null}
+        {!isLoading && !error && visibleDocuments.length > 0 ? (
           <CardPad style={{ paddingTop: 0 }}>
-            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', { label: 'Total', align: 'right' }]} minWidth={780}>
-              {documents.map((document) => (
+            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', 'Total']} minWidth={780}>
+              {visibleDocuments.map((document) => (
                 <tr key={document.id}>
                   <td>
                     <Link href={`/app/documents/${document.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 700 }}>
@@ -121,8 +156,8 @@ function DocumentsPageInner() {
                   <td style={{ fontFamily: 'var(--mono)' }}>{document.documentNumber}</td>
                   <td>{new Date(document.documentDate).toLocaleDateString('en-IN')}</td>
                   <td>{document.financialYear}</td>
-                  <td>{document.buyer?.legalName ?? document.buyer?.tradeName ?? 'Walk-in customer'}</td>
-                  <td style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal)}</td>
+                  <td>{buyerName(document)}</td>
+                  <td style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal)}</td>
                 </tr>
               ))}
             </DataTable>

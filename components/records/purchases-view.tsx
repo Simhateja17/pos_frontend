@@ -13,7 +13,7 @@ import {
   receiveAuthenticatedPurchaseOrder,
   updateAuthenticatedPurchaseOrder,
 } from '@/lib/api/authenticated-client'
-import { Badge, type BadgeTone, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, Tabs } from '@/components/couture/ui'
+import { Badge, type BadgeTone, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 
 type StatusFilter = 'all' | 'draft' | 'sent' | 'partial' | 'received' | 'cancelled'
@@ -44,6 +44,7 @@ export function PurchasesView() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [filter, setFilter] = useState<StatusFilter>('all')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -216,7 +217,14 @@ export function PurchasesView() {
     }
   }
 
-  const visible = (orders ?? []).filter((po) => (filter === 'all' ? true : po.status === filter))
+  const term = search.trim().toLowerCase()
+  const visible = (orders ?? [])
+    .filter((po) => (filter === 'all' ? true : po.status === filter))
+    .filter((po) =>
+      term
+        ? [po.poNumber, po.supplierName].some((field) => (field ?? '').toLowerCase().includes(term))
+        : true,
+    )
   const openOrders = (orders ?? []).filter((po) => ['sent', 'partial'].includes(po.status))
   const openValue = openOrders.reduce((sum, po) => sum + Number(po.totalCost), 0)
 
@@ -265,7 +273,20 @@ export function PurchasesView() {
         <CardHead
           title="Purchase orders"
           sub={orders ? `${visible.length} shown` : 'Loading…'}
-          right={<Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter purchase orders" />}
+          right={
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {orders && orders.length > 0 ? (
+                <SearchField
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Search by PO number or supplier…"
+                  ariaLabel="Search purchase orders"
+                  width={240}
+                />
+              ) : null}
+              <Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter purchase orders" />
+            </div>
+          }
         />
 
         {loading && <LoadingState label="Loading purchase orders" />}
@@ -273,10 +294,16 @@ export function PurchasesView() {
         {!loading && !error && visible.length === 0 && (
           <EmptyState
             icon={<Warehouse size={24} strokeWidth={1.8} />}
-            title={filter === 'all' ? 'No purchase orders yet' : 'No orders match this filter'}
+            title={
+              term
+                ? 'No orders match this search'
+                : filter === 'all'
+                  ? 'No purchase orders yet'
+                  : 'No orders match this filter'
+            }
             body="Raise a purchase order against a supplier. Receiving against it is what puts stock on your shelves and records what it cost."
             action={
-              filter === 'all' ? (
+              filter === 'all' && !term ? (
                 <button className="btn btn-pri" onClick={() => void openCreate()}>
                   <Plus size={15} /> Create PO
                 </button>
@@ -287,7 +314,7 @@ export function PurchasesView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['PO #', 'Supplier', 'Expected', 'Items', 'Received', 'Value', 'Status', { label: '', align: 'right' }]}
+            cols={['PO #', 'Supplier', 'Expected', 'Items', 'Received', 'Value', 'Status', '']}
             minWidth={940}
           >
             {visible.map((po) => {

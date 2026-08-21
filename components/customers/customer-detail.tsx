@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, Edit3, ExternalLink } from 'lucide-react'
-import { Badge, Card, CardHead, DataTable, Modal, PageHead } from '@/components/couture/ui'
+import { Badge, Card, CardHead, DataTable, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { Pagination } from '@/components/records/orders-view'
 import {
@@ -29,6 +29,26 @@ function titleFor(customer: Customer): string {
   return customer.billingName ?? customer.name ?? 'Unnamed customer'
 }
 
+/**
+ * The purchases endpoint only pages, it does not search, so the filter runs over
+ * the page that is already on screen and says so in the empty state.
+ */
+function matchesPurchase(purchase: CustomerPurchaseList['items'][number], query: string): boolean {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return true
+  return [
+    purchase.documentNumber,
+    purchase.documentType,
+    purchase.id,
+    purchase.store?.name,
+    purchase.status,
+    purchase.total,
+    ...purchase.paymentMethods,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => value.toLowerCase().includes(needle))
+}
+
 export function CustomerDetailView({ customerId }: { customerId: string }) {
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [purchases, setPurchases] = useState<CustomerPurchaseList | null>(null)
@@ -37,6 +57,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
   const [historyLoading, setHistoryLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [historyError, setHistoryError] = useState<string | null>(null)
+  const [historySearch, setHistorySearch] = useState('')
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -91,6 +112,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
   if (error || !customer) return <ErrorState message={error ?? 'Customer profile unavailable'} onRetry={() => void loadCustomer()} />
 
   const address = displayAddress(customer)
+  const visiblePurchases = (purchases?.items ?? []).filter((purchase) => matchesPurchase(purchase, historySearch))
 
   return (
     <>
@@ -131,15 +153,33 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       </div>
 
       <Card>
-        <CardHead title="Purchase history" sub={purchases ? `${purchases.total} persisted sale${purchases.total === 1 ? '' : 's'}` : 'Loading…'} />
+        <CardHead
+          title="Purchase history"
+          sub={purchases ? `${purchases.total} persisted sale${purchases.total === 1 ? '' : 's'}` : 'Loading…'}
+          right={
+            <SearchField
+              value={historySearch}
+              onChange={setHistorySearch}
+              placeholder="Search bill, store or payment…"
+              ariaLabel="Search purchase history"
+              width={240}
+            />
+          }
+        />
         {historyLoading && <LoadingState label="Loading purchase history" />}
         {!historyLoading && historyError && <ErrorState message={historyError} onRetry={() => void loadPurchases(cursor)} />}
         {!historyLoading && !historyError && purchases?.items.length === 0 && (
           <EmptyState title="No purchases found" body="Completed sales linked to this customer will appear here. Walk-in sales remain anonymous." />
         )}
-        {!historyLoading && !historyError && purchases && purchases.items.length > 0 && (
+        {!historyLoading && !historyError && purchases && purchases.items.length > 0 && visiblePurchases.length === 0 && (
+          <EmptyState
+            title="No purchases match this search"
+            body="Only the purchases on this page are searched. Clear the search or move to the next page to look further back."
+          />
+        )}
+        {!historyLoading && !historyError && purchases && visiblePurchases.length > 0 && (
           <DataTable cols={['Bill / document', 'Date', 'Store', 'Total', 'Payment', 'Status', 'Actions']} minWidth={980}>
-            {purchases.items.map((purchase) => (
+            {visiblePurchases.map((purchase) => (
               <tr key={purchase.id}>
                 <td>
                   <div className="t-strong">{purchase.documentNumber ?? `Sale ${purchase.id.slice(0, 8).toUpperCase()}`}</div>
@@ -162,7 +202,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
         )}
         {purchases && !historyLoading && !historyError && (
           <Pagination
-            shown={purchases.items.length}
+            shown={visiblePurchases.length}
             total={purchases.total}
             previous={cursor}
             next={purchases.nextCursor}

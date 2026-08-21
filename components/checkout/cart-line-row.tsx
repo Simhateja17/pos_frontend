@@ -78,7 +78,7 @@ export function CartLineRow({
               aria-label={`Quantity for ${line.name} in ${unitSuffix(line.unitOfMeasure)}`}
               onChange={(e) => onQuantityChange(line.variantId, Number(e.target.value))}
               className="fld-input num"
-              style={{ maxWidth: 84, textAlign: 'right' }}
+              style={{ maxWidth: 84 }}
             />
             <span className="t-sub">{unitSuffix(line.unitOfMeasure)}</span>
           </div>
@@ -125,7 +125,7 @@ export function CartLineRow({
             aria-label={`Discount for ${line.name}`}
             onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
             className="fld-input num"
-            style={{ maxWidth: 92, textAlign: 'right' }}
+            style={{ maxWidth: 92 }}
           />
         ) : (
           <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowDiscountInput(true)} disabled={disabled}>
@@ -136,7 +136,7 @@ export function CartLineRow({
 
       <td className="num t-strong">{money.format(lineTotal(line))}</td>
 
-      <td style={{ textAlign: 'right' }}>
+      <td>
         <button
           type="button"
           aria-label={`Remove ${line.name} from cart`}

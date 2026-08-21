@@ -177,7 +177,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
         <Card>
           <CardHead title="Members" sub="Active permissions and access actions are applied by the server." />
           <CardPad style={{ paddingTop: 4 }}>
-            <DataTable cols={['Name', 'Role', 'Access', 'Status', { label: 'Actions', align: 'right' }]}>
+            <DataTable cols={['Name', 'Role', 'Access', 'Status', 'Actions']}>
               {members.map((member) => (
                 <tr key={member.id}>
                   <td>
@@ -203,7 +203,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
                       {member.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                       {!firstPinSetup && (
                         <button
@@ -248,7 +248,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
             {sessions.length === 0 ? (
               <p className="t-sub" style={{ fontSize: 13 }}>No cashier sessions recorded yet.</p>
             ) : (
-              <DataTable cols={['Staff', 'Counter', 'Logged in', 'Logged out', 'Status']} headerAlign="center" minWidth={780}>
+              <DataTable cols={['Staff', 'Counter', 'Logged in', 'Logged out', 'Status']} minWidth={780}>
                 {sessions.slice(0, 50).map((session) => (
                   <tr key={session.id}>
                     <td className="t-strong">{session.staffName ?? '-'}</td>

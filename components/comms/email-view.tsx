@@ -10,7 +10,7 @@ import {
   getAuthenticatedEmailSuppressions,
   removeAuthenticatedEmailSuppression,
 } from '@/lib/api/authenticated-client'
-import { Badge, Card, CardHead, CardPad, DataTable, Fld, KpiRow, Modal, PageHead, type KpiItem } from '@/components/couture/ui'
+import { Badge, Card, CardHead, CardPad, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 
 const dateTime = new Intl.DateTimeFormat('en-IN', {
@@ -32,11 +32,21 @@ const STATUS_TONE = {
   suppressed: 'grey',
 } as const
 
+/** Both tables are returned whole by the API, so searching them client-side is enough. */
+function matches(values: Array<string | null | undefined>, query: string): boolean {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return true
+  return values.filter((value): value is string => Boolean(value)).some((value) => value.toLowerCase().includes(needle))
+}
+
 export function EmailView() {
   const [log, setLog] = useState<EmailLog | null>(null)
   const [suppressions, setSuppressions] = useState<EmailSuppressionList | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [logSearch, setLogSearch] = useState('')
+  const [suppressionSearch, setSuppressionSearch] = useState('')
 
   const [formOpen, setFormOpen] = useState(false)
   const [email, setEmail] = useState('')
@@ -79,6 +89,13 @@ export function EmailView() {
       setSaving(false)
     }
   }
+
+  const logEntries = (log?.entries ?? []).filter((entry) =>
+    matches([entry.recipient, entry.subject, entry.kind, entry.status, entry.errorMessage], logSearch),
+  )
+  const suppressedEntries = (suppressions?.suppressions ?? []).filter((entry) =>
+    matches([entry.email, entry.reason, entry.detail], suppressionSearch),
+  )
 
   const metrics: KpiItem[] = log
     ? [
@@ -129,7 +146,19 @@ export function EmailView() {
           )}
 
           <Card>
-            <CardHead title="Send log" sub="Every attempt, including the ones that never left" />
+            <CardHead
+              title="Send log"
+              sub="Every attempt, including the ones that never left"
+              right={
+                <SearchField
+                  value={logSearch}
+                  onChange={setLogSearch}
+                  placeholder="Search customer email or subject…"
+                  ariaLabel="Search send log"
+                  width={260}
+                />
+              }
+            />
             {log && log.entries.length === 0 ? (
               <CardPad>
                 <EmptyState
@@ -137,9 +166,13 @@ export function EmailView() {
                   body="Bills appear here as soon as a sale is completed with a customer email address."
                 />
               </CardPad>
+            ) : logEntries.length === 0 ? (
+              <CardPad>
+                <EmptyState title="No emails match this search" body="Try part of the customer address, the subject, or a status such as failed." />
+              </CardPad>
             ) : (
               <DataTable cols={['When', 'To', 'Kind', 'Subject', 'Status', 'Detail']} minWidth={880}>
-                {(log?.entries ?? []).map((entry) => (
+                {logEntries.map((entry) => (
                   <tr key={entry.id}>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
                     <td>{entry.recipient}</td>
@@ -159,6 +192,15 @@ export function EmailView() {
             <CardHead
               title="Do not email"
               sub="Unsubscribes stop offers only. Bounces and spam complaints stop everything, including bills."
+              right={
+                <SearchField
+                  value={suppressionSearch}
+                  onChange={setSuppressionSearch}
+                  placeholder="Search address or reason…"
+                  ariaLabel="Search do not email list"
+                  width={240}
+                />
+              }
             />
             {suppressions && suppressions.suppressions.length === 0 ? (
               <CardPad>
@@ -167,9 +209,13 @@ export function EmailView() {
                   body="Addresses that unsubscribe, bounce or report spam appear here automatically."
                 />
               </CardPad>
+            ) : suppressedEntries.length === 0 ? (
+              <CardPad>
+                <EmptyState title="No addresses match this search" body="Try part of the email address, or a reason such as bounced." />
+              </CardPad>
             ) : (
               <DataTable cols={['Address', 'Reason', 'Detail', 'Since', '']}>
-                {(suppressions?.suppressions ?? []).map((entry) => (
+                {suppressedEntries.map((entry) => (
                   <tr key={entry.id}>
                     <td>{entry.email}</td>
                     <td>
@@ -177,7 +223,7 @@ export function EmailView() {
                     </td>
                     <td className="t-sub">{entry.detail ?? '-'}</td>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td>
                       <button
                         className="btn btn-sm btn-ghost"
                         type="button"

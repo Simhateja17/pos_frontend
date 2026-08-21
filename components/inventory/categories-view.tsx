@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { FolderTree, Plus } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
-import { Card, CardHead, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
+import { Card, CardHead, DataTable, Fld, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 
 type Category = {
@@ -19,6 +19,7 @@ export function CategoriesView() {
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
@@ -98,6 +99,13 @@ export function CategoriesView() {
     await load()
   }
 
+  // The full list is already in memory, so the search filters it here rather
+  // than round-tripping. Name is the only field an owner would type.
+  const term = search.trim().toLowerCase()
+  const visible = (categories ?? []).filter((c) =>
+    term ? c.name.toLowerCase().includes(term) : true,
+  )
+
   return (
     <>
       <PageHead
@@ -113,7 +121,18 @@ export function CategoriesView() {
       <Card>
         <CardHead
           title="Your categories"
-          sub={categories ? `${categories.length} in use` : 'Loading…'}
+          sub={categories ? (term ? `${visible.length} shown` : `${categories.length} in use`) : 'Loading…'}
+          right={
+            categories && categories.length > 0 ? (
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                placeholder="Search categories…"
+                ariaLabel="Search categories"
+                width={240}
+              />
+            ) : undefined
+          }
         />
 
         {loading && <LoadingState label="Loading categories" />}
@@ -131,12 +150,19 @@ export function CategoriesView() {
           />
         )}
 
-        {!loading && !error && categories && categories.length > 0 && (
+        {!loading && !error && categories && categories.length > 0 && visible.length === 0 && (
+          <EmptyState
+            title="No categories match this search"
+            body="Check the spelling, or clear the search to see every category."
+          />
+        )}
+
+        {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['Category', { label: 'Products', align: 'right' }, { label: '', align: 'right' }]}
+            cols={['Category', 'Products', '']}
             minWidth={560}
           >
-            {categories.map((category) => (
+            {visible.map((category) => (
               <tr key={category.id}>
                 <td className="t-strong">{category.name}</td>
                 <td className="num">{category.productCount}</td>

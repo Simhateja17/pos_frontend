@@ -179,7 +179,7 @@ export function OrdersView() {
 
         {!isLoading && !error && data && data.items.length > 0 && (
           <DataTable
-            cols={['Bill No.', 'Customer', 'Cashier', 'Time', 'Method', 'Status', { label: 'Amount', align: 'right' }, { label: '', align: 'right' }]}
+            cols={['Bill No.', 'Customer', 'Cashier', 'Time', 'Method', 'Status', 'Amount', '']}
             minWidth={900}
           >
             {data.items.map((sale) => {
@@ -198,10 +198,10 @@ export function OrdersView() {
                   <td>
                     <span className={`badge b-${STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'}`}>{sale.status}</span>
                   </td>
-                  <td className="num t-strong" style={{ textAlign: 'right' }}>
+                  <td className="num t-strong">
                     {money.format(Number(sale.totalAmount))}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td>
                     <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(sale.id)}`}>
                       View
                     </Link>
