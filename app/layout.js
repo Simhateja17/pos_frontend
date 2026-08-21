@@ -1,5 +1,6 @@
 import "./globals.css";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: "Ambel POS | India's Most Complete Retail Suite",
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         {children}
+        <Analytics />
       </body>
     </html>
   );
