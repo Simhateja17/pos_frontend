@@ -361,7 +361,7 @@ export default function LandingPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
             Simple, transparent pricing
           </div>
-          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Start free. <em>Scale without limits.</em></h2>
+          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
           <PricingGrid animate />
         </div>

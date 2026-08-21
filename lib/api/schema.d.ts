@@ -15,7 +15,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    region?: "IN" | "US";
+                    region?: components["schemas"]["BillingRegion"];
                 };
                 header?: never;
                 path?: never;
@@ -5318,7 +5318,7 @@ export interface components {
             plans: components["schemas"]["BillingPlanOption"][];
         };
         /** @enum {string} */
-        BillingRegion: "IN" | "US";
+        BillingRegion: "IN" | "INTL" | "US";
         BillingPlanOption: {
             key: string;
             includedStores: number;
@@ -5329,6 +5329,7 @@ export interface components {
             popular: boolean;
             features: string[];
             entitlements: components["schemas"]["EntitlementLimits"];
+            addons: components["schemas"]["BillingAddon"][];
             monthly: components["schemas"]["BillingQuote"];
             annual: components["schemas"]["BillingQuote"];
             monthlyAvailable: boolean;
@@ -5353,6 +5354,12 @@ export interface components {
             integrations: components["schemas"]["EntitlementValue"];
         };
         EntitlementValue: "unlimited" | number;
+        BillingAddon: {
+            /** @enum {string} */
+            key: "location" | "register" | "user";
+            label: string;
+            unitAmountMinor: number;
+        };
         BillingQuote: {
             baseAmountMinor: number;
             taxAmountMinor: number;
@@ -5571,7 +5578,7 @@ export interface components {
         };
         OnboardingPlanSelectionStep: {
             /** @enum {string} */
-            trialPlan: "starter" | "growth" | "enterprise";
+            trialPlan: "starter" | "growth" | "pro";
             /** @enum {string} */
             billingCycle: "monthly" | "annual";
         };

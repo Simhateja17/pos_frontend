@@ -84,39 +84,55 @@ export default function LandingPage() {
           <h2>Simple Pricing</h2>
           <div className="pricing-grid">
             <div className="pricing-card">
-              <div className="pricing-name">Essentials</div>
+              <div className="pricing-name">Starter</div>
               <div className="pricing-price">
-                $29<span>/mo</span>
+                $49<span>/mo</span>
               </div>
-              <div className="pricing-desc">Perfect for solo boutiques</div>
+              <div className="pricing-desc">For focused retail teams</div>
               <ul className="pricing-list">
-                <li>1 location, unlimited staff</li>
-                <li>Sales tax automation</li>
-                <li>Digital receipts (email/SMS)</li>
-                <li>Offline billing</li>
-                <li>Email support</li>
+                <li>2 locations · 5 users · 3 registers</li>
+                <li>Unlimited POS transactions</li>
+                <li>ML reorder intelligence</li>
+                <li>Sales tax configuration</li>
+                <li>Digital receipts and offline billing</li>
               </ul>
               <button className="btn btn-ghost" onClick={goAuth}>
-                Get started
+                Choose Starter
               </button>
             </div>
             <div className="pricing-card featured">
               <div className="pricing-badge">Most Popular</div>
-              <div className="pricing-name">Professional</div>
+              <div className="pricing-name">Growth</div>
               <div className="pricing-price">
-                $79<span>/mo</span>
+                $99<span>/mo</span>
               </div>
-              <div className="pricing-desc">For multi-location retailers</div>
+              <div className="pricing-desc">For growing multi-location retailers</div>
               <ul className="pricing-list">
-                <li>Up to 5 locations</li>
-                <li>All Essentials features</li>
-                <li>Omnichannel sync (Shopify)</li>
-                <li>BOPIS &amp; ship-from-store</li>
-                <li>Advanced reports</li>
-                <li>Phone &amp; email support</li>
+                <li>5 locations · 15 users · 8 registers</li>
+                <li>Unlimited POS transactions</li>
+                <li>ML reorder intelligence</li>
+                <li>Sales tax configuration</li>
+                <li>Priority support</li>
               </ul>
               <button className="btn btn-primary" onClick={goAuth}>
-                Choose a plan
+                Choose Growth
+              </button>
+            </div>
+            <div className="pricing-card">
+              <div className="pricing-name">Pro</div>
+              <div className="pricing-price">
+                $199<span>/mo</span>
+              </div>
+              <div className="pricing-desc">For established retail operations</div>
+              <ul className="pricing-list">
+                <li>15 locations · 25 users · 15 registers</li>
+                <li>Unlimited POS transactions</li>
+                <li>ML reorder intelligence</li>
+                <li>Sales tax configuration</li>
+                <li>Flexible location, register and user add-ons</li>
+              </ul>
+              <button className="btn btn-ghost" onClick={goAuth}>
+                Choose Pro
               </button>
             </div>
           </div>

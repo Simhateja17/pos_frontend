@@ -7,10 +7,10 @@ export const metadata = { title: "Pricing | Ambel POS" };
 
 const FAQ: [string, string][] = [
   ["Are the India prices tax inclusive?", "Yes. India subscription prices are shown as GST-inclusive totals in the secure checkout."],
-  ["Do you charge per POS transaction?", "No. The India catalogue uses plan allowances; Standard, Professional and Premium include unlimited POS transactions."],
+  ["Do you charge per POS transaction?", "No. Starter, Growth and Pro all include unlimited POS transactions."],
   ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
-  ["What does the Free plan include?", "One location, one active user, one active register, and 50 committed POS transactions per month."],
-  ["What is included in every plan?", "POS billing, inventory management, GST-ready reports and CSV export, and offline billing and sync."],
+  ["How do Pro add-ons work?", "Pro includes six locations, ten users and six registers. Add locations at ₹299 each, registers at ₹199 each, or users at ₹99 each."],
+  ["What is included in every plan?", "POS billing, inventory management, ML reorder intelligence, GST-ready reports and CSV export, and offline billing and sync."],
 ];
 
 export default function PricingPage() {
@@ -22,8 +22,8 @@ export default function PricingPage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
           Simple, transparent pricing
         </div>
-        <h1>Start free.<br /><em>Grow with clarity.</em></h1>
-        <p>Four straightforward India plans. Paid prices are per location/month when billed annually. No per-transaction fees.</p>
+        <h1>Choose clearly.<br /><em>Grow with confidence.</em></h1>
+        <p>Three straightforward India plans. Prices are per month, with no per-transaction fees and no free tier.</p>
       </section>
 
       <section className="content-section">

@@ -8,7 +8,7 @@ import type { components } from '@/lib/api/schema'
 import { EntitlementUsagePanel } from './entitlement-usage-panel'
 import styles from './subscription-checkout.module.css'
 
-type Region = 'IN' | 'US'
+type Region = 'IN' | 'INTL'
 type Catalog = components['schemas']['BillingPlanCatalog']
 type Plan = components['schemas']['BillingPlanOption']
 type Cycle = 'monthly' | 'annual'
@@ -78,7 +78,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const router = useRouter()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [cycle, setCycle] = useState<Cycle>('annual')
-  const [selectedKey, setSelectedKey] = useState(initialPlanKey ?? (region === 'IN' ? 'professional' : 'professional'))
+  const [selectedKey, setSelectedKey] = useState(initialPlanKey ?? 'growth')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -114,7 +114,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
 
   const selected = useMemo<Plan | undefined>(() => catalog?.plans.find((plan) => plan.key === selectedKey), [catalog, selectedKey])
   const quote = selected?.[cycle]
-  const available = selected?.key === 'free' || Boolean(selected?.providerConfigured[cycle])
+  const available = Boolean(selected?.providerConfigured[cycle])
 
   function selectPlan(key: string) {
     setSelectedKey(key)
@@ -157,10 +157,9 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
             headers,
             // onboarding_data.1 is a compatibility record. The subscription
             // row and its entitlement snapshot remain the authority for the
-            // new Standard/Professional/Premium keys until the integrator
-            // refreshes the onboarding contract.
+            // Starter/Growth/Pro keys.
             body: {
-              trialPlan: selected.key === 'standard' || selected.key === 'free' ? 'starter' : 'growth',
+              trialPlan: selected.key === 'starter' ? 'starter' : selected.key === 'pro' ? 'pro' : 'growth',
               billingCycle: cycle,
             },
           })
@@ -179,12 +178,6 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       })
       if (createError || !data) {
         throw new Error(providerError(createError, response.status === 403 ? 'Only the account owner can start a subscription.' : 'We could not start this subscription.'))
-      }
-
-      if (selected.key === 'free') {
-        window.sessionStorage.removeItem(attemptStorageKey)
-        router.push(successPath)
-        return
       }
 
       await loadCheckoutScript()
@@ -238,7 +231,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         <button type="button" className={styles.back} onClick={() => router.back()}>← Back</button>
         <header className={styles.header}>
           <h1>{title ?? 'Choose your subscription plan.'}</h1>
-          <p>{subtitle ?? (region === 'IN' ? 'Choose a plan to activate your store. The Free plan has no payment step; paid prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
+          <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
           <div className={styles.mode} role="group" aria-label="Billing cycle">
             <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => { setCycle('monthly'); setAttemptKey(null) }}>Monthly</button>
             <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => { setCycle('annual'); setAttemptKey(null) }}>Annual</button>
@@ -263,15 +256,18 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                           billing note, then the one-line pitch above the features. */}
                       <h2 className={styles.name}>{plan.name}</h2>
                       <div className={styles.price}><strong>{money(planAmount, plan.currency, region)}</strong><span>/mo equivalent</span></div>
-                      <p className={styles.annualNote}>{cycle === 'annual' ? `Billed ${money(planQuote.totalAmountMinor, plan.currency, region)} annually` : 'Billed every month'}</p>
+                      <p className={styles.annualNote}>{cycle === 'annual' ? `Billed ${money(planQuote.totalAmountMinor, plan.currency, region)} annually · no annual discount` : 'Billed every month'}</p>
                       <p className={styles.description}>{plan.description}</p>
                       <ul className={styles.features}>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+                      {plan.addons.length > 0 && <ul className={styles.features} aria-label="Available add-ons">
+                        {plan.addons.map((addon) => <li key={addon.key}>{addon.label}: {money(addon.unitAmountMinor, plan.currency, region)} / month</li>)}
+                      </ul>}
                     </button>
                     {selectedKey === plan.key && <div className={styles.quote} aria-label="Payment summary">
                       <div className={styles.quoteRow}><span>{region === 'IN' ? 'Plan amount before GST' : 'Plan amount'}</span><strong>{money(planQuote.baseAmountMinor, plan.currency, region)}</strong></div>
                       <div className={styles.quoteRow}><span>{planQuote.taxLabel}</span><strong>{money(planQuote.taxAmountMinor, plan.currency, region)}</strong></div>
                       <div className={`${styles.quoteRow} ${styles.quoteTotal}`}><span>Total payable</span><strong>{money(planQuote.totalAmountMinor, plan.currency, region)}</strong></div>
-                      {!plan.providerConfigured[cycle] && plan.key !== 'free' && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
+                      {!plan.providerConfigured[cycle] && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
                     </div>}
                   </article>
                 )
@@ -279,13 +275,11 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
             </div>
             <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:sales@Ambel.in">Contact sales</a>.</div>
             <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || !available || paying}>
-              {selected?.key === 'free'
-                ? 'Continue with Free →'
-                : paying
+              {paying
                   ? 'Opening secure checkout…'
                   : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate →`}
             </button>
-            <p className={styles.legal}>{selected?.key === 'free' ? 'The Free plan has no payment step. Ambel POS activates its server-side entitlement once your account is ready.' : 'Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.'}</p>
+            <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
             <EntitlementUsagePanel region={region} />
           </>
         )}

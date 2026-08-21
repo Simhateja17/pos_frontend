@@ -30,17 +30,17 @@ export const STEPS = [
           <label>Subscription plan</label>
           <div class="choice-group">
             <label class="choice">
-              <input type="radio" name="plan" value="essentials">
-              <div class="choice-body"><b>Essentials · $29/mo</b><span>1 location · 2 registers · sales tax automation, digital receipts, offline billing &amp; email support</span></div>
+              <input type="radio" name="plan" value="starter">
+              <div class="choice-body"><b>Starter · $49/mo</b><span>2 locations · 5 users · 3 registers · unlimited POS transactions, ML reorder intelligence, sales tax configuration and offline billing</span></div>
             </label>
             <label class="choice">
-              <input type="radio" name="plan" value="professional" checked>
-              <div class="choice-body"><b>Professional · $79/mo</b><span>Up to 5 locations · everything in Essentials plus omnichannel (Shopify) sync, BOPIS &amp; ship-from-store, advanced reports and phone support</span></div>
+              <input type="radio" name="plan" value="growth" checked>
+              <div class="choice-body"><b>Growth · $99/mo</b><span>5 locations · 15 users · 8 registers · everything in Starter plus priority support</span></div>
               <span class="choice-tag">Most popular</span>
             </label>
             <label class="choice">
-              <input type="radio" name="plan" value="enterprise">
-              <div class="choice-body"><b>Enterprise · Custom</b><span>Unlimited locations &amp; registers · custom reporting and API, dedicated account manager and 99.98% uptime SLA</span></div>
+              <input type="radio" name="plan" value="pro">
+              <div class="choice-body"><b>Pro · $199/mo</b><span>15 locations · 25 users · 15 registers · ML reorder intelligence plus flexible location, register and user add-ons</span></div>
             </label>
           </div>
           <div class="form-hint" style="margin-top:10px;">Annual billing is charged upfront through Razorpay.</div>
@@ -50,7 +50,6 @@ export const STEPS = [
           <button type="submit" class="btn btn-primary">Continue to payment
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </button>
-          <button type="button" class="btn btn-skip" data-nav="skip">Decide later</button>
         </div>
       </form>
 
@@ -61,13 +60,13 @@ export const STEPS = [
           <ul class="ctx-list">
             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Automatic US sales tax</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Tap, chip &amp; mobile payments</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Unlimited staff accounts</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>ML reorder intelligence</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Offline-first billing</li>
           </ul>
         </div>
         <div class="ctx-card">
           <h4>No surprises</h4>
-          <p>Prices shown are per location, per month. Cancel anytime during your trial and you won't be charged.</p>
+          <p>Prices are shown in USD per month. Annual billing is charged upfront through secure checkout; there is no free trial.</p>
         </div>
       </div>
     `,
