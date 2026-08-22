@@ -26,11 +26,12 @@ export type LivePlan = {
 
 // Server-only: the marketing site stays one deployment covering both
 // regions, so it needs both backends reachable, not the single build-time
-// BACKEND_API_URL the authenticated app's client-side rewrite uses. Both
-// fall back to the one live backend until the India/International VM split
-// (Phase 3, still in progress) actually stands up a second one.
+// BACKEND_API_URL the authenticated app's client-side rewrite uses (see
+// next.config.mjs's host-based /_backend rewrite for that side).
 function backendUrlFor(region: MarketingRegion): string {
-  const fallback = 'https://posbackend.withcouture.me/api'
+  const fallback = region === 'IN'
+    ? 'https://api-in.ambelpos.com/api'
+    : 'https://api-us.ambelpos.com/api'
   const url = region === 'IN'
     ? process.env.BACKEND_API_URL_IN ?? fallback
     : process.env.BACKEND_API_URL_INTL ?? fallback

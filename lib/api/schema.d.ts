@@ -3907,12 +3907,50 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /** @description Update settings for one selected store. International tenants use explicit state, county, city and district sales-tax rates without GST fields. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateStoreSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description Store settings updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreSettings"];
+                    };
+                };
+                /** @description Invalid request or region-specific tax fields */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The submitted fields are owner-only or the caller is not management */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Update settings for one selected store. Managers may edit store address, locality, place of supply and tax rate; company identity and policy fields are owner-only. */
+        /** @description Update settings for one selected store. India uses the combined tax rate; International tenants use explicit state, county, city and district sales-tax rates. Company identity and policy fields are owner-only. */
         patch: {
             parameters: {
                 query?: never;
@@ -6577,6 +6615,8 @@ export interface components {
             sampleTitles: string[];
         };
         StoreSettings: {
+            /** @enum {string} */
+            region: "IN" | "INTL";
             businessName: string;
             tradeName: string | null;
             addressLine1: string;
@@ -6585,13 +6625,19 @@ export interface components {
             state: string;
             postalCode: string;
             /** @enum {string|null} */
-            gstStatus: "regular" | "composition" | "unregistered" | null;
-            gstin: string | null;
-            pan: string | null;
-            placeOfSupply: string | null;
+            gstStatus?: "regular" | "composition" | "unregistered" | null;
+            gstin?: string | null;
+            pan?: string | null;
+            placeOfSupply?: string | null;
             /** @enum {string|null} */
             businessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
-            combinedTaxRatePercent: string;
+            combinedTaxRatePercent?: string;
+            salesTaxRates?: {
+                state: string;
+                county: string;
+                city: string;
+                district: string;
+            };
             discountThresholdPercent: string;
             barcodeLabelFormat: components["schemas"]["BarcodeLabelFormat"];
             editableFields: {
@@ -6608,6 +6654,7 @@ export interface components {
                 placeOfSupply: boolean;
                 businessType: boolean;
                 combinedTaxRatePercent: boolean;
+                salesTaxRates: boolean;
                 discountThresholdPercent: boolean;
                 barcodeLabelFormat: boolean;
             };
@@ -6630,6 +6677,12 @@ export interface components {
             businessType?: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
             placeOfSupply?: string | null;
             combinedTaxRatePercent?: number;
+            salesTaxRates?: {
+                state: number;
+                county: number;
+                city: number;
+                district: number;
+            };
             discountThresholdPercent?: number;
             barcodeLabelFormat?: components["schemas"]["BarcodeLabelFormat"];
         };
