@@ -12,9 +12,17 @@ import {
 } from '@/lib/auth/session-establishment'
 import styles from './india-auth.module.css'
 import { setActiveStoreId } from '@/lib/store-context'
+import type { Region } from '@/components/marketing/regions'
 
 type AuthShellProps = {
   mode: 'signup' | 'login'
+  /**
+   * Which edition's brand panel copy to show. The layout, the stylesheet and
+   * every form control are identical across regions: only the marketing panel
+   * text differs, so the US auth screen renders through this same shell rather
+   * than through a parallel stylesheet of its own.
+   */
+  region?: Region
   children: ReactNode
 }
 
@@ -47,26 +55,59 @@ export async function establishSession(session: BackendSession) {
 // the US route uses the same verified Supabase-session installation path.
 export const establishIndiaSession = establishSession
 
-const content = {
-  signup: {
-    heading: <>One platform.<br />Every store detail.</>,
-    description: 'From GST billing to loyalty rewards, built for Indian retail.',
-    benefits: [
-      'GST-native invoicing from day 1',
-      'Offline billing, works without internet',
-      'AI Copilot reads your live store data',
-      '22 integrated modules, one subscription',
-    ],
+const content: Record<Region, Record<'signup' | 'login', {
+  heading: ReactNode
+  description: string
+  benefits: string[]
+  footer: ReactNode
+}>> = {
+  IN: {
+    signup: {
+      heading: <>One platform.<br />Every store detail.</>,
+      description: 'From GST billing to loyalty rewards, built for Indian retail.',
+      benefits: [
+        'GST-native invoicing from day 1',
+        'Offline billing, works without internet',
+        'AI Copilot reads your live store data',
+        '22 integrated modules, one subscription',
+      ],
+      footer: <>Couture Services Private Limited<br />GST: 37AAMCC4557F1ZF</>,
+    },
+    login: {
+      heading: <>Welcome back to your store.</>,
+      description: 'Billing, inventory, loyalty and compliance, all in one place.',
+      benefits: [
+        '2,400+ stores across India',
+        '₹18 Cr+ GMV processed monthly',
+        'GST-compliant from day one',
+        'Works fully offline',
+      ],
+      footer: <>Couture Services Private Limited<br />GST: 37AAMCC4557F1ZF</>,
+    },
   },
-  login: {
-    heading: <>Welcome back to your store.</>,
-    description: 'Billing, inventory, loyalty and compliance, all in one place.',
-    benefits: [
-      '2,400+ stores across India',
-      '₹18 Cr+ GMV processed monthly',
-      'GST-compliant from day one',
-      'Works fully offline',
-    ],
+  US: {
+    signup: {
+      heading: <>One platform.<br />Every store detail.</>,
+      description: 'From sales tax to BOPIS pickups, built for US retail.',
+      benefits: [
+        'Sales tax resolved per transaction',
+        'Offline billing, works without internet',
+        'One stock pool across store and online',
+        'Digital receipts with return barcodes',
+      ],
+      footer: <>Couture Services Private Limited<br />US retail edition</>,
+    },
+    login: {
+      heading: <>Welcome back to your store.</>,
+      description: 'Checkout, inventory, tax and reporting, all in one place.',
+      benefits: [
+        '500+ retailers across the US',
+        '12,000+ tax jurisdictions covered',
+        'Omnichannel sync from day one',
+        'Works fully offline',
+      ],
+      footer: <>Couture Services Private Limited<br />US retail edition</>,
+    },
   },
 }
 
@@ -82,8 +123,12 @@ export function BrandMark() {
   )
 }
 
-export function IndiaAuthShell({ mode, children }: AuthShellProps) {
-  const panel = content[mode]
+/**
+ * Shared auth layout for every edition. The `India` prefix is historical: the
+ * US route renders this same shell with `region="US"`.
+ */
+export function IndiaAuthShell({ mode, region = 'IN', children }: AuthShellProps) {
+  const panel = content[region][mode]
 
   return (
     <main className={styles.screen}>
@@ -101,10 +146,7 @@ export function IndiaAuthShell({ mode, children }: AuthShellProps) {
             ))}
           </div>
         </div>
-        <p className={styles.brandFooter}>
-          Couture Services Private Limited<br />
-          GST: 37AAMCC4557F1ZF
-        </p>
+        <p className={styles.brandFooter}>{panel.footer}</p>
       </aside>
       <section className={styles.formCanvas}>
         <div className={styles.formInner}>{children}</div>
@@ -112,3 +154,6 @@ export function IndiaAuthShell({ mode, children }: AuthShellProps) {
     </main>
   )
 }
+
+// Region-neutral alias: prefer this name in new code.
+export const AuthShell = IndiaAuthShell

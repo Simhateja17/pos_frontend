@@ -1,6 +1,16 @@
 "use client";
 
+/*
+ * US onboarding wizard shell.
+ *
+ * Uses the India app-shell chrome from `app/globals.css` (`.app`, `.sidebar`,
+ * `.sb-brand`, `.sb-logo`, `.sb-nav`, `.sb-group`, `.sb-foot`, `.sys-pill`,
+ * `.content`); `onboarding.css` adds only the wizard-specific pieces, scoped
+ * under `.us-onboarding`.
+ */
+
 import { useRouter } from "next/navigation";
+import { AmbelMark } from "@/components/brand/ambel-mark";
 import { STEPS, FINAL_ROUTE } from "./steps";
 import "./onboarding.css";
 
@@ -50,39 +60,31 @@ export default function OnboardingShell({ step }) {
   }
 
   return (
-    <div className="page">
-      <div className="progress-bar">
-        <div
-          className="progress-fill"
-          style={{ width: `${(current / total) * 100}%` }}
-        />
+    <div className="us-onboarding app">
+      <div className="ob-progress">
+        <i style={{ width: `${(current / total) * 100}%` }} />
       </div>
 
-      <aside className="sidebar">
+      <aside className="sidebar" aria-label="Onboarding steps">
         <div className="sb-brand">
-          <div className="sb-mark">AP</div>
+          <div className="sb-logo">
+            <AmbelMark size={38} />
+          </div>
           <div>
-            <b>Ambel POS</b>
-            <span>US retail edition</span>
+            <h1>Ambel POS</h1>
+            <p>US retail edition</p>
           </div>
         </div>
-        <div className="sb-label">Setup · {total} steps</div>
-        <ul className="step-list">
+
+        <nav className="sb-nav">
+          <div className="sb-group">Setup · {total} steps</div>
           {STEPS.map((s) => {
-            const cls =
-              s.n < current ? "done" : s.n === current ? "active" : "";
+            const state = s.n < current ? "done" : s.n === current ? "active" : "";
             return (
-              <li key={s.n} className={`step-item ${cls}`}>
-                <span className="step-num">
+              <div key={s.n} className={`ob-step ${state}`} aria-current={s.n === current ? "step" : undefined}>
+                <span className="ob-num">
                   {s.n < current ? (
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      width="12"
-                      height="12"
-                    >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   ) : (
@@ -90,24 +92,27 @@ export default function OnboardingShell({ step }) {
                   )}
                 </span>
                 {s.label}
-              </li>
+              </div>
             );
           })}
-        </ul>
-        <div className="sb-help">
-          <b>{data.help.title}</b>
-          <p>{data.help.text}</p>
+        </nav>
+
+        <div className="sb-foot">
+          <div className="sys-pill">
+            <b>{data.help.title}</b>
+            <p>{data.help.text}</p>
+          </div>
         </div>
       </aside>
 
-      <main className="main">
-        <div
-          className="main-inner"
+      <div className="main">
+        <main
+          className="content ob-inner"
           onSubmit={onSubmit}
           onClick={onClick}
           dangerouslySetInnerHTML={{ __html: data.body }}
         />
-      </main>
+      </div>
     </div>
   );
 }

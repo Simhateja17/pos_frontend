@@ -1,14 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Screens, NAV_GROUPS, NAMES, ic } from "./screens";
-import "./design.css";
+/*
+ * US edition app shell.
+ *
+ * The chrome here is the India `AppShell` chrome: the same `.app` / `.sidebar`
+ * / `.sb-brand` / `.sb-nav` / `.nav-item` / `.topbar` / `.content` classes from
+ * `app/globals.css`, and the same mobile-drawer module the India shell uses.
+ * It is a separate component only because the India shell also carries the
+ * live store context, register lock and role gating that the US prototype has
+ * no backend for yet: the visual language is shared, not forked.
+ */
 
-/* Count-up animation, ported from the original app.js but scoped
-   to the content container so it re-runs on every screen change. */
+import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
+import { AmbelMark } from "@/components/brand/ambel-mark";
+import styles from "@/components/app-shell.module.css";
+import { Screens, NAV_GROUPS, NAMES, ic } from "./screens";
+
+const STORES = ["Austin", "Denver", "Online"];
+
+/**
+ * Count-up on the KPI figures, scoped to the content container so it re-runs
+ * on every screen change. `.kv` is the India KPI value element.
+ */
 function animateNumbers(root) {
   if (!root) return;
-  root.querySelectorAll(".kpi-value").forEach((el, idx) => {
+  if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+
+  root.querySelectorAll(".kv").forEach((el, idx) => {
     const original = el.textContent.trim();
     const m = original.match(/^(\$?)([\d,]+\.?\d*)([\s\S]*)$/);
     if (!m) return;
@@ -51,167 +70,140 @@ function animateNumbers(root) {
   });
 }
 
-export default function Dashboard() {
+export default function USDashboard() {
   const [active, setActive] = useState("dash");
   const [store, setStore] = useState("Austin");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const contentRef = useRef(null);
 
-  // Fade + count-up after each screen change.
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
-    el.style.transition =
-      "opacity .32s cubic-bezier(.22,1,.36,1), transform .32s cubic-bezier(.22,1,.36,1)";
-    el.style.opacity = "1";
-    el.style.transform = "translateY(0)";
     const raf = requestAnimationFrame(() => animateNumbers(el));
     return () => cancelAnimationFrame(raf);
   }, [active]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen]);
+
   function go(id) {
-    if (id === active) return;
-    const el = contentRef.current;
-    if (el) {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(6px)";
-    }
-    setTimeout(() => setActive(id), 140);
+    setMobileOpen(false);
+    if (id !== active) setActive(id);
   }
 
   return (
-    <>
-      {/* Ambient background orbs */}
-      <div className="bg-canvas">
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <div className="orb orb-3" />
-      </div>
+    <div className="app">
+      {mobileOpen && (
+        <button className={styles.scrim} aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
+      )}
 
-      <div className="app">
-        {/* ── Sidebar ── */}
-        <aside className="sidebar">
-          <div className="brand">
-            <div className="brand-mark">
-              <span>AP</span>
+      <aside
+        aria-label="US application navigation"
+        className={`sidebar ${styles.sidebar} ${mobileOpen ? styles.drawerOpen : styles.drawerClosed}`}
+      >
+        <div className="sb-brand">
+          <div className="sb-logo">
+            <AmbelMark size={38} />
+          </div>
+          <div>
+            <h1>Ambel POS</h1>
+            <p>US retail edition</p>
+          </div>
+          <button className={styles.closeDrawer} aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <nav className="sb-nav">
+          {NAV_GROUPS.map(([group, ids]) => (
+            <div key={group}>
+              <div className="sb-group">{group}</div>
+              {ids.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-current={id === active ? "page" : undefined}
+                  className={`nav-item${id === active ? " active" : ""}`}
+                  style={{ width: "100%", textAlign: "left", background: id === active ? undefined : "transparent", border: 0, font: "inherit" }}
+                  onClick={() => go(id)}
+                  dangerouslySetInnerHTML={{ __html: `${ic(id, 17)}<span>${NAMES[id]}</span>` }}
+                />
+              ))}
             </div>
-            <div className="brand-text">
-              <strong>Ambel POS</strong>
-              <span>US retail edition</span>
-            </div>
+          ))}
+        </nav>
+
+        <div className="sb-foot">
+          <div className="sys-pill">
+            <b><span className="dot" />Store systems live</b>
+            <p>Card reader, tax engine and receipt service healthy</p>
+          </div>
+        </div>
+      </aside>
+
+      <div className="main">
+        <header className={`topbar ${styles.topbar}`}>
+          <button className={styles.mobileMenu} aria-label="Open navigation" onClick={() => setMobileOpen(true)}>
+            <Menu size={18} />
+          </button>
+
+          <div className={`crumb ${styles.crumb}`}>
+            Ambel POS / <b>{NAMES[active]}</b>
           </div>
 
-          <nav id="nav">
-            {NAV_GROUPS.map(([group, ids]) => (
-              <div key={group}>
-                <div className="nav-group-label">{group}</div>
-                {ids.map((id) => (
-                  <button
-                    key={id}
-                    className={`nav-item${id === active ? " active" : ""}`}
-                    onClick={() => go(id)}
-                    dangerouslySetInnerHTML={{
-                      __html: `${ic(id)}<span>${NAMES[id]}</span>`,
-                    }}
-                  />
-                ))}
-              </div>
-            ))}
-          </nav>
-
-          <div className="sidebar-footer">
-            <div className="status-pod">
-              <div className="status-led" />
-              <div>
-                <b>Store systems live</b>
-                <small>Card reader, tax engine &amp; receipt service healthy</small>
-              </div>
-            </div>
+          <div className="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+            <input placeholder="Search products, customers, orders…  or type a command" aria-label="Search" />
+            <span className="kbd">⌘K</span>
           </div>
-        </aside>
 
-        {/* ── Main ── */}
-        <main className="main">
-          {/* Top navigation bar */}
-          <header className="topbar">
-            <div className="crumb">
-              <span>Ambel POS</span>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-              <b>{NAMES[active]}</b>
-            </div>
-
-            <div className="search">
-              <svg
-                className="search-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m21 21-4.4-4.4" />
-              </svg>
-              <input
-                className="search-input"
-                type="text"
-                placeholder="Search products, customers, orders…"
-              />
-              <kbd>⌘K</kbd>
-            </div>
-
-            <div className="topbar-right">
-              <a className="ref-link" href="#">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+          <div className={styles.topbarActions}>
+            <div className={`store-switch ${styles.storeSwitch}`}>
+              {STORES.map((s) => (
+                <span
+                  key={s}
+                  role="button"
+                  tabIndex={0}
+                  className={`store-pill${s === store ? " active" : ""}`}
+                  onClick={() => setStore(s)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setStore(s);
+                    }
+                  }}
                 >
-                  <path d="M21 12a9 9 0 0 1-15.5 6.2" />
-                  <path d="M3 12A9 9 0 0 1 18.5 5.8" />
-                  <path d="M18 2v4h4M6 22v-4H2" />
-                </svg>
-                India ref
-              </a>
+                  {s}
+                </span>
+              ))}
+            </div>
 
-              <div className="store-tabs">
-                {["Austin", "Denver", "Online"].map((s) => (
-                  <button
-                    key={s}
-                    className={`store-tab${s === store ? " active" : ""}`}
-                    onClick={() => setStore(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              <div className="user-block">
-                <div className="avatar">MJ</div>
-                <div className="user-meta">
-                  <b>Mia James</b>
-                  <span>Store manager</span>
-                </div>
+            <div className={`tb-user ${styles.user}`}>
+              <div className="tb-ava">MJ</div>
+              <div>
+                <div className="nm">Mia James</div>
+                <div className="rl">Store manager</div>
               </div>
             </div>
-          </header>
+          </div>
+        </header>
 
-          {/* Screen content */}
-          <section
-            className="content"
-            ref={contentRef}
-            dangerouslySetInnerHTML={{ __html: Screens[active]() }}
-          />
-        </main>
+        <main
+          className={`content fade ${styles.content}`}
+          key={active}
+          ref={contentRef}
+          dangerouslySetInnerHTML={{ __html: Screens[active]() }}
+        />
       </div>
-    </>
+    </div>
   );
 }

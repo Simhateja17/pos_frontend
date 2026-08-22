@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Check } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { supabase } from '@/lib/supabase/client'
+import { Card, CardPad } from '@/components/couture/ui'
 
 export default function USOnboardingCompletePage() {
   const router = useRouter()
@@ -30,13 +32,20 @@ export default function USOnboardingCompletePage() {
   }, [router])
 
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f8fafc', fontFamily: 'Inter, system-ui, sans-serif', color: '#0f172a' }}>
-      <section style={{ maxWidth: 560, width: '100%', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 18, padding: 36, textAlign: 'center', boxShadow: '0 12px 36px rgba(15,23,42,.08)' }}>
-        <div style={{ fontSize: 42, color: '#0f9f6e' }}>✓</div>
-        <h1>Subscription confirmed</h1>
-        <p style={{ color: '#64748b', lineHeight: 1.6 }}>{message}</p>
-        <Link href="/us/dashboard" style={{ display: 'inline-block', marginTop: 16, padding: '12px 18px', borderRadius: 10, color: '#fff', background: '#0f5ec7', fontWeight: 700 }}>Open dashboard →</Link>
-      </section>
+    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: 'var(--bg)' }}>
+      <Card style={{ maxWidth: 520, width: '100%' }}>
+        <CardPad style={{ padding: 36, textAlign: 'center' }}>
+          {/* `.lico b-green` is the design system's tinted icon tile. */}
+          <div className="lico b-green" style={{ width: 52, height: 52, margin: '0 auto 16px' }}>
+            <Check strokeWidth={2.4} />
+          </div>
+          <h2 style={{ fontFamily: 'var(--display)', fontSize: 24, letterSpacing: '-.025em' }}>Subscription confirmed</h2>
+          <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginTop: 8 }}>{message}</p>
+          <Link className="btn btn-pri" href="/us/dashboard" style={{ marginTop: 20 }}>
+            Open dashboard →
+          </Link>
+        </CardPad>
+      </Card>
     </main>
   )
 }
