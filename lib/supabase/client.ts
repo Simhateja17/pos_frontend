@@ -13,18 +13,29 @@ import { createClient } from '@supabase/supabase-js'
 // this client's project didn't sign, so the very next authenticated request
 // (GET /auth/v1/user) comes back 403 as an "invalid" session.
 const INDIA_HOST = 'in.ambelpos.com'
-const isIndia = typeof window !== 'undefined' && window.location.hostname === INDIA_HOST
+
+// Static prerendering and SSR evaluate this module with no `window` at all —
+// there is no request-scoped hostname to pick a region by, and this client
+// is never actually called during that pass (every real .auth.* call happens
+// from a browser event/effect). Treat "no window" as "region unknown, don't
+// care": fall back through whatever config exists so the build never crashes
+// on a region that happens to be unconfigured in this environment. The
+// browser re-evaluates this module fresh at hydration with a real
+// window.location — that's the only place a call is ever made, and the only
+// place a truly missing config should fail loudly.
+const hasWindow = typeof window !== 'undefined'
+const isIndia = hasWindow && window.location.hostname === INDIA_HOST
 
 // NEXT_PUBLIC_SUPABASE_URL/ANON_KEY (unsuffixed) is the pre-existing India
 // config already set in Vercel — kept as the India fallback so this change
 // needs no edit to that env var. Only the two _INTL vars are new.
-const supabaseUrl = isIndia
-  ? process.env.NEXT_PUBLIC_SUPABASE_URL_IN ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  : process.env.NEXT_PUBLIC_SUPABASE_URL_INTL
+const inUrl = process.env.NEXT_PUBLIC_SUPABASE_URL_IN ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+const inKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_IN ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const intlUrl = process.env.NEXT_PUBLIC_SUPABASE_URL_INTL
+const intlKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_INTL
 
-const supabaseAnonKey = isIndia
-  ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_IN ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_INTL
+const supabaseUrl = hasWindow ? (isIndia ? inUrl : intlUrl) : (inUrl ?? intlUrl)
+const supabaseAnonKey = hasWindow ? (isIndia ? inKey : intlKey) : (inKey ?? intlKey)
 
 if (!supabaseUrl || !supabaseAnonKey) {
   const region = isIndia ? 'India' : 'International'
