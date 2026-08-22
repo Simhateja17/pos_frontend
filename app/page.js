@@ -72,6 +72,9 @@ function featBadges(b3, b4) {
 export default function LandingPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [plans, setPlans] = useState([]);
+  // "loading" | "loaded" | "error" — distinguishes "hasn't returned yet" from
+  // "failed", since both start out as an empty plans array.
+  const [plansState, setPlansState] = useState("loading");
   const goApp = () => {
     window.location.href = "/app/dashboard";
   };
@@ -81,11 +84,23 @@ export default function LandingPage() {
     // Same-origin through the existing /_backend rewrite (see lib/api/client.ts)
     // — this route needs no auth/session, so a plain fetch is fine here.
     void fetch("/_backend/public/plans?region=IN")
-      .then((res) => res.json())
-      .then((body) => {
-        if (active) setPlans(body.plans ?? []);
+      .then((res) => {
+        if (!res.ok) throw new Error(`plans fetch failed: ${res.status}`);
+        return res.json();
       })
-      .catch(() => {});
+      .then((body) => {
+        if (!active) return;
+        setPlans(body.plans ?? []);
+        setPlansState("loaded");
+      })
+      .catch((err) => {
+        // Swallowing this used to mean a backend hiccup made the whole
+        // pricing section vanish with zero trace in the console — logging
+        // it keeps that failure visible without surfacing raw errors to
+        // visitors (see the plain-language fallback below instead).
+        console.error("Failed to load pricing plans", err);
+        if (active) setPlansState("error");
+      });
     return () => {
       active = false;
     };
@@ -379,7 +394,13 @@ export default function LandingPage() {
           </div>
           <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
-          {plans.length > 0 && <PricingGrid plans={plans} animate />}
+          {plansState === "loaded" && plans.length > 0 && <PricingGrid plans={plans} animate />}
+          {plansState === "error" && (
+            <p className="section-sub" style={{ margin: "28px auto 0" }}>
+              Pricing is temporarily unavailable. Please refresh, or see the{" "}
+              <a href="/pricing">full pricing page</a>.
+            </p>
+          )}
         </div>
       </section>
 
