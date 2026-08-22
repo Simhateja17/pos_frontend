@@ -18,6 +18,26 @@ export function middleware(request: NextRequest) {
   const hostname = host.split(':')[0]
   const isIndia = hostname === INDIA_HOST
 
+  // Google (and any other inbound link) mostly points at the bare/www
+  // domain, not in.ambelpos.com — so an India visitor who never explicitly
+  // typed the India subdomain would otherwise land on the US marketing page
+  // and, if they sign up, get provisioned on the US backend. Redirect them
+  // (not just rewrite content) so the URL bar, cookies, and every later API
+  // call are genuinely first-party to in.ambelpos.com. Scoped to `/` only —
+  // this is a landing-page fix, not a blanket redirect: an already-logged-in
+  // session on /app/* must never be bounced to a different domain's cookies.
+  if (request.nextUrl.pathname === '/' && !isIndia) {
+    const cookieOverride = request.cookies.get(REGION_COOKIE)?.value
+    const geoCountry = request.headers.get('x-vercel-ip-country')
+    const wantsIndia = cookieOverride === 'IN' || (cookieOverride !== 'INTL' && geoCountry === 'IN')
+    if (wantsIndia) {
+      const target = new URL(request.url)
+      target.hostname = INDIA_HOST
+      target.pathname = '/'
+      return NextResponse.redirect(target)
+    }
+  }
+
   const response =
     request.nextUrl.pathname === '/' && !isIndia
       ? NextResponse.rewrite(new URL('/us', request.url))
