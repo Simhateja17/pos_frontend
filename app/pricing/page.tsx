@@ -2,18 +2,29 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { PricingGrid } from "@/components/marketing/pricing-plans";
+import { RegionSwitcher } from "@/components/marketing/region-switcher";
+import { detectRegion } from "@/lib/marketing/region";
+import { getLivePlans } from "@/lib/marketing/pricing";
 
 export const metadata = { title: "Pricing | Ambel POS" };
 
-const FAQ: [string, string][] = [
-  ["Are the India prices tax inclusive?", "Yes. India subscription prices are shown as GST-inclusive totals in the secure checkout."],
-  ["Do you charge per POS transaction?", "No. Starter, Growth and Pro all include unlimited POS transactions."],
-  ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
-  ["How do Pro add-ons work?", "Pro includes six locations, ten users and six registers. Add locations at ₹299 each, registers at ₹199 each, or users at ₹99 each."],
-  ["What is included in every plan?", "POS billing, inventory management, ML reorder intelligence, GST-ready reports and CSV export, and offline billing and sync."],
-];
+function faqFor(region: "IN" | "INTL"): [string, string][] {
+  return [
+    ...(region === "IN"
+      ? [["Are the India prices tax inclusive?", "Yes. India subscription prices are shown as GST-inclusive totals in the secure checkout."] as [string, string]]
+      : []),
+    ["Do you charge per POS transaction?", "No. Starter, Growth and Pro all include unlimited POS transactions."],
+    ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
+    ["How do Pro add-ons work?", "Pro includes a generous base allowance of locations, users and registers. Add more of any of the three at a small per-unit price once you outgrow it."],
+    ["What is included in every plan?", "POS billing, inventory management, ML reorder intelligence, tax-ready reports and CSV export, and offline billing and sync."],
+  ];
+}
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const region = detectRegion();
+  const plans = await getLivePlans(region);
+  const FAQ = faqFor(region);
+
   return (
     <>
       <SiteHeader />
@@ -23,11 +34,14 @@ export default function PricingPage() {
           Simple, transparent pricing
         </div>
         <h1>Choose clearly.<br /><em>Grow with confidence.</em></h1>
-        <p>Three straightforward India plans. Prices are per month, with no per-transaction fees and no free tier.</p>
+        <p>Three straightforward plans. Prices are per month, with no per-transaction fees and no free tier.</p>
+        <div style={{ marginTop: 20 }}>
+          <RegionSwitcher region={region} />
+        </div>
       </section>
 
       <section className="content-section">
-        <PricingGrid />
+        <PricingGrid plans={plans} />
       </section>
 
       <section className="how-section">
@@ -46,9 +60,9 @@ export default function PricingPage() {
 
       <section className="cta-section">
         <h2>Ready to transform<br />your store?</h2>
-        <p>Choose the India plan that matches your active locations, users and registers, then activate your store.</p>
+        <p>Choose the plan that matches your active locations, users and registers, then activate your store.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/signup">Choose a plan</a>
+          <a className="btn-cta-w" href={`/signup?region=${region}`}>Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>
         </div>
       </section>

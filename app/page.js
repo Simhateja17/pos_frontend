@@ -71,9 +71,25 @@ function featBadges(b3, b4) {
 
 export default function LandingPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [plans, setPlans] = useState([]);
   const goApp = () => {
     window.location.href = "/app/dashboard";
   };
+
+  useEffect(() => {
+    let active = true;
+    // Same-origin through the existing /_backend rewrite (see lib/api/client.ts)
+    // — this route needs no auth/session, so a plain fetch is fine here.
+    void fetch("/_backend/public/plans?region=IN")
+      .then((res) => res.json())
+      .then((body) => {
+        if (active) setPlans(body.plans ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -363,7 +379,7 @@ export default function LandingPage() {
           </div>
           <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
-          <PricingGrid animate />
+          {plans.length > 0 && <PricingGrid plans={plans} animate />}
         </div>
       </section>
 

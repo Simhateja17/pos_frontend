@@ -112,3 +112,56 @@ export function IndiaAuthShell({ mode, children }: AuthShellProps) {
     </main>
   )
 }
+
+const internationalContent = {
+  signup: {
+    heading: <>One platform.<br />Every store detail.</>,
+    description: 'Sales, inventory and ML reorder intelligence, built for retailers outside India.',
+    benefits: [
+      'ML reorder intelligence from day 1',
+      'Offline billing, works without internet',
+      'Sales tax configuration built in',
+      'One subscription, unlimited transactions',
+    ],
+  },
+  login: {
+    heading: <>Welcome back to your store.</>,
+    description: 'Billing, inventory and reporting, all in one place.',
+    benefits: [
+      'ML-driven reorder suggestions',
+      'Works fully offline',
+      'Digital receipts on every sale',
+      'Priority support on Growth and Pro',
+    ],
+  },
+}
+
+// No legal-entity/registration footer here (unlike IndiaAuthShell's GST
+// line) — that detail isn't settled for the International entity yet, and
+// an invented one would be worse than none.
+export function InternationalAuthShell({ mode, children }: AuthShellProps) {
+  const panel = internationalContent[mode]
+
+  return (
+    <main className={styles.screen}>
+      <aside className={styles.brand}>
+        <div className={styles.brandContent}>
+          <BrandMark />
+          <h2 className={styles.brandHeading}>{panel.heading}</h2>
+          <p className={styles.brandDescription}>{panel.description}</p>
+          <div className={styles.benefits}>
+            {panel.benefits.map((benefit) => (
+              <div className={styles.benefit} key={benefit}>
+                <span className={styles.check}><Check aria-hidden="true" /></span>
+                <span>{benefit}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+      <section className={styles.formCanvas}>
+        <div className={styles.formInner}>{children}</div>
+      </section>
+    </main>
+  )
+}
