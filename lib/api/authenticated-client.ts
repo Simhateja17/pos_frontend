@@ -9,7 +9,14 @@ export type Dashboard = components['schemas']['Dashboard']
 export type DashboardRange = components['schemas']['DashboardRange']
 export type Sale = components['schemas']['Sale']
 export type SaleList = components['schemas']['SaleList']
+export type CreateSaleRequest = components['schemas']['CreateSaleRequest']
+export type ResendReceiptResponse = components['schemas']['ResendReceiptResponse']
+export type ShiftHistoryEntry = components['schemas']['ShiftHistoryEntry']
+export type LowStockVariant = components['schemas']['LowStockVariant']
+export type StoreSettings = components['schemas']['StoreSettings']
+export type UpdateStoreSettingsRequest = components['schemas']['UpdateStoreSettingsRequest']
 export type CustomerList = components['schemas']['CustomerList']
+export type Customer = components['schemas']['Customer']
 export type PaymentRead = components['schemas']['PaymentRead']
 export type TaxDocument = components['schemas']['TaxDocument']
 export type TaxDocumentSummary = components['schemas']['TaxDocumentSummary']
@@ -250,6 +257,63 @@ export function getAuthenticatedCustomers(query: CustomerRecordQuery): Promise<C
   return authenticatedRead(
     async () => apiClient.GET('/customers/records', { params: { query }, headers: await authorizationHeader() }),
     'Customer records are unavailable right now. Please retry.',
+  )
+}
+
+/** Checkout search uses the small customer lookup contract, not the paginated records view. */
+export function getAuthenticatedCustomerMatches(search?: string): Promise<Customer[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/customers', {
+      params: { query: search ? { search } : {} },
+      headers: await authorizationHeader(),
+    }),
+    'Customer lookup is unavailable right now. Please retry.',
+  )
+}
+
+export function createAuthenticatedSale(body: CreateSaleRequest): Promise<Sale> {
+  return authenticatedRead(
+    async () => apiClient.POST('/sales', { body, headers: await authorizationHeader() }),
+    'The sale could not be completed right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedShifts(): Promise<ShiftHistoryEntry[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/shifts', { headers: await authorizationHeader() }),
+    'Shift records are unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedLowStock(): Promise<LowStockVariant[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/stock-movements/low-stock', { headers: await authorizationHeader() }),
+    'Low-stock records are unavailable right now. Please retry.',
+  )
+}
+
+export function resendAuthenticatedReceipt(saleId: string, email?: string): Promise<ResendReceiptResponse> {
+  return authenticatedRead(
+    async () => apiClient.POST('/sales/{saleId}/resend-receipt', {
+      params: { path: { saleId } },
+      body: email ? { email } : {},
+      headers: await authorizationHeader(),
+    }),
+    'The receipt could not be sent right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedSettings(): Promise<StoreSettings> {
+  return authenticatedRead(
+    async () => apiClient.GET('/settings', { headers: await authorizationHeader() }),
+    'Sales-tax settings are unavailable right now. Please retry.',
+  )
+}
+
+export function updateAuthenticatedSettings(body: UpdateStoreSettingsRequest): Promise<StoreSettings> {
+  return authenticatedRead(
+    async () => apiClient.PUT('/settings', { body, headers: await authorizationHeader() }),
+    'Sales-tax settings could not be saved right now. Please retry.',
   )
 }
 

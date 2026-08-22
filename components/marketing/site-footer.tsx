@@ -1,10 +1,10 @@
 import { AmbelMark } from "@/components/brand/ambel-mark";
-import type { Region } from "@/components/marketing/regions";
-import { REGION_SITE } from "@/components/marketing/regions";
+import type { MarketingRegion } from "@/lib/marketing/region";
+import { REGION_SITE } from "@/components/marketing/site-links";
 
 const LOGO = <AmbelMark size={38} />;
 
-export default function SiteFooter({ region = "IN" }: { region?: Region }) {
+export default function SiteFooter({ region = "IN" }: { region?: MarketingRegion }) {
   const site = REGION_SITE[region];
 
   return (

@@ -1,14 +1,17 @@
 /**
- * Region wiring for the shared marketing chrome.
+ * Per-region destinations and copy for the shared marketing chrome
+ * (SiteHeader / SiteFooter).
  *
- * The India and US editions render the SAME components and the same
- * `app/landing.css` design system. Only the destinations and the copy differ,
- * so those live here rather than being forked into a parallel set of US-only
- * components with their own stylesheet (which is what caused the two editions
- * to drift apart visually in the first place).
+ * Both editions render the SAME components and the same `app/landing.css`
+ * design system; only the links and the blurb differ, which is all this table
+ * holds. Region detection itself lives in `lib/marketing/region.ts` — the type
+ * is imported from there so there is exactly one region vocabulary
+ * (`IN | INTL`) in the codebase.
+ *
+ * `import type` keeps this module client-safe: the type is erased at compile
+ * time, so `next/headers` never reaches the browser bundle.
  */
-
-export type Region = 'IN' | 'US'
+import type { MarketingRegion } from '@/lib/marketing/region'
 
 type SiteLinks = {
   /** Where the wordmark points. */
@@ -36,7 +39,17 @@ const COMPANY_COLUMN: [string, [string, string][]] = [
   ],
 ]
 
-export const REGION_SITE: Record<Region, SiteLinks> = {
+const RETAIL_COLUMN: [string, [string, string][]] = [
+  'Retail',
+  [
+    ['Fashion & Apparel', '/retail/fashion-apparel'],
+    ['Beauty & Wellness', '/retail/beauty-wellness'],
+    ['Electronics', '/retail/electronics'],
+    ['Multi-store', '/retail/multi-store'],
+  ],
+]
+
+export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
   IN: {
     home: '/',
     navLinks: [
@@ -60,20 +73,12 @@ export const REGION_SITE: Record<Region, SiteLinks> = {
           ['Roadmap', '/roadmap'],
         ],
       ],
-      [
-        'Retail',
-        [
-          ['Fashion & Apparel', '/retail/fashion-apparel'],
-          ['Beauty & Wellness', '/retail/beauty-wellness'],
-          ['Electronics', '/retail/electronics'],
-          ['Multi-store', '/retail/multi-store'],
-        ],
-      ],
+      RETAIL_COLUMN,
       COMPANY_COLUMN,
     ],
     footerMeta: ['GST: 37AAMCC4557F1ZF'],
   },
-  US: {
+  INTL: {
     home: '/us',
     navLinks: [
       ['Features', '/us#features'],
@@ -96,15 +101,7 @@ export const REGION_SITE: Record<Region, SiteLinks> = {
           ['Changelog', '/changelog'],
         ],
       ],
-      [
-        'Retail',
-        [
-          ['Fashion & Apparel', '/retail/fashion-apparel'],
-          ['Beauty & Wellness', '/retail/beauty-wellness'],
-          ['Electronics', '/retail/electronics'],
-          ['Multi-store', '/retail/multi-store'],
-        ],
-      ],
+      RETAIL_COLUMN,
       COMPANY_COLUMN,
     ],
     footerMeta: ['US retail edition'],

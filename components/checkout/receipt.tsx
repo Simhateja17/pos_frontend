@@ -25,6 +25,8 @@ export interface ReceiptSale {
   discountAmount: string
   taxAmount: string
   totalAmount: string
+  cashReceived: string | null
+  changeDue: string
   lines: ReceiptLine[]
   payments?: {
     method: 'cash' | 'card' | 'check' | 'upi'
@@ -149,6 +151,11 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
             </span>
           ))}
         </div>
+        {Number(sale.changeDue) > 0 ? (
+          <div role="status" className="mt-3 rounded-lg bg-amber-50 p-3 text-lg font-semibold text-amber-900">
+            Return ₹{money(sale.changeDue)} change
+          </div>
+        ) : null}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
         WhatsApp bill delivery is unavailable for this store. Print or email the confirmed bill instead.
@@ -211,6 +218,12 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
               <span className="receipt-amount">{money(payment.amount)}</span>
             </div>
           ))}
+          {sale.cashReceived ? (
+            <>
+              <div className="receipt-row"><span>Cash received</span><span className="receipt-amount">{money(sale.cashReceived)}</span></div>
+              <div className="receipt-row"><span>Change returned</span><span className="receipt-amount">{money(sale.changeDue)}</span></div>
+            </>
+          ) : null}
           <div className="receipt-rule-dashed" />
           <div className="receipt-foot">Thank you for shopping with us</div>
         </div>

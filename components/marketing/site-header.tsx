@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 
 import { AmbelMark } from "@/components/brand/ambel-mark";
-import type { Region } from "@/components/marketing/regions";
-import { REGION_SITE } from "@/components/marketing/regions";
+import type { MarketingRegion } from "@/lib/marketing/region";
+import { REGION_SITE } from "@/components/marketing/site-links";
 
 const LOGO = <AmbelMark size={38} />;
 
@@ -13,7 +13,7 @@ export default function SiteHeader({
   region = "IN",
 }: {
   authenticated?: boolean;
-  region?: Region;
+  region?: MarketingRegion;
 }) {
   const site = REGION_SITE[region];
 

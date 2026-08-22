@@ -28,5 +28,5 @@ export default function USOnboardingStepPage() {
     )
   }
 
-  return <SubscriptionCheckout region="US" successPath="/us/onboarding/complete" />
+  return <SubscriptionCheckout region="INTL" successPath="/us/onboarding/complete" />
 }

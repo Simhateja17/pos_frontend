@@ -4,6 +4,318 @@
  */
 
 export interface paths {
+    "/hardware": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Hardware state for the active store */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HardwareOverview"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/pairing-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateHardwarePairing"];
+                };
+            };
+            responses: {
+                /** @description Short-lived single-use pairing code */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            pairingCode: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            /** Format: uuid */
+                            terminalId: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateHardwareTestJob"];
+                };
+            };
+            responses: {
+                /** @description Hardware job queued */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            status: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/companions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Companion revoked */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/companion/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["HardwarePair"];
+                };
+            };
+            responses: {
+                /** @description Companion paired */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            companionId: string;
+                            /** Format: uuid */
+                            terminalId: string;
+                            token: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/companion/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["HardwareHeartbeat"];
+                };
+            };
+            responses: {
+                /** @description Heartbeat recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/companion/jobs/next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Next job or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/hardware/companion/jobs/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["HardwareJobResult"];
+                };
+            };
+            responses: {
+                /** @description Result recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/billing/plans": {
         parameters: {
             query?: never;
@@ -15,7 +327,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    region?: "IN" | "US";
+                    region?: components["schemas"]["BillingRegion"];
                 };
                 header?: never;
                 path?: never;
@@ -3907,12 +4219,50 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /** @description Update settings for one selected store. International tenants use explicit state, county, city and district sales-tax rates without GST fields. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateStoreSettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description Store settings updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreSettings"];
+                    };
+                };
+                /** @description Invalid request or region-specific tax fields */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The submitted fields are owner-only or the caller is not management */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Update settings for one selected store. Managers may edit store address, locality, place of supply and tax rate; company identity and policy fields are owner-only. */
+        /** @description Update settings for one selected store. India uses the combined tax rate; International tenants use explicit state, county, city and district sales-tax rates. Company identity and policy fields are owner-only. */
         patch: {
             parameters: {
                 query?: never;
@@ -5311,6 +5661,81 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        HardwareOverview: {
+            terminals: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                cashMode: string;
+                isCurrentDevice: boolean;
+            }[];
+            companions: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                terminalId: string;
+                machineName: string;
+                os: string;
+                version: string;
+                capabilities: {
+                    [key: string]: unknown;
+                };
+                /** Format: date-time */
+                lastSeenAt: string | null;
+                online: boolean;
+            }[];
+            jobs: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                terminalId: string;
+                kind: string;
+                status: string;
+                attempts: number;
+                error: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+        };
+        CreateHardwarePairing: {
+            /** Format: uuid */
+            terminalId: string;
+        };
+        CreateHardwareTestJob: {
+            /** Format: uuid */
+            terminalId: string;
+            /** @enum {string} */
+            kind: "test_print" | "open_drawer";
+            /** @default {} */
+            payload: {
+                [key: string]: unknown;
+            };
+        };
+        HardwarePair: {
+            pairingCode: string;
+            machineName: string;
+            os: string;
+            version: string;
+            /** @default {} */
+            capabilities: {
+                [key: string]: unknown;
+            };
+        };
+        HardwareHeartbeat: {
+            version: string;
+            /** @default {} */
+            capabilities: {
+                [key: string]: unknown;
+            };
+        };
+        HardwareJobResult: {
+            /** @enum {string} */
+            status: "completed" | "failed";
+            error?: string;
+            result?: {
+                [key: string]: unknown;
+            };
+        };
         BillingPlanCatalog: {
             /** @enum {string} */
             mode: "test" | "live";
@@ -5318,7 +5743,7 @@ export interface components {
             plans: components["schemas"]["BillingPlanOption"][];
         };
         /** @enum {string} */
-        BillingRegion: "IN" | "US";
+        BillingRegion: "IN" | "INTL" | "US";
         BillingPlanOption: {
             key: string;
             includedStores: number;
@@ -5329,6 +5754,7 @@ export interface components {
             popular: boolean;
             features: string[];
             entitlements: components["schemas"]["EntitlementLimits"];
+            addons: components["schemas"]["BillingAddon"][];
             monthly: components["schemas"]["BillingQuote"];
             annual: components["schemas"]["BillingQuote"];
             monthlyAvailable: boolean;
@@ -5353,6 +5779,12 @@ export interface components {
             integrations: components["schemas"]["EntitlementValue"];
         };
         EntitlementValue: "unlimited" | number;
+        BillingAddon: {
+            /** @enum {string} */
+            key: "location" | "register" | "user";
+            label: string;
+            unitAmountMinor: number;
+        };
         BillingQuote: {
             baseAmountMinor: number;
             taxAmountMinor: number;
@@ -5571,7 +6003,7 @@ export interface components {
         };
         OnboardingPlanSelectionStep: {
             /** @enum {string} */
-            trialPlan: "starter" | "growth" | "enterprise";
+            trialPlan: "starter" | "growth" | "pro";
             /** @enum {string} */
             billingCycle: "monthly" | "annual";
         };
@@ -6020,6 +6452,8 @@ export interface components {
             discountAmount: string;
             taxAmount: string;
             totalAmount: string;
+            cashReceived: string | null;
+            changeDue: string;
             status: string;
             /** Format: uuid */
             createdBy: string | null;
@@ -6071,6 +6505,7 @@ export interface components {
             cartDiscountPercent?: string;
             cartDiscountAmount?: string;
             payments: components["schemas"]["PaymentInput"][];
+            cashReceived?: string;
             customer?: {
                 /** Format: uuid */
                 id?: string;
@@ -6570,6 +7005,8 @@ export interface components {
             sampleTitles: string[];
         };
         StoreSettings: {
+            /** @enum {string} */
+            region: "IN" | "INTL";
             businessName: string;
             tradeName: string | null;
             addressLine1: string;
@@ -6578,13 +7015,19 @@ export interface components {
             state: string;
             postalCode: string;
             /** @enum {string|null} */
-            gstStatus: "regular" | "composition" | "unregistered" | null;
-            gstin: string | null;
-            pan: string | null;
-            placeOfSupply: string | null;
+            gstStatus?: "regular" | "composition" | "unregistered" | null;
+            gstin?: string | null;
+            pan?: string | null;
+            placeOfSupply?: string | null;
             /** @enum {string|null} */
             businessType: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
-            combinedTaxRatePercent: string;
+            combinedTaxRatePercent?: string;
+            salesTaxRates?: {
+                state: string;
+                county: string;
+                city: string;
+                district: string;
+            };
             discountThresholdPercent: string;
             barcodeLabelFormat: components["schemas"]["BarcodeLabelFormat"];
             editableFields: {
@@ -6601,6 +7044,7 @@ export interface components {
                 placeOfSupply: boolean;
                 businessType: boolean;
                 combinedTaxRatePercent: boolean;
+                salesTaxRates: boolean;
                 discountThresholdPercent: boolean;
                 barcodeLabelFormat: boolean;
             };
@@ -6623,6 +7067,12 @@ export interface components {
             businessType?: "supermarket" | "grocery" | "bakery" | "general" | "apparel" | "electronics" | "other" | null;
             placeOfSupply?: string | null;
             combinedTaxRatePercent?: number;
+            salesTaxRates?: {
+                state: number;
+                county: number;
+                city: number;
+                district: number;
+            };
             discountThresholdPercent?: number;
             barcodeLabelFormat?: components["schemas"]["BarcodeLabelFormat"];
         };

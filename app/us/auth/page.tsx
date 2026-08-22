@@ -3,7 +3,7 @@
 /*
  * US sign-in / sign-up.
  *
- * Renders through the same `AuthShell` and the same `india-auth.module.css`
+ * Renders through `InternationalAuthShell` and the same `india-auth.module.css`
  * design system as the India login and signup screens, so the two editions
  * stay visually identical. Only the fields (state / ZIP instead of state /
  * PIN code, no GSTIN) and the destination routes are market-specific.
@@ -13,7 +13,7 @@ import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
-import { AuthShell, establishSession } from '@/components/auth/india-auth-shell'
+import { InternationalAuthShell, establishSession } from '@/components/auth/india-auth-shell'
 import styles from '@/components/auth/india-auth.module.css'
 
 type Mode = 'login' | 'signup'
@@ -154,7 +154,7 @@ export default function USAuthPage() {
   )
 
   return (
-    <AuthShell mode={mode === 'login' ? 'login' : 'signup'} region="US">
+    <InternationalAuthShell mode={mode === 'login' ? 'login' : 'signup'}>
       <h1 className={styles.heading}>
         {mode === 'login' ? 'Good to have you back.' : 'Create your store account.'}
       </h1>
@@ -291,6 +291,6 @@ export default function USAuthPage() {
       <p className={styles.footerText}>
         <Link className={styles.link} href="/us">← Back to US retail</Link>
       </p>
-    </AuthShell>
+    </InternationalAuthShell>
   )
 }

@@ -8,6 +8,7 @@ export type TenderMethod = 'cash' | 'card' | 'upi'
 export interface TenderRow {
   method: TenderMethod
   amount: string
+  cashReceived?: string
   referenceCode?: string
 }
 
@@ -83,7 +84,7 @@ export function PaymentMethodGrid({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-        {splitEnabled && rows.map((row, index) => (
+        {rows.map((row, index) => (
           <div
             key={`${row.method}-${index}`}
             style={{ border: '1px solid var(--border-soft)', borderRadius: 10, padding: 12, background: '#FAFBFC' }}
@@ -121,6 +122,20 @@ export function PaymentMethodGrid({
               onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
               placeholder="₹0.00"
             />
+
+            {row.method === 'cash' && (
+              <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
+                <span>Cash received from customer</span>
+                <input
+                  value={row.cashReceived ?? ''}
+                  disabled={disabled}
+                  inputMode="decimal"
+                  onChange={(e) => onRowChange(index, { ...row, cashReceived: e.target.value })}
+                  placeholder="₹0.00"
+                  required
+                />
+              </label>
+            )}
 
             {(row.method === 'card' || row.method === 'upi') && (
               <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>

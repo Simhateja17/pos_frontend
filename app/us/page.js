@@ -5,9 +5,12 @@
  *
  * Structurally identical to the India landing (`app/page.js`): it imports the
  * same `app/landing.css` design system and composes the same SiteHeader /
- * SiteFooter / PricingGrid components, passing region="US". Only the copy and
+ * SiteFooter / PricingGrid components, passing region="INTL". Only the copy and
  * the mock figures are market-specific, so a change to the design system lands
  * on both editions at once instead of drifting.
+ *
+ * Pricing is fetched live from the backend exactly as the India landing does
+ * (see `app/page.js`); there are deliberately no hardcoded plan figures here.
  */
 
 import "@/app/landing.css";
@@ -81,9 +84,36 @@ function featBadges(b3, b4) {
 
 export default function USLandingPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [plans, setPlans] = useState([]);
+  // "loading" | "loaded" | "error" — distinguishes "hasn't returned yet" from
+  // "failed", since both start out as an empty plans array.
+  const [plansState, setPlansState] = useState("loading");
   const goAuth = () => {
     window.location.href = "/us/auth";
   };
+
+  useEffect(() => {
+    let active = true;
+    // Same-origin through the existing /_backend rewrite (see lib/api/client.ts)
+    // — this route needs no auth/session, so a plain fetch is fine here.
+    void fetch("/_backend/public/plans?region=INTL")
+      .then((res) => {
+        if (!res.ok) throw new Error(`plans fetch failed: ${res.status}`);
+        return res.json();
+      })
+      .then((body) => {
+        if (!active) return;
+        setPlans(body.plans ?? []);
+        setPlansState("loaded");
+      })
+      .catch((err) => {
+        console.error("Failed to load pricing plans", err);
+        if (active) setPlansState("error");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -174,7 +204,7 @@ export default function USLandingPage() {
   return (
     <>
       {/* NAV */}
-      <SiteHeader authenticated={authenticated} region="US" />
+      <SiteHeader authenticated={authenticated} region="INTL" />
 
       {/* HERO */}
       <section className="hero-section">
@@ -371,9 +401,15 @@ export default function USLandingPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
             Simple, transparent pricing
           </div>
-          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>One flat price. <em>Scale without limits.</em></h2>
+          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
-          <PricingGrid animate region="US" />
+          {plansState === "loaded" && plans.length > 0 && <PricingGrid plans={plans} animate />}
+          {plansState === "error" && (
+            <p className="section-sub" style={{ margin: "28px auto 0" }}>
+              Pricing is temporarily unavailable. Please refresh, or see the{" "}
+              <a href="/pricing">full pricing page</a>.
+            </p>
+          )}
         </div>
       </section>
 
@@ -416,7 +452,7 @@ export default function USLandingPage() {
       </section>
 
       {/* FOOTER */}
-      <SiteFooter region="US" />
+      <SiteFooter region="INTL" />
     </>
   );
 }

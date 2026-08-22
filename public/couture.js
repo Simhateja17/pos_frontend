@@ -1819,19 +1819,19 @@ biztype: function(){
 subscription: function(){
   var billing=AUTH.billing;
   var plans=[
-    {id:'starter',name:'Starter',monthly:999,annual:799,stores:'1 store · 2 counters',desc:'Perfect for single-store kirana or specialty retail.',feats:['Billing & cart: GST-native','UPI, card & cash payments','Inventory (up to 2,000 SKUs)','5 staff accounts','Email & WhatsApp bills','GST reports & GSTR-1 export']},
-    {id:'growth',name:'Growth',monthly:2499,annual:1999,stores:'Up to 3 stores · unlimited counters',desc:'Most popular for fashion & lifestyle chains.',feats:['Everything in Starter','Loyalty, gift cards & CRM','Sales channels (web + social)','Delivery challan & receivables','AI Copilot: 100 queries/mo','WhatsApp campaigns (DLT)','Staff commissions & coaching','Priority support (4-hr SLA)'],featured:true},
-    {id:'enterprise',name:'Enterprise',monthly:null,annual:null,stores:'Unlimited stores & counters',desc:'For large chains, franchises and enterprise retail.',feats:['Everything in Growth','Unlimited AI Copilot queries','Custom report builder & API','Integration marketplace','Franchise management module','Dedicated account manager','99.98% uptime SLA']}
+    {id:'starter',name:'Starter',monthly:799,annual:799,stores:'2 locations · 5 users · 3 registers',desc:'A clear starting point for focused retail teams.',feats:['Unlimited POS transactions','ML reorder intelligence','Billing & cart: GST-native','Inventory management','GST reports & CSV export','Offline billing and sync']},
+    {id:'growth',name:'Growth',monthly:1499,annual:1499,stores:'5 locations · 15 users · 8 registers',desc:'Most popular for growing multi-location retailers.',feats:['Unlimited POS transactions','ML reorder intelligence','Everything in Starter','Inventory management','GST reports & CSV export','Priority support'],featured:true},
+    {id:'pro',name:'Pro',monthly:2999,annual:2999,stores:'6 locations · 10 users · 6 registers',desc:'Flexible capacity for larger retail operations.',feats:['Unlimited POS transactions','ML reorder intelligence','Everything in Growth','Additional locations: ₹299 each','Additional registers: ₹199 each','Additional users: ₹99 each','Priority support']}
   ];
   return '<div class="a-full" style="background:#F2F4F7;overflow-y:auto;justify-content:flex-start;padding:48px 40px">'
     +'<div style="width:100%;max-width:860px;margin:0 auto">'
     +'<div style="text-align:center;margin-bottom:6px"><button class="ab-link" style="font-size:13px;color:#98A2B3" onclick="authGo(\'biztype\',\'back\')">← Back</button></div>'
     +'<div style="text-align:center;margin-bottom:24px"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px">Choose your plan.</div><div style="font-size:15px;color:#667085;margin-bottom:20px">Choose a paid plan and complete secure checkout</div>'
-    +'<div class="a-bill-tog" style="margin:0 auto 0"><button class="a-bill-opt'+(billing==='monthly'?' on':'')+'" onclick="AUTH.billing=\'monthly\';authGo(\'subscription\')">Monthly</button><button class="a-bill-opt'+(billing==='annual'?' on':'')+'" onclick="AUTH.billing=\'annual\';authGo(\'subscription\')">Annual <span style="background:#10B981;color:#fff;padding:2px 7px;border-radius:100px;font-size:10px;margin-left:4px">Save 20%</span></button></div></div>'
+    +'<div class="a-bill-tog" style="margin:0 auto 0"><button class="a-bill-opt'+(billing==='monthly'?' on':'')+'" onclick="AUTH.billing=\'monthly\';authGo(\'subscription\')">Monthly</button><button class="a-bill-opt'+(billing==='annual'?' on':'')+'" onclick="AUTH.billing=\'annual\';authGo(\'subscription\')">Annual</button></div></div>'
     +'<div class="a-plan-wrap">'
     +plans.map(function(p){
       var sel=AUTH.plan===p.id;
-      var price=p.monthly?'<div class="a-pprice"><sup>₹</sup>'+(billing==='annual'?p.annual:p.monthly)+'<sub>/mo</sub></div>'+(billing==='annual'?'<div style="font-size:11.5px;color:#667085;margin-top:2px">billed ₹'+Math.round(p.annual*12/100)*100+'/year</div>':''):'<div class="a-pprice" style="font-size:22px">Custom pricing</div>';
+      var price='<div class="a-pprice"><sup>₹</sup>'+(billing==='annual'?p.annual:p.monthly)+'<sub>/mo</sub></div>'+(billing==='annual'?'<div style="font-size:11.5px;color:#667085;margin-top:2px">billed ₹'+(p.annual*12)+'/year · no annual discount</div>':'');
       return '<div class="a-plan'+(sel?' sel':'')+(p.featured?' a-feat':'')+'" onclick="AUTH.plan=\''+p.id+'\';document.querySelectorAll(\'.a-plan\').forEach(function(x){x.classList.remove(\'sel\');});this.classList.add(\'sel\')">'
         +(p.featured?'<div class="a-pbadge">MOST POPULAR</div>':'')
         +'<div class="a-pname">'+p.name+'</div>'

@@ -64,6 +64,8 @@ type SaleResponse = {
   discountAmount: string
   taxAmount: string
   totalAmount: string
+  cashReceived: string | null
+  changeDue: string
   businessName?: string | null
   lines: { variantId: string; quantity: number; unitPrice: string; lineTotal: string }[]
   payments?: {
@@ -112,6 +114,7 @@ interface PendingSaleBody {
   cartDiscountPercent?: string
   cartDiscountAmount?: string
   payments: { method: TenderMethod; amount: string; referenceCode?: string }[]
+  cashReceived?: string
   customer?: { id?: string; name?: string; phone?: string; email?: string }
   receiptEmail?: string
 }
@@ -591,6 +594,16 @@ function CheckoutPageInner() {
       return
     }
 
+    const cashRow = tenderRows.find((row) => row.method === 'cash')
+    if (cashRow) {
+      const received = Number(cashRow.cashReceived)
+      const allocated = Number(cashRow.amount)
+      if (!cashRow.cashReceived || !Number.isFinite(received) || received < allocated) {
+        setChargeError(`Enter cash received of at least ₹${money(allocated)} so Ambel can calculate the change.`)
+        return
+      }
+    }
+
     const body: PendingSaleBody = {
       // Stable for the life of this bill: see cartSaleId's declaration. A
       // retry of the same bill MUST reuse this id so the server recognises it
@@ -609,6 +622,7 @@ function CheckoutPageInner() {
         amount: Number(r.amount || '0').toFixed(2),
         referenceCode: r.referenceCode,
       })),
+      cashReceived: cashRow ? Number(cashRow.cashReceived).toFixed(2) : undefined,
       customer: buildCustomerPayload(),
     }
 
@@ -681,6 +695,8 @@ function CheckoutPageInner() {
       discountAmount: sale.discountAmount,
       taxAmount: sale.taxAmount,
       totalAmount: sale.totalAmount,
+      cashReceived: sale.cashReceived,
+      changeDue: sale.changeDue,
       payments: sale.payments ?? [],
       lines: sale.lines.map((line) => ({
         ...line,

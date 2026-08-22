@@ -46,7 +46,7 @@ export default function FeaturesPage() {
 
       <section className="cta-section">
         <h2>See it running<br />on your own catalog.</h2>
-        <p>Import your products in minutes and try every module free for 14 days.</p>
+        <p>Import your products in minutes and choose the plan that fits your active locations, users and registers.</p>
         <div className="cta-actions">
           <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>

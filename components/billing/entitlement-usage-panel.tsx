@@ -6,7 +6,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
 import styles from './entitlement-usage-panel.module.css'
 
-type Region = 'IN' | 'US'
+type Region = 'IN' | 'INTL'
 type BillingStatus = components['schemas']['BillingStatus']
 type EntitlementValue = number | 'unlimited'
 
@@ -80,7 +80,7 @@ export function EntitlementUsagePanel({ region }: { region: Region }) {
         </span>
       </div>
       <p className={styles.note}>
-        Implemented resources only · POS transactions for {status.usage.businessMonth.slice(0, 7)} · {region === 'IN' ? 'India catalogue' : 'US catalogue'}
+        Implemented resources only · POS transactions for {status.usage.businessMonth.slice(0, 7)} · {region === 'IN' ? 'India catalogue' : 'International catalogue'}
       </p>
       <div className={styles.grid}>
         {metrics.map(([label, used, limit]) => (
