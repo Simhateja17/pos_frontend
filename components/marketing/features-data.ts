@@ -23,3 +23,20 @@ export const FEATURES: Feature[] = [
   ["challan", "Delivery Challan", "Legally-required B2B and inter-branch dispatch documents, one-click convert to tax invoice on delivery.", "NEW", ""],
   ["payments", "Payments & Settlement", "UPI, card, cash, split, with PSP-level UTR matching, daily settlement reconciliation, and failed-payment resolution.", "", "★"],
 ];
+
+/**
+ * US edition feature set. Same `Feature` tuple and same `FEAT_ICONS` keys as
+ * India so both editions render through the identical `.feat-card` grid; only
+ * the copy is market-specific.
+ */
+export const US_FEATURES: Feature[] = [
+  ["bill", "Fast Checkout", "Payment-first checkout with barcode scan, variant picker, split tender and tap/chip card capture in a handful of taps.", "EXISTING", ""],
+  ["reports", "Sales Tax Automation", "State, county, city and special-district nexus resolved per transaction, with product taxability and exemption certificates.", "NEW", "★"],
+  ["channels", "Omnichannel Sync", "One stock pool across store POS, Shopify storefront and social shops. BOPIS and ship-from-store fulfil out of the same inventory.", "NEW", ""],
+  ["bolt", "Offline-First Billing", "Keep selling when the internet drops. Sales, tax and card authorisations are stored locally and reconciled the moment you reconnect.", "", "★"],
+  ["inventory", "Inventory & Variants", "Size × colour × material matrix, multi-location transfers, purchase orders and reorder suggestions across every channel.", "", "★"],
+  ["challan", "BOPIS & Pickup", "Buy-online-pickup-in-store queues, staging shelves, promise times and late-pickup follow-up built into the associate view.", "NEW", ""],
+  ["payments", "Payments & Hardware", "Tap/chip readers, cash drawers, receipt and label printers paired from one screen, with store-and-forward card fallback.", "", ""],
+  ["customer", "Digital Receipts & Returns", "Email and SMS receipts by default, printed on request, each carrying a return barcode and the full tax breakdown.", "", "IMPROVE"],
+  ["staff", "Reports & Staff", "Best sellers, gross margin, tax liability, omnichannel mix and per-associate performance, scheduled straight to your inbox.", "", ""],
+];
