@@ -410,7 +410,7 @@ export default function USLandingPage() {
           </div>
           <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
-          {plansState === "loaded" && plans.length > 0 && <PricingGrid plans={plans} animate />}
+          {plansState === "loaded" && plans.length > 0 && <PricingGrid plans={plans} />}
           {plansState === "error" && (
             <p className="section-sub" style={{ margin: "28px auto 0" }}>
               Pricing is temporarily unavailable. Please refresh, or see the{" "}
