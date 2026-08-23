@@ -1,5 +1,9 @@
 'use client'
 
+// See app/plans/page.tsx: the subscription checkout is styled by landing.css,
+// which is imported at the route rather than inside the component.
+import '@/app/landing.css'
+
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { SubscriptionCheckout } from '@/components/billing/subscription-checkout'

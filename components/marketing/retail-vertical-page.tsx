@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
+import { REGION_SITE } from "@/components/marketing/site-links";
+import type { MarketingRegion } from "@/lib/marketing/region";
 
 type Feature = { title: string; body: string };
 type Stat = [string, string];
@@ -13,6 +15,7 @@ export default function RetailVerticalPage({
   subtitle,
   stats,
   features,
+  region = "IN",
 }: {
   tag: string;
   title: string;
@@ -20,10 +23,14 @@ export default function RetailVerticalPage({
   subtitle: string;
   stats: Stat[];
   features: Feature[];
+  /** Which edition's chrome and CTA destinations to render. */
+  region?: MarketingRegion;
 }) {
+  const site = REGION_SITE[region];
+
   return (
     <>
-      <SiteHeader />
+      <SiteHeader region={region} />
       <section className="content-hero">
         <div className="section-tag">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7z" /></svg>
@@ -64,11 +71,11 @@ export default function RetailVerticalPage({
         <h2>Ready to run {tag.toLowerCase()}<br />on Ambel POS?</h2>
         <p>Choose a paid plan and migrate your existing catalog in minutes.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/signup">Choose a plan</a>
-          <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>
+          <a className="btn-cta-w" href={site.signupHref}>Choose a plan</a>
+          <a className="btn-cta-g" href={site.appHref}>Explore prototype →</a>
         </div>
       </section>
-      <SiteFooter />
+      <SiteFooter region={region} />
     </>
   );
 }
