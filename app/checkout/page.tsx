@@ -595,10 +595,10 @@ function CheckoutPageInner() {
     }
 
     const cashRow = tenderRows.find((row) => row.method === 'cash')
-    if (cashRow) {
+    if (cashRow?.cashReceived) {
       const received = Number(cashRow.cashReceived)
       const allocated = Number(cashRow.amount)
-      if (!cashRow.cashReceived || !Number.isFinite(received) || received < allocated) {
+      if (!Number.isFinite(received) || received < allocated) {
         setChargeError(`Enter cash received of at least ₹${money(allocated)} so Ambel can calculate the change.`)
         return
       }
