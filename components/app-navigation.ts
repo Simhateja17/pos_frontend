@@ -1,6 +1,7 @@
 import {
   BadgeIndianRupee,
   BarChart3,
+  DollarSign,
   Bell,
   Boxes,
   FolderTree,
@@ -25,10 +26,12 @@ import {
   UserCog,
   Users,
   Wallet,
+  Landmark,
   WalletCards,
   Warehouse,
   type LucideIcon,
 } from 'lucide-react'
+import type { MarketingRegion } from '@/lib/marketing/region'
 
 export type AppNavItem = {
   label: string
@@ -125,6 +128,79 @@ export const APP_NAVIGATION: AppNavGroup[] = [
   },
 ]
 
+/**
+ * How the US edition differs from the India tree above.
+ *
+ * The STRUCTURE is deliberately identical — same seven groups, same order, same
+ * role gating — because both editions are the same product. Only the content
+ * moves: modules that exist solely for Indian regulation or channels are
+ * dropped, tax vocabulary changes, and the rupee icon becomes a dollar. Keyed
+ * by the India href so the two lists cannot silently drift apart.
+ */
+type RegionItemOverride = {
+  /** Not part of this edition at all. */
+  drop?: true
+  label?: string
+  icon?: LucideIcon
+}
+
+const INTL_OVERRIDES: Record<string, RegionItemOverride> = {
+  // A delivery challan is an Indian goods-transport document; there is no US
+  // equivalent that maps onto the same backend contract.
+  '/app/delivery-challan': { drop: true },
+  // WhatsApp is the India-first customer channel. The US edition reaches
+  // customers over the Email module that is already in the System group.
+  '/app/whatsapp-connect': { drop: true },
+  '/app/documents': { label: 'Tax Documents' },
+  '/app/payments': { icon: DollarSign },
+}
+
+/**
+ * Items that exist only in the US tree, inserted after the given India href.
+ *
+ * Sales tax is configured per jurisdiction and is a daily concern for a US
+ * retailer, so it earns a nav entry of its own; India's single GST registration
+ * is captured at signup and lives in Settings.
+ */
+const INTL_EXTRAS: Record<string, AppNavItem[]> = {
+  '/app/payments': [{ label: 'Sales Tax', href: '/app/settings/tax', icon: Landmark }],
+}
+
+function itemsForRegion(items: AppNavItem[], region: MarketingRegion): AppNavItem[] {
+  if (region === 'IN') return items
+
+  const result: AppNavItem[] = []
+  for (const item of items) {
+    const override = INTL_OVERRIDES[item.href]
+    if (override?.drop) continue
+    result.push(override ? { ...item, ...(override.label ? { label: override.label } : {}), ...(override.icon ? { icon: override.icon } : {}) } : item)
+    for (const extra of INTL_EXTRAS[item.href] ?? []) result.push(extra)
+  }
+  return result
+}
+
+/**
+ * The India-relative href every nav item is declared with.
+ *
+ * Shared screens are written against `/app/...`; `appPath()` in
+ * `lib/app-region.tsx` rebases them onto `/us/dashboard/...`. Role checks run
+ * the mapping backwards so one permission table serves both editions.
+ */
+export function toIndiaPath(pathname: string): string {
+  return pathname.startsWith('/us/dashboard')
+    ? `/app${pathname.slice('/us/dashboard'.length)}`
+    : pathname
+}
+
+export function navigationForRegionRole(
+  region: MarketingRegion,
+  role?: 'owner' | 'manager' | 'cashier',
+): AppNavGroup[] {
+  return navigationForRole(role)
+    .map((group) => ({ ...group, items: itemsForRegion(group.items, region) }))
+    .filter((group) => group.items.length > 0)
+}
+
 export function navigationForRole(role?: 'owner' | 'manager' | 'cashier'): AppNavGroup[] {
   if (!role) return []
 
@@ -140,16 +216,18 @@ export function navigationForRole(role?: 'owner' | 'manager' | 'cashier'): AppNa
 }
 
 export function cashierCanAccessAppPath(pathname: string): boolean {
+  const path = toIndiaPath(pathname)
   return APP_NAVIGATION.some((group) =>
     group.items.some(
-      (item) => item.cashierAccessible && (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+      (item) => item.cashierAccessible && (path === item.href || path.startsWith(`${item.href}/`)),
     ),
   )
 }
 
 export function roleCanAccessAppPath(role: 'owner' | 'manager' | 'cashier', pathname: string): boolean {
+  const path = toIndiaPath(pathname)
   const candidates = APP_NAVIGATION.flatMap((group) => group.items)
-    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .filter((item) => path === item.href || path.startsWith(`${item.href}/`))
     .sort((a, b) => b.href.length - a.href.length)
   const matched = candidates[0]
   if (!matched) return role !== 'cashier'

@@ -1,5 +1,5 @@
-import { UsDashboardView } from '@/components/us-app/dashboard-view'
+import { DashboardView } from '@/components/dashboard/dashboard-view'
 
 export default function UsDashboardPage() {
-  return <UsDashboardView />
+  return <DashboardView />
 }

@@ -7,6 +7,7 @@ import { X } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
+import { useAppRegion } from '@/lib/app-region'
 
 type SetupState = components['schemas']['SetupState']
 type TourStep = { id: string; title: string; body: string; href: string }
@@ -22,6 +23,10 @@ const ALL_TOUR_STEPS: readonly TourStep[] = [
 
 export function GuidedTour() {
   const pathname = usePathname()
+  // Tour destinations are declared with India paths; the US edition walks the
+  // same steps at its own base. `appPath` is stable per region, so it is safe
+  // in the effect below.
+  const { appPath } = useAppRegion()
   const [setup, setSetup] = useState<SetupState | null>(null)
   const [steps, setSteps] = useState<readonly TourStep[]>(ALL_TOUR_STEPS)
   const [open, setOpen] = useState(false)
@@ -30,7 +35,7 @@ export function GuidedTour() {
   useEffect(() => {
     let active = true
     void (async () => {
-      const isDashboard = pathname === '/app/dashboard'
+      const isDashboard = pathname === appPath('/app/dashboard')
       const replayRequested = window.location.hash === '#guided-tour'
       const isPlainDashboard = isDashboard && !window.location.search && !window.location.hash
       if (!isDashboard) return
@@ -73,7 +78,7 @@ export function GuidedTour() {
       }
     })()
     return () => { active = false }
-  }, [pathname])
+  }, [pathname, appPath])
 
   async function save(status: 'in_progress' | 'skipped' | 'completed', nextIndex = index) {
     const headers = await authHeaders()
@@ -102,7 +107,7 @@ export function GuidedTour() {
       <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
         <Link
           className="btn btn-sm"
-          href={current.href}
+          href={appPath(current.href)}
           // The tour is intentionally a coachmark, not a modal. Keep it open
           // while the user visits the page so fields underneath remain
           // clickable and typeable; progress is saved before navigation.
