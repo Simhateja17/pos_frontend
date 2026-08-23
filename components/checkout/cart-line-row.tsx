@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { allowsFractionalQuantity, unitSuffix } from '@/lib/units'
+import { useAppRegion } from '@/lib/app-region'
 
 export interface CartLine {
   variantId: string
@@ -16,7 +17,6 @@ export interface CartLine {
   isTaxable: boolean
 }
 
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 
 function lineTotal(line: CartLine): number {
   return Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0')
@@ -40,6 +40,7 @@ export function CartLineRow({
   onRemove: (variantId: string) => void
   disabled?: boolean
 }) {
+  const { money } = useAppRegion()
   const [showDiscountInput, setShowDiscountInput] = useState(Number(line.discountAmount || '0') > 0)
   const discount = Number(line.discountAmount || '0')
 
@@ -54,7 +55,7 @@ export function CartLineRow({
             <>
               {' · '}
               <span className="badge b-amber" style={{ fontSize: 9, padding: '1px 5px' }}>
-                −{money.format(discount)}
+                −{money(discount)}
               </span>
             </>
           ) : null}
@@ -110,7 +111,7 @@ export function CartLineRow({
       </td>
 
       <td className="num">
-        {money.format(Number(line.unitPrice))}
+        {money(Number(line.unitPrice))}
         {unitSuffix(line.unitOfMeasure) ? <span className="t-sub"> / {unitSuffix(line.unitOfMeasure)}</span> : null}
       </td>
 
@@ -134,7 +135,7 @@ export function CartLineRow({
         )}
       </td>
 
-      <td className="num t-strong">{money.format(lineTotal(line))}</td>
+      <td className="num t-strong">{money(lineTotal(line))}</td>
 
       <td>
         <button

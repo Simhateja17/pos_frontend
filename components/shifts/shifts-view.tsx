@@ -21,6 +21,7 @@ import { ReconciliationFigure } from '@/components/shifts/reconciliation-figure'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
+import { useAppRegion } from '@/lib/app-region'
 
 type XReport = {
   shiftId: string
@@ -56,16 +57,22 @@ type ShiftHistoryEntry = {
   terminalName: string | null
 }
 const LOAD_ERROR = "We couldn't load this shift. Check your connection and try again."
-// A total the API has not sent yet (an older backend without UPI, say) must
-// read as ₹0.00, never ₹NaN.
-const money = (value: string) => {
+/**
+ * A total the API has not sent yet (an older backend without UPI, say) must
+ * read as a zero amount, never NaN. Takes the edition's formatter so the same
+ * guard serves rupees and dollars.
+ */
+const safeMoney = (format: (value: string | number) => string, value: string) => {
   const amount = Number(value)
-  return `₹${(Number.isFinite(amount) ? amount : 0).toFixed(2)}`
+  return format(Number.isFinite(amount) ? amount : 0)
 }
-const stamp = (value: string) =>
-  new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+const stampAt = (value: string, locale: string) =>
+  new Date(value).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })
 
 export function ShiftsView() {
+  const { money: formatMoney, pack } = useAppRegion()
+  const money = (value: string) => safeMoney(formatMoney, value)
+  const stamp = (value: string) => stampAt(value, pack.locale)
   /**
    * Which shift is "mine" is derived from the server, not cached in
    * localStorage. A paired counter is the primary key: cashiers can change
@@ -162,11 +169,11 @@ export function ShiftsView() {
     const openingCash = startingCash.trim()
     if (currentTerminal.cashMode !== 'none') {
       if (!openingCash) {
-        setOpenError('Enter the opening cash amount before opening the register. Enter ₹0 if the drawer is empty.')
+        setOpenError(`Enter the opening cash amount before opening the register. Enter ${money('0')} if the drawer is empty.`)
         return
       }
       if (!Number.isFinite(Number(openingCash)) || Number(openingCash) < 0) {
-        setOpenError('Enter a valid opening cash amount of ₹0 or more.')
+        setOpenError(`Enter a valid opening cash amount of ${money('0')} or more.`)
         return
       }
     }
@@ -198,9 +205,9 @@ export function ShiftsView() {
   // the cashier nothing to act on.
   function invalidCount() {
     const counted = countedCash.trim()
-    if (!counted) return 'Enter the counted cash before closing. Enter ₹0 if the drawer is empty.'
+    if (!counted) return `Enter the counted cash before closing. Enter ${money('0')} if the drawer is empty.`
     if (!Number.isFinite(Number(counted)) || Number(counted) < 0)
-      return 'Enter a valid counted cash amount of ₹0 or more.'
+      return `Enter a valid counted cash amount of ${money('0')} or more.`
     return null
   }
 
@@ -390,13 +397,16 @@ function OpenRegister({
   error: string | null
   canPairCounter?: boolean
 }) {
+  const { money: formatMoney, pack } = useAppRegion()
+  const money = (value: string) => safeMoney(formatMoney, value)
+  const stamp = (value: string) => stampAt(value, pack.locale)
   return (
     <Card>
       <CardHead
         title={currentTerminal ? `Open ${currentTerminal.name}` : 'Connect this device'}
         sub={currentTerminal
           ? currentTerminal.cashMode === 'none'
-            ? `${cashier} can start immediately. This counter has no cash drawer, so opening cash is ₹0.00.`
+            ? `${cashier} can start immediately. This counter has no cash drawer, so opening cash is ${money('0')}.`
             : `Count the drawer before the first sale. This is the opening cash for ${currentTerminal.name}.`
           : 'An owner or manager must pair this browser to a counter before a shift can start.'}
       />
@@ -422,14 +432,14 @@ function OpenRegister({
           <form onSubmit={onSubmit} style={{ maxWidth: 460 }}>
             {currentTerminal.cashMode === 'none' ? (
               <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--soft)', color: 'var(--ink-2)', fontSize: 13 }}>
-                Opening cash: <b>₹0.00</b>. This is a no-cash counter.
+                Opening cash: <b>{money('0')}</b>. This is a no-cash counter.
               </div>
             ) : (
               <Fld id="starting-cash" label="Opening cash count">
                 <input
                   id="starting-cash"
                   inputMode="decimal"
-                  placeholder="₹0.00"
+                  placeholder={money('0')}
                   aria-invalid={Boolean(error)}
                   value={startingCash}
                   onChange={(e) => onStartingCash(e.target.value)}
@@ -464,6 +474,9 @@ function ActiveShift({
   busy: boolean
   error: string | null
 }) {
+  const { money: formatMoney, pack } = useAppRegion()
+  const money = (value: string) => safeMoney(formatMoney, value)
+  const stamp = (value: string) => stampAt(value, pack.locale)
   const metrics: KpiItem[] = report
     ? [
         { label: 'Cash sales', value: money(report.cashSalesTotal), meta: 'Into this drawer' },
@@ -510,7 +523,7 @@ function ActiveShift({
             <input
               id="counted-cash"
               inputMode="decimal"
-              placeholder="₹0.00"
+              placeholder={money('0')}
               aria-invalid={Boolean(error)}
               value={countedCash}
               onChange={(e) => onCountedCash(e.target.value)}
@@ -545,6 +558,9 @@ function ActiveShift({
 }
 
 function ClosedSummary({ report }: { report: ZReport }) {
+  const { money: formatMoney, pack } = useAppRegion()
+  const money = (value: string) => safeMoney(formatMoney, value)
+  const stamp = (value: string) => stampAt(value, pack.locale)
   const varianceValue = Number(report.variance)
   return (
     <Card>
@@ -574,6 +590,9 @@ function ClosedSummary({ report }: { report: ZReport }) {
 }
 
 function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
+  const { money: formatMoney, pack } = useAppRegion()
+  const money = (value: string) => safeMoney(formatMoney, value)
+  const stamp = (value: string) => stampAt(value, pack.locale)
   return (
     <Card>
       <CardHead

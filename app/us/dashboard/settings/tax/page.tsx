@@ -1,5 +1,5 @@
-import { UsTaxView } from '@/components/us-app/tax-view'
+import { SalesTaxView } from '@/components/settings/sales-tax-view'
 
-export default function UsTaxPage() {
-  return <UsTaxView />
+export default function UsSalesTaxPage() {
+  return <SalesTaxView />
 }

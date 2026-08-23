@@ -15,8 +15,8 @@ import {
   type CustomerWrite,
 } from './api'
 import { CustomerForm } from './customer-form'
+import { useAppRegion } from '@/lib/app-region'
 
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
 
 function displayAddress(customer: Customer): string {
@@ -50,6 +50,7 @@ function matchesPurchase(purchase: CustomerPurchaseList['items'][number], query:
 }
 
 export function CustomerDetailView({ customerId }: { customerId: string }) {
+  const { money } = useAppRegion()
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [purchases, setPurchases] = useState<CustomerPurchaseList | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
@@ -187,7 +188,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
                 </td>
                 <td className="t-sub">{dateTime.format(new Date(purchase.date))}</td>
                 <td className="t-sub">{purchase.store?.name ?? 'Store unavailable'}</td>
-                <td className="t-mono t-strong">{money.format(Number(purchase.total))}</td>
+                <td className="t-mono t-strong">{money(Number(purchase.total))}</td>
                 <td className="t-sub">{purchase.paymentMethods.length ? purchase.paymentMethods.join(' + ') : 'Not recorded'}</td>
                 <td><Badge tone={purchase.status === 'completed' ? 'green' : 'grey'}>{purchase.status}</Badge></td>
                 <td>

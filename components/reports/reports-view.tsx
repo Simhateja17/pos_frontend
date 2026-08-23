@@ -11,8 +11,8 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Card, CardHead, CardPad, DataTable, PageHead, Seg, SectionLabel } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useAppRegion } from '@/lib/app-region'
 
-const currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 
 const GROUPS = [
   { label: 'Sales', value: 'sales' },
@@ -30,9 +30,9 @@ function isoDaysAgo(days: number): string {
   return date.toISOString().slice(0, 10)
 }
 
-function cell(value: string | number | null, money: boolean): string {
+function cell(value: string | number | null, money: boolean, format: (value: string | number) => string): string {
   if (value === null || value === undefined) return '-'
-  if (money) return currency.format(Number(value))
+  if (money) return format(Number(value))
   return String(value)
 }
 
@@ -67,6 +67,7 @@ function download(report: ReportTable) {
 }
 
 export function ReportsView() {
+  const { money } = useAppRegion()
   const [catalog, setCatalog] = useState<ReportCatalog | null>(null)
   const [group, setGroup] = useState<Group>('sales')
   const [kind, setKind] = useState<ReportKind>('sales-by-day')
@@ -214,7 +215,7 @@ export function ReportsView() {
                   <tr key={index}>
                     {report.columns.map((column) => (
                       <td key={column.key}>
-                        {cell(row[column.key] ?? null, column.money)}
+                        {cell(row[column.key] ?? null, column.money, money)}
                       </td>
                     ))}
                   </tr>
@@ -225,7 +226,7 @@ export function ReportsView() {
                       <td key={column.key}>
                         {report.totals?.[column.key] === undefined
                           ? ''
-                          : cell(report.totals[column.key] ?? null, column.money)}
+                          : cell(report.totals[column.key] ?? null, column.money, money)}
                       </td>
                     ))}
                   </tr>

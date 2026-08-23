@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { getAuthenticatedSale, type Sale } from '@/lib/api/authenticated-client'
 import { Badge, Card, CardHead, CardPad, DataTable, KpiRow, PageHead, type BadgeTone, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useAppRegion } from '@/lib/app-region'
 
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
 
 const PAYMENT_LABELS: Record<Sale['payments'][number]['method'], string> = {
@@ -30,6 +30,7 @@ function titleFor(sale: Sale): string {
 }
 
 export function SaleDetailView({ saleId }: { saleId: string }) {
+  const { money } = useAppRegion()
   const [sale, setSale] = useState<Sale | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +75,7 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
     { label: 'Status', value: <Badge tone={statusTone}>{sale.status}</Badge>, meta: 'Server status' },
     { label: 'Recorded', value: dateTime.format(new Date(sale.createdAt)), meta: 'Server timestamp' },
     { label: 'Items', value: String(itemCount), meta: `${sale.lines.length} line${sale.lines.length === 1 ? '' : 's'}` },
-    { label: 'Total', value: money.format(Number(sale.totalAmount)), meta: 'Server total', lead: true },
+    { label: 'Total', value: money(Number(sale.totalAmount)), meta: 'Server total', lead: true },
   ]
 
   return (
@@ -98,10 +99,10 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
                 <tr key={line.id}>
                   <td className="t-mono t-sub" title={line.variantId}>{line.variantId}</td>
                   <td className="num">{line.quantity}</td>
-                  <td className="num">{money.format(Number(line.unitPrice))}</td>
-                  <td className="num">{Number(line.discountAmount) > 0 ? `−${money.format(Number(line.discountAmount))}` : '-'}</td>
+                  <td className="num">{money(Number(line.unitPrice))}</td>
+                  <td className="num">{Number(line.discountAmount) > 0 ? `−${money(Number(line.discountAmount))}` : '-'}</td>
                   <td>{line.isTaxable ? 'Yes' : 'No'}</td>
-                  <td className="num t-strong">{money.format(Number(line.lineTotal))}</td>
+                  <td className="num t-strong">{money(Number(line.lineTotal))}</td>
                 </tr>
               ))}
             </DataTable>
@@ -119,7 +120,7 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
                   <td>{PAYMENT_LABELS[payment.method]}</td>
                   <td><Badge tone={payment.direction === 'refund' ? 'blue' : 'green'}>{payment.direction}</Badge></td>
                   <td className="t-mono t-sub">{payment.referenceCode ?? '-'}</td>
-                  <td className="num t-strong">{money.format(Number(payment.amount))}</td>
+                  <td className="num t-strong">{money(Number(payment.amount))}</td>
                 </tr>
               ))}
             </DataTable>
@@ -145,10 +146,11 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
 }
 
 function SummaryRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  const { money } = useAppRegion()
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: strong ? 16 : 13.5, fontWeight: strong ? 700 : 400 }}>
       <span>{label}</span>
-      <span className="num">{money.format(Number(value))}</span>
+      <span className="num">{money(Number(value))}</span>
     </div>
   )
 }
