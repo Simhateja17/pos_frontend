@@ -13,7 +13,7 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import NotFoundPath from "@/components/marketing/not-found-path";
 import { REGION_SITE } from "@/components/marketing/site-links";
-import { CURRENCY_GLYPH_PATH } from "@/components/marketing/currency-mark";
+import { CURRENCY_GLYPH_SVG } from "@/components/marketing/currency-mark";
 
 type Tile = [slug: string, label: string, sub: string, icon: string];
 
@@ -32,7 +32,7 @@ function tilesFor(region: MarketingRegion): Tile[] {
       "/pricing",
       "Pricing",
       "Plans and billing",
-      `<path d="${CURRENCY_GLYPH_PATH[region]}"/>`,
+      CURRENCY_GLYPH_SVG[region],
     ],
     [
       "/changelog",
