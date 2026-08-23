@@ -14,7 +14,7 @@ import {
 import { Badge, Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2, type KpiItem } from '@/components/couture/ui'
 import { SetupPrompt } from '@/components/onboarding/setup-prompt'
 import { EmptyState, ErrorState, InlineLoader, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
-import { fullDate, money, shortDate } from '@/lib/region'
+import { useAppRegion } from '@/lib/app-region'
 
 const RANGES = [
   { label: '7D', value: '7d' },
@@ -22,9 +22,8 @@ const RANGES = [
   { label: '30D', value: '30d' },
 ] as const
 
-const dateLabel = shortDate
-
 export function DashboardView() {
+  const { fullDate, appPath } = useAppRegion()
   const [range, setRange] = useState<DashboardRange>('7d')
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
   const [hasCatalog, setHasCatalog] = useState<boolean | null>(null)
@@ -68,11 +67,11 @@ export function DashboardView() {
         sub={`Today · ${fullDate(new Date())}`}
         actions={
           hasCatalog === false ? (
-            <Link className="btn btn-grad" href="/app/inventory/catalog/new">
+            <Link className="btn btn-grad" href={appPath('/app/inventory/catalog/new')}>
               <Zap size={15} /> Add Product
             </Link>
           ) : (
-            <Link className="btn btn-grad" href="/app/shifts">
+            <Link className="btn btn-grad" href={appPath('/app/shifts')}>
               <Zap size={15} /> Open Register
             </Link>
           )
@@ -120,6 +119,7 @@ function DashboardContent({
   isRefreshing: boolean
   hasCatalog: boolean | null
 }) {
+  const { money, shortDate: dateLabel, appPath } = useAppRegion()
   const hasActivity = dashboard.sales.billCount > 0
   const drawer = dashboard.cashDrawer
 
@@ -207,7 +207,7 @@ function DashboardContent({
                   title="Add your first products to get started"
                   body="A store needs a catalog before it can sell anything. Add products, then open the register to make your first sale."
                   action={
-                    <Link className="btn btn-pri" href="/app/inventory/catalog/new">
+                    <Link className="btn btn-pri" href={appPath('/app/inventory/catalog/new')}>
                       Add products
                     </Link>
                   }
@@ -218,7 +218,7 @@ function DashboardContent({
                   title="Your store is ready for its first sale"
                   body="Open the register to begin. The revenue trend appears here once real transactions are recorded."
                   action={
-                    <Link className="btn btn-pri" href="/app/shifts">
+                    <Link className="btn btn-pri" href={appPath('/app/shifts')}>
                       Open register
                     </Link>
                   }
@@ -250,6 +250,7 @@ function DashboardContent({
  * plotted from real revenue points only. No synthetic series is drawn.
  */
 function RevenueChart({ points }: { points: { date: string; amount: string }[] }) {
+  const { money, fullDate, shortDate: dateLabel } = useAppRegion()
   const { area, line, dots, max } = useMemo(() => {
     const w = 640
     const h = 175
@@ -382,6 +383,7 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
 }
 
 function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
+  const { shortDate: dateLabel, appPath } = useAppRegion()
   const items = dashboard.actionable.items
 
   return (
@@ -409,7 +411,7 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
                 title={`${item.productName} is low on stock`}
                 sub={`${item.sku} · ${item.quantity} remaining · reorder at ${item.reorderThreshold}`}
                 action={
-                  <Link className="btn btn-sm btn-ghost" href="/app/inventory">
+                  <Link className="btn btn-sm btn-ghost" href={appPath('/app/inventory')}>
                     Review
                   </Link>
                 }
@@ -422,7 +424,7 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
                 title="Register is open"
                 sub={`Opened ${dateLabel(item.openedAt)} · review the current shift`}
                 action={
-                  <Link className="btn btn-sm btn-ghost" href="/app/shifts">
+                  <Link className="btn btn-sm btn-ghost" href={appPath('/app/shifts')}>
                     Open
                   </Link>
                 }
@@ -441,6 +443,7 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
  * screen so there's one place suggestions are actually actioned from.
  */
 function ReorderSummaryCard() {
+  const { appPath } = useAppRegion()
   const [data, setData] = useState<ReorderSuggestionList | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -474,7 +477,7 @@ function ReorderSummaryCard() {
         title="Reorder suggestions"
         sub="Rule-based, worked out from sales rate and supplier lead time"
         right={
-          <Link className="btn btn-sm btn-pri" href="/app/inventory">
+          <Link className="btn btn-sm btn-pri" href={appPath('/app/inventory')}>
             <Sparkle size={14} /> Review all ({items.length})
           </Link>
         }

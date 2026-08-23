@@ -15,7 +15,7 @@
 
 import "@/app/landing.css";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { AmbelMark } from "@/components/brand/ambel-mark";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
@@ -116,6 +116,13 @@ export default function USLandingPage() {
   }, []);
 
   useEffect(() => {
+    // The session only decides whether the CTA reads "Sign in" or "Open the
+    // app". If this bundle has no Supabase credentials for the region (a local
+    // .env without the _INTL vars, say), stay on the signed-out copy rather
+    // than throwing — lib/supabase/client.ts has already logged what is
+    // missing, and a marketing page must still render without Auth.
+    if (!isSupabaseConfigured) return;
+
     let active = true;
     void supabase.auth.getSession().then(({ data }) => {
       if (active) setAuthenticated(Boolean(data.session));

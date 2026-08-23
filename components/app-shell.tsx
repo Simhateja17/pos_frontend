@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
@@ -10,10 +10,13 @@ import { UserMenu } from '@/components/user-menu'
 import {
   APP_NAVIGATION,
   cashierCanAccessAppPath,
-  navigationForRole,
+  navigationForRegionRole,
   roleCanAccessAppPath,
+  toIndiaPath,
   type AppNavItem,
 } from '@/components/app-navigation'
+import type { MarketingRegion } from '@/lib/marketing/region'
+import { AppRegionProvider, buildRegionValue } from '@/lib/app-region'
 import { supabase } from '@/lib/supabase/client'
 import {
   AuthenticatedRequestError,
@@ -49,8 +52,17 @@ function matchedNavHref(pathname: string, items: AppNavItem[] = ALL_NAV_ITEMS): 
   return best
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+/**
+ * The application chrome for BOTH editions.
+ *
+ * India renders at `/app/*` and the US at `/us/dashboard/*` from this one
+ * component: same sidebar, same topbar, same role gating, same skeletons. The
+ * `region` decides only content — which modules appear, what they are called,
+ * where each link points, and where an unauthenticated visitor is sent.
+ */
+export function AppShell({ region = 'IN', children }: { region?: MarketingRegion; children: ReactNode }) {
   const pathname = usePathname()
+  const { appPath, pack } = useMemo(() => buildRegionValue(region), [region])
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [context, setContext] = useState<AppContext | null>(null)
@@ -72,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       if (error instanceof AuthenticatedRequestError && error.kind === 'unauthenticated') {
         if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
         setDeviceGate('redirecting')
-        router.replace('/login')
+        router.replace(pack.signInPath)
         return
       }
       // A failed load has no store to speak for, so the stale one goes.
@@ -85,7 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     } finally {
       setIsContextLoading(false)
     }
-  }, [router])
+  }, [router, pack.signInPath])
 
   useEffect(() => {
     const returnToPin = () => {
@@ -110,7 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         if (!headers) {
           if (!cancelled) {
             setDeviceGate('redirecting')
-            router.replace('/login')
+            router.replace(pack.signInPath)
           }
           return null
         }
@@ -139,7 +151,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [pathname, router])
+  }, [pathname, router, pack.signInPath])
 
   useEffect(() => {
     if (deviceGate === 'ready') void loadContext()
@@ -165,14 +177,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (context?.staff.role && !roleCanAccessAppPath(context.staff.role, pathname)) {
-      router.replace(context.staff.role === 'cashier' ? '/app/billing' : '/app/dashboard')
+      router.replace(appPath(context.staff.role === 'cashier' ? '/app/billing' : '/app/dashboard'))
     }
-  }, [context?.staff.role, pathname, router])
+  }, [context?.staff.role, pathname, router, appPath])
 
   const reauthenticate = useCallback(async () => {
     await supabase.auth.signOut()
-    router.push('/login')
-  }, [router])
+    router.push(pack.signInPath)
+  }, [router, pack.signInPath])
 
   const lockIdleRegister = useCallback(() => {
     if (typeof window === 'undefined' || !window.sessionStorage.getItem('operatorToken')) return
@@ -236,9 +248,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const contentReady =
     deviceGate === 'ready' && !isContextLoading && !cashierIsRedirecting && !roleIsRedirecting
 
-  const navigation = navigationForRole(context?.staff.role)
+  const navigation = navigationForRegionRole(region, context?.staff.role)
   const visibleNavItems = navigation.flatMap((group) => group.items)
-  const matchedHref = matchedNavHref(pathname, visibleNavItems)
+  const matchedHref = matchedNavHref(toIndiaPath(pathname), visibleNavItems)
   const current = visibleNavItems.find((item) => item.href === matchedHref)?.label ?? 'Ambel POS'
   const isCashier = context?.staff.role === 'cashier'
 
@@ -256,6 +268,7 @@ export function AppShell({ children }: { children: ReactNode }) {
    * sentence: it stays in the title/tooltip rather than the chip.
    */
   return (
+    <AppRegionProvider region={region}>
     <div className="app">
       {mobileOpen && (
         <button className={styles.scrim} aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
@@ -263,7 +276,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <aside
         ref={drawerRef}
-        aria-label="India application navigation"
+        aria-label={`${region === 'IN' ? 'India' : 'US'} application navigation`}
         aria-modal={mobileOpen ? true : undefined}
         role={mobileOpen ? 'dialog' : undefined}
         className={`sidebar ${styles.sidebar} ${mobileOpen ? styles.drawerOpen : styles.drawerClosed}`}
@@ -293,7 +306,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={appPath(item.href)}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => setMobileOpen(false)}
                     className={`nav-item ${active ? 'active' : ''}`}
@@ -413,5 +426,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+    </AppRegionProvider>
   )
 }

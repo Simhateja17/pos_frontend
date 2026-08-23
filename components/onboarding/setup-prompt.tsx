@@ -7,6 +7,7 @@ import { Card, CardHead, CardPad, ListRow } from '@/components/couture/ui'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
+import { useAppRegion } from '@/lib/app-region'
 
 type SetupState = components['schemas']['SetupState']
 
@@ -16,6 +17,10 @@ type SetupState = components['schemas']['SetupState']
  * active store causes the shell to reload this store's readiness state.
  */
 export function SetupPrompt() {
+  // `/setup` answers with India-relative action hrefs (`/app/...`) because that
+  // is the path vocabulary the backend was written against. Rebase them so a US
+  // tenant's "Set up" buttons stay inside `/us/dashboard/*`.
+  const { appPath } = useAppRegion()
   const [state, setState] = useState<SetupState | null>(null)
 
   useEffect(() => {
@@ -37,7 +42,7 @@ export function SetupPrompt() {
       <CardHead
         title="Finish setting up"
         sub={`${state.completionPercentage}% complete · ${state.store.name}`}
-        right={<Link className="btn btn-sm btn-ghost" href="/app/setup">Open guided setup <ArrowRight size={14} /></Link>}
+        right={<Link className="btn btn-sm btn-ghost" href={appPath('/app/setup')}>Open guided setup <ArrowRight size={14} /></Link>}
       />
       <CardPad style={{ paddingTop: 4 }}>
         {pending.map((step) => (
@@ -46,7 +51,7 @@ export function SetupPrompt() {
             icon={<ListChecks size={17} strokeWidth={1.85} />}
             title={step.title}
             sub={step.reason ?? step.description}
-            action={step.actionHref ? <Link className="btn btn-sm btn-ghost" href={step.actionHref}>Set up</Link> : undefined}
+            action={step.actionHref ? <Link className="btn btn-sm btn-ghost" href={appPath(step.actionHref)}>Set up</Link> : undefined}
           />
         ))}
         {state.steps.length > pending.length ? <p className="t-sub" style={{ margin: '8px 0 0' }}>Open guided setup to see every step and its dependencies.</p> : null}
