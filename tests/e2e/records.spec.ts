@@ -1,8 +1,14 @@
 import { expect, test } from './fixtures'
 
 const primarySale = {
-  id: '11111111-1111-4111-8111-111111111111', clientSaleId: '21111111-1111-4111-8111-111111111111', shiftId: null, customerId: null,
-  subtotal: '2500.00', discountAmount: '0.00', taxAmount: '0.00', totalAmount: '2500.00', status: 'completed', createdBy: null, createdAt: '2026-07-25T08:00:00.000Z', lines: [],
+  id: '11111111-1111-4111-8111-111111111111', clientSaleId: '21111111-1111-4111-8111-111111111111', shiftId: null, customerId: '41111111-1111-4111-8111-111111111111',
+  customer: { id: '41111111-1111-4111-8111-111111111111', name: 'Primary Tenant Customer', billingName: 'Primary Tenant Customer', phone: '+919999999999', email: 'primary@example.test' },
+  cashierName: 'Asha Cashier',
+  subtotal: '2500.00', discountAmount: '0.00', taxAmount: '0.00', totalAmount: '2500.00', status: 'completed', createdBy: '51111111-1111-4111-8111-111111111111', createdAt: '2026-07-25T08:00:00.000Z', lines: [{
+    id: '61111111-1111-4111-8111-111111111111', variantId: '71111111-1111-4111-8111-111111111111',
+    productName: 'Cotton Kurta', sku: 'CK-001', size: 'M', color: 'Blue', material: 'Cotton',
+    quantity: 1, unitPrice: '2500.00', discountPercent: null, discountAmount: '0.00', isTaxable: false, lineTotal: '2500.00',
+  }],
   payments: [{ id: '31111111-1111-4111-8111-111111111111', saleId: '11111111-1111-4111-8111-111111111111', method: 'cash' as const, direction: 'payment' as const, amount: '2500.00', referenceCode: null, createdBy: null, createdAt: '2026-07-25T08:00:00.000Z' }],
 }
 const otherTenantSale = { ...primarySale, id: '99999999-9999-4999-8999-999999999999', totalAmount: '99999.99' }
@@ -21,10 +27,14 @@ test('renders scoped API records, server money, filter requests, and unavailable
   await authenticatedPage.goto('/app/orders')
   await authenticatedPage.getByLabel('Search bills').fill('Primary')
   await expect(authenticatedPage.getByText('₹2,500.00')).toBeVisible()
+  await expect(authenticatedPage.getByText('Primary Tenant Customer')).toBeVisible()
+  await expect(authenticatedPage.getByText('Asha Cashier')).toBeVisible()
   await expect(authenticatedPage.getByRole('button', { name: 'Export unavailable' })).toBeDisabled()
   await authenticatedPage.getByRole('link', { name: 'View' }).click()
   await expect(authenticatedPage).toHaveURL(`/app/orders/${primarySale.id}`)
   await expect(authenticatedPage.getByRole('heading', { name: 'Bill 11111111' })).toBeVisible()
+  await expect(authenticatedPage.getByText('Cotton Kurta')).toBeVisible()
+  await expect(authenticatedPage.getByText('M / Blue / Cotton · CK-001')).toBeVisible()
   await expect(authenticatedPage.getByText('₹2,500.00').first()).toBeVisible()
   await expect(authenticatedPage.getByText('Cash')).toBeVisible()
   await authenticatedPage.goto('/app/customers')

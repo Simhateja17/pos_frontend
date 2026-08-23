@@ -29,6 +29,24 @@ function titleFor(sale: Sale): string {
   return `Bill ${sale.id.slice(0, 8).toUpperCase()}`
 }
 
+function lineDisplay(line: Sale['lines'][number]): { title: string; detail: string | null } {
+  const variantDetail = [line.size, line.color, line.material].filter(Boolean).join(' / ')
+  const detail = [variantDetail, line.sku].filter(Boolean).join(' · ')
+  return {
+    title: line.productName ?? 'Product unavailable',
+    detail: detail || null,
+  }
+}
+
+function customerLabel(sale: Sale): string {
+  const customer = sale.customer
+  return customer?.name
+    ?? customer?.billingName
+    ?? customer?.phone
+    ?? customer?.email
+    ?? (sale.customerId ? 'Customer linked' : 'Walk-in')
+}
+
 export function SaleDetailView({ saleId }: { saleId: string }) {
   const [sale, setSale] = useState<Sale | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,6 +88,7 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
 
   const itemCount = sale.lines.reduce((sum, line) => sum + line.quantity, 0)
   const statusTone = STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'
+  const customerContact = [sale.customer?.phone, sale.customer?.email].filter(Boolean).join(' · ')
   const metrics: KpiItem[] = [
     { label: 'Status', value: <Badge tone={statusTone}>{sale.status}</Badge>, meta: 'Server status' },
     { label: 'Recorded', value: dateTime.format(new Date(sale.createdAt)), meta: 'Server timestamp' },
@@ -87,23 +106,46 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
 
       <KpiRow items={metrics} cols={4} />
 
+      <Card>
+        <CardHead title="Customer and cashier" sub="People attached to this persisted bill" />
+        <CardPad>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+            <div>
+              <div className="t-sub" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.08em' }}>Customer</div>
+              <div className="t-strong" style={{ marginTop: 6 }}>{customerLabel(sale)}</div>
+              {customerContact ? <div className="t-sub" style={{ marginTop: 4 }}>{customerContact}</div> : null}
+            </div>
+            <div>
+              <div className="t-sub" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.08em' }}>Cashier</div>
+              <div className="t-strong" style={{ marginTop: 6 }}>{sale.cashierName ?? 'Not recorded'}</div>
+            </div>
+          </div>
+        </CardPad>
+      </Card>
+
       <div className="split-2">
         <Card>
           <CardHead title="Bill lines" sub="Line items and amounts returned by the server" />
           {sale.lines.length === 0 ? (
             <EmptyState title="No line items recorded" body="This bill has no persisted line items." />
           ) : (
-            <DataTable cols={['Variant', 'Qty', 'Unit price', 'Discount', 'Taxable', 'Line total']} minWidth={720}>
-              {sale.lines.map((line) => (
-                <tr key={line.id}>
-                  <td className="t-mono t-sub" title={line.variantId}>{line.variantId}</td>
-                  <td className="num">{line.quantity}</td>
-                  <td className="num">{money.format(Number(line.unitPrice))}</td>
-                  <td className="num">{Number(line.discountAmount) > 0 ? `−${money.format(Number(line.discountAmount))}` : '-'}</td>
-                  <td>{line.isTaxable ? 'Yes' : 'No'}</td>
-                  <td className="num t-strong">{money.format(Number(line.lineTotal))}</td>
-                </tr>
-              ))}
+            <DataTable cols={['Product / variant', 'Qty', 'Unit price', 'Discount', 'Taxable', 'Line total']} minWidth={720}>
+              {sale.lines.map((line) => {
+                const display = lineDisplay(line)
+                return (
+                  <tr key={line.id}>
+                    <td title={line.variantId}>
+                      <div className="t-strong">{display.title}</div>
+                      {display.detail && <div className="t-sub" style={{ fontSize: 11 }}>{display.detail}</div>}
+                    </td>
+                    <td className="num">{line.quantity}</td>
+                    <td className="num">{money.format(Number(line.unitPrice))}</td>
+                    <td className="num">{Number(line.discountAmount) > 0 ? `−${money.format(Number(line.discountAmount))}` : '-'}</td>
+                    <td>{line.isTaxable ? 'Yes' : 'No'}</td>
+                    <td className="num t-strong">{money.format(Number(line.lineTotal))}</td>
+                  </tr>
+                )
+              })}
             </DataTable>
           )}
         </Card>

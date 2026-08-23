@@ -67,7 +67,7 @@ type SaleResponse = {
   cashReceived: string | null
   changeDue: string
   businessName?: string | null
-  lines: { variantId: string; quantity: number; unitPrice: string; lineTotal: string }[]
+  lines: { variantId: string; productName?: string | null; quantity: number; unitPrice: string; lineTotal: string }[]
   payments?: {
     method: TenderMethod
     direction: 'payment' | 'refund'
@@ -682,11 +682,10 @@ function CheckoutPageInner() {
   function onChargeSuccess(sale: SaleResponse) {
     setSuccessMessage(`Sale complete: ₹${sale.totalAmount} charged and recorded by the server.`)
 
-    // Enrich the persisted sale's lines with the cart's product names for
-    // receipt display: the sale response itself only carries variantId
-    // (no product/variant name join server-side). The Total paid figure and
-    // every other money field on the receipt still come directly from
-    // `sale`, never recomputed (Pitfall 2).
+    // Keep the cart name as a compatibility fallback for older backends; new
+    // sale responses also carry the server-resolved product name. The Total
+    // paid figure and every other money field on the receipt still come
+    // directly from `sale`, never recomputed (Pitfall 2).
     const cartByVariantId = new Map(cart.map((l) => [l.variantId, l]))
     setCompletedSale({
       id: sale.id,
@@ -700,7 +699,7 @@ function CheckoutPageInner() {
       payments: sale.payments ?? [],
       lines: sale.lines.map((line) => ({
         ...line,
-        name: cartByVariantId.get(line.variantId)?.name,
+        name: cartByVariantId.get(line.variantId)?.name ?? line.productName ?? undefined,
       })),
     })
     setBusinessName(sale.businessName ?? businessName)

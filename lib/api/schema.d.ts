@@ -6458,16 +6458,31 @@ export interface components {
             /** Format: uuid */
             createdBy: string | null;
             createdAt: string;
+            customer?: components["schemas"]["SaleCustomer"];
+            cashierName?: string | null;
             invoiceNumber?: string | null;
             lines: components["schemas"]["SaleLineItem"][];
             payments: components["schemas"]["Payment"][];
             businessName?: string | null;
         };
+        SaleCustomer: {
+            /** Format: uuid */
+            id: string;
+            name: string | null;
+            billingName: string | null;
+            phone: string | null;
+            email: string | null;
+        } | null;
         SaleLineItem: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             variantId: string;
+            productName?: string | null;
+            sku?: string | null;
+            size?: string | null;
+            color?: string | null;
+            material?: string | null;
             quantity: number;
             unitPrice: string;
             discountPercent: string | null;

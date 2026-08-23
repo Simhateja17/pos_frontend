@@ -32,6 +32,23 @@ test('creates and edits a GST customer, attaches it at checkout, and reads its p
     status: 'completed',
     paymentMethods: ['cash'],
   }]
+  const saleDetail = {
+    id: saleId,
+    clientSaleId: '61111111-1111-4111-8111-111111111111',
+    shiftId: null,
+    customerId,
+    subtotal: '1250.00',
+    discountAmount: '0.00',
+    taxAmount: '0.00',
+    totalAmount: '1250.00',
+    cashReceived: '1250.00',
+    changeDue: '0.00',
+    status: 'completed',
+    createdBy: null,
+    createdAt: '2026-08-11T11:00:00.000Z',
+    lines: [],
+    payments: [{ id: '71111111-1111-4111-8111-111111111111', saleId, method: 'cash' as const, direction: 'payment' as const, amount: '1250.00', referenceCode: null, createdBy: null, createdAt: '2026-08-11T11:00:00.000Z' }],
+  }
 
   await authenticatedPage.route('**/customers/**', async (route) => {
     const request = route.request()
@@ -70,6 +87,7 @@ test('creates and edits a GST customer, attaches it at checkout, and reads its p
   })
   await authenticatedPage.route('**/shifts*', (route) => route.fulfill({ json: [] }))
   await authenticatedPage.route('**/terminals/device*', (route) => route.fulfill({ json: { terminal: null } }))
+  await authenticatedPage.route(`**/sales/${saleId}`, (route) => route.fulfill({ json: saleDetail }))
 
   await authenticatedPage.goto('/app/customers')
   await authenticatedPage.getByRole('button', { name: 'New customer' }).click()
@@ -96,5 +114,9 @@ test('creates and edits a GST customer, attaches it at checkout, and reads its p
   await authenticatedPage.goto(`/app/customers/${customerId}`)
   await expect(authenticatedPage.getByText(`Sale ${saleId.slice(0, 8).toUpperCase()}`)).toBeVisible()
   await expect(authenticatedPage.getByText('₹1,250.00')).toBeVisible()
-  await expect(authenticatedPage.getByRole('link', { name: 'Open sale' })).toHaveAttribute('href', new RegExp(`/app/orders\\?search=${saleId}`))
+  const openBill = authenticatedPage.getByRole('link', { name: 'Open bill' })
+  await expect(openBill).toHaveAttribute('href', `/app/orders/${saleId}`)
+  await openBill.click()
+  await expect(authenticatedPage).toHaveURL(`/app/orders/${saleId}`)
+  await expect(authenticatedPage.getByRole('heading', { name: 'Bill 51111111' })).toBeVisible()
 })

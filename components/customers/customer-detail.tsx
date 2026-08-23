@@ -192,7 +192,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
                 <td><Badge tone={purchase.status === 'completed' ? 'green' : 'grey'}>{purchase.status}</Badge></td>
                 <td>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <Link className="btn btn-sm" href={`/app/orders?search=${encodeURIComponent(purchase.id)}`}><ExternalLink size={13} /> Open bill</Link>
+                    <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(purchase.id)}`}><ExternalLink size={13} /> Open bill</Link>
                     <Link className="btn btn-sm" href={`/app/returns?saleId=${encodeURIComponent(purchase.id)}`}>Bill / return</Link>
                   </div>
                 </td>

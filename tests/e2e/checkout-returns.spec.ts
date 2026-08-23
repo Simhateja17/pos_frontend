@@ -32,7 +32,12 @@ test('checkout shows a bill only after a successful server charge and resend out
   await authenticatedPage.route('**/products?*', (route) => route.fulfill({ json: [{ id: 'p', name: 'Kurta', variants: [{ id: variantId, productId: 'p', sku: 'K-001', size: 'M', color: 'Blue', material: null, price: '1000.00', currentStock: 4 }] }] }))
   await authenticatedPage.route('**/customers?*', (route) => route.fulfill({ json: [{ id: '41111111-1111-4111-8111-111111111111', name: 'Asha', phone: '+919999999999', email: 'asha@example.test' }] }))
   await authenticatedPage.route('**/sales/*/resend-receipt', (route) => route.fulfill({ status: 200, json: { ok: true, email: 'asha@example.test' } }))
-  await authenticatedPage.route('**/sales', (route) => route.fulfill({ status: 201, json: { id: saleId, createdAt: '2026-07-25T08:00:00.000Z', subtotal: '2000.00', discountAmount: '0.00', taxAmount: '360.00', totalAmount: '2360.00', businessName: 'Test Store', lines: [{ variantId, quantity: 2, unitPrice: '1000.00', lineTotal: '2000.00' }] } }))
+  let submittedCustomerId: string | undefined
+  await authenticatedPage.route('**/sales', async (route) => {
+    const body = JSON.parse(route.request().postData() ?? '{}') as { customer?: { id?: string } }
+    submittedCustomerId = body.customer?.id
+    await route.fulfill({ status: 201, json: { id: saleId, createdAt: '2026-07-25T08:00:00.000Z', subtotal: '2000.00', discountAmount: '0.00', taxAmount: '360.00', totalAmount: '2360.00', businessName: 'Test Store', lines: [{ variantId, quantity: 2, unitPrice: '1000.00', lineTotal: '2000.00' }] } })
+  })
   await authenticatedPage.goto('/checkout?shiftId=41111111-1111-4111-8111-111111111111')
   await authenticatedPage.getByPlaceholder(/scan barcode/i).fill('Kurta')
   await authenticatedPage.getByRole('button', { name: /add/i }).click()
@@ -42,6 +47,7 @@ test('checkout shows a bill only after a successful server charge and resend out
   await authenticatedPage.getByRole('button', { name: 'Cash' }).click()
   await expect(authenticatedPage.getByRole('spinbutton', { name: 'Cash amount' })).toHaveCount(0)
   await authenticatedPage.getByRole('button', { name: 'Charge sale' }).click()
+  expect(submittedCustomerId).toBe('41111111-1111-4111-8111-111111111111')
   await expect(authenticatedPage.getByRole('region', { name: 'Completed bill' })).toContainText('₹2360.00 recorded by the server')
   await authenticatedPage.getByPlaceholder('Enter customer email').fill('asha@example.test')
   await authenticatedPage.getByRole('button', { name: 'Email bill' }).click()
