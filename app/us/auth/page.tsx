@@ -261,8 +261,8 @@ export default function USAuthPage() {
           <label className={styles.agreement}>
             <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
             <span>
-              I agree to Ambel POS <Link className={styles.link} href="/terms">Terms of Service</Link> and{' '}
-              <Link className={styles.link} href="/privacy">Privacy Policy</Link>
+              I agree to Ambel POS <Link className={styles.link} href="/us/terms">Terms of Service</Link> and{' '}
+              <Link className={styles.link} href="/us/privacy">Privacy Policy</Link>
             </span>
           </label>
           <button className={styles.primary} type="submit" disabled={busy}>

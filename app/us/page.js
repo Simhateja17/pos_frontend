@@ -407,7 +407,7 @@ export default function USLandingPage() {
           {plansState === "error" && (
             <p className="section-sub" style={{ margin: "28px auto 0" }}>
               Pricing is temporarily unavailable. Please refresh, or see the{" "}
-              <a href="/pricing">full pricing page</a>.
+              <a href="/us/pricing">full pricing page</a>.
             </p>
           )}
         </div>
