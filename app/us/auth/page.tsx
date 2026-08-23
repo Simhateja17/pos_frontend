@@ -1,10 +1,20 @@
 'use client'
 
+/*
+ * US sign-in / sign-up.
+ *
+ * Renders through `InternationalAuthShell` and the same `india-auth.module.css`
+ * design system as the India login and signup screens, so the two editions
+ * stay visually identical. Only the fields (state / ZIP instead of state /
+ * PIN code, no GSTIN) and the destination routes are market-specific.
+ */
+
 import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
-import { establishSession } from '@/components/auth/india-auth-shell'
-import './auth.css'
+import { InternationalAuthShell, establishSession } from '@/components/auth/india-auth-shell'
+import styles from '@/components/auth/india-auth.module.css'
 
 type Mode = 'login' | 'signup'
 
@@ -46,6 +56,10 @@ export default function USAuthPage() {
     setError(null)
     setOtpSent(false)
     setOtp('')
+  }
+
+  function updateSignup(field: keyof SignupFields, value: string) {
+    setSignup((current) => ({ ...current, [field]: value }))
   }
 
   async function handleSendOtp(event: FormEvent<HTMLFormElement>) {
@@ -120,62 +134,163 @@ export default function USAuthPage() {
     }
   }
 
+  const otpField = (id: string) => (
+    <label className={styles.field}>
+      <span className={styles.label}>6-digit code<span className={styles.required}>*</span></span>
+      <input
+        className={styles.input}
+        id={id}
+        type="text"
+        inputMode="numeric"
+        pattern="\d{6}"
+        maxLength={6}
+        placeholder="123456"
+        autoComplete="one-time-code"
+        required
+        value={otp}
+        onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+      />
+    </label>
+  )
+
   return (
-    <div className="auth-page">
-      <div className="bg-orbs"><div className="orb orb-1" /><div className="orb orb-2" /></div>
-      <div className="page">
-        <div className="auth-card">
-          <div className="auth-logo"><div className="auth-logo-mark">AP</div><span>Ambel POS · US</span></div>
-          <div className="tab-switcher">
-            <button type="button" className={`tab-btn${mode === 'login' ? ' active' : ''}`} onClick={() => switchMode('login')}>Sign in</button>
-            <button type="button" className={`tab-btn${mode === 'signup' ? ' active' : ''}`} onClick={() => switchMode('signup')}>Create account</button>
-          </div>
-          {error && <p role="alert" style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 16 }}>{error}</p>}
-          {mode === 'login' ? (
-            <>
-              <h1>Welcome back</h1>
-              <p className="subtitle">Sign in to continue to your paid subscription setup.</p>
-              {!otpSent ? (
-                <form onSubmit={handleSendOtp}>
-                  <div className="form-group"><label htmlFor="us-login-email">Email</label><input id="us-login-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></div>
-                  <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Sending code…' : 'Send code →'}</button>
-                </form>
-              ) : (
-                <form onSubmit={handleLogin}>
-                  <div className="form-group"><label htmlFor="us-login-otp">6-digit code</label><input id="us-login-otp" type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" /></div>
-                  <button type="submit" className="btn btn-primary" disabled={busy || otp.length !== 6}>{busy ? 'Signing in…' : 'Sign in →'}</button>
-                </form>
-              )}
-            </>
-          ) : (
-            <>
-              <h1>Create account</h1>
-              <p className="subtitle">Create your account, then choose a paid USD subscription to activate your store.</p>
-              {!otpSent ? (
-                <form onSubmit={handleSendOtp}>
-                  <div className="form-group"><label htmlFor="us-name">Full name</label><input id="us-name" required autoComplete="name" value={signup.ownerName} onChange={(event) => setSignup((current) => ({ ...current, ownerName: event.target.value }))} placeholder="Jane Doe" /></div>
-                  <div className="form-group"><label htmlFor="us-business">Business name</label><input id="us-business" required value={signup.businessName} onChange={(event) => setSignup((current) => ({ ...current, businessName: event.target.value }))} placeholder="My Boutique LLC" /></div>
-                  <div className="form-group"><label htmlFor="us-email">Email</label><input id="us-email" type="email" required autoComplete="email" value={signup.email} onChange={(event) => setSignup((current) => ({ ...current, email: event.target.value }))} placeholder="you@example.com" /></div>
-                  <div className="form-group"><label htmlFor="us-address">Business address</label><input id="us-address" required value={signup.addressLine1} onChange={(event) => setSignup((current) => ({ ...current, addressLine1: event.target.value }))} placeholder="100 Congress Ave" /></div>
-                  <div className="form-group"><label htmlFor="us-city">City</label><input id="us-city" required value={signup.city} onChange={(event) => setSignup((current) => ({ ...current, city: event.target.value }))} placeholder="Austin" /></div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div className="form-group"><label htmlFor="us-state">State</label><input id="us-state" required value={signup.state} onChange={(event) => setSignup((current) => ({ ...current, state: event.target.value }))} placeholder="Texas" /></div>
-                    <div className="form-group"><label htmlFor="us-postal">ZIP code</label><input id="us-postal" required value={signup.postalCode} onChange={(event) => setSignup((current) => ({ ...current, postalCode: event.target.value }))} placeholder="78701" /></div>
-                  </div>
-                  <div className="form-check"><input id="us-terms" type="checkbox" required checked={agreed} onChange={(event) => setAgreed(event.target.checked)} /><label htmlFor="us-terms" style={{ margin: 0, letterSpacing: 'normal', textTransform: 'none' }}>I agree to the Terms of Service and Privacy Policy</label></div>
-                  <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Sending code…' : 'Send code →'}</button>
-                </form>
-              ) : (
-                <form onSubmit={handleSignup}>
-                  <div className="form-group"><label htmlFor="us-signup-otp">6-digit code</label><input id="us-signup-otp" type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" /></div>
-                  <button type="submit" className="btn btn-primary" disabled={busy || otp.length !== 6}>{busy ? 'Creating account…' : 'Create account →'}</button>
-                </form>
-              )}
-            </>
-          )}
-          <p className="auth-link"><a href="/us">← Back to US retail</a></p>
-        </div>
+    <InternationalAuthShell mode={mode === 'login' ? 'login' : 'signup'}>
+      <h1 className={styles.heading}>
+        {mode === 'login' ? 'Good to have you back.' : 'Create your store account.'}
+      </h1>
+      <p className={styles.subheading}>
+        {mode === 'login'
+          ? 'Enter your store credentials to continue.'
+          : 'Create your account, then choose a paid USD subscription to activate your store.'}
+      </p>
+
+      <div className={styles.tabs} role="tablist" aria-label="Authentication mode">
+        <button
+          className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`}
+          role="tab"
+          aria-selected={mode === 'login'}
+          type="button"
+          onClick={() => switchMode('login')}
+        >
+          Sign in
+        </button>
+        <button
+          className={`${styles.tab} ${mode === 'signup' ? styles.tabActive : ''}`}
+          role="tab"
+          aria-selected={mode === 'signup'}
+          type="button"
+          onClick={() => switchMode('signup')}
+        >
+          Create account
+        </button>
       </div>
-    </div>
+
+      {error && <div className={styles.alert} role="alert" aria-live="polite">{error}</div>}
+
+      {mode === 'login' ? (
+        !otpSent ? (
+          <form onSubmit={handleSendOtp}>
+            <label className={styles.field}>
+              <span className={styles.label}>Email address<span className={styles.required}>*</span></span>
+              <input
+                className={styles.input}
+                id="us-login-email"
+                type="email"
+                placeholder="owner@yourstore.com"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => { setEmail(event.target.value); setError(null) }}
+              />
+            </label>
+            <button className={styles.primary} type="submit" disabled={busy}>
+              {busy ? 'Sending code…' : 'Send code →'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleLogin}>
+            <label className={styles.field}>
+              <span className={styles.label}>Email address</span>
+              <input className={styles.input} type="email" value={email} disabled />
+            </label>
+            {otpField('us-login-otp')}
+            <div className={styles.rememberRow}>
+              <button className={styles.link} type="button" onClick={() => { setOtpSent(false); setOtp(''); setError(null) }}>
+                Use a different email
+              </button>
+            </div>
+            <button className={styles.primary} type="submit" disabled={busy || otp.length !== 6}>
+              {busy ? 'Verifying…' : 'Sign in →'}
+            </button>
+          </form>
+        )
+      ) : !otpSent ? (
+        <form onSubmit={handleSendOtp}>
+          <label className={styles.field}>
+            <span className={styles.label}>Full name<span className={styles.required}>*</span></span>
+            <input className={styles.input} id="us-name" placeholder="Jane Doe" autoComplete="name" required value={signup.ownerName} onChange={(event) => updateSignup('ownerName', event.target.value)} />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Business name<span className={styles.required}>*</span></span>
+            <input className={styles.input} id="us-business" placeholder="My Boutique LLC" required value={signup.businessName} onChange={(event) => updateSignup('businessName', event.target.value)} />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Email address<span className={styles.required}>*</span></span>
+            <input className={styles.input} id="us-email" type="email" placeholder="owner@yourstore.com" autoComplete="email" required value={signup.email} onChange={(event) => updateSignup('email', event.target.value)} />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Business address<span className={styles.required}>*</span></span>
+            <input className={styles.input} id="us-address" placeholder="100 Congress Ave" required value={signup.addressLine1} onChange={(event) => updateSignup('addressLine1', event.target.value)} />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>City<span className={styles.required}>*</span></span>
+            <input className={styles.input} id="us-city" placeholder="Austin" required value={signup.city} onChange={(event) => updateSignup('city', event.target.value)} />
+          </label>
+          {/* `actions` is the module's two-column row; the same pairing India
+              uses for City / State and PIN code / GSTIN. */}
+          <div className={styles.actions}>
+            <label className={styles.field}>
+              <span className={styles.label}>State<span className={styles.required}>*</span></span>
+              <input className={styles.input} id="us-state" placeholder="Texas" required value={signup.state} onChange={(event) => updateSignup('state', event.target.value)} />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>ZIP code<span className={styles.required}>*</span></span>
+              <input className={styles.input} id="us-postal" inputMode="numeric" placeholder="78701" required value={signup.postalCode} onChange={(event) => updateSignup('postalCode', event.target.value)} />
+            </label>
+          </div>
+          <label className={styles.agreement}>
+            <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+            <span>
+              I agree to Ambel POS <Link className={styles.link} href="/us/terms">Terms of Service</Link> and{' '}
+              <Link className={styles.link} href="/us/privacy">Privacy Policy</Link>
+            </span>
+          </label>
+          <button className={styles.primary} type="submit" disabled={busy}>
+            {busy ? 'Sending code…' : 'Send code →'}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSignup}>
+          <label className={styles.field}>
+            <span className={styles.label}>Email address</span>
+            <input className={styles.input} type="email" value={signup.email} disabled />
+          </label>
+          {otpField('us-signup-otp')}
+          <div className={styles.rememberRow}>
+            <button className={styles.link} type="button" onClick={() => { setOtpSent(false); setOtp(''); setError(null) }}>
+              Edit your details
+            </button>
+          </div>
+          <button className={styles.primary} type="submit" disabled={busy || otp.length !== 6}>
+            {busy ? 'Creating account…' : 'Create account →'}
+          </button>
+        </form>
+      )}
+
+      <div className={styles.separator}>or</div>
+      <p className={styles.footerText}>
+        <Link className={styles.link} href="/us">← Back to US retail</Link>
+      </p>
+    </InternationalAuthShell>
   )
 }

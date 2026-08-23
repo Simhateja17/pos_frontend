@@ -1,38 +1,12 @@
 import { AmbelMark } from "@/components/brand/ambel-mark";
+import type { MarketingRegion } from "@/lib/marketing/region";
+import { REGION_SITE } from "@/components/marketing/site-links";
 
 const LOGO = <AmbelMark size={38} />;
 
-const COLUMNS: [string, [string, string][]][] = [
-  [
-    "Product",
-    [
-      ["Features", "/features"],
-      ["Pricing", "/pricing"],
-      ["Changelog", "/changelog"],
-      ["Roadmap", "/roadmap"],
-    ],
-  ],
-  [
-    "Retail",
-    [
-      ["Fashion & Apparel", "/retail/fashion-apparel"],
-      ["Beauty & Wellness", "/retail/beauty-wellness"],
-      ["Electronics", "/retail/electronics"],
-      ["Multi-store", "/retail/multi-store"],
-    ],
-  ],
-  [
-    "Company",
-    [
-      ["About", "/about"],
-      ["Blog", "/blog"],
-      ["Careers", "/careers"],
-      ["Contact", "/contact"],
-    ],
-  ],
-];
+export default function SiteFooter({ region = "IN" }: { region?: MarketingRegion }) {
+  const site = REGION_SITE[region];
 
-export default function SiteFooter() {
   return (
     <footer>
       <div className="footer-inner">
@@ -41,9 +15,9 @@ export default function SiteFooter() {
             <div className="nav-logo-mark">{LOGO}</div>
             <span className="nav-logo-text">Ambel POS</span>
           </div>
-          <p>India&apos;s most complete retail suite: GST-native, AI-powered, offline-first.</p>
+          <p>{site.tagline}</p>
         </div>
-        {COLUMNS.map(([title, links]) => (
+        {site.footerColumns.map(([title, links]) => (
           <div className="footer-col" key={title}>
             <h4>{title}</h4>
             {links.map(([label, href]) => (
@@ -55,9 +29,12 @@ export default function SiteFooter() {
       <div className="footer-bottom">
         <span>© 2026 Couture Services Private Limited</span>
         <div style={{ display: "flex", gap: 20 }}>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
-          <span>GST: 37AAMCC4557F1ZF</span>
+          {site.legalLinks.map(([label, href]) => (
+            <a href={href} key={label}>{label}</a>
+          ))}
+          {site.footerMeta.map((meta) => (
+            <span key={meta}>{meta}</span>
+          ))}
         </div>
       </div>
     </footer>

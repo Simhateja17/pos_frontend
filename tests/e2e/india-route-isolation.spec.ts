@@ -34,7 +34,7 @@ test.describe('India and US route isolation (user-owned browser specification)',
       await authenticatedPage.setViewportSize(viewport)
       await authenticatedPage.goto('/us')
       await expect(authenticatedPage.getByLabel('India application navigation')).toHaveCount(0)
-      await expect(authenticatedPage.getByText('Modern POS for US Retail')).toBeVisible()
+      await expect(authenticatedPage.getByRole('heading', { name: /US retail, run from/ })).toBeVisible()
       await expect(authenticatedPage.locator('body')).not.toContainText(appContext.tenant.businessName)
       await testInfo.attach(`us-route-isolation-${viewport.name}`, {
         body: await authenticatedPage.screenshot(),

@@ -3,10 +3,20 @@
 import { useEffect } from "react";
 
 import { AmbelMark } from "@/components/brand/ambel-mark";
+import type { MarketingRegion } from "@/lib/marketing/region";
+import { REGION_SITE } from "@/components/marketing/site-links";
 
 const LOGO = <AmbelMark size={38} />;
 
-export default function SiteHeader({ authenticated = false }: { authenticated?: boolean }) {
+export default function SiteHeader({
+  authenticated = false,
+  region = "IN",
+}: {
+  authenticated?: boolean;
+  region?: MarketingRegion;
+}) {
+  const site = REGION_SITE[region];
+
   useEffect(() => {
     const nav = document.getElementById("main-nav");
     const onScroll = () => nav && nav.classList.toggle("scrolled", window.scrollY > 10);
@@ -17,23 +27,22 @@ export default function SiteHeader({ authenticated = false }: { authenticated?: 
 
   return (
     <nav id="main-nav">
-      <a href="/" className="nav-logo">
+      <a href={site.home} className="nav-logo">
         <div className="nav-logo-mark">{LOGO}</div>
         <span className="nav-logo-text">Ambel POS</span>
       </a>
       <div className="nav-links">
-        <a href="/features">Features</a>
-        <a href="/#how">How it works</a>
-        <a href="/#screens">Screens</a>
-        <a href="/pricing">Pricing</a>
+        {site.navLinks.map(([label, href]) => (
+          <a href={href} key={label}>{label}</a>
+        ))}
       </div>
       <div className="nav-ctas">
         {authenticated ? (
-          <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href="/app/dashboard">Back to Billing</a>
+          <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href={site.appHref}>{site.appLabel}</a>
         ) : (
           <>
-            <a className="btn-outline" style={{ display: "inline-flex", alignItems: "center" }} href="/login">Log in</a>
-            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href="/signup">Choose a plan</a>
+            <a className="btn-outline" style={{ display: "inline-flex", alignItems: "center" }} href={site.loginHref}>Log in</a>
+            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href={site.signupHref}>Choose a plan</a>
           </>
         )}
       </div>
