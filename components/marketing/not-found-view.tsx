@@ -13,39 +13,48 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import NotFoundPath from "@/components/marketing/not-found-path";
 import { REGION_SITE } from "@/components/marketing/site-links";
+import { CURRENCY_GLYPH_PATH } from "@/components/marketing/currency-mark";
 
-const TILES: [slug: string, label: string, sub: string, icon: string][] = [
-  [
-    "/features",
-    "Features",
-    "All 22 modules",
-    '<rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/>',
-  ],
-  [
-    "/pricing",
-    "Pricing",
-    "Plans and billing",
-    '<path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2"/>',
-  ],
-  [
-    "/changelog",
-    "Changelog",
-    "What shipped recently",
-    '<path d="M12 7.2V12l3 1.8"/><circle cx="12" cy="12" r="8.6"/>',
-  ],
-  [
-    "/contact",
-    "Contact support",
-    "We reply in a day",
-    '<path d="M3.5 6.5h17v11a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M4 7l8 6.4L20 7"/>',
-  ],
-];
+type Tile = [slug: string, label: string, sub: string, icon: string];
+
+// The Pricing tile's icon is the edition's currency, so the list is built per
+// region rather than sitting in a module constant: a US 404 must not offer
+// "Plans and billing" under a rupee.
+function tilesFor(region: MarketingRegion): Tile[] {
+  return [
+    [
+      "/features",
+      "Features",
+      "All 22 modules",
+      '<rect x="3" y="3" width="7" height="9" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/><rect x="14" y="12" width="7" height="9" rx="1.6"/><rect x="3" y="16" width="7" height="5" rx="1.6"/>',
+    ],
+    [
+      "/pricing",
+      "Pricing",
+      "Plans and billing",
+      `<path d="${CURRENCY_GLYPH_PATH[region]}"/>`,
+    ],
+    [
+      "/changelog",
+      "Changelog",
+      "What shipped recently",
+      '<path d="M12 7.2V12l3 1.8"/><circle cx="12" cy="12" r="8.6"/>',
+    ],
+    [
+      "/contact",
+      "Contact support",
+      "We reply in a day",
+      '<path d="M3.5 6.5h17v11a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M4 7l8 6.4L20 7"/>',
+    ],
+  ];
+}
 
 export default function NotFoundView({ region }: { region: MarketingRegion }) {
   const site = REGION_SITE[region];
   // The India pages live at the root (`/features`); the US mirrors under
   // `/us/features`. Never send a US visitor to India-specific copy.
   const prefix = region === "INTL" ? "/us" : "";
+  const tiles = tilesFor(region);
 
   return (
     <>
@@ -80,7 +89,7 @@ export default function NotFoundView({ region }: { region: MarketingRegion }) {
         </div>
 
         <div className="nf-links">
-          {TILES.map(([slug, label, sub, icon]) => (
+          {tiles.map(([slug, label, sub, icon]) => (
             <a className="nf-link" href={prefix + slug} key={slug}>
               <div className="ico">
                 <svg viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: icon }} />
