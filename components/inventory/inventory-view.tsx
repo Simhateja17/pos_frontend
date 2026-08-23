@@ -11,6 +11,7 @@ import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } f
 import { LowStockBadge } from '@/components/low-stock-badge'
 import { money } from '@/lib/region'
 import { priceLabel, unitSuffix } from '@/lib/units'
+import { inventoryStatus, inventoryVariantMatches } from '@/lib/operational-display'
 import { ReorderSuggestions } from './reorder-suggestions'
 
 type LowStockVariant = {
@@ -185,10 +186,7 @@ export function InventoryView() {
         .map((product) => ({
           ...product,
           variants: product.variants.filter(
-            (v) =>
-              v.barcode === term ||
-              v.sku.toLowerCase().includes(term) ||
-              product.name.toLowerCase().includes(term),
+            (v) => inventoryVariantMatches(product.name, v, term),
           ),
         }))
         .filter((product) => product.variants.length > 0)
@@ -227,7 +225,7 @@ export function InventoryView() {
               <SearchField
                 value={search}
                 onChange={setSearch}
-                placeholder="Scan a barcode, or search name / SKU"
+                placeholder="Scan barcode or search name / SKU / variant"
                 ariaLabel="Search catalog"
                 width={280}
               />
@@ -250,7 +248,7 @@ export function InventoryView() {
           />
         )}
         {!catalogLoading && !catalogError && products.length > 0 && visible.length === 0 && (
-          <EmptyState title="Nothing matches that" body="No product, SKU or barcode matches your search." />
+          <EmptyState title="Nothing matches that" body="No product, SKU, barcode, size, colour or material matches your search." />
         )}
 
         {!catalogLoading && !catalogError && visible.length > 0 && (
@@ -388,7 +386,7 @@ export function InventoryView() {
               minWidth={760}
             >
               {exceptions.map((item) => {
-                const out = item.quantity === 0
+                const status = inventoryStatus(item.quantity, item.reorderThreshold)
                 return (
                   <tr key={item.variantId}>
                     <td className="t-mono t-strong">{item.sku}</td>
@@ -403,7 +401,7 @@ export function InventoryView() {
                       {item.reorderThreshold}
                     </td>
                     <td>
-                      <span className={`badge ${out ? 'b-red' : 'b-amber'}`}>{out ? 'Out of stock' : 'Low stock'}</span>
+                      <span className={`badge b-${status.tone}`}>{status.label}</span>
                     </td>
                   </tr>
                 )

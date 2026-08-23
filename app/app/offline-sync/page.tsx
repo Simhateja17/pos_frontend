@@ -198,7 +198,7 @@ export default function OfflineSyncPage() {
                 <td className="num t-strong">{inr.format(Number(e.confirmedTotal))}</td>
                 <td>
                   {e.saleId ? (
-                    <Link className="btn btn-sm" href={`/app/orders?search=${encodeURIComponent(e.saleId)}`}>
+                    <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(e.saleId)}`}>
                       View
                     </Link>
                   ) : (

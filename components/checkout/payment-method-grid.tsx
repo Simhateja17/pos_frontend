@@ -27,6 +27,13 @@ const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
 /** These are the persisted POS tender methods. UPI records an external UPI reference; it is not a gateway capture. */
 const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi']
 
+const inrFormat = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
+
+function formatAmount(value: string): string {
+  const amount = Number(value)
+  return Number.isFinite(amount) ? inrFormat.format(amount) : value
+}
+
 export function PaymentMethodGrid({
   selected,
   onToggle,
@@ -110,31 +117,52 @@ export function PaymentMethodGrid({
               </div>
             )}
 
-            <input
-              className="fld-input num"
-              style={{ width: '100%', height: 38, textAlign: 'right' }}
-              type="number"
-              min={0}
-              step={0.01}
-              value={row.amount}
-              disabled={disabled}
-              aria-label={`${METHOD_LABELS[row.method]} amount`}
-              onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
-              placeholder="₹0.00"
-            />
+            {splitEnabled ? (
+              <input
+                className="fld-input num"
+                style={{ width: '100%', height: 38, textAlign: 'right' }}
+                type="number"
+                min={0}
+                step={0.01}
+                value={row.amount}
+                disabled={disabled}
+                aria-label={`${METHOD_LABELS[row.method]} amount`}
+                onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
+                placeholder="₹0.00"
+              />
+            ) : (
+              <div
+                aria-label={`${METHOD_LABELS[row.method]} amount`}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 38, padding: '0 10px', border: '1px solid var(--border-soft)', borderRadius: 8, background: 'var(--surface)' }}
+              >
+                <span className="t-sub">Amount applied</span>
+                <strong className="num">{formatAmount(row.amount)}</strong>
+              </div>
+            )}
 
             {row.method === 'cash' && (
-              <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
-                <span>Cash received from customer</span>
-                <input
-                  value={row.cashReceived ?? ''}
+              row.cashReceived === undefined ? (
+                <button
+                  className="btn btn-sm btn-ghost"
+                  type="button"
+                  onClick={() => onRowChange(index, { ...row, cashReceived: row.amount })}
                   disabled={disabled}
-                  inputMode="decimal"
-                  onChange={(e) => onRowChange(index, { ...row, cashReceived: e.target.value })}
-                  placeholder="₹0.00"
-                  required
-                />
-              </label>
+                  style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}
+                >
+                  Enter cash received for change
+                </button>
+              ) : (
+                <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
+                  <span>Cash received from customer <em style={{ fontStyle: 'normal', fontWeight: 500, color: 'var(--muted-2)' }}>(optional)</em></span>
+                  <input
+                    value={row.cashReceived}
+                    disabled={disabled}
+                    inputMode="decimal"
+                    onChange={(e) => onRowChange(index, { ...row, cashReceived: e.target.value })}
+                    placeholder={row.amount ? formatAmount(row.amount) : '₹0.00'}
+                  />
+                </label>
+              )
             )}
 
             {(row.method === 'card' || row.method === 'upi') && (

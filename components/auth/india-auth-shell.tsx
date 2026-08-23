@@ -24,20 +24,37 @@ type AuthShellProps = {
  * token handling here prevents login and signup from drifting into different
  * authentication paths.
  */
-export async function establishSession(session: BackendSession) {
+export async function establishSession(session: BackendSession, operatorToken?: string) {
   return establishSessionWith(session, {
     installSession: async (nextSession) => supabase.auth.setSession({
       access_token: nextSession.accessToken,
       refresh_token: nextSession.refreshToken,
     }),
-    loadContext: async () => {
+    prepareContext: async () => {
       // A tab can be reused after signing out of another business. Store scope
       // belongs to the authenticated business, so never carry an old UUID into
       // the newly established session.
-      setActiveStoreId(null)
+      setActiveStoreId(operatorToken ? 'all' : null)
+      if (typeof window !== 'undefined') {
+        if (operatorToken) {
+          window.sessionStorage.setItem('operatorToken', operatorToken)
+          window.sessionStorage.removeItem('registerLocked')
+        } else {
+          window.sessionStorage.removeItem('operatorToken')
+        }
+      }
+    },
+    loadContext: async () => {
       await getAuthenticatedAppContext()
     },
-    signOut: () => supabase.auth.signOut(),
+    signOut: async () => {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('operatorToken')
+        window.sessionStorage.removeItem('registerLocked')
+      }
+      setActiveStoreId(null)
+      await supabase.auth.signOut({ scope: 'local' })
+    },
     isRegisterLockedError: (error) =>
       error instanceof AuthenticatedRequestError && error.kind === 'register_locked',
   })

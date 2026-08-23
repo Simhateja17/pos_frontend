@@ -35,6 +35,21 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   voided: 'red',
 }
 
+function customerLabel(sale: SaleList['items'][number]): string {
+  const customer = sale.customer
+  return customer?.name
+    ?? customer?.billingName
+    ?? customer?.phone
+    ?? customer?.email
+    ?? (sale.customerId ? 'Customer linked' : 'Walk-in')
+}
+
+function customerExportValue(sale: SaleList['items'][number]): string {
+  const customer = sale.customer
+  if (!customer) return sale.customerId ? 'Customer linked' : 'Walk-in'
+  return [customer.name ?? customer.billingName, customer.phone, customer.email].filter(Boolean).join(' · ') || 'Customer'
+}
+
 export function OrdersView() {
   const { money } = useAppRegion()
   const router = useRouter()
@@ -120,7 +135,7 @@ export function OrdersView() {
                     data.items.map((sale) => [
                       sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase(),
                       sale.id,
-                      sale.customerId ? 'Customer linked' : 'Walk-in',
+                      customerExportValue(sale),
                       sale.createdAt,
                       sale.payments.map((payment) => payment.method).join(' / '),
                       sale.status,
@@ -189,8 +204,8 @@ export function OrdersView() {
               return (
                 <tr key={sale.id}>
                   <td className="t-mono t-strong">{billReference}</td>
-                  <td>{sale.customerId ? 'Customer linked' : 'Walk-in'}</td>
-                  <td className="t-sub">Not recorded</td>
+                  <td>{customerLabel(sale)}</td>
+                  <td className="t-sub">{sale.cashierName ?? 'Not recorded'}</td>
                   <td className="t-mono t-sub">
                     {timeOnly.format(created)}
                     <div className="t-sub">{dateShort.format(created)}</div>

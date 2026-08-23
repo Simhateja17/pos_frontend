@@ -17,6 +17,11 @@ type Sale = {
   lines: {
     id: string
     variantId: string
+    productName: string | null
+    sku: string | null
+    size: string | null
+    color: string | null
+    material: string | null
     quantity: number
     unitPrice: string
     lineTotal: string
@@ -540,7 +545,12 @@ function ReturnsPageInner() {
                         </div>
                       </td>
                       <td>
-                        <span style={{ display: 'block', fontWeight: 600, fontSize: 13 }}>{line.variantId}</span>
+                        <span style={{ display: 'block', fontWeight: 600, fontSize: 13 }}>
+                          {line.productName ?? line.sku ?? 'Item'}
+                        </span>
+                        <span className="t-sub">
+                          {[line.sku, line.size, line.color, line.material].filter(Boolean).join(' · ') || line.variantId}
+                        </span>
                         <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>₹{money(line.unitPrice)} each</span>
                       </td>
                       <td>{line.quantity}</td>

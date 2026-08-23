@@ -481,7 +481,7 @@ export function SettingsView() {
       </Card>
 
       <Card>
-        <CardHead title="Tax & discounts" sub="Applied at checkout and to staff discount approval" />
+        <CardHead title="Tax & discounts" sub="Item tax rates are used at checkout; this rate is only the legacy fallback" />
         <CardPad>
           <form onSubmit={saveTax}>
             {taxError && (
@@ -494,7 +494,7 @@ export function SettingsView() {
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              <Fld id="settings-tax-rate" label="Combined tax rate (%)">
+              <Fld id="settings-tax-rate" label="Legacy fallback tax rate (%)">
                 <input
                   id="settings-tax-rate"
                   type="number"

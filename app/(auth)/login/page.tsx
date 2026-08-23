@@ -105,7 +105,7 @@ export default function LoginPage() {
         return
       }
 
-      const sessionResult = await establishIndiaSession(data.session)
+      const sessionResult = await establishIndiaSession(data.session, data.operatorToken)
       if (!sessionResult.ok) {
         setError(sessionResult.message)
         return

@@ -44,7 +44,7 @@ test('renders an honest empty dashboard and captures the mobile stack', async ({
   await authenticatedPage.setViewportSize({ width: 393, height: 852 })
   await pageEmptyDashboard(authenticatedPage)
   await authenticatedPage.goto('/app/dashboard')
-  await expect(authenticatedPage.getByText('Your store is ready for its first sale')).toBeVisible()
+  await expect(authenticatedPage.getByText('No sales in this range')).toBeVisible()
   await expect(authenticatedPage.getByRole('link', { name: 'Open register' })).toBeVisible()
   await testInfo.attach('dashboard-mobile-empty', { body: await authenticatedPage.screenshot(), contentType: 'image/png' })
 })

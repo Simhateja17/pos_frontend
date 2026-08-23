@@ -9,6 +9,7 @@ export type SessionEstablishmentResult =
 
 type SessionEstablishmentDependencies = {
   installSession: (session: BackendSession) => Promise<{ error: unknown }>
+  prepareContext: () => Promise<unknown>
   loadContext: () => Promise<unknown>
   signOut: () => Promise<unknown>
   isRegisterLockedError: (error: unknown) => boolean
@@ -25,6 +26,7 @@ export async function establishSessionWith(
   }
 
   try {
+    await dependencies.prepareContext()
     await dependencies.loadContext()
     return { ok: true, requiresPin: false }
   } catch (error) {

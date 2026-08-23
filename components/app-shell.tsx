@@ -182,7 +182,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
   }, [context?.staff.role, pathname, router, appPath])
 
   const reauthenticate = useCallback(async () => {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     router.push(pack.signInPath)
   }, [router, pack.signInPath])
 

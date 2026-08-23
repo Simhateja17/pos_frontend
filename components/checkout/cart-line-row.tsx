@@ -15,6 +15,10 @@ export interface CartLine {
   quantity: number
   discountAmount: string // "0.00" if none, always a concrete string per D-07/Open Question #2's resolution
   isTaxable: boolean
+  /** Null means this legacy item still uses the store fallback tax rate. */
+  taxRatePercent: string | null
+  /** Stock at the selected store when the cashier added this line. */
+  currentStock: number
 }
 
 
@@ -43,6 +47,12 @@ export function CartLineRow({
   const { money } = useAppRegion()
   const [showDiscountInput, setShowDiscountInput] = useState(Number(line.discountAmount || '0') > 0)
   const discount = Number(line.discountAmount || '0')
+  const taxLabel = !line.isTaxable
+    ? 'Tax exempt'
+    : line.taxRatePercent === null || line.taxRatePercent === undefined
+      ? 'Store fallback tax'
+      : `${Number(line.taxRatePercent).toFixed(2)}% GST`
+  const exceedsStock = line.quantity > line.currentStock
 
   return (
     <tr>
@@ -56,6 +66,20 @@ export function CartLineRow({
               {' · '}
               <span className="badge b-amber" style={{ fontSize: 9, padding: '1px 5px' }}>
                 −{money(discount)}
+              </span>
+            </>
+          ) : null}
+          {' · '}
+          <span className="badge b-blue" style={{ fontSize: 9, padding: '1px 5px' }}>
+            {taxLabel}
+          </span>
+          {exceedsStock ? (
+            <>
+              {' · '}
+              <span className="badge b-red" style={{ fontSize: 9, padding: '1px 5px' }}>
+                {line.currentStock <= 0
+                  ? 'Out of stock — sale records negative stock'
+                  : `${line.currentStock} available — excess records negative stock`}
               </span>
             </>
           ) : null}
@@ -117,17 +141,21 @@ export function CartLineRow({
 
       <td>
         {showDiscountInput ? (
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={line.discountAmount}
-            disabled={disabled}
-            aria-label={`Discount for ${line.name}`}
-            onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
-            className="fld-input num"
-            style={{ maxWidth: 92 }}
-          />
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span aria-hidden="true">₹</span>
+            <input
+              type="number"
+              min={0}
+              max={Number(line.unitPrice) * line.quantity}
+              step={0.01}
+              value={line.discountAmount}
+              disabled={disabled}
+              aria-label={`Discount amount in rupees for ${line.name}`}
+              onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
+              className="fld-input num"
+              style={{ maxWidth: 92 }}
+            />
+          </div>
         ) : (
           <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowDiscountInput(true)} disabled={disabled}>
             Add discount

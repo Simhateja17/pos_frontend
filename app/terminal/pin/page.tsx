@@ -88,7 +88,7 @@ export default function PinPadPage() {
     }
     sessionStorage.removeItem('operatorToken')
     sessionStorage.removeItem('registerLocked')
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     router.replace('/login')
   }
 

@@ -25,6 +25,7 @@ type VariantFormRow = {
   color: string
   material: string
   price: string
+  taxRatePercent: string
   reorderThreshold: string
   /** Optional. Written as a 'receive' stock movement after the product is
    * created: stock is never set directly, only ever added to the append-only
@@ -40,6 +41,7 @@ const EMPTY_VARIANT_ROW: VariantFormRow = {
   color: '',
   material: '',
   price: '',
+  taxRatePercent: '',
   reorderThreshold: '',
   openingStock: '',
 }
@@ -105,6 +107,10 @@ export default function NewProductPage() {
       if (row.price.trim() === '' || Number.isNaN(Number(row.price))) {
         return `Enter a price${position}.`
       }
+      const taxRate = Number(row.taxRatePercent)
+      if (row.taxRatePercent.trim() === '' || !Number.isFinite(taxRate) || taxRate < 0 || taxRate > 100) {
+        return `Enter an item tax rate between 0 and 100%${position}.`
+      }
       if (row.barcode.trim() && !/^\d{8,14}$/.test(row.barcode.trim())) {
         return `A barcode must be 8-14 digits${position}.`
       }
@@ -163,6 +169,7 @@ export default function NewProductPage() {
           color: row.color.trim() || undefined,
           material: row.material.trim() || undefined,
           price: Number(row.price),
+          taxRatePercent: Number(row.taxRatePercent),
           reorderThreshold: row.reorderThreshold.trim() ? Number(row.reorderThreshold) : undefined,
         })),
       },
@@ -335,6 +342,19 @@ export default function NewProductPage() {
                         onChange={(e) => setRow(index, 'price', e.target.value)}
                       />
                     </Fld>
+                    <Fld id={`variant-${index}-tax-rate`} label="Item tax rate (%)">
+                      <input
+                        id={`variant-${index}-tax-rate`}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        required
+                        value={row.taxRatePercent}
+                        onChange={(e) => setRow(index, 'taxRatePercent', e.target.value)}
+                        placeholder="e.g. 5, 12, 18"
+                      />
+                    </Fld>
                     <Fld id={`variant-${index}-opening-stock`} label={suffix ? `Opening stock (${suffix})` : 'Opening stock'}>
                       <input
                         id={`variant-${index}-opening-stock`}
@@ -357,17 +377,9 @@ export default function NewProductPage() {
                         placeholder="Defaults to 4"
                       />
                     </Fld>
-                    <Fld id={`variant-${index}-sku`} label="SKU">
-                      <input
-                        id={`variant-${index}-sku`}
-                        value={row.sku}
-                        onChange={(e) => setRow(index, 'sku', e.target.value)}
-                        placeholder="Auto-generated"
-                      />
-                    </Fld>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                     <Fld id={`variant-${index}-size`} label="Size">
                       <input
                         id={`variant-${index}-size`}
@@ -387,6 +399,14 @@ export default function NewProductPage() {
                         id={`variant-${index}-material`}
                         value={row.material}
                         onChange={(e) => setRow(index, 'material', e.target.value)}
+                      />
+                    </Fld>
+                    <Fld id={`variant-${index}-sku`} label="SKU">
+                      <input
+                        id={`variant-${index}-sku`}
+                        value={row.sku}
+                        onChange={(e) => setRow(index, 'sku', e.target.value)}
+                        placeholder="Auto-generated"
                       />
                     </Fld>
                   </div>

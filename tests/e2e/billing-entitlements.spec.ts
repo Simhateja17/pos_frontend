@@ -84,7 +84,7 @@ test.describe('India entitlement UI contract', () => {
     await page.getByPlaceholder(/scan barcode/i).fill('Kurta')
     await page.getByRole('button', { name: /add/i }).click()
     await page.getByRole('button', { name: 'Cash' }).click()
-    await page.getByPlaceholder('₹0.00').fill('100.00')
+    await expect(page.getByRole('spinbutton', { name: 'Cash amount' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Charge sale' }).click()
 
     await expect(page.getByRole('alert')).toContainText(/50\/50|limit reached/i)
