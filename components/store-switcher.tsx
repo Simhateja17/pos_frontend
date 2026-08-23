@@ -45,7 +45,10 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
     setError(null)
     try {
       const payload = await getAuthenticatedStores()
-      setStores(payload.stores.filter((store) => store.isActive))
+      // Closed stores remain selectable for historical reads. The backend
+      // blocks writes in that scope, while Orders, Documents and Inventory
+      // continue to expose the records the business must retain.
+      setStores(payload.stores)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
     }
@@ -115,7 +118,11 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
               <span className={styles.optionIcon}><StoreIcon size={16} /></span>
               <span className={styles.optionText}>
                 <strong>{store.name}</strong>
-                <small>{[store.city, store.state].filter(Boolean).join(' · ') || 'Store'}</small>
+                <small>
+                  {store.isActive
+                    ? ([store.city, store.state].filter(Boolean).join(' · ') || 'Store')
+                    : 'Closed · history only'}
+                </small>
               </span>
               {activeStoreId === store.id ? <Check size={16} className={styles.check} /> : null}
             </button>

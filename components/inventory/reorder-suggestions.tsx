@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Badge, type BadgeTone, Card, CardHead, DataTable } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { normalizeReorderReason } from '@/lib/operational-display'
 
 const CONFIDENCE_TONE: Record<string, BadgeTone> = { low: 'grey', medium: 'amber', high: 'green' }
 
@@ -260,7 +261,7 @@ export function ReorderSuggestions() {
                 <td className="t-mono t-strong">{s.sku}</td>
                 <td>{s.productName}</td>
                 <td className="num">
-                  {s.reason.currentStock}
+                  {normalizeReorderReason(s.reason as unknown as Record<string, unknown>).currentStock}
                 </td>
                 <td className="num t-sub">
                   {s.reason.onOrder}

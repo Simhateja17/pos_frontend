@@ -15,11 +15,19 @@ import {
   type TenderMethod,
   type TenderRow,
 } from '@/components/checkout/payment-method-grid'
+import {
+  checkoutDiscountState,
+  saleContentSignature,
+  serializeMoneyIfPresent,
+  serializeOptionalMoney,
+  serializeOptionalPercent,
+} from '@/lib/checkout/sale-preparation'
 import { ManagerApprovalModal } from '@/components/checkout/manager-approval-modal'
 import { Receipt, type ReceiptSale } from '@/components/checkout/receipt'
 import { useConnectivity } from '@/lib/offline/connectivity'
 import { enqueueSale, countPending } from '@/lib/offline/queue'
 import { startSyncEngine } from '@/lib/offline/sync'
+import { equalIntraStateTaxSplit } from '@/lib/operational-display'
 
 type Variant = {
   id: string
@@ -142,6 +150,7 @@ function CheckoutPageInner() {
    * the counter's open shift, regardless of which staff member opened it.
    */
   const [openShiftsForStaff, setOpenShiftsForStaff] = useState<OpenShiftEntry[]>([])
+  const [counterState, setCounterState] = useState<'unknown' | 'none' | 'unpaired' | 'paired'>('unknown')
   const activeShift =
     openShiftsForStaff.length === 1 ? openShiftsForStaff[0] : null
   const hasMultipleOpenShifts = openShiftsForStaff.length > 1
@@ -149,16 +158,19 @@ function CheckoutPageInner() {
 
   const loadActiveShift = useCallback(async () => {
     try {
-      const [context, shiftsResult, deviceResult] = await Promise.all([
+      const [context, shiftsResult, deviceResult, terminalsResult] = await Promise.all([
         getAuthenticatedAppContext(),
         apiClient.GET('/shifts', { headers: await authHeaders() }),
         apiClient.GET('/terminals/device', { headers: await authHeaders() }),
+        apiClient.GET('/terminals', { headers: await authHeaders() }),
       ])
       const mine = context.staff.id
       setTaxRatePercent(Number(context.store?.combinedTaxRatePercent ?? 0))
       setTaxTreatment(context.store?.taxTreatment ?? 'cgst_sgst')
       const shifts = (shiftsResult.data as OpenShiftEntry[] | undefined) ?? []
       const currentTerminalId = deviceResult.data?.terminal?.id
+      const terminalCount = terminalsResult.data?.filter((terminal) => terminal.isActive).length ?? 0
+      setCounterState(currentTerminalId ? 'paired' : terminalCount === 0 ? 'none' : 'unpaired')
       setOpenShiftsForStaff(
         shifts.filter((s) => s.closedAt === null && (currentTerminalId ? s.terminalId === currentTerminalId : s.staffId === mine)),
       )
@@ -260,18 +272,15 @@ function CheckoutPageInner() {
     }
   }, [customerIdParam])
 
-  const subtotal = cart.reduce(
-    (sum, l) => sum + Number(l.unitPrice) * l.quantity - Number(l.discountAmount || '0'),
-    0,
+  const discountState = checkoutDiscountState(cart, cartDiscountMode, cartDiscountValue)
+  const grossSubtotal = discountState.grossSubtotal
+  const subtotal = discountState.grossSubtotal - discountState.lineDiscountTotal
+  const cartDiscount = discountState.cartDiscount
+  const totalDiscount = discountState.totalDiscount
+  const discountedSubtotal = discountState.discountedSubtotal
+  const lineBases = cart.map((line, index) =>
+    Number(line.unitPrice) * line.quantity - discountState.lineDiscountAmounts[index],
   )
-  const cartDiscount =
-    cartDiscountMode === 'percent'
-      ? (subtotal * Number(cartDiscountValue || '0')) / 100
-      : cartDiscountMode === 'amount'
-        ? Number(cartDiscountValue || '0')
-        : 0
-  const discountedSubtotal = Math.max(0, subtotal - cartDiscount)
-  const lineBases = cart.map((line) => Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0'))
   const discountedLineBases = lineBases.map((lineBase) =>
     subtotal > 0 ? lineBase - (cartDiscount * lineBase) / subtotal : lineBase,
   )
@@ -286,8 +295,15 @@ function CheckoutPageInner() {
       return sum + discountedLineBases[index] * (configuredRate / 100)
     }, 0) * 100,
   ) / 100
-  const estimatedCgst = taxTreatment === 'cgst_sgst' ? Math.round((taxEstimate / 2) * 100) / 100 : 0
-  const estimatedSgst = taxTreatment === 'cgst_sgst' ? Math.round((taxEstimate - estimatedCgst) * 100) / 100 : 0
+  // Intra-state GST components must be equal. When half of the total lands on
+  // half a paisa, round both halves identically and show the one-paisa invoice
+  // adjustment separately instead of silently making SGST differ from CGST.
+  const estimatedSplit = taxTreatment === 'cgst_sgst'
+    ? equalIntraStateTaxSplit(taxEstimate)
+    : { cgst: 0, sgst: 0, roundingAdjustment: 0 }
+  const estimatedCgst = estimatedSplit.cgst
+  const estimatedSgst = estimatedSplit.sgst
+  const estimatedTaxRounding = estimatedSplit.roundingAdjustment
   const preChargeEstimate = discountedSubtotal + taxEstimate
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
@@ -302,6 +318,12 @@ function CheckoutPageInner() {
     if (tenderRows[0].amount === total) return
     setTenderRows((rows) => (rows[0] ? [{ ...rows[0], amount: total }] : rows))
   }, [splitEnabled, preChargeEstimate, tenderRows])
+
+  // A validation message describes the exact cart/tender snapshot that was
+  // submitted. Once the cashier changes that snapshot it is no longer true.
+  useEffect(() => {
+    setChargeError(null)
+  }, [cart, cartDiscountMode, cartDiscountValue, tenderRows])
 
   async function runSearch(query: string) {
     setSearchError(null)
@@ -397,6 +419,7 @@ function CheckoutPageInner() {
           discountAmount: '0.00',
           isTaxable: hit.variant.isTaxable,
           taxRatePercent: hit.variant.taxRatePercent,
+          currentStock: hit.variant.currentStock,
         },
       ]
     })
@@ -581,10 +604,19 @@ function CheckoutPageInner() {
     setChargeError(null)
     setSuccessMessage(null)
 
+    if (discountState.error) {
+      setChargeError(discountState.error)
+      return
+    }
+
     if (!shiftId) {
       setChargeError(
         hasMultipleOpenShifts
           ? 'You have shifts open on more than one counter. Close the extra one before taking a sale.'
+          : counterState === 'none'
+            ? 'This store has no counters. Add a counter before taking a sale.'
+            : counterState === 'unpaired'
+              ? 'This browser is not paired to a counter. Pair it before taking a sale.'
           : 'No open shift. Open a shift before taking a sale.',
       )
       return
@@ -612,7 +644,7 @@ function CheckoutPageInner() {
       }
     }
 
-    const body: PendingSaleBody = {
+    const candidateBody: PendingSaleBody = {
       // Stable for the life of this bill: see cartSaleId's declaration. A
       // retry of the same bill MUST reuse this id so the server recognises it
       // as a replay rather than a second sale.
@@ -621,18 +653,24 @@ function CheckoutPageInner() {
       lines: cart.map((l) => ({
         variantId: l.variantId,
         quantity: l.quantity,
-        discountAmount: Number(l.discountAmount || '0') > 0 ? l.discountAmount : undefined,
+        discountAmount: serializeOptionalMoney(l.discountAmount),
       })),
-      cartDiscountPercent: cartDiscountMode === 'percent' ? cartDiscountValue : undefined,
-      cartDiscountAmount: cartDiscountMode === 'amount' ? cartDiscountValue : undefined,
+      cartDiscountPercent: cartDiscountMode === 'percent' ? serializeOptionalPercent(cartDiscountValue) : undefined,
+      cartDiscountAmount: cartDiscountMode === 'amount' ? serializeOptionalMoney(cartDiscountValue) : undefined,
       payments: tenderRows.map((r) => ({
         method: r.method,
         amount: Number(r.amount || '0').toFixed(2),
         referenceCode: r.referenceCode,
       })),
-      cashReceived: cashRow ? Number(cashRow.cashReceived).toFixed(2) : undefined,
+      cashReceived: serializeMoneyIfPresent(cashRow?.cashReceived),
       customer: buildCustomerPayload(),
     }
+
+    const shouldRotateSaleId = pendingSaleBody !== null
+      && saleContentSignature(pendingSaleBody) !== saleContentSignature(candidateBody)
+    const nextSaleId = shouldRotateSaleId ? crypto.randomUUID() : cartSaleId
+    if (shouldRotateSaleId) setCartSaleId(nextSaleId)
+    const body = { ...candidateBody, clientSaleId: nextSaleId }
 
     setPendingSaleBody(body)
 
@@ -642,7 +680,7 @@ function CheckoutPageInner() {
     if (!isOnline) {
       try {
         await enqueueSale({
-          clientSaleId: cartSaleId,
+          clientSaleId: body.clientSaleId,
           body,
           estimatedTotal: preChargeEstimate.toFixed(2),
         })
@@ -758,7 +796,11 @@ function CheckoutPageInner() {
             ? 'Scan products, collect tender, then let the server confirm the sale.'
             : hasMultipleOpenShifts
               ? 'You have more than one shift open'
-              : 'No open shift for this terminal'
+              : counterState === 'none'
+                ? 'No counters configured for this store'
+                : counterState === 'unpaired'
+                  ? 'This browser is not paired to a counter'
+                  : 'No open shift for this terminal'
         }
         actions={
           isOnline ? (
@@ -812,10 +854,22 @@ function CheckoutPageInner() {
             <span style={{ fontSize: 13, color: '#8a6410' }}>
               {hasMultipleOpenShifts
                 ? 'You have shifts open on more than one counter. Close the extra one before taking a sale.'
-                : 'No open shift for this terminal. Open a shift before taking a sale.'}
+                : counterState === 'none'
+                  ? 'This store has no counters. Add a counter before taking a sale.'
+                  : counterState === 'unpaired'
+                    ? 'This browser is not paired to a counter. Pair it before taking a sale.'
+                    : 'No open shift for this terminal. Open a shift before taking a sale.'}
             </span>
-            <Link className="btn btn-sm" href="/app/shifts" style={{ marginLeft: 'auto' }}>
-              {hasMultipleOpenShifts ? 'Manage shifts' : 'Open register'}
+            <Link
+              className="btn btn-sm"
+              href={counterState === 'none' || counterState === 'unpaired' ? '/app/settings/terminals' : '/app/shifts'}
+              style={{ marginLeft: 'auto' }}
+            >
+              {hasMultipleOpenShifts
+                ? 'Manage shifts'
+                : counterState === 'none' || counterState === 'unpaired'
+                  ? 'Manage counters'
+                  : 'Open register'}
             </Link>
           </CardPad>
         </Card>
@@ -992,6 +1046,7 @@ function CheckoutPageInner() {
                     className="fld-input num"
                     type="number"
                     min={0}
+                    max={cartDiscountMode === 'percent' ? 100 : subtotal}
                     step={0.01}
                     aria-label="Discount value"
                     value={cartDiscountValue}
@@ -1100,12 +1155,12 @@ function CheckoutPageInner() {
 
             <div className="sum-row">
               <span>Subtotal</span>
-              <span className="num">{inr(subtotal)}</span>
+              <span className="num">{inr(grossSubtotal)}</span>
             </div>
             <div className="sum-row">
               <span>Discount</span>
-              <span className="num" style={{ color: Number(cartDiscount) > 0 ? 'var(--success)' : undefined }}>
-                {Number(cartDiscount) > 0 ? `−${inr(cartDiscount)}` : inr(cartDiscount)}
+              <span className="num" style={{ color: totalDiscount > 0 ? 'var(--success)' : undefined }}>
+                {totalDiscount > 0 ? `−${inr(totalDiscount)}` : inr(totalDiscount)}
               </span>
             </div>
             {taxTreatment === 'cgst_sgst' ? (
@@ -1118,6 +1173,12 @@ function CheckoutPageInner() {
                   <span>SGST (item rates)</span>
                   <span className="num">{inr(estimatedSgst)}</span>
                 </div>
+                {estimatedTaxRounding !== 0 ? (
+                  <div className="sum-row">
+                    <span>Tax rounding adjustment</span>
+                    <span className="num">{estimatedTaxRounding > 0 ? '+' : '−'}{inr(Math.abs(estimatedTaxRounding))}</span>
+                  </div>
+                ) : null}
               </>
             ) : (
               <div className="sum-row">
@@ -1169,9 +1230,9 @@ function CheckoutPageInner() {
               disabled={isCharging}
             />
 
-            {chargeError && (
+            {(discountState.error || chargeError) && (
               <div role="alert" style={{ marginTop: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--danger-soft)', color: '#cf3030', fontSize: 12.5 }}>
-                {chargeError}
+                {discountState.error ?? chargeError}
               </div>
             )}
 
@@ -1179,7 +1240,7 @@ function CheckoutPageInner() {
               className="btn btn-grad"
               type="button"
               onClick={handleCharge}
-              disabled={isCharging || cart.length === 0 || !shiftId}
+              disabled={isCharging || cart.length === 0 || !shiftId || !!discountState.error}
               aria-busy={isCharging}
               style={{ width: '100%', height: 46, marginTop: 12, justifyContent: 'center', fontSize: 15 }}
             >

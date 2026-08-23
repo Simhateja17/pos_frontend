@@ -215,8 +215,8 @@ function DashboardContent({
               ) : (
                 <EmptyState
                   icon={<PackageOpen size={24} strokeWidth={1.8} />}
-                  title="Your store is ready for its first sale"
-                  body="Open the register to begin. The revenue trend appears here once real transactions are recorded."
+                  title="No sales in this range"
+                  body="Choose a longer date range or open the register to record the next sale."
                   action={
                     <Link className="btn btn-pri" href={appPath('/app/shifts')}>
                       Open register

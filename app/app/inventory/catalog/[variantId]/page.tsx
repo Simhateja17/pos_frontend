@@ -384,7 +384,8 @@ export default function VariantDetailPage() {
     setIsAdjusting(false)
 
     if (error) {
-      setAdjustError(response?.status === 403 ? CASHIER_ADJUST_ERROR : GENERIC_MOVEMENT_ERROR)
+      const apiMessage = (error as { error?: string } | undefined)?.error
+      setAdjustError(response?.status === 403 ? CASHIER_ADJUST_ERROR : apiMessage ?? GENERIC_MOVEMENT_ERROR)
       return
     }
 

@@ -15,16 +15,11 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Badge, type BadgeTone, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { purchaseStatusFilters } from '@/lib/operational-display'
 
 type StatusFilter = 'all' | 'draft' | 'sent' | 'partial' | 'received' | 'cancelled'
 
-const FILTERS: readonly { label: string; value: StatusFilter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Sent', value: 'sent' },
-  { label: 'Partial', value: 'partial' },
-  { label: 'Received', value: 'received' },
-]
+const FILTERS: readonly { label: string; value: StatusFilter }[] = purchaseStatusFilters
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   draft: 'grey',
@@ -232,7 +227,7 @@ export function PurchasesView() {
     <>
       <PageHead
         title="Purchases"
-        sub="Purchase orders and goods receipt"
+        sub="Purchase orders and goods receipt for the selected store"
         actions={
           <button className="btn btn-pri" onClick={() => void openCreate()}>
             <Plus size={15} /> Create PO

@@ -34,11 +34,9 @@ export default function USOnboardingStepPage() {
 
   useEffect(() => {
     if (params.step !== '1') return
-    console.log('[probe] effect ran')
     let active = true
     ;(async () => {
       const destination = await resolveUSPostAuthDestination()
-      console.log('[probe] resolved', destination, 'active', active)
       if (!active) return
       if (destination === US_DASHBOARD_PATH) router.replace(US_DASHBOARD_PATH)
       else setState('checkout')
