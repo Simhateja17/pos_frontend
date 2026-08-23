@@ -8,6 +8,11 @@
  * is imported from there so there is exactly one region vocabulary
  * (`IN | INTL`) in the codebase.
  *
+ * Every footer entry points at a real page inside its own edition: the India
+ * pages live at `/about`, `/pricing`, `/retail/*` … and the US mirrors live
+ * under `/us/*`. A US visitor never crosses into India-specific copy (GST,
+ * INR pricing, Bengaluru offices) by clicking a footer link.
+ *
  * `import type` keeps this module client-safe: the type is erased at compile
  * time, so `next/headers` never reaches the browser bundle.
  */
@@ -25,11 +30,13 @@ type SiteLinks = {
   /** Footer blurb under the wordmark. */
   tagline: string
   footerColumns: [title: string, links: [label: string, href: string][]][]
+  /** Left-hand links in the footer bottom bar. */
+  legalLinks: [label: string, href: string][]
   /** Right-hand items in the footer bottom bar. */
   footerMeta: string[]
 }
 
-const COMPANY_COLUMN: [string, [string, string][]] = [
+const IN_COMPANY_COLUMN: [string, [string, string][]] = [
   'Company',
   [
     ['About', '/about'],
@@ -39,13 +46,33 @@ const COMPANY_COLUMN: [string, [string, string][]] = [
   ],
 ]
 
-const RETAIL_COLUMN: [string, [string, string][]] = [
+const IN_RETAIL_COLUMN: [string, [string, string][]] = [
   'Retail',
   [
     ['Fashion & Apparel', '/retail/fashion-apparel'],
     ['Beauty & Wellness', '/retail/beauty-wellness'],
     ['Electronics', '/retail/electronics'],
     ['Multi-store', '/retail/multi-store'],
+  ],
+]
+
+const US_COMPANY_COLUMN: [string, [string, string][]] = [
+  'Company',
+  [
+    ['About', '/us/about'],
+    ['Blog', '/us/blog'],
+    ['Careers', '/us/careers'],
+    ['Contact', '/us/contact'],
+  ],
+]
+
+const US_RETAIL_COLUMN: [string, [string, string][]] = [
+  'Retail',
+  [
+    ['Fashion & Apparel', '/us/retail/fashion-apparel'],
+    ['Beauty & Wellness', '/us/retail/beauty-wellness'],
+    ['Electronics', '/us/retail/electronics'],
+    ['Multi-store', '/us/retail/multi-store'],
   ],
 ]
 
@@ -73,18 +100,22 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
           ['Roadmap', '/roadmap'],
         ],
       ],
-      RETAIL_COLUMN,
-      COMPANY_COLUMN,
+      IN_RETAIL_COLUMN,
+      IN_COMPANY_COLUMN,
+    ],
+    legalLinks: [
+      ['Privacy', '/privacy'],
+      ['Terms', '/terms'],
     ],
     footerMeta: ['GST: 37AAMCC4557F1ZF'],
   },
   INTL: {
     home: '/us',
     navLinks: [
-      ['Features', '/us#features'],
+      ['Features', '/us/features'],
       ['How it works', '/us#how'],
       ['Screens', '/us#screens'],
-      ['Pricing', '/us#pricing'],
+      ['Pricing', '/us/pricing'],
     ],
     loginHref: '/us/auth',
     signupHref: '/us/auth',
@@ -95,14 +126,18 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
       [
         'Product',
         [
-          ['Features', '/us#features'],
-          ['Pricing', '/us#pricing'],
-          ['Screens', '/us#screens'],
-          ['Changelog', '/changelog'],
+          ['Features', '/us/features'],
+          ['Pricing', '/us/pricing'],
+          ['Changelog', '/us/changelog'],
+          ['Roadmap', '/us/roadmap'],
         ],
       ],
-      RETAIL_COLUMN,
-      COMPANY_COLUMN,
+      US_RETAIL_COLUMN,
+      US_COMPANY_COLUMN,
+    ],
+    legalLinks: [
+      ['Privacy', '/us/privacy'],
+      ['Terms', '/us/terms'],
     ],
     footerMeta: ['US retail edition'],
   },

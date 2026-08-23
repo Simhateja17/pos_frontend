@@ -248,7 +248,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         {message && <p className={`${styles.message} ${styles.success}`} role="status">{message}</p>}
         {loading ? <p className={styles.message}>Loading plans…</p> : (
           <>
-            <div className="pricing-grid">
+            <div className={`pricing-grid ${styles.grid}`}>
               {catalog?.plans.map((plan) => {
                 const planQuote = plan[cycle]
                 const planAmount = cycle === 'annual' ? Math.round(planQuote.totalAmountMinor / 12) : planQuote.totalAmountMinor
