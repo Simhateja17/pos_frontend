@@ -1,5 +1,10 @@
-import { UsReportsView } from '@/components/us-app/reports-view'
+/*
+ * US edition mirror of app/app/reports/page.tsx.
+ *
+ * Same component, same design — the edition's content (currency, tax
+ * vocabulary, link targets) comes from the region context that
+ * `app/us/dashboard/layout.tsx` provides via `<AppShell region="INTL">`.
+ */
+import { ReportsView } from '@/components/reports/reports-view'
 
-export default function UsReportsPage() {
-  return <UsReportsView />
-}
+export default function ReportsPage() { return <ReportsView /> }

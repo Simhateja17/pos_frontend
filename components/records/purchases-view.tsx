@@ -15,6 +15,7 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Badge, type BadgeTone, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useAppRegion } from '@/lib/app-region'
 import { purchaseStatusFilters } from '@/lib/operational-display'
 
 type StatusFilter = 'all' | 'draft' | 'sent' | 'partial' | 'received' | 'cancelled'
@@ -29,12 +30,11 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   cancelled: 'red',
 }
 
-const money = (value: string | number) =>
-  `₹${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 type DraftLine = { variantId: string; quantityOrdered: string; unitCost: string }
 
 export function PurchasesView() {
+  const { money } = useAppRegion()
   const [orders, setOrders] = useState<PurchaseOrder[] | null>(null)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [products, setProducts] = useState<Product[]>([])

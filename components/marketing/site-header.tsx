@@ -25,8 +25,13 @@ export default function SiteHeader({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // `.mkt-nav` is the hook every navbar rule in landing.css is scoped to. It is
+  // load-bearing, not cosmetic: landing.css survives a client-side navigation
+  // out of the marketing site, and an unscoped `nav{}` rule there repainted the
+  // app shell's `<nav class="sb-nav">` sidebar as a fixed dark top bar. See the
+  // scoping contract at the top of app/landing.css.
   return (
-    <nav id="main-nav">
+    <nav id="main-nav" className="mkt-nav">
       <a href={site.home} className="nav-logo">
         <div className="nav-logo-mark">{LOGO}</div>
         <span className="nav-logo-text">Ambel POS</span>

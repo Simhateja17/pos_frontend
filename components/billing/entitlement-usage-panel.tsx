@@ -6,8 +6,8 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
 import styles from './entitlement-usage-panel.module.css'
 
-type Region = 'IN' | 'INTL'
 type BillingStatus = components['schemas']['BillingStatus']
+type Region = components['schemas']['BillingRegion']
 type EntitlementValue = number | 'unlimited'
 
 type EntitlementStatus = BillingStatus & {
@@ -34,11 +34,22 @@ function limitText(value: EntitlementValue | undefined): string {
   return value === 'unlimited' ? 'Unlimited' : typeof value === 'number' ? String(value) : 'Unavailable'
 }
 
-export function EntitlementUsagePanel({ region }: { region: Region }) {
-  const [status, setStatus] = useState<EntitlementStatus | null>(null)
-  const [loading, setLoading] = useState(true)
+export function EntitlementUsagePanel({
+  region,
+  status: providedStatus,
+}: {
+  region: Region
+  status?: EntitlementStatus | null
+}) {
+  const [status, setStatus] = useState<EntitlementStatus | null>(providedStatus ?? null)
+  const [loading, setLoading] = useState(providedStatus === undefined)
 
   useEffect(() => {
+    if (providedStatus !== undefined) {
+      setStatus(providedStatus)
+      setLoading(false)
+      return
+    }
     let active = true
     void (async () => {
       try {
@@ -56,7 +67,7 @@ export function EntitlementUsagePanel({ region }: { region: Region }) {
     return () => {
       active = false
     }
-  }, [region])
+  }, [region, providedStatus])
 
   if (loading) return <section className={styles.panel} aria-label="Plan usage"><p>Loading current usage…</p></section>
   if (!status?.usage || !status.entitlements) return null

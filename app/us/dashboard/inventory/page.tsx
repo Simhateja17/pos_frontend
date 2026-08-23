@@ -1,5 +1,10 @@
-import { UsInventoryView } from '@/components/us-app/inventory-view'
+/*
+ * US edition mirror of app/app/inventory/page.tsx.
+ *
+ * Same component, same design — the edition's content (currency, tax
+ * vocabulary, link targets) comes from the region context that
+ * `app/us/dashboard/layout.tsx` provides via `<AppShell region="INTL">`.
+ */
+import { InventoryView } from '@/components/inventory/inventory-view'
 
-export default function UsInventoryPage() {
-  return <UsInventoryView />
-}
+export default function IndiaInventoryPage() { return <InventoryView /> }

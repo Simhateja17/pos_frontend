@@ -11,6 +11,7 @@
 import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import { AlertTriangle, Inbox, Loader2, PackageOpen } from 'lucide-react'
+import { useAppRegion } from '@/lib/app-region'
 import { Card, CardPad, PageHead } from './ui'
 
 export function EmptyState({
@@ -148,6 +149,11 @@ export function UnavailableValue({ reason, text = 'Not tracked yet' }: { reason?
 
 /** Full-page state for modules with no Phase 1-3 backend contract. */
 export function UnavailableModulePage({ title, sub, capability }: { title: string; sub?: string; capability?: string }) {
+  // This screen is rendered by BOTH editions' `[module]` route. Hardcoding
+  // /app/dashboard sent a US visitor out of /us/dashboard and into the India
+  // edition; appPath() keeps the link on the edition they are already in.
+  const { appPath } = useAppRegion()
+
   return (
     <>
       <PageHead title={title} sub={sub ?? 'Not available in this build'} />
@@ -163,7 +169,7 @@ export function UnavailableModulePage({ title, sub, capability }: { title: strin
               </>
             }
             action={
-              <Link className="btn btn-pri" href="/app/dashboard">
+              <Link className="btn btn-pri" href={appPath('/app/dashboard')}>
                 Back to dashboard
               </Link>
             }

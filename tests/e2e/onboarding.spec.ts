@@ -84,4 +84,90 @@ test.describe('India onboarding billing', () => {
     await subscriptionRequest
     expect(stepRequests).toHaveLength(0)
   })
+
+  test('US onboarding continues when the selected subscription is already active', async ({ authenticatedPage: page }) => {
+    const quote = {
+      baseAmountMinor: 1_188_00,
+      taxAmountMinor: 0,
+      totalAmountMinor: 1_188_00,
+      taxRateBps: 0,
+      taxMode: 'exclusive' as const,
+      taxLabel: 'Tax calculated according to your tax settings',
+    }
+    const plan = {
+      key: 'growth',
+      includedStores: 1,
+      region: 'INTL' as const,
+      currency: 'USD' as const,
+      name: 'Growth',
+      description: 'Test growth plan',
+      popular: true,
+      features: ['ML reorder intelligence'],
+      entitlements: {
+        maxLocations: 3,
+        maxActiveUsers: 10,
+        maxActiveRegisters: 5,
+        monthlyPosTransactions: 'unlimited' as const,
+        monthlySalesOrders: 'unlimited' as const,
+        monthlyEcommerceOrders: 'unlimited' as const,
+        monthlyPurchaseOrders: 'unlimited' as const,
+        monthlyBills: 'unlimited' as const,
+        dailyApiCalls: 'unlimited' as const,
+        integrations: 'unlimited' as const,
+      },
+      addons: [],
+      monthly: quote,
+      annual: quote,
+      monthlyAvailable: true,
+      annualAvailable: true,
+      providerConfigured: { monthly: true, annual: true },
+    }
+    let subscriptionRequests = 0
+
+    await page.route('**/billing/plans*', (route) => route.fulfill({
+      json: { mode: 'test', region: 'INTL', plans: [plan] },
+    }))
+    await page.route('**/billing/status', (route) => route.fulfill({
+      json: {
+        hasSubscription: true,
+        entitlement: 'active',
+        accessAllowed: true,
+        graceUntil: null,
+        planKey: 'growth',
+        region: 'INTL',
+        entitlementSource: 'subscription',
+        entitlementVersion: 'intl-mvp-01-v1',
+        entitlements: plan.entitlements,
+        usage: {
+          businessMonth: '2026-08-01',
+          locations: 1,
+          activeUsers: 1,
+          activeRegisters: 1,
+          monthlyPosTransactions: 0,
+        },
+        subscription: {
+          id: '00000000-0000-4000-8000-000000000002',
+          providerSubscriptionId: 'sub_test_existing',
+          planKey: 'growth',
+          billingCycle: 'annual',
+          currency: 'USD',
+          status: 'active',
+          cancelAtCycleEnd: false,
+          currentEndAt: null,
+          lastPaymentId: null,
+          lastInvoiceId: null,
+        },
+      },
+    }))
+    await page.route('**/billing/subscription', (route) => {
+      subscriptionRequests += 1
+      return route.fulfill({ status: 500, json: { error: 'subscription should not be recreated' } })
+    })
+
+    await page.goto('/us/onboarding/1')
+    await expect(page.getByRole('button', { name: /continue setup/i })).toBeEnabled()
+    await page.getByRole('button', { name: /continue setup/i }).click()
+    await expect(page).toHaveURL(/\/us\/onboarding\/complete$/)
+    expect(subscriptionRequests).toBe(0)
+  })
 })

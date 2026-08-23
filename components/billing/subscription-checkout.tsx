@@ -11,6 +11,7 @@ import styles from './subscription-checkout.module.css'
 type Region = 'IN' | 'INTL'
 type Catalog = components['schemas']['BillingPlanCatalog']
 type Plan = components['schemas']['BillingPlanOption']
+type BillingStatus = components['schemas']['BillingStatus']
 type Cycle = 'monthly' | 'annual'
 
 type Props = {
@@ -84,6 +85,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [attemptKey, setAttemptKey] = useState<string | null>(null)
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null)
 
   const attemptStorageKey = `couture.billing.attempt.${region}.${selectedKey}.${cycle}`
 
@@ -112,9 +114,36 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     setAttemptKey(typeof window === 'undefined' ? null : window.sessionStorage.getItem(attemptStorageKey))
   }, [attemptStorageKey])
 
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      try {
+        const headers = await authHeaders()
+        const { data } = await apiClient.GET('/billing/status', { headers })
+        if (active && data) setBillingStatus(data)
+      } catch {
+        // Status is advisory until checkout starts. A failed status request
+        // should not block a new payment attempt.
+      }
+    })()
+    return () => { active = false }
+  }, [region])
+
   const selected = useMemo<Plan | undefined>(() => catalog?.plans.find((plan) => plan.key === selectedKey), [catalog, selectedKey])
   const quote = selected?.[cycle]
   const available = Boolean(selected?.providerConfigured[cycle])
+  const activeSelectedSubscription = Boolean(
+    billingStatus?.accessAllowed
+    && billingStatus.hasSubscription
+    && billingStatus.planKey === selectedKey
+    && (!billingStatus.subscription || billingStatus.subscription.billingCycle === cycle)
+  )
+
+  async function refreshBillingStatus(headers: Record<string, string>) {
+    const { data } = await apiClient.GET('/billing/status', { headers })
+    if (data) setBillingStatus(data)
+    return data ?? null
+  }
 
   function selectPlan(key: string) {
     setSelectedKey(key)
@@ -139,6 +168,16 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     setPaying(true)
     try {
       const headers = await authHeaders()
+      const status = billingStatus ?? await refreshBillingStatus(headers)
+      if (
+        status?.accessAllowed
+        && status.hasSubscription
+        && status.planKey === selected.key
+        && (!status.subscription || status.subscription.billingCycle === cycle)
+      ) {
+        router.push(successPath)
+        return
+      }
       const currentAttemptKey = attemptKey ?? crypto.randomUUID()
       setAttemptKey(currentAttemptKey)
       window.sessionStorage.setItem(attemptStorageKey, currentAttemptKey)
@@ -300,13 +339,15 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
               })}
             </div>
             <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:sales@Ambel.in">Contact sales</a>.</div>
-            <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || !available || paying}>
+            <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || paying || (!available && !activeSelectedSubscription)}>
               {paying
-                  ? 'Opening secure checkout…'
-                  : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate →`}
+                  ? activeSelectedSubscription ? 'Continuing...' : 'Opening secure checkout...'
+                  : activeSelectedSubscription
+                    ? 'Continue setup ->'
+                    : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate ->`}
             </button>
             <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
-            <EntitlementUsagePanel region={region} />
+            <EntitlementUsagePanel region={region} status={billingStatus} />
           </>
         )}
       </div>

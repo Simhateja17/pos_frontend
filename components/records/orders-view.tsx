@@ -12,8 +12,8 @@ import {
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, Tabs, type BadgeTone, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { downloadCsv } from '@/lib/csv'
+import { useAppRegion } from '@/lib/app-region'
 
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 const timeOnly = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })
 const dateShort = new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' })
 
@@ -51,6 +51,7 @@ function customerExportValue(sale: SaleList['items'][number]): string {
 }
 
 export function OrdersView() {
+  const { money } = useAppRegion()
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [range, setRange] = useState<Range>('today')
@@ -214,7 +215,7 @@ export function OrdersView() {
                     <span className={`badge b-${STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'}`}>{sale.status}</span>
                   </td>
                   <td className="num t-strong">
-                    {money.format(Number(sale.totalAmount))}
+                    {money(Number(sale.totalAmount))}
                   </td>
                   <td>
                     <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(sale.id)}`}>

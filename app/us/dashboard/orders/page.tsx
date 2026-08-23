@@ -1,5 +1,10 @@
-import { UsOrdersView } from '@/components/us-app/orders-view'
+/*
+ * US edition mirror of app/app/orders/page.tsx.
+ *
+ * Same component, same design — the edition's content (currency, tax
+ * vocabulary, link targets) comes from the region context that
+ * `app/us/dashboard/layout.tsx` provides via `<AppShell region="INTL">`.
+ */
+import { OrdersView } from '@/components/records/orders-view'
 
-export default function UsOrdersPage() {
-  return <UsOrdersView />
-}
+export default function OrdersPage() { return <OrdersView /> }
