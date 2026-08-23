@@ -7,6 +7,7 @@ import { authHeaders as sharedAuthHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
 import { EntitlementUsagePanel } from './entitlement-usage-panel'
 import styles from './subscription-checkout.module.css'
+import { CurrencyMark } from '@/components/marketing/currency-mark'
 
 type Region = 'IN' | 'INTL'
 type Catalog = components['schemas']['BillingPlanCatalog']
@@ -271,7 +272,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       {/* Same hero treatment as the India /pricing page. */}
       <header className={`content-hero ${styles.hero}`}>
         <div className="section-tag">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
+          <CurrencyMark region={region} />
           Secure checkout
         </div>
         <h1>{title ?? <>Choose your <em>subscription plan.</em></>}</h1>
