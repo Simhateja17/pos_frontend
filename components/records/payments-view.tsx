@@ -7,8 +7,8 @@ import { Card, CardHead, DataTable, KpiRow, PageHead, Tabs, type KpiItem } from 
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { downloadCsv } from '@/lib/csv'
 import { Pagination } from './orders-view'
+import { useAppRegion } from '@/lib/app-region'
 
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
 
 const FILTERS = [
@@ -20,6 +20,7 @@ const FILTERS = [
 type Filter = (typeof FILTERS)[number]['value']
 
 export function PaymentsView() {
+  const { money } = useAppRegion()
   const [filter, setFilter] = useState<Filter>('all')
   const [data, setData] = useState<PaymentRead | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
@@ -54,9 +55,9 @@ export function PaymentsView() {
 
   const summary = data?.summary
   const metrics: KpiItem[] = [
-    { label: 'Collected', value: summary ? money.format(Number(summary.collectedAmount)) : '-', meta: 'Server-calculated' },
-    { label: 'Refunded', value: summary ? money.format(Number(summary.refundedAmount)) : '-', meta: 'Server-calculated' },
-    { label: 'Net Collected', value: summary ? money.format(Number(summary.netAmount)) : '-', meta: 'Server-calculated' },
+    { label: 'Collected', value: summary ? money(Number(summary.collectedAmount)) : '-', meta: 'Server-calculated' },
+    { label: 'Refunded', value: summary ? money(Number(summary.refundedAmount)) : '-', meta: 'Server-calculated' },
+    { label: 'Net Collected', value: summary ? money(Number(summary.netAmount)) : '-', meta: 'Server-calculated' },
     { label: 'Settlement', value: <UnavailableValue />, meta: 'No settlement endpoint is available' },
   ]
 
@@ -120,7 +121,7 @@ export function PaymentsView() {
                   </span>
                 </td>
                 <td className="num t-strong">
-                  {money.format(Number(payment.amount))}
+                  {money(Number(payment.amount))}
                 </td>
               </tr>
             ))}

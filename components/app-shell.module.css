@@ -140,3 +140,40 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/*
+ * Token guard for the app chrome.
+ *
+ * Page-level global stylesheets (app/landing.css) are injected by Next on a
+ * client-side navigation and are never removed again, so one trip out to a
+ * marketing route — /plans on a billing redirect, a 404, the pricing page —
+ * leaves the marketing palette live inside the dashboard for the rest of the
+ * session. Its `:root` block redefines --bg, --ink, --muted, --border, --r and
+ * the shadows, and because it is unlayered it outranks globals.css's
+ * `@layer components`.
+ *
+ * Custom properties resolve from the nearest declaring ancestor, so declaring
+ * the app's own values here — on the shell root, below :root — makes the app
+ * immune no matter what a later stylesheet does to :root. Keep these in sync
+ * with the `:root` block in app/globals.css.
+ */
+.shell {
+  --bg: #f5f6f7;
+  --surface: #ffffff;
+  --border: #e6e8eb;
+  --border-soft: #eef0f2;
+  --ink: #0f1729;
+  --ink-2: #2b3447;
+  --muted: #5b6675;
+  --muted-2: #7a8699;
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 1px rgba(15, 23, 41, 0.03);
+  --shadow-md: 0 1px 3px rgba(15, 23, 41, 0.05), 0 4px 12px rgba(15, 23, 41, 0.04);
+  --shadow-lg: 0 8px 28px rgba(15, 23, 41, 0.08);
+  /* landing.css also sets `body{background:var(--bg)}` unlayered; repaint the
+   * shell's own ground so the dashboard never shows the marketing white. */
+  background: var(--bg);
+  color: var(--ink);
+}

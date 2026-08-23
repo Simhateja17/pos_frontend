@@ -269,7 +269,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
    */
   return (
     <AppRegionProvider region={region}>
-    <div className="app">
+    <div className={`app ${styles.shell}`}>
       {mobileOpen && (
         <button className={styles.scrim} aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
       )}
