@@ -227,48 +227,74 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
 
   return (
     <main className={styles.page}>
+      <button type="button" className={styles.back} onClick={() => router.back()}>← Back</button>
+
+      {/* Same hero treatment as the India /pricing page. */}
+      <header className={`content-hero ${styles.hero}`}>
+        <div className="section-tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
+          Secure checkout
+        </div>
+        <h1>{title ?? <>Choose your <em>subscription plan.</em></>}</h1>
+        <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
+        <div className={styles.mode} role="group" aria-label="Billing cycle">
+          <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => { setCycle('monthly'); setAttemptKey(null) }}>Monthly</button>
+          <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => { setCycle('annual'); setAttemptKey(null) }}>Annual</button>
+        </div>
+      </header>
+
       <div className={styles.canvas}>
-        <button type="button" className={styles.back} onClick={() => router.back()}>← Back</button>
-        <header className={styles.header}>
-          <h1>{title ?? 'Choose your subscription plan.'}</h1>
-          <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
-          <div className={styles.mode} role="group" aria-label="Billing cycle">
-            <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => { setCycle('monthly'); setAttemptKey(null) }}>Monthly</button>
-            <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => { setCycle('annual'); setAttemptKey(null) }}>Annual</button>
-          </div>
-        </header>
         {error && <p className={`${styles.message} ${styles.error}`} role="alert">{error}</p>}
         {message && <p className={`${styles.message} ${styles.success}`} role="status">{message}</p>}
         {loading ? <p className={styles.message}>Loading plans…</p> : (
           <>
-            <div className={styles.grid}>
+            <div className="pricing-grid">
               {catalog?.plans.map((plan) => {
                 const planQuote = plan[cycle]
                 const planAmount = cycle === 'annual' ? Math.round(planQuote.totalAmountMinor / 12) : planQuote.totalAmountMinor
+                const isSelected = selectedKey === plan.key
                 return (
                   <article
                     key={plan.key}
-                    className={[styles.card, plan.popular ? styles.cardFeatured : '', selectedKey === plan.key ? styles.cardSelected : ''].filter(Boolean).join(' ')}
+                    className={[
+                      'price-card',
+                      plan.popular ? 'featured' : '',
+                      plan.popular ? styles.onFeatured : '',
+                      isSelected ? (plan.popular ? styles.cardFeaturedSelected : styles.cardSelected) : '',
+                    ].filter(Boolean).join(' ')}
                   >
-                    <button type="button" className={styles.cardButton} onClick={() => selectPlan(plan.key)} aria-pressed={selectedKey === plan.key}>
-                      {plan.popular && <span className={styles.popular}>Most popular</span>}
+                    <button type="button" className={styles.cardButton} onClick={() => selectPlan(plan.key)} aria-pressed={isSelected}>
+                      {plan.popular && <span className="price-popular">Most popular</span>}
                       {/* Order mirrors the marketing pricing grid: plan label, price,
                           billing note, then the one-line pitch above the features. */}
-                      <h2 className={styles.name}>{plan.name}</h2>
-                      <div className={styles.price}><strong>{money(planAmount, plan.currency, region)}</strong><span>/mo equivalent</span></div>
-                      <p className={styles.annualNote}>{cycle === 'annual' ? `Billed ${money(planQuote.totalAmountMinor, plan.currency, region)} annually · no annual discount` : 'Billed every month'}</p>
-                      <p className={styles.description}>{plan.description}</p>
-                      <ul className={styles.features}>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
-                      {plan.addons.length > 0 && <ul className={styles.features} aria-label="Available add-ons">
-                        {plan.addons.map((addon) => <li key={addon.key}>{addon.label}: {money(addon.unitAmountMinor, plan.currency, region)} / month</li>)}
-                      </ul>}
+                      <div className="price-plan" style={plan.popular ? { color: 'rgba(255,255,255,.75)' } : undefined}>{plan.name}</div>
+                      <div className="price-h">
+                        <span className="price-now">
+                          {money(planAmount, plan.currency, region)}
+                          <span className="price-per" style={plan.popular ? { color: 'rgba(255,255,255,.7)' } : undefined}>/mo equivalent</span>
+                        </span>
+                      </div>
+                      <div className="price-sub" style={{ marginBottom: 6, ...(plan.popular ? { color: 'rgba(255,255,255,.65)' } : {}) }}>
+                        {cycle === 'annual' ? `Billed ${money(planQuote.totalAmountMinor, plan.currency, region)} annually · no annual discount` : 'Billed every month'}
+                      </div>
+                      <div className="price-sub" style={plan.popular ? { color: 'rgba(255,255,255,.65)' } : undefined}>{plan.description}</div>
+                      <ul className="price-features" style={plan.popular ? { color: 'rgba(255,255,255,.9)' } : undefined}>
+                        {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
+                      </ul>
+                      {plan.addons.length > 0 && (
+                        <ul className="price-features" aria-label="Available add-ons" style={plan.popular ? { color: 'rgba(255,255,255,.9)' } : undefined}>
+                          {plan.addons.map((addon) => <li key={addon.key}>{addon.label}: {money(addon.unitAmountMinor, plan.currency, region)} / month</li>)}
+                        </ul>
+                      )}
                     </button>
-                    {selectedKey === plan.key && <div className={styles.quote} aria-label="Payment summary">
-                      <div className={styles.quoteRow}><span>{region === 'IN' ? 'Plan amount before GST' : 'Plan amount'}</span><strong>{money(planQuote.baseAmountMinor, plan.currency, region)}</strong></div>
-                      <div className={styles.quoteRow}><span>{planQuote.taxLabel}</span><strong>{money(planQuote.taxAmountMinor, plan.currency, region)}</strong></div>
-                      <div className={`${styles.quoteRow} ${styles.quoteTotal}`}><span>Total payable</span><strong>{money(planQuote.totalAmountMinor, plan.currency, region)}</strong></div>
-                      {!plan.providerConfigured[cycle] && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
-                    </div>}
+                    {isSelected && (
+                      <div className={styles.quote} aria-label="Payment summary">
+                        <div className={styles.quoteRow}><span>{region === 'IN' ? 'Plan amount before GST' : 'Plan amount'}</span><strong>{money(planQuote.baseAmountMinor, plan.currency, region)}</strong></div>
+                        <div className={styles.quoteRow}><span>{planQuote.taxLabel}</span><strong>{money(planQuote.taxAmountMinor, plan.currency, region)}</strong></div>
+                        <div className={`${styles.quoteRow} ${styles.quoteTotal}`}><span>Total payable</span><strong>{money(planQuote.totalAmountMinor, plan.currency, region)}</strong></div>
+                        {!plan.providerConfigured[cycle] && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
+                      </div>
+                    )}
                   </article>
                 )
               })}

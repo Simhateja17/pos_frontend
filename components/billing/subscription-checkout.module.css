@@ -1,95 +1,186 @@
-/* The plan cards deliberately mirror `.price-card` in app/landing.css so the
-   checkout reads as the same product as the marketing pricing grid. landing.css
-   cannot be imported here (it carries a global reset and element selectors), so
-   the shared values are restated as literals. */
+/*
+ * Subscription checkout.
+ *
+ * The plan cards, the hero and the price typography now come from the real
+ * India design system in `app/landing.css` (`.content-hero`, `.section-tag`,
+ * `.pricing-grid`, `.price-card`, `.price-plan`, `.price-h`, `.price-now`,
+ * `.price-per`, `.price-sub`, `.price-features`, `.price-popular`) rather than
+ * from literals restated here. An earlier version copied those values by hand
+ * because landing.css carries a global reset; it is instead imported by the
+ * two routes that render this component (`/plans` and `/us/onboarding/[step]`),
+ * exactly as `/pricing` already does.
+ *
+ * What remains below is only the checkout-specific chrome that the marketing
+ * pricing grid has no equivalent for: the billing-cycle toggle, the selected
+ * state, the per-plan payment summary and the pay action.
+ */
+
 .page {
   min-height: 100vh;
-  padding: 48px 24px 72px;
-  background: linear-gradient(145deg, #fffdf7 0%, #f3f7ff 56%, #f8fafc 100%);
-  color: #0e1117;
+  padding-bottom: 72px;
+  background: var(--bg);
+  color: var(--ink);
 }
 
-.canvas { max-width: 1120px; margin: 0 auto; }
-.back { border: 0; background: transparent; color: #6b7280; cursor: pointer; font-size: 14px; padding: 0; }
-.header { text-align: center; max-width: 700px; margin: 30px auto 26px; }
-.header h1 { font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 800; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.04em; margin: 0 0 10px; }
-.header p { color: #6b7280; margin: 0; line-height: 1.6; }
-.mode { display: inline-flex; gap: 6px; margin: 18px 0 26px; padding: 4px; border: 1px solid #dbe4f0; border-radius: 999px; background: rgba(255,255,255,.72); }
-.mode button { border: 0; background: transparent; border-radius: 999px; padding: 9px 16px; color: #6b7280; cursor: pointer; font-weight: 700; }
-.mode .active { background: #0058BA; color: white; box-shadow: 0 4px 12px rgba(0,88,186,.25); }
-.message { margin: 0 auto 20px; max-width: 760px; border-radius: 12px; padding: 13px 16px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+/* The shared hero assumes a fixed navbar above it; this route has none. */
+.hero {
+  padding-top: 54px;
+}
+
+.canvas {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 5vw;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 26px 0 0 5vw;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+}
+.back:hover { color: var(--brand-1); }
+
+/* Billing-cycle toggle. */
+.mode {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 24px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--pill, 999px);
+  background: #fff;
+  box-shadow: var(--shadow-md);
+}
+.mode button {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 9px 20px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all .18s var(--ease);
+}
+.mode .active {
+  background: var(--brand-1);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 88, 186, .25);
+}
+
+.message {
+  margin: 24px auto 0;
+  max-width: 760px;
+  border-radius: var(--r);
+  padding: 13px 16px;
+  font-size: 14px;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
 .success { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
 .error { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
-/* Top padding keeps the "Most popular" ribbon, which hangs above the card edge,
-   from being clipped by the grid. */
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: stretch; padding-top: 16px; max-width: 860px; margin: 0 auto; }
-
-.card {
-  position: relative;
+/*
+ * The whole card is the selection control. `.price-card` already paints the
+ * surface, so this is a bare hit area that inherits it.
+ */
+.cardButton {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
   text-align: left;
-  background: #fff;
-  border: 1.5px solid rgba(0,0,0,.08);
-  border-radius: 22px;
-  padding: 32px;
-  transition: all .28s cubic-bezier(.22,.68,0,1);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
 }
-.card:not(.cardFeatured):hover { transform: translateY(-4px); box-shadow: 0 12px 44px rgba(0,88,186,.18); border-color: rgba(0,88,186,.2); }
-.cardFeatured {
-  background: linear-gradient(145deg, #06337A, #0058BA, #2B6FDB);
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 20px 60px rgba(0,88,186,.35);
-}
-.cardSelected { box-shadow: 0 0 0 3px rgba(0,88,186,.45), 0 12px 44px rgba(0,88,186,.18); }
-.cardFeatured.cardSelected { box-shadow: 0 0 0 3px rgba(255,255,255,.75), 0 20px 60px rgba(0,88,186,.35); }
 
-.cardButton { width: 100%; border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
-.popular {
-  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  background: #FFD060; color: #7A5900;
-  font-size: 11px; font-weight: 800; letter-spacing: .08em;
-  padding: 5px 14px; border-radius: 100px; white-space: nowrap;
-}
-.name { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 10px; opacity: .7; }
-.cardFeatured .name { opacity: .9; }
-.price { font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif; display: flex; align-items: baseline; gap: 7px; margin: 0 0 6px; }
-.price strong { font-size: 36px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
-.price span { font-size: 14px; font-weight: 600; opacity: .7; }
-.annualNote { font-size: 12.5px; opacity: .6; margin: 0 0 6px; }
-.description { min-height: 40px; margin: 0 0 24px; line-height: 1.5; font-size: 13px; opacity: .65; }
-.features { list-style: none; display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; font-size: 14px; }
-.features li { display: flex; align-items: flex-start; gap: 9px; }
-.features li::before { content: '✓'; font-weight: 800; color: #6C9FFF; flex-shrink: 0; }
-.cardFeatured .features li::before { color: #A9C7FF; }
+.cardSelected { box-shadow: 0 0 0 3px rgba(0, 88, 186, .45), var(--shadow-lg); }
+.cardFeaturedSelected { box-shadow: 0 0 0 3px rgba(255, 255, 255, .75), 0 20px 60px rgba(0, 88, 186, .35); }
 
-.quote { margin-top: 22px; border-top: 1px solid rgba(0,0,0,.08); padding-top: 16px; display: grid; gap: 8px; font-size: 13px; }
-.cardFeatured .quote { border-top-color: rgba(255,255,255,.22); }
+/* Per-plan payment summary, revealed on the selected card. */
+.quote {
+  margin-top: 22px;
+  border-top: 1px solid rgba(0, 0, 0, .08);
+  padding-top: 16px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
 .quoteRow { display: flex; justify-content: space-between; gap: 20px; opacity: .7; }
 .quoteRow strong { opacity: 1; }
-.quoteTotal { margin-top: 4px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,.08); font-size: 15px; opacity: 1; }
-.cardFeatured .quoteTotal { border-top-color: rgba(255,255,255,.22); }
-.quoteTotal strong { font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
+.quoteTotal {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, .08);
+  font-size: 15px;
+  opacity: 1;
+}
+.quoteTotal strong {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+/* On the navy featured card the hairlines and the note need light values. */
+.onFeatured .quote,
+.onFeatured .quoteTotal { border-top-color: rgba(255, 255, 255, .22); }
+.onFeatured .providerNote { color: #FFD060; }
+
 .providerNote { margin: 12px 0 0; color: #9a3412; font-size: 12px; line-height: 1.45; }
-.cardFeatured .providerNote { color: #FFD060; }
 
 .action {
-  display: block; width: min(100%, 460px); margin: 26px auto 0;
-  border: 0; border-radius: 12px; padding: 15px 20px;
-  font-family: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
-  background: #0058BA; color: white; cursor: pointer; font-weight: 700; font-size: 16px;
-  box-shadow: 0 8px 20px rgba(0,88,186,.3); transition: all .18s;
+  display: block;
+  width: min(100%, 460px);
+  margin: 30px auto 0;
+  border: 0;
+  border-radius: 12px;
+  height: 52px;
+  padding: 0 20px;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand-1);
+  box-shadow: 0 8px 20px rgba(0, 88, 186, .3);
+  cursor: pointer;
+  transition: all .18s var(--ease);
 }
-.action:hover:not(:disabled) { background: #06337A; transform: translateY(-1px); }
+.action:hover:not(:disabled) { background: var(--brand-dark); transform: translateY(-1px); }
 .action:disabled { cursor: not-allowed; opacity: .55; box-shadow: none; }
-.legal { text-align: center; max-width: 620px; margin: 16px auto 0; color: #6b7280; font-size: 12px; line-height: 1.5; }
-.enterprise { margin: 22px auto 0; max-width: 700px; text-align: center; border: 1px dashed #cbd5e1; border-radius: 16px; padding: 17px; color: #3A3F4A; font-size: 13px; }
-.enterprise a { color: #0058BA; font-weight: 700; }
+
+.legal {
+  text-align: center;
+  max-width: 620px;
+  margin: 16px auto 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.enterprise {
+  margin: 30px auto 0;
+  max-width: 700px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 17px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.enterprise a { color: var(--brand-1); font-weight: 700; }
 
 @media (max-width: 760px) {
-  .page { padding: 30px 16px 56px; }
-  .grid { grid-template-columns: 1fr; }
-  .card { padding: 26px 22px; }
-  .price strong { font-size: 32px; }
-  .description { min-height: 0; }
+  .hero { padding-top: 34px; }
+  .back { margin-left: 20px; }
 }
