@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { InternationalAuthShell, establishSession } from '@/components/auth/india-auth-shell'
+import { resolveUSPostAuthDestination, US_CHECKOUT_PATH } from '@/lib/billing/post-auth-destination'
 import styles from '@/components/auth/india-auth.module.css'
 
 type Mode = 'login' | 'signup'
@@ -89,11 +90,15 @@ export default function USAuthPage() {
       if (requestError || !data?.session) throw new Error(responseMessage(requestError, 'Invalid or expired code.'))
       const session = await establishSession(data.session)
       if (!session.ok) throw new Error(session.message)
+      // Only a tenant without an active entitlement belongs in checkout, so
+      // resolve the destination instead of assuming every sign-in is a first
+      // one. See lib/billing/post-auth-destination.
+      const destination = await resolveUSPostAuthDestination()
       if (session.requiresPin) {
-        router.replace('/terminal/pin?returnTo=%2Fus%2Fonboarding%2F1')
+        router.replace(`/terminal/pin?returnTo=${encodeURIComponent(destination)}`)
         return
       }
-      router.push('/us/onboarding/1')
+      router.push(destination)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Sign-in is unavailable right now.')
     } finally {
@@ -123,10 +128,10 @@ export default function USAuthPage() {
       const session = await establishSession(data.session)
       if (!session.ok) throw new Error(session.message)
       if (session.requiresPin) {
-        router.replace('/terminal/pin?returnTo=%2Fus%2Fonboarding%2F1')
+        router.replace(`/terminal/pin?returnTo=${encodeURIComponent(US_CHECKOUT_PATH)}`)
         return
       }
-      router.push('/us/onboarding/1')
+      router.push(US_CHECKOUT_PATH)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'We could not create your account right now.')
     } finally {
