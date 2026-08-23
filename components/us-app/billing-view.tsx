@@ -94,8 +94,13 @@ export function UsBillingView() {
   const openShift = shifts.find((shift) => shift.closedAt === null) ?? null
   const taxRate = Number(context?.store?.combinedTaxRatePercent ?? 0) / 100
   const subtotal = cart.reduce((sum, line) => sum + Number(line.variant.price) * line.quantity, 0)
-  const taxableSubtotal = cart.reduce((sum, line) => sum + (line.variant.isTaxable ? Number(line.variant.price) * line.quantity : 0), 0)
-  const estimatedTax = Number((taxableSubtotal * taxRate).toFixed(2))
+  const estimatedTax = Number(cart.reduce((sum, line) => {
+    if (!line.variant.isTaxable) return sum
+    const itemRate = line.variant.taxRatePercent === null || line.variant.taxRatePercent === undefined
+      ? taxRate
+      : Number(line.variant.taxRatePercent) / 100
+    return sum + Number(line.variant.price) * line.quantity * itemRate
+  }, 0).toFixed(2))
   const estimatedTotal = Number((subtotal + estimatedTax).toFixed(2))
 
   function addToCart(item: CatalogVariant) {
@@ -194,7 +199,7 @@ export function UsBillingView() {
             <div className="field" style={{ marginBottom: 10 }}><label htmlFor="us-customer-search">Customer lookup</label><input id="us-customer-search" value={customerSearch} onChange={(event) => setCustomerSearch(event.target.value)} placeholder="Name, phone, or email" />{customerLoading ? <small><UsInlineLoader label="Looking up customers…" /></small> : null}<select value={selectedCustomerId} onChange={(event) => setSelectedCustomerId(event.target.value)} aria-label="Select customer"><option value="">Walk-in customer</option>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name || customer.email || customer.phone || customer.id}</option>)}</select></div>
             <div className="field" style={{ marginBottom: 10 }}><label htmlFor="us-receipt-email">Receipt email (optional)</label><input id="us-receipt-email" type="email" value={receiptEmail} onChange={(event) => setReceiptEmail(event.target.value)} placeholder="customer@example.com" /></div>
             <div className="total-row"><span>Subtotal</span><span className="num">{money(subtotal)}</span></div>
-            <div className="total-row"><span>Estimated sales tax{taxRate > 0 ? ` (${(taxRate * 100).toFixed(3)}%)` : ''}</span><span className="num">{money(estimatedTax)}</span></div>
+            <div className="total-row"><span>Estimated sales tax (item rates)</span><span className="num">{money(estimatedTax)}</span></div>
             <div className="total-row total-grand"><span>Estimated total</span><span className="num">{money(estimatedTotal)}</span></div>
             <div className="notice" style={{ marginTop: 10 }}>The backend recomputes tax, stock, and the final total when the sale is charged.</div>
             <div className="pay-grid"><button type="button" className={`btn btn-lg ${paymentMethod === 'card' ? 'btn-primary' : ''}`} onClick={() => setPaymentMethod('card')}><CreditCardIcon />Card</button><button type="button" className={`btn btn-lg ${paymentMethod === 'cash' ? 'btn-primary' : ''}`} onClick={() => setPaymentMethod('cash')}><DollarIcon />Cash</button></div>

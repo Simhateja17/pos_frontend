@@ -32,6 +32,7 @@ type Variant = {
   material: string | null
   price: string
   isTaxable: boolean
+  taxRatePercent: string | null
   currentStock: number
 }
 
@@ -270,15 +271,21 @@ function CheckoutPageInner() {
         ? Number(cartDiscountValue || '0')
         : 0
   const discountedSubtotal = Math.max(0, subtotal - cartDiscount)
-  const taxableSubtotal = cart.reduce(
-    (sum, line) => sum + (line.isTaxable ? Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0') : 0),
-    0,
+  const lineBases = cart.map((line) => Number(line.unitPrice) * line.quantity - Number(line.discountAmount || '0'))
+  const discountedLineBases = lineBases.map((lineBase) =>
+    subtotal > 0 ? lineBase - (cartDiscount * lineBase) / subtotal : lineBase,
   )
-  const taxableShare = subtotal > 0 ? taxableSubtotal / subtotal : 0
-  const discountedTaxableSubtotal = Math.max(0, taxableSubtotal - cartDiscount * taxableShare)
   // Display/payment preparation mirrors the server Decimal calculation, but
   // the server remains authoritative and recomputes from persisted prices.
-  const taxEstimate = Math.round(discountedTaxableSubtotal * (taxRatePercent / 100) * 100) / 100
+  const taxEstimate = Math.round(
+    cart.reduce((sum, line, index) => {
+      if (!line.isTaxable) return sum
+      const configuredRate = line.taxRatePercent === null || line.taxRatePercent === undefined
+        ? taxRatePercent
+        : Number(line.taxRatePercent)
+      return sum + discountedLineBases[index] * (configuredRate / 100)
+    }, 0) * 100,
+  ) / 100
   const estimatedCgst = taxTreatment === 'cgst_sgst' ? Math.round((taxEstimate / 2) * 100) / 100 : 0
   const estimatedSgst = taxTreatment === 'cgst_sgst' ? Math.round((taxEstimate - estimatedCgst) * 100) / 100 : 0
   const preChargeEstimate = discountedSubtotal + taxEstimate
@@ -389,6 +396,7 @@ function CheckoutPageInner() {
           quantity: 1,
           discountAmount: '0.00',
           isTaxable: hit.variant.isTaxable,
+          taxRatePercent: hit.variant.taxRatePercent,
         },
       ]
     })
@@ -1103,17 +1111,17 @@ function CheckoutPageInner() {
             {taxTreatment === 'cgst_sgst' ? (
               <>
                 <div className="sum-row">
-                  <span>CGST ({(taxRatePercent / 2).toFixed(2)}% estimate)</span>
+                  <span>CGST (item rates)</span>
                   <span className="num">{inr(estimatedCgst)}</span>
                 </div>
                 <div className="sum-row">
-                  <span>SGST ({(taxRatePercent / 2).toFixed(2)}% estimate)</span>
+                  <span>SGST (item rates)</span>
                   <span className="num">{inr(estimatedSgst)}</span>
                 </div>
               </>
             ) : (
               <div className="sum-row">
-                <span>IGST ({taxRatePercent.toFixed(2)}% estimate)</span>
+                <span>IGST (item rates)</span>
                 <span className="num">{inr(taxEstimate)}</span>
               </div>
             )}

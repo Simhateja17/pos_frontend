@@ -14,6 +14,8 @@ export interface CartLine {
   quantity: number
   discountAmount: string // "0.00" if none, always a concrete string per D-07/Open Question #2's resolution
   isTaxable: boolean
+  /** Null means this legacy item still uses the store fallback tax rate. */
+  taxRatePercent: string | null
 }
 
 const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
@@ -42,6 +44,11 @@ export function CartLineRow({
 }) {
   const [showDiscountInput, setShowDiscountInput] = useState(Number(line.discountAmount || '0') > 0)
   const discount = Number(line.discountAmount || '0')
+  const taxLabel = !line.isTaxable
+    ? 'Tax exempt'
+    : line.taxRatePercent === null || line.taxRatePercent === undefined
+      ? 'Store fallback tax'
+      : `${Number(line.taxRatePercent).toFixed(2)}% GST`
 
   return (
     <tr>
@@ -58,6 +65,10 @@ export function CartLineRow({
               </span>
             </>
           ) : null}
+          {' · '}
+          <span className="badge b-blue" style={{ fontSize: 9, padding: '1px 5px' }}>
+            {taxLabel}
+          </span>
         </div>
       </td>
 

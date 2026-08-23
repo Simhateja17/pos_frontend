@@ -7,8 +7,12 @@ const session = { accessToken: 'access-token', refreshToken: 'refresh-token' }
 
 test('preserves the authenticated session when a paired register requires a PIN', async () => {
   let signOutCalls = 0
+  let prepared = false
   const result = await establishSessionWith(session, {
     installSession: async () => ({ error: null }),
+    prepareContext: async () => {
+      prepared = true
+    },
     loadContext: async () => {
       throw Object.assign(new Error('register locked'), { kind: 'register_locked' })
     },
@@ -19,6 +23,7 @@ test('preserves the authenticated session when a paired register requires a PIN'
   })
 
   assert.deepEqual(result, { ok: true, requiresPin: true })
+  assert.equal(prepared, true)
   assert.equal(signOutCalls, 0)
 })
 
@@ -26,6 +31,7 @@ test('signs out a partially established session for an ordinary context failure'
   let signOutCalls = 0
   const result = await establishSessionWith(session, {
     installSession: async () => ({ error: null }),
+    prepareContext: async () => {},
     loadContext: async () => {
       throw new Error('network unavailable')
     },
@@ -40,4 +46,20 @@ test('signs out a partially established session for an ordinary context failure'
     message: 'We could not open your store context. Please try again.',
   })
   assert.equal(signOutCalls, 1)
+})
+
+test('does not prepare owner back-office state when session installation fails', async () => {
+  let prepared = false
+  const result = await establishSessionWith(session, {
+    installSession: async () => ({ error: new Error('invalid session') }),
+    prepareContext: async () => {
+      prepared = true
+    },
+    loadContext: async () => {},
+    signOut: async () => {},
+    isRegisterLockedError: () => false,
+  })
+
+  assert.equal(result.ok, false)
+  assert.equal(prepared, false)
 })

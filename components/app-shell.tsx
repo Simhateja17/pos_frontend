@@ -170,7 +170,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [context?.staff.role, pathname, router])
 
   const reauthenticate = useCallback(async () => {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     router.push('/login')
   }, [router])
 

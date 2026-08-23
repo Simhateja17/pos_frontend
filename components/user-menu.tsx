@@ -52,7 +52,7 @@ export function UserMenu({
     }
     if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
     setActiveStoreId(null)
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     router.push('/login')
   }
 

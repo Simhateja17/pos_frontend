@@ -76,7 +76,7 @@ export function UsAppShell({ children }: { children: ReactNode }) {
   const locality = context?.store?.locality || context?.tenant.locality || 'International workspace'
 
   async function signOut() {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     router.replace('/us/auth')
   }
 

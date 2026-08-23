@@ -6250,6 +6250,7 @@ export interface components {
                 accessToken: string;
                 refreshToken: string;
             };
+            operatorToken?: string;
         };
         SignupRequest: {
             /** Format: email */
@@ -6335,6 +6336,7 @@ export interface components {
             price: string;
             movingAverageCost: string | null;
             isTaxable: boolean;
+            taxRatePercent: string | null;
             reorderThreshold: number;
             identityLocked: boolean;
             currentStock: number;
@@ -6355,6 +6357,7 @@ export interface components {
                 color?: string;
                 material?: string;
                 price: number;
+                taxRatePercent: number;
                 reorderThreshold?: number;
             }[];
         };
@@ -6365,6 +6368,7 @@ export interface components {
             barcode?: string | null;
             unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
             price?: number;
+            taxRatePercent?: number;
             reorderThreshold?: number;
         };
         StockMovement: {

@@ -70,18 +70,18 @@ export function UsTaxView() {
     }
   }
 
-  if (loading) return <><UsPageHead title="Sales Tax" sub="Store-level International sales-tax rates" /><UsLoadingState label="Loading sales-tax settings" rows={6} /></>
-  if (!settings) return <><UsPageHead title="Sales Tax" sub="Store-level International sales-tax rates" /><UsCard><UsErrorState message={error || 'Settings are unavailable.'} onRetry={() => void load()} /></UsCard></>
+  if (loading) return <><UsPageHead title="Sales Tax" sub="Store-level fallback sales-tax rates" /><UsLoadingState label="Loading sales-tax settings" rows={6} /></>
+  if (!settings) return <><UsPageHead title="Sales Tax" sub="Store-level fallback sales-tax rates" /><UsCard><UsErrorState message={error || 'Settings are unavailable.'} onRetry={() => void load()} /></UsCard></>
   if (settings.region !== 'INTL' || !rates) return <UsUnavailableModulePage title="Sales Tax" sub="International settings are not available for this tenant" capability="The current settings response does not expose the International sales-tax rate contract." />
 
   return (
     <>
-      <UsPageHead title="Sales Tax" sub="Plain state, county, city, and special-district sales-tax rates" actions={<button type="button" className="btn btn-primary" onClick={() => void save()} disabled={saving || settings.editableFields.salesTaxRates === false}><Save size={14} />{saving ? 'Saving…' : 'Save rates'}</button>} />
+      <UsPageHead title="Sales Tax" sub="Fallback rates for items without an assigned item rate" actions={<button type="button" className="btn btn-primary" onClick={() => void save()} disabled={saving || settings.editableFields.salesTaxRates === false}><Save size={14} />{saving ? 'Saving…' : 'Save rates'}</button>} />
       {error ? <div className="notice error" role="alert" style={{ marginBottom: 14 }}>{error}</div> : null}
       {notice ? <div className="notice success" role="status" style={{ marginBottom: 14 }}>{notice}</div> : null}
       <div className="grid cols-2">
         <UsCard>
-          <UsCardHeader title="Store rates" sub="These values are persisted in the existing store tax-rate columns and used by checkout." />
+          <UsCardHeader title="Store fallback rates" sub="These values are used only when an older catalog item has no item tax rate." />
           <UsCardBody>
             <div className="form-grid">{RATE_LABELS.map(({ key, label, help }) => <div className="field" key={key}><label htmlFor={`us-tax-${key}`}>{label}</label><input id={`us-tax-${key}`} type="number" min="0" max="100" step="0.001" value={rates[key]} disabled={settings.editableFields.salesTaxRates === false || saving} onChange={(event) => setRates((current) => current ? { ...current, [key]: event.target.value } : current)} /><small>{help}</small></div>)}</div>
             {settings.editableFields.salesTaxRates === false ? <div className="notice" style={{ marginTop: 14 }}>This role can view rates but cannot edit them.</div> : null}
@@ -90,7 +90,7 @@ export function UsTaxView() {
         <UsCard>
           <UsCardHeader title="Combined checkout rate" sub="A read-only sum of the four persisted jurisdiction rates" />
           <UsCardBody>
-            <div className="kpi-card" style={{ boxShadow: 'none', background: 'var(--blue-pale)', borderColor: '#c7d7ff' }}><div className="kpi-label">Estimated combined rate</div><div className="kpi-value num">{totalRate.toFixed(3)}%</div><div className="kpi-meta">Checkout applies this combined rate only to taxable catalog variants. The server remains authoritative.</div></div>
+            <div className="kpi-card" style={{ boxShadow: 'none', background: 'var(--blue-pale)', borderColor: '#c7d7ff' }}><div className="kpi-label">Legacy fallback rate</div><div className="kpi-value num">{totalRate.toFixed(3)}%</div><div className="kpi-meta">Checkout uses each item&apos;s configured rate first. This combined value is only a fallback for older items. The server remains authoritative.</div></div>
             <div className="item-list" style={{ marginTop: 14 }}>{RATE_LABELS.map(({ key, label }) => <div className="item-row" key={key}><div className="item-body"><b>{label}</b><small>Current persisted value</small></div><span className="num">{Number(rates[key] || 0).toFixed(3)}%</span></div>)}</div>
           </UsCardBody>
         </UsCard>

@@ -27,6 +27,7 @@ type Variant = {
   color: string | null
   material: string | null
   price: string
+  taxRatePercent: string | null
   reorderThreshold: number
   identityLocked: boolean
   currentStock: number
@@ -102,6 +103,7 @@ export default function VariantDetailPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const [editPrice, setEditPrice] = useState('')
+  const [editTaxRatePercent, setEditTaxRatePercent] = useState('')
   const [editReorderThreshold, setEditReorderThreshold] = useState('')
   const [editBarcode, setEditBarcode] = useState('')
   const [editUnit, setEditUnit] = useState('piece')
@@ -166,6 +168,7 @@ export default function VariantDetailPage() {
     setProduct(foundProduct)
     setVariant(foundVariant)
     setEditPrice(foundVariant.price)
+    setEditTaxRatePercent(foundVariant.taxRatePercent ?? '')
     setEditReorderThreshold(String(foundVariant.reorderThreshold))
     setEditBarcode(foundVariant.barcode ?? '')
     setEditUnit(foundVariant.unitOfMeasure)
@@ -286,6 +289,16 @@ export default function VariantDetailPage() {
     setEditError(null)
     setIsSavingEdit(true)
 
+    const taxRatePercent = editTaxRatePercent.trim() ? Number(editTaxRatePercent) : null
+    if (
+      taxRatePercent !== null &&
+      (!Number.isFinite(taxRatePercent) || taxRatePercent < 0 || taxRatePercent > 100)
+    ) {
+      setEditError('Item tax rate must be between 0 and 100%.')
+      setIsSavingEdit(false)
+      return
+    }
+
     const headers = await authHeaders()
     const { error } = await apiClient.PATCH('/products/{productId}/variants/{variantId}', {
       params: { path: { productId: product.id, variantId: variant.id } },
@@ -295,6 +308,7 @@ export default function VariantDetailPage() {
         // Null clears a mis-typed code; undefined would leave it untouched.
         barcode: editBarcode.trim() || null,
         unitOfMeasure: editUnit as (typeof UNITS)[number]['value'],
+        ...(taxRatePercent === null ? {} : { taxRatePercent }),
       },
       headers,
     })
@@ -544,7 +558,7 @@ export default function VariantDetailPage() {
                 </Fld>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 8 }}>
                 <Fld id="edit-price" label={unitSuffix(editUnit) ? `Price per ${unitSuffix(editUnit)}` : 'Price'}>
                   <input
                     id="edit-price"
@@ -553,6 +567,18 @@ export default function VariantDetailPage() {
                     required
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
+                  />
+                </Fld>
+                <Fld id="edit-tax-rate" label="Item tax rate (%)">
+                  <input
+                    id="edit-tax-rate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={editTaxRatePercent}
+                    onChange={(e) => setEditTaxRatePercent(e.target.value)}
+                    placeholder="Set item rate"
                   />
                 </Fld>
                 <Fld id="edit-reorder-threshold" label="Reorder threshold">
