@@ -15,6 +15,7 @@
  * the US landing page shows, so a backend blip never blocks a release.
  */
 import "@/app/landing.css";
+import { CurrencyMark } from "@/components/marketing/currency-mark";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { PricingGrid } from "@/components/marketing/pricing-plans";
@@ -45,7 +46,7 @@ export default async function USPricingPage() {
       <SiteHeader region="INTL" />
       <section className="content-hero">
         <div className="section-tag">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
+          <CurrencyMark region="INTL" />
           Simple, transparent pricing
         </div>
         <h1>Choose clearly.<br /><em>Grow with confidence.</em></h1>

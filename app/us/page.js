@@ -14,6 +14,7 @@
  */
 
 import "@/app/landing.css";
+import { CurrencyMark } from "@/components/marketing/currency-mark";
 import { useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { AmbelMark } from "@/components/brand/ambel-mark";
@@ -405,7 +406,7 @@ export default function USLandingPage() {
       <section className="pricing-section" id="pricing">
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
           <div className="section-tag" style={{ justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.5 5h9M9.5 5a3.8 3.8 0 0 1 0 8H7.5l7.5 6.2" /></svg>
+            <CurrencyMark region="INTL" />
             Simple, transparent pricing
           </div>
           <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
