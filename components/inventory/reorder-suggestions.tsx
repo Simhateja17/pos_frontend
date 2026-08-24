@@ -1,14 +1,19 @@
 'use client'
 
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { ClipboardList, RefreshCw, Sparkle } from 'lucide-react'
 import {
   type ReorderSkipped,
   type ReorderSuggestion,
   type ReorderSuggestionList,
+  type ForecastRun,
+  type ForecastRunItem,
   createAuthenticatedPurchaseOrder,
+  getAuthenticatedForecastRun,
+  getAuthenticatedForecastRunItems,
   generateAuthenticatedReorderSuggestions,
   getAuthenticatedReorderSuggestions,
+  startAuthenticatedForecastRun,
 } from '@/lib/api/authenticated-client'
 import { Badge, type BadgeTone, Card, CardHead, DataTable } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
@@ -37,6 +42,64 @@ const SKIPPED_LABEL: Record<ReorderSkipped['kind'], string> = {
 }
 
 const num = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2))
+
+function evidenceNumber(value: unknown, fallback = '—'): string {
+  return typeof value === 'number' && Number.isFinite(value) ? num(value) : fallback
+}
+
+function evidenceText(value: unknown, fallback = '—'): string {
+  return typeof value === 'string' && value ? value : fallback
+}
+
+function ForecastComparison({ items }: { items: ForecastRunItem[] }) {
+  if (items.length === 0) {
+    return <div style={{ padding: '13px 16px', color: 'var(--muted)', fontSize: 12.5 }}>No product comparison rows were returned.</div>
+  }
+
+  return (
+    <div style={{ borderTop: '1px solid var(--border-soft)' }}>
+      <div style={{ padding: '14px 16px 8px' }}>
+        <div style={{ fontSize: 13, fontWeight: 650 }}>Test comparison</div>
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
+          Rule-based and ML evidence are shown together. Only a genuine winning forecast becomes a purchasable suggestion above.
+        </div>
+      </div>
+      <DataTable cols={['SKU', 'Product', 'Rule-based', 'ML forecast', 'Model / accuracy', 'Outcome']} minWidth={980}>
+        {items.map((item) => {
+          const rule = item.ruleBased as Record<string, unknown>
+          const ml = item.mlResult as Record<string, unknown>
+          const ruleQuantity = evidenceNumber(rule.suggestedQuantity)
+          const mlQuantity = evidenceNumber(ml.suggestedQuantity)
+          const model = evidenceText(ml.model, item.eligible ? 'Not produced' : 'Skipped')
+          const accuracy = typeof ml.forecastWape === 'number' && typeof ml.heuristicWape === 'number'
+            ? `${num(ml.forecastWape)} vs ${num(ml.heuristicWape)} WAPE`
+            : evidenceText(ml.error)
+          const interval = typeof ml.forecastLower === 'number' && typeof ml.forecastUpper === 'number'
+            ? `${num(ml.forecastLower)}–${num(ml.forecastUpper)}`
+            : '—'
+          return (
+            <tr key={item.id}>
+              <td className="t-mono t-strong">{item.sku}</td>
+              <td>{item.productName}</td>
+              <td className="num">{ruleQuantity}</td>
+              <td className="num">{item.eligible ? `${mlQuantity} · ${interval}` : '—'}</td>
+              <td>
+                <div>{model}</div>
+                <div style={{ color: 'var(--muted)', fontSize: 11.5 }}>{accuracy}</div>
+              </td>
+              <td>
+                <Badge tone={item.disposition === 'forecast_written' ? 'green' : item.disposition === 'failed' ? 'red' : 'grey'}>
+                  {item.disposition.replaceAll('_', ' ')}
+                </Badge>
+                {item.reasonCode ? <div style={{ color: 'var(--muted)', fontSize: 11.5, marginTop: 4 }}>{item.reasonCode.replaceAll('_', ' ')}</div> : null}
+              </td>
+            </tr>
+          )
+        })}
+      </DataTable>
+    </div>
+  )
+}
 
 /**
  * The "why", expanded from the stored reason JSON: not hidden behind a
@@ -95,6 +158,11 @@ export function ReorderSuggestions() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [notice, setNotice] = useState<string | null>(null)
+  const [manualRun, setManualRun] = useState<ForecastRun | null>(null)
+  const [manualItems, setManualItems] = useState<ForecastRunItem[]>([])
+  const [manualLoading, setManualLoading] = useState(false)
+  const [manualError, setManualError] = useState<string | null>(null)
+  const pollingRef = useRef(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -110,6 +178,9 @@ export function ReorderSuggestions() {
 
   useEffect(() => {
     void load()
+    return () => {
+      pollingRef.current = false
+    }
   }, [load])
 
   async function recalculate() {
@@ -124,6 +195,40 @@ export function ReorderSuggestions() {
       setError(cause instanceof Error ? cause.message : 'Reorder suggestions could not be recalculated.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function runManualForecast() {
+    if (manualLoading) return
+    pollingRef.current = true
+    setManualLoading(true)
+    setManualError(null)
+    setManualItems([])
+    try {
+      const queued = await startAuthenticatedForecastRun()
+      setManualRun(queued.run)
+      let current = queued.run
+      for (let attempt = 0; attempt < 60 && pollingRef.current; attempt += 1) {
+        if (current.status === 'completed' || current.status === 'failed') break
+        await new Promise((resolve) => window.setTimeout(resolve, queued.pollAfterMs))
+        if (!pollingRef.current) return
+        current = await getAuthenticatedForecastRun(current.id)
+        setManualRun(current)
+      }
+      if (!pollingRef.current) return
+      if (current.status === 'completed' || current.status === 'failed') {
+        const comparison = await getAuthenticatedForecastRunItems(current.id)
+        setManualItems(comparison.items)
+        if (current.status === 'completed') await load()
+        else setManualError(current.errorMessage ?? 'The manual forecast failed. Review the run details and retry.')
+      } else {
+        setManualError('The forecast is still running. Refresh this page shortly to see its result.')
+      }
+    } catch (cause) {
+      setManualError(cause instanceof Error ? cause.message : 'The manual forecast could not be started.')
+    } finally {
+      pollingRef.current = false
+      setManualLoading(false)
     }
   }
 
@@ -203,6 +308,11 @@ export function ReorderSuggestions() {
             <button className="btn btn-sm" onClick={() => void recalculate()} disabled={busy}>
               <RefreshCw size={14} /> {busy ? 'Working…' : 'Recalculate'}
             </button>
+            {data?.manualForecastEnabled === true ? (
+              <button className="btn btn-sm" onClick={() => void runManualForecast()} disabled={busy || manualLoading}>
+                <Sparkle size={14} /> {manualLoading ? 'Forecasting…' : 'Run forecast now'}
+              </button>
+            ) : null}
           </div>
         }
       />
@@ -210,6 +320,30 @@ export function ReorderSuggestions() {
       {notice && (
         <div style={{ padding: '11px 16px', fontSize: 13, color: 'var(--ink-2)' }} role="status">
           {notice}
+        </div>
+      )}
+
+      {manualError && !manualRun ? (
+        <div style={{ padding: '11px 16px', color: 'var(--danger)', fontSize: 12.5 }} role="alert">
+          {manualError}
+        </div>
+      ) : null}
+
+      {manualRun && (
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-soft)' }} role="status">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <b>Forecast test: {manualRun.status}</b>
+            <span style={{ color: 'var(--muted)' }}>
+              {manualRun.status === 'completed'
+                ? `${manualRun.productsEvaluated} evaluated · ${manualRun.productsEligible} eligible · ${manualRun.forecastsWritten} written`
+                : manualRun.status === 'running'
+                  ? 'The model is evaluating this store in the background.'
+                  : manualRun.status === 'queued'
+                    ? 'Waiting for the VM worker.'
+                    : manualRun.errorMessage ?? 'The run failed.'}
+            </span>
+          </div>
+          {manualError ? <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 5 }}>{manualError}</div> : null}
         </div>
       )}
 
@@ -320,6 +454,10 @@ export function ReorderSuggestions() {
           )}
         </div>
       )}
+
+      {(manualRun?.status === 'completed' || manualRun?.status === 'failed') && manualItems.length > 0 ? (
+        <ForecastComparison items={manualItems} />
+      ) : null}
     </Card>
   )
 }

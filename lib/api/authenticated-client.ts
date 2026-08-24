@@ -40,6 +40,9 @@ export type UpdateSupplierProductRequest = components['schemas']['UpdateSupplier
 export type ReorderSuggestion = components['schemas']['ReorderSuggestion']
 export type ReorderSuggestionList = components['schemas']['ReorderSuggestionList']
 export type ReorderSkipped = components['schemas']['ReorderSkipped']
+export type ForecastRun = components['schemas']['ForecastRun']
+export type ForecastRunItem = components['schemas']['ForecastRunItem']
+export type ForecastRunItemList = components['schemas']['ForecastRunItemList']
 export type Product = components['schemas']['Product']
 export type Variant = components['schemas']['Variant']
 export type PurchaseOrder = components['schemas']['PurchaseOrder']
@@ -544,6 +547,35 @@ export function generateAuthenticatedReorderSuggestions(): Promise<ReorderSugges
   return authenticatedRead(
     async () => apiClient.POST('/reorder/generate', { headers: await authorizationHeader() }),
     'Reorder suggestions could not be recalculated. Please retry.',
+  )
+}
+
+export function startAuthenticatedForecastRun(idempotencyKey = crypto.randomUUID()): Promise<{ run: ForecastRun; pollAfterMs: number }> {
+  return authenticatedRead(
+    async () => apiClient.POST('/reorder/forecast-runs', {
+      headers: { ...(await authorizationHeader()), 'Idempotency-Key': idempotencyKey },
+    }),
+    'The manual forecast could not be queued. Please retry.',
+  )
+}
+
+export function getAuthenticatedForecastRun(runId: string): Promise<ForecastRun> {
+  return authenticatedRead(
+    async () => apiClient.GET('/reorder/forecast-runs/{runId}', {
+      params: { path: { runId } },
+      headers: await authorizationHeader(),
+    }),
+    'The manual forecast status is unavailable right now. Please retry.',
+  )
+}
+
+export function getAuthenticatedForecastRunItems(runId: string): Promise<ForecastRunItemList> {
+  return authenticatedRead(
+    async () => apiClient.GET('/reorder/forecast-runs/{runId}/items', {
+      params: { path: { runId }, query: { limit: 200 } },
+      headers: await authorizationHeader(),
+    }),
+    'The manual forecast comparison is unavailable right now. Please retry.',
   )
 }
 

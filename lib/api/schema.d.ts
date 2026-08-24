@@ -4968,6 +4968,164 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reorder/forecast-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Queue one temporary, store-scoped ML forecast test. Manager or owner only; idempotent while a manual run is queued or running. The response is asynchronous and the worker runs separately on the production VM. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Forecast test queued */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ForecastRunCreateResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Manual forecast testing is disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reorder/forecast-runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the status and evidence summary of a store-scoped manual forecast test. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    runId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Forecast run status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ForecastRun"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forecast run not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reorder/forecast-runs/{runId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read side-by-side rule-based and ML evidence for a forecast test run. */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    runId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Forecast comparison items */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ForecastRunItemList"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forecast run not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/import/uploads": {
         parameters: {
             query?: never;
@@ -7244,6 +7402,7 @@ export interface components {
             generatedAt: string | null;
             items: components["schemas"]["ReorderSuggestion"][];
             skipped: components["schemas"]["ReorderSkipped"][];
+            manualForecastEnabled: boolean;
         };
         ReorderSuggestion: {
             /** Format: uuid */
@@ -7292,6 +7451,68 @@ export interface components {
             kind: "insufficient_history" | "no_velocity" | "sufficient_stock" | "no_supplier";
             historyDays: number | null;
         };
+        ForecastRunCreateResponse: {
+            run: components["schemas"]["ForecastRun"];
+            pollAfterMs: number;
+        };
+        ForecastRun: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            storeId: string;
+            source: components["schemas"]["ForecastRunSource"];
+            status: components["schemas"]["ForecastRunStatus"];
+            requestedAt: string;
+            startedAt: string | null;
+            completedAt: string | null;
+            heartbeatAt: string | null;
+            productsEvaluated: number;
+            productsEligible: number;
+            forecastsWon: number;
+            forecastsWritten: number;
+            productsSkipped: number;
+            errorCode: string | null;
+            errorMessage: string | null;
+            workerVersion: string | null;
+            modelVersion: string | null;
+            manualForecastEnabled: boolean;
+        };
+        /** @enum {string} */
+        ForecastRunSource: "manual_test" | "nightly";
+        /** @enum {string} */
+        ForecastRunStatus: "queued" | "running" | "completed" | "failed";
+        ForecastRunItemList: {
+            items: components["schemas"]["ForecastRunItem"][];
+            nextCursor: string | null;
+        };
+        ForecastRunItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            runId: string;
+            /** Format: uuid */
+            variantId: string;
+            sku: string;
+            productName: string;
+            historyDays: number | null;
+            trailingUnits: number;
+            totalUnits: number;
+            eligible: boolean;
+            /** Format: uuid */
+            supplierId: string | null;
+            supplierLeadDays: number | null;
+            reviewDays: number;
+            forecastHorizonDays: number | null;
+            ruleBased: components["schemas"]["ForecastEvidence"];
+            mlResult: components["schemas"]["ForecastEvidence"];
+            disposition: components["schemas"]["ForecastRunItemDisposition"];
+            reasonCode: string | null;
+        };
+        ForecastEvidence: {
+            [key: string]: unknown;
+        };
+        /** @enum {string} */
+        ForecastRunItemDisposition: "forecast_written" | "heuristic_won" | "ineligible" | "no_supplier" | "sufficient_stock" | "failed";
         ImportBatch: {
             /** Format: uuid */
             id: string;
