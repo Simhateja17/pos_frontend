@@ -586,6 +586,18 @@ export function getAuthenticatedProducts(): Promise<Product[]> {
   )
 }
 
+/** Header search uses the server-filtered catalog contract so barcode/SKU
+ * lookups stay index-backed instead of downloading the entire catalog. */
+export function getAuthenticatedProductMatches(search: string): Promise<Product[]> {
+  return authenticatedRead(
+    async () => apiClient.GET('/products', {
+      params: { query: { search } },
+      headers: await authorizationHeader(),
+    }),
+    'Product lookup is unavailable right now. Please retry.',
+  )
+}
+
 export function getAuthenticatedPurchaseOrders(): Promise<PurchaseOrder[]> {
   return authenticatedRead(
     async () => apiClient.GET('/purchase-orders', { headers: await authorizationHeader() }),

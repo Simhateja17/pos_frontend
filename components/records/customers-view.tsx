@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { Card, CardHead, DataTable, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
@@ -17,6 +18,7 @@ import { CustomerForm } from '@/components/customers/customer-form'
 const dateOnly = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' })
 
 export function CustomersView() {
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const [data, setData] = useState<CustomerList | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
@@ -25,6 +27,10 @@ export function CustomersView() {
   const [formOpen, setFormOpen] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') openCreate()
+  }, [searchParams])
 
   const load = useCallback(
     async (nextCursor?: string) => {

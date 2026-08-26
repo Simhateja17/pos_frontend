@@ -31,6 +31,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { ACTIVE_STORE_CHANGED_EVENT } from '@/lib/store-context'
 import { GuidedTour } from '@/components/onboarding/guided-tour'
 import { StoreSwitcher } from '@/components/store-switcher'
+import { GlobalSearch } from '@/components/global-search'
 import { ShellContentSkeleton, ShellNavSkeleton } from '@/components/app-shell-skeleton'
 import { Sk } from '@/components/couture/states'
 
@@ -346,19 +347,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
               <Sk h={38} r={10} />
             </div>
           ) : (
-            !isCashier && (
-              <div className="search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M21 21l-4.3-4.3" />
-                </svg>
-                <input
-                  placeholder="Search orders, products, customers, suppliers…  or type a command"
-                  aria-label="Search"
-                />
-                <span className="kbd">⌘K</span>
-              </div>
-            )
+            !isCashier && <GlobalSearch context={context} navigation={navigation} appPath={appPath} />
           )}
 
           {/* Pinned to the right edge so the cluster does not shift with the breadcrumb width. */}
