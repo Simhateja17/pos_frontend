@@ -5020,6 +5020,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reorder/forecast-runs/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the most recent temporary, store-scoped ML forecast test so Inventory can restore it after navigation or register unlock. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Latest forecast run, or null when none has been queued */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ForecastRunLatestResponse"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reorder/forecast-runs/{runId}": {
         parameters: {
             query?: never;
@@ -7481,6 +7524,9 @@ export interface components {
         ForecastRunSource: "manual_test" | "nightly";
         /** @enum {string} */
         ForecastRunStatus: "queued" | "running" | "completed" | "failed";
+        ForecastRunLatestResponse: {
+            run: components["schemas"]["ForecastRun"] & (Record<string, never> | null);
+        };
         ForecastRunItemList: {
             items: components["schemas"]["ForecastRunItem"][];
             nextCursor: string | null;

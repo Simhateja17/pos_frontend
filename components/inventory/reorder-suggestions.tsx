@@ -11,6 +11,7 @@ import {
   createAuthenticatedPurchaseOrder,
   getAuthenticatedForecastRun,
   getAuthenticatedForecastRunItems,
+  getAuthenticatedLatestForecastRun,
   generateAuthenticatedReorderSuggestions,
   getAuthenticatedReorderSuggestions,
   startAuthenticatedForecastRun,
@@ -178,7 +179,31 @@ export function ReorderSuggestions() {
 
   useEffect(() => {
     void load()
+    // Register lock navigation unmounts this card. Restore the durable manual
+    // run ledger (and its comparison rows) when the manager returns so a
+    // completed test is not lost with the previous React tree.
+    let mounted = true
+    void (async () => {
+      try {
+        const latest = await getAuthenticatedLatestForecastRun()
+        if (!mounted || !latest) return
+        setManualRun(latest)
+        if (latest.status === 'completed' || latest.status === 'failed') {
+          const comparison = await getAuthenticatedForecastRunItems(latest.id)
+          if (!mounted) return
+          setManualItems(comparison.items)
+          if (latest.status === 'failed') {
+            setManualError(latest.errorMessage ?? 'The manual forecast failed. Review the run details and retry.')
+          }
+        }
+      } catch {
+        // This is a non-blocking restore path. During a rolling deploy an old
+        // backend may not have the latest-run endpoint; the current suggestions
+        // should still render normally in that case.
+      }
+    })()
     return () => {
+      mounted = false
       pollingRef.current = false
     }
   }, [load])
@@ -288,6 +313,17 @@ export function ReorderSuggestions() {
 
   const items = data?.items ?? []
   const skipped = data?.skipped ?? []
+  const hasForecast = items.some((item) => item.method === 'forecast')
+  const hasHeuristic = items.some((item) => item.method === 'heuristic')
+  const basisLabel = hasForecast && hasHeuristic ? 'Rule-based + forecast' : hasForecast ? 'Forecast-backed' : 'Rule-based'
+  const forecastWasReplaced = Boolean(
+    manualRun?.status === 'completed' &&
+      manualRun.forecastsWritten > 0 &&
+      manualRun.completedAt &&
+      data?.generatedAt &&
+      new Date(data.generatedAt).getTime() > new Date(manualRun.completedAt).getTime() &&
+      !hasForecast,
+  )
 
   return (
     <Card>
@@ -295,7 +331,7 @@ export function ReorderSuggestions() {
         title="Reorder suggestions"
         sub={
           data?.generatedAt
-            ? `Rule-based · worked out ${new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
+            ? `${basisLabel} · worked out ${new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
             : 'Rule-based, sales rate multiplied by supplier lead time'
         }
         right={
@@ -346,6 +382,12 @@ export function ReorderSuggestions() {
           {manualError ? <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 5 }}>{manualError}</div> : null}
         </div>
       )}
+
+      {forecastWasReplaced ? (
+        <div style={{ padding: '11px 16px', borderBottom: '1px solid var(--border-soft)', color: 'var(--muted)', fontSize: 12.5 }} role="note">
+          This forecast test completed successfully, but the current suggestions were recalculated afterward. The test comparison below is still available.
+        </div>
+      ) : null}
 
       {loading && <LoadingState label="Loading reorder suggestions" rows={3} />}
       {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}

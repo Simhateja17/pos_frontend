@@ -559,6 +559,15 @@ export function startAuthenticatedForecastRun(idempotencyKey = crypto.randomUUID
   )
 }
 
+/** Restores the most recent temporary forecast after navigation or register unlock. */
+export async function getAuthenticatedLatestForecastRun(): Promise<ForecastRun | null> {
+  const payload = await authenticatedRead(
+    async () => apiClient.GET('/reorder/forecast-runs/latest', { headers: await authorizationHeader() }),
+    'The latest manual forecast is unavailable right now. Please retry.',
+  )
+  return payload.run
+}
+
 export function getAuthenticatedForecastRun(runId: string): Promise<ForecastRun> {
   return authenticatedRead(
     async () => apiClient.GET('/reorder/forecast-runs/{runId}', {
