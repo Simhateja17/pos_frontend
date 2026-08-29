@@ -88,7 +88,8 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const [attemptKey, setAttemptKey] = useState<string | null>(null)
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null)
 
-  const attemptStorageKey = `couture.billing.attempt.${region}.${selectedKey}.${cycle}`
+  const storageKeyFor = (planKey: string, billingCycle: Cycle) => `couture.billing.attempt.${region}.${planKey}.${billingCycle}`
+  const attemptStorageKey = storageKeyFor(selectedKey, cycle)
 
   useEffect(() => {
     let active = true
@@ -147,7 +148,22 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   }
 
   function selectPlan(key: string) {
+    if (typeof window !== 'undefined' && key !== selectedKey) {
+      window.sessionStorage.removeItem(attemptStorageKey)
+      window.sessionStorage.removeItem(storageKeyFor(key, cycle))
+    }
     setSelectedKey(key)
+    setAttemptKey(null)
+    setMessage(null)
+    setError(null)
+  }
+
+  function selectCycle(nextCycle: Cycle) {
+    if (typeof window !== 'undefined' && nextCycle !== cycle) {
+      window.sessionStorage.removeItem(attemptStorageKey)
+      window.sessionStorage.removeItem(storageKeyFor(selectedKey, nextCycle))
+    }
+    setCycle(nextCycle)
     setAttemptKey(null)
     setMessage(null)
     setError(null)
@@ -283,8 +299,8 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         <h1>{title ?? <>Choose your <em>subscription plan.</em></>}</h1>
         <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
         <div className={styles.mode} role="group" aria-label="Billing cycle">
-          <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => { setCycle('monthly'); setAttemptKey(null) }}>Monthly</button>
-          <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => { setCycle('annual'); setAttemptKey(null) }}>Annual</button>
+          <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => selectCycle('monthly')}>Monthly</button>
+          <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => selectCycle('annual')}>Annual</button>
         </div>
       </header>
 
