@@ -1,242 +1,78 @@
 'use client'
 
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
-import { ClipboardList, RefreshCw, Sparkle } from 'lucide-react'
+import { ClipboardList, PackageCheck, RefreshCw } from 'lucide-react'
 import {
-  type ReorderSkipped,
+  type ForecastRun,
   type ReorderSuggestion,
   type ReorderSuggestionList,
-  type ForecastRun,
-  type ForecastRunItem,
   createAuthenticatedPurchaseOrder,
-  getAuthenticatedForecastRun,
-  getAuthenticatedForecastRunItems,
-  getAuthenticatedLatestForecastRun,
   generateAuthenticatedReorderSuggestions,
+  getAuthenticatedForecastRun,
+  getAuthenticatedLatestForecastRun,
   getAuthenticatedReorderSuggestions,
   startAuthenticatedForecastRun,
 } from '@/lib/api/authenticated-client'
-import { Badge, type BadgeTone, Card, CardHead, DataTable, KpiRow, Tabs } from '@/components/couture/ui'
+import { Card, CardHead, DataTable } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { normalizeReorderReason } from '@/lib/operational-display'
 
-const CONFIDENCE_TONE: Record<string, BadgeTone> = { low: 'grey', medium: 'amber', high: 'green' }
+const wholeUnits = (value: number) => Math.max(0, Math.ceil(value))
 
-/**
- * ML-01 forbids calling this AI. It is a velocity multiplication, and the
- * label says exactly that. Phase 6 writes method='forecast' rows through this
- * same component, which is why the label is derived from the data rather than
- * hardcoded.
- */
-const METHOD_LABEL: Record<string, string> = {
-  heuristic: 'Rule-based suggestion',
-  forecast: 'Forecast',
+function stockOnHand(suggestion: ReorderSuggestion) {
+  return normalizeReorderReason(suggestion.reason as unknown as Record<string, unknown>).currentStock
 }
 
-const METHOD_TONE: Record<string, BadgeTone> = { heuristic: 'grey', forecast: 'green' }
-
-type ComparisonFilter = 'written' | 'winners' | 'heuristic' | 'skipped' | 'all'
-
-const COMPARISON_DISPOSITION_LABEL: Record<ForecastRunItem['disposition'], string> = {
-  forecast_written: 'Forecast written',
-  heuristic_won: 'Rule-based kept',
-  ineligible: 'Not forecasted',
-  no_supplier: 'No supplier',
-  sufficient_stock: 'Sufficient stock',
-  failed: 'Forecast failed',
+function quantityExplanation(suggestion: ReorderSuggestion) {
+  const reason = suggestion.reason
+  const required = wholeUnits(reason.reorderPoint + reason.reviewPeriodDemand)
+  return `${stockOnHand(suggestion)} available + ${reason.onOrder} already ordered. About ${required} are needed to cover expected sales and a safety buffer.`
 }
 
-const COMPARISON_REASON_LABEL: Record<string, string> = {
-  no_recent_sales: 'No sales in the last 14 days',
-  insufficient_history: 'Not enough sales history',
-  insufficient_volume: 'Not enough total sales volume',
-  model_not_better: 'ML did not beat the rule-based forecast',
-  no_supplier: 'No supplier on file',
-  forecast_error: 'The model could not produce a forecast',
-}
-
-const SKIPPED_LABEL: Record<ReorderSkipped['kind'], string> = {
-  insufficient_history: 'Not enough sales history yet',
-  no_velocity: 'No sales in the last 30 days',
-  sufficient_stock: 'Stock and open orders already cover expected demand',
-  no_supplier: 'No supplier on file to order from',
-}
-
-const num = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2))
-
-function evidenceNumber(value: unknown, fallback = '—'): string {
-  return typeof value === 'number' && Number.isFinite(value) ? num(value) : fallback
-}
-
-function evidenceText(value: unknown, fallback = '—'): string {
-  return typeof value === 'string' && value ? value : fallback
-}
-
-function comparisonReasonLabel(value: string): string {
-  return COMPARISON_REASON_LABEL[value] ?? value.replaceAll('_', ' ')
-}
-
-function isSkippedComparisonItem(item: ForecastRunItem): boolean {
-  return item.disposition === 'ineligible' || item.disposition === 'no_supplier' || item.disposition === 'failed'
-}
-
-function comparisonItemsForFilter(items: ForecastRunItem[], filter: ComparisonFilter): ForecastRunItem[] {
-  if (filter === 'all') return items
-  if (filter === 'written') return items.filter((item) => item.disposition === 'forecast_written')
-  if (filter === 'winners') return items.filter((item) => item.disposition === 'forecast_written' || item.disposition === 'sufficient_stock')
-  if (filter === 'heuristic') return items.filter((item) => item.disposition === 'heuristic_won')
-  return items.filter(isSkippedComparisonItem)
-}
-
-function ForecastComparison({ items, runId }: { items: ForecastRunItem[]; runId: string }) {
-  const [filter, setFilter] = useState<ComparisonFilter>('written')
-  const writtenCount = items.filter((item) => item.disposition === 'forecast_written').length
-  const winnerCount = items.filter((item) => item.disposition === 'forecast_written' || item.disposition === 'sufficient_stock').length
-  const heuristicCount = items.filter((item) => item.disposition === 'heuristic_won').length
-  const skippedCount = items.filter(isSkippedComparisonItem).length
-  const filteredItems = comparisonItemsForFilter(items, filter)
-
-  useEffect(() => {
-    setFilter(writtenCount > 0 ? 'written' : winnerCount > 0 ? 'winners' : 'all')
-  }, [runId, writtenCount, winnerCount])
-
-  if (items.length === 0) {
-    return <div style={{ padding: '13px 16px', color: 'var(--muted)', fontSize: 12.5 }}>No product comparison rows were returned.</div>
-  }
-
-  const filterItems: readonly { label: string; value: ComparisonFilter }[] = [
-    { label: `Written (${writtenCount})`, value: 'written' },
-    { label: `ML winners (${winnerCount})`, value: 'winners' },
-    { label: `Rule-based kept (${heuristicCount})`, value: 'heuristic' },
-    { label: `Skipped (${skippedCount})`, value: 'skipped' },
-    { label: `All (${items.length})`, value: 'all' },
-  ]
-
-  return (
-    <div style={{ borderTop: '1px solid var(--border-soft)' }}>
-      <div style={{ padding: '14px 16px 8px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 13, fontWeight: 650 }}>Forecast test evidence</div>
-          <span style={{ color: 'var(--muted)', fontSize: 11.5 }}>Showing {filteredItems.length} of {items.length} evaluated variants</span>
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
-          Current reorder suggestions are above. This historical test evidence explains what happened to every evaluated variant.
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <Tabs items={filterItems} active={filter} onSelect={setFilter} ariaLabel="Forecast test evidence filter" />
-        </div>
-      </div>
-
-      {filteredItems.length === 0 ? (
-        <div style={{ padding: '13px 16px 16px', color: 'var(--muted)', fontSize: 12.5 }}>
-          No variants match this evidence filter.
-        </div>
-      ) : (
-        <DataTable cols={['SKU', 'Product', 'Rule-based', 'ML forecast', 'Model / accuracy', 'Outcome']} minWidth={980}>
-          {filteredItems.map((item) => {
-          const rule = item.ruleBased as Record<string, unknown>
-          const ml = item.mlResult as Record<string, unknown>
-          const ruleQuantity = evidenceNumber(rule.suggestedQuantity)
-          const mlQuantity = evidenceNumber(ml.suggestedQuantity)
-          const model = evidenceText(ml.model, item.eligible ? 'Not produced' : 'Skipped')
-          const accuracy = typeof ml.forecastWape === 'number' && typeof ml.heuristicWape === 'number'
-            ? `${num(ml.forecastWape)} vs ${num(ml.heuristicWape)} WAPE`
-            : evidenceText(ml.error)
-          const interval = typeof ml.forecastLower === 'number' && typeof ml.forecastUpper === 'number'
-            ? `${num(ml.forecastLower)}–${num(ml.forecastUpper)}`
-            : '—'
-          return (
-            <tr key={item.id}>
-              <td className="t-mono t-strong">{item.sku}</td>
-              <td>{item.productName}</td>
-              <td className="num">{ruleQuantity}</td>
-              <td className="num">{item.eligible ? `${mlQuantity} · ${interval}` : '—'}</td>
-              <td>
-                <div>{model}</div>
-                <div style={{ color: 'var(--muted)', fontSize: 11.5 }}>{accuracy}</div>
-              </td>
-              <td>
-                <Badge tone={item.disposition === 'forecast_written' ? 'green' : item.disposition === 'failed' ? 'red' : 'grey'}>
-                  {COMPARISON_DISPOSITION_LABEL[item.disposition]}
-                </Badge>
-                {item.reasonCode ? <div style={{ color: 'var(--muted)', fontSize: 11.5, marginTop: 4 }}>{comparisonReasonLabel(item.reasonCode)}</div> : null}
-              </td>
-            </tr>
-          )
-          })}
-        </DataTable>
-      )}
-    </div>
-  )
-}
-
-function ForecastRunSummary({ run }: { run: ForecastRun }) {
-  if (run.status !== 'completed') return null
-
-  return (
-    <div style={{ padding: '14px 16px 0', borderBottom: '1px solid var(--border-soft)' }}>
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 13, fontWeight: 650 }}>Forecast test summary</div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
-          A forecast becomes actionable only when it beats the rule-based baseline and produces a positive reorder quantity. {run.productsSkipped} variants did not become model-backed purchase suggestions.
-        </div>
-      </div>
-      <KpiRow
-        cols={4}
-        items={[
-          { label: 'Evaluated', value: run.productsEvaluated, meta: 'Variants inspected' },
-          { label: 'Eligible', value: run.productsEligible, meta: 'Passed the sales gate' },
-          { label: 'ML wins', value: run.forecastsWon, meta: 'Beat rule-based WAPE' },
-          { label: 'Written', value: run.forecastsWritten, meta: 'Positive reorder quantity', lead: true },
-        ]}
-      />
-    </div>
-  )
-}
-
-/**
- * The "why", expanded from the stored reason JSON: not hidden behind a
- * tooltip (ML-03). Every line here is a field the server persisted, so the
- * arithmetic on screen is the arithmetic that produced the number.
- */
 function ReasonBreakdown({ suggestion }: { suggestion: ReorderSuggestion }) {
-  const r = suggestion.reason
-  const rows: [string, string][] = [
-    [`Sold in the last ${r.windowDays} days`, `${r.unitsSoldInWindow} units`],
-    ...(r.returnsInWindow > 0
-      ? ([[`Less returns`, `−${r.returnsInWindow} units`]] as [string, string][])
-      : []),
-    [`Net demand over ${r.historyDays} days of history`, `${r.netUnitsInWindow} units`],
-    ['Sales rate', `${num(r.dailyVelocity)} per day`],
-    [`Cover for the ${r.leadTimeDays}-day supplier lead time`, `${num(r.leadTimeDemand)} units`],
-    [`Safety buffer (${r.safetyDays} days)`, `${num(r.safetyStock)} units`],
-    [`Cover until the next reorder (${r.reviewPeriodDays} days)`, `${num(r.reviewPeriodDemand)} units`],
-    ['Needed in total', `${num(r.reorderPoint + r.reviewPeriodDemand)} units`],
-    ['Less stock on hand', `−${r.currentStock} units`],
-    ['Less already on order', `−${r.onOrder} units`],
-  ]
+  const reason = suggestion.reason
+  const required = wholeUnits(reason.reorderPoint + reason.reviewPeriodDemand)
+  const expectedSales = wholeUnits(reason.leadTimeDemand + reason.reviewPeriodDemand)
 
   return (
-    <div style={{ padding: '11px 14px 14px', background: 'var(--bg)', borderRadius: 10 }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>
-        How this number was worked out
+    <div style={{ padding: '14px 16px', background: 'var(--bg)', borderRadius: 10 }}>
+      <div style={{ fontSize: 14, fontWeight: 650, marginBottom: 4 }}>
+        Why order {suggestion.suggestedQuantity} units?
       </div>
-      {rows.map(([label, value]) => (
-        <div key={label} className="sum-row" style={{ fontSize: 12.5 }}>
-          <span>{label}</span>
-          <b className="num">{value}</b>
-        </div>
-      ))}
-      <div
-        className="sum-row"
-        style={{ fontSize: 13, borderTop: '1px solid var(--border)', marginTop: 6, paddingTop: 8 }}
-      >
-        <span style={{ fontWeight: 600 }}>Order</span>
-        <b className="num">{suggestion.suggestedQuantity} units</b>
+      <div style={{ color: 'var(--muted)', fontSize: 12.5, marginBottom: 12 }}>
+        Based on recent sales, your current stock may not last until the next stock review.
       </div>
-      {r.supplierName ? (
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 9 }}>
-          Lead time from {r.supplierName}. Change it on the Suppliers screen and this number changes with it.
+      <div className="sum-row" style={{ fontSize: 12.5 }}>
+        <span>Sold in the last {reason.windowDays} days</span>
+        <b>{wholeUnits(reason.unitsSoldInWindow)} units</b>
+      </div>
+      <div className="sum-row" style={{ fontSize: 12.5 }}>
+        <span>Expected sales before the next stock review</span>
+        <b>{expectedSales} units</b>
+      </div>
+      <div className="sum-row" style={{ fontSize: 12.5 }}>
+        <span>Extra stock to avoid running out</span>
+        <b>{wholeUnits(reason.safetyStock)} units</b>
+      </div>
+      <div className="sum-row" style={{ fontSize: 12.5 }}>
+        <span>Total stock needed</span>
+        <b>{required} units</b>
+      </div>
+      <div className="sum-row" style={{ fontSize: 12.5 }}>
+        <span>Available now</span>
+        <b>{stockOnHand(suggestion)} units</b>
+      </div>
+      <div className="sum-row" style={{ fontSize: 12.5 }}>
+        <span>Already on the way</span>
+        <b>{reason.onOrder} units</b>
+      </div>
+      <div className="sum-row" style={{ borderTop: '1px solid var(--border)', marginTop: 7, paddingTop: 9, fontSize: 13.5 }}>
+        <span style={{ fontWeight: 650 }}>Recommended order</span>
+        <b>{suggestion.suggestedQuantity} units</b>
+      </div>
+      {reason.supplierName ? (
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10 }}>
+          This allows for {reason.leadTimeDays} days of delivery time from {reason.supplierName}.
         </div>
       ) : null}
     </div>
@@ -246,16 +82,13 @@ function ReasonBreakdown({ suggestion }: { suggestion: ReorderSuggestion }) {
 export function ReorderSuggestions() {
   const [data, setData] = useState<ReorderSuggestionList | null>(null)
   const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [creatingOrders, setCreatingOrders] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [notice, setNotice] = useState<string | null>(null)
-  const [manualRun, setManualRun] = useState<ForecastRun | null>(null)
-  const [manualItems, setManualItems] = useState<ForecastRunItem[]>([])
-  const [manualLoading, setManualLoading] = useState(false)
-  const [manualError, setManualError] = useState<string | null>(null)
-  const [showSkipped, setShowSkipped] = useState(false)
+  const [activeRun, setActiveRun] = useState<ForecastRun | null>(null)
   const pollingRef = useRef(false)
 
   const load = useCallback(async () => {
@@ -264,7 +97,7 @@ export function ReorderSuggestions() {
     try {
       setData(await getAuthenticatedReorderSuggestions())
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Reorder suggestions are unavailable right now.')
+      setError(cause instanceof Error ? cause.message : 'Recommendations are unavailable right now.')
     } finally {
       setLoading(false)
     }
@@ -272,81 +105,50 @@ export function ReorderSuggestions() {
 
   useEffect(() => {
     void load()
-    // Register lock navigation unmounts this card. Restore the durable manual
-    // run ledger (and its comparison rows) when the manager returns so a
-    // completed test is not lost with the previous React tree.
     let mounted = true
-    void (async () => {
-      try {
-        const latest = await getAuthenticatedLatestForecastRun()
-        if (!mounted || !latest) return
-        setManualRun(latest)
-        if (latest.status === 'completed' || latest.status === 'failed') {
-          const comparison = await getAuthenticatedForecastRunItems(latest.id)
-          if (!mounted) return
-          setManualItems(comparison.items)
-          if (latest.status === 'failed') {
-            setManualError(latest.errorMessage ?? 'The manual forecast failed. Review the run details and retry.')
-          }
-        }
-      } catch {
-        // This is a non-blocking restore path. During a rolling deploy an old
-        // backend may not have the latest-run endpoint; the current suggestions
-        // should still render normally in that case.
-      }
-    })()
+    void getAuthenticatedLatestForecastRun()
+      .then((run) => {
+        if (mounted && run && (run.status === 'queued' || run.status === 'running')) setActiveRun(run)
+      })
+      .catch(() => undefined)
     return () => {
       mounted = false
       pollingRef.current = false
     }
   }, [load])
 
-  async function recalculate() {
-    setBusy(true)
+  async function refreshRecommendations() {
+    if (refreshing) return
+    setRefreshing(true)
     setError(null)
     setNotice(null)
     try {
-      const next = await generateAuthenticatedReorderSuggestions()
-      setData(next)
-      setSelected(new Set())
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Reorder suggestions could not be recalculated.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function runManualForecast() {
-    if (manualLoading) return
-    pollingRef.current = true
-    setManualLoading(true)
-    setManualError(null)
-    setManualItems([])
-    try {
-      const queued = await startAuthenticatedForecastRun()
-      setManualRun(queued.run)
-      let current = queued.run
-      for (let attempt = 0; attempt < 60 && pollingRef.current; attempt += 1) {
-        if (current.status === 'completed' || current.status === 'failed') break
-        await new Promise((resolve) => window.setTimeout(resolve, queued.pollAfterMs))
-        if (!pollingRef.current) return
-        current = await getAuthenticatedForecastRun(current.id)
-        setManualRun(current)
-      }
-      if (!pollingRef.current) return
-      if (current.status === 'completed' || current.status === 'failed') {
-        const comparison = await getAuthenticatedForecastRunItems(current.id)
-        setManualItems(comparison.items)
-        if (current.status === 'completed') await load()
-        else setManualError(current.errorMessage ?? 'The manual forecast failed. Review the run details and retry.')
+      if (data?.manualForecastEnabled === true) {
+        pollingRef.current = true
+        const queued = await startAuthenticatedForecastRun()
+        let current = queued.run
+        setActiveRun(current)
+        for (let attempt = 0; attempt < 60 && pollingRef.current; attempt += 1) {
+          if (current.status === 'completed' || current.status === 'failed') break
+          await new Promise((resolve) => window.setTimeout(resolve, queued.pollAfterMs))
+          if (!pollingRef.current) return
+          current = await getAuthenticatedForecastRun(current.id)
+          setActiveRun(current)
+        }
+        if (current.status === 'failed') throw new Error('Recommendations could not be updated. Please try again.')
+        if (current.status !== 'completed') throw new Error('The update is taking longer than expected. Refresh this page shortly.')
+        setActiveRun(null)
+        await load()
       } else {
-        setManualError('The forecast is still running. Refresh this page shortly to see its result.')
+        setData(await generateAuthenticatedReorderSuggestions())
       }
+      setSelected(new Set())
+      setNotice('Recommendations updated. Review the quantities before creating purchase orders.')
     } catch (cause) {
-      setManualError(cause instanceof Error ? cause.message : 'The manual forecast could not be started.')
+      setError(cause instanceof Error ? cause.message : 'Recommendations could not be updated.')
     } finally {
       pollingRef.current = false
-      setManualLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -357,14 +159,9 @@ export function ReorderSuggestions() {
     return next
   }
 
-  /**
-   * Accepted suggestions become a DRAFT purchase order, never a sent one:
-   * the owner still decides what actually goes to the supplier. One PO per
-   * supplier, since a purchase order is addressed to a single vendor.
-   */
   async function createDraftPurchaseOrders() {
     if (!data) return
-    const chosen = data.items.filter((s) => selected.has(s.id) && s.supplierId)
+    const chosen = data.items.filter((suggestion) => selected.has(suggestion.id) && suggestion.supplierId)
     if (chosen.length === 0) return
 
     const bySupplier = new Map<string, ReorderSuggestion[]>()
@@ -374,247 +171,108 @@ export function ReorderSuggestions() {
       bySupplier.set(suggestion.supplierId!, list)
     }
 
-    setBusy(true)
+    setCreatingOrders(true)
     setError(null)
     try {
       const created: string[] = []
       for (const [supplierId, group] of bySupplier) {
-        const po = await createAuthenticatedPurchaseOrder({
+        const purchaseOrder = await createAuthenticatedPurchaseOrder({
           supplierId,
-          lines: group.map((s) => ({
-            variantId: s.variantId,
-            quantityOrdered: s.suggestedQuantity,
-            // Cost is left at zero here deliberately: the ordered price is not
-            // known from a sales-velocity calculation. It is captured for real
-            // at goods receipt, which is what sets the cost basis.
+          lines: group.map((suggestion) => ({
+            variantId: suggestion.variantId,
+            quantityOrdered: suggestion.suggestedQuantity,
             unitCost: 0,
           })),
         })
-        created.push(po.poNumber)
+        created.push(purchaseOrder.poNumber)
       }
       setSelected(new Set())
-      setNotice(
-        `Created ${created.length} draft purchase order${created.length === 1 ? '' : 's'}: ${created.join(', ')}. ` +
-          'Review the unit costs on the Purchases screen, then mark it sent.',
-      )
+      setNotice(`Created ${created.length} draft purchase order${created.length === 1 ? '' : 's'}: ${created.join(', ')}. Review prices before sending.`)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Those draft purchase orders could not be created.')
+      setError(cause instanceof Error ? cause.message : 'The draft purchase orders could not be created.')
     } finally {
-      setBusy(false)
+      setCreatingOrders(false)
     }
   }
 
   const items = data?.items ?? []
-  const skipped = data?.skipped ?? []
-  const hasForecast = items.some((item) => item.method === 'forecast')
-  const hasHeuristic = items.some((item) => item.method === 'heuristic')
-  const basisLabel = hasForecast && hasHeuristic ? 'Rule-based + forecast' : hasForecast ? 'Forecast-backed' : 'Rule-based'
-  const forecastWasReplaced = Boolean(
-    manualRun?.status === 'completed' &&
-      manualRun.forecastsWritten > 0 &&
-      manualRun.completedAt &&
-      data?.generatedAt &&
-      new Date(data.generatedAt).getTime() > new Date(manualRun.completedAt).getTime() &&
-      !hasForecast,
-  )
+  const totalUnits = items.reduce((total, item) => total + item.suggestedQuantity, 0)
+  const updateInProgress = refreshing || activeRun?.status === 'queued' || activeRun?.status === 'running'
+  const updatedAt = data?.generatedAt
+    ? new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+    : null
 
   return (
     <Card>
       <CardHead
-        title="Current reorder suggestions"
-        sub={
-          data?.generatedAt
-            ? `${basisLabel} · worked out ${new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
-            : 'Rule-based, sales rate multiplied by supplier lead time'
-        }
+        title="Recommended purchase list"
+        sub={updatedAt ? `${items.length} products · ${totalUnits} units to order · updated ${updatedAt}` : 'See what needs ordering and why'}
         right={
-          <div style={{ display: 'flex', gap: 8 }}>
-            {selected.size > 0 && (
-              <button className="btn btn-sm btn-pri" onClick={() => void createDraftPurchaseOrders()} disabled={busy}>
-                <ClipboardList size={14} /> Create draft PO ({selected.size})
-              </button>
-            )}
-            <button className="btn btn-sm" onClick={() => void recalculate()} disabled={busy}>
-              <RefreshCw size={14} /> {busy ? 'Working…' : 'Recalculate'}
-            </button>
-            {data?.manualForecastEnabled === true ? (
-              <button className="btn btn-sm" onClick={() => void runManualForecast()} disabled={busy || manualLoading}>
-                <Sparkle size={14} /> {manualLoading ? 'Forecasting…' : 'Run forecast now'}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {selected.size > 0 ? (
+              <button className="btn btn-sm btn-pri" onClick={() => void createDraftPurchaseOrders()} disabled={creatingOrders || updateInProgress}>
+                <ClipboardList size={14} /> {creatingOrders ? 'Creating…' : `Create draft PO (${selected.size})`}
               </button>
             ) : null}
+            <button className="btn btn-sm" onClick={() => void refreshRecommendations()} disabled={creatingOrders || updateInProgress}>
+              <RefreshCw size={14} /> {updateInProgress ? 'Updating…' : 'Refresh recommendations'}
+            </button>
           </div>
         }
       />
 
-      {notice && (
-        <div style={{ padding: '11px 16px', fontSize: 13, color: 'var(--ink-2)' }} role="status">
-          {notice}
-        </div>
-      )}
-
-      {manualError && !manualRun ? (
-        <div style={{ padding: '11px 16px', color: 'var(--danger)', fontSize: 12.5 }} role="alert">
-          {manualError}
+      {updateInProgress ? (
+        <div style={{ padding: '11px 16px', borderBottom: '1px solid var(--border-soft)', color: 'var(--muted)', fontSize: 12.5 }} role="status">
+          Reviewing recent sales, current stock, incoming orders and supplier delivery times…
         </div>
       ) : null}
-
-      {manualRun && (
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-soft)' }} role="status">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-            <b>Forecast test: {manualRun.status}</b>
-            <span style={{ color: 'var(--muted)' }}>
-              {manualRun.status === 'completed'
-                ? `${manualRun.productsEvaluated} evaluated · ${manualRun.productsEligible} eligible · ${manualRun.forecastsWon} ML wins · ${manualRun.forecastsWritten} written`
-                : manualRun.status === 'running'
-                  ? 'The model is evaluating this store in the background.'
-                  : manualRun.status === 'queued'
-                    ? 'Waiting for the VM worker.'
-                    : manualRun.errorMessage ?? 'The run failed.'}
-            </span>
-          </div>
-          {manualError ? <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 5 }}>{manualError}</div> : null}
-        </div>
-      )}
-
-      {manualRun ? <ForecastRunSummary run={manualRun} /> : null}
-
-      {forecastWasReplaced ? (
-        <div style={{ padding: '11px 16px', borderBottom: '1px solid var(--border-soft)', color: 'var(--muted)', fontSize: 12.5 }} role="note">
-          This forecast test completed successfully, but the current suggestions were recalculated afterward. The test comparison below is still available.
-        </div>
-      ) : null}
-
-      {loading && <LoadingState label="Loading reorder suggestions" rows={3} />}
+      {notice ? <div style={{ padding: '11px 16px', fontSize: 13 }} role="status">{notice}</div> : null}
+      {loading && <LoadingState label="Loading purchase recommendations" rows={3} />}
       {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
 
-      {!loading && !error && items.length === 0 && (
+      {!loading && !error && items.length === 0 ? (
         <EmptyState
-          icon={<Sparkle size={24} strokeWidth={1.8} />}
-          title={data?.generatedAt ? 'Nothing needs reordering right now' : 'No suggestions worked out yet'}
-          body={
-            data?.generatedAt
-              ? 'Every item either has enough stock and orders in transit to cover expected demand, or does not have enough sales history to judge.'
-              : 'Suggestions are worked out from your sales rate and each supplier’s lead time. Recalculate to produce them.'
-          }
-          action={
-            <button className="btn btn-pri" onClick={() => void recalculate()} disabled={busy}>
-              <RefreshCw size={15} /> {busy ? 'Working…' : 'Recalculate'}
-            </button>
-          }
+          icon={<PackageCheck size={24} strokeWidth={1.8} />}
+          title={updatedAt ? 'Stock levels look covered' : 'No recommendations yet'}
+          body={updatedAt ? 'No purchase is recommended right now. Refresh after new sales, deliveries or stock changes.' : 'Refresh to check recent sales, available stock and incoming orders.'}
+          action={<button className="btn btn-pri" onClick={() => void refreshRecommendations()} disabled={updateInProgress}><RefreshCw size={15} /> Refresh recommendations</button>}
         />
-      )}
+      ) : null}
 
-      {!loading && !error && items.length > 0 && (
-        <DataTable
-          cols={[
-            '',
-            'SKU',
-            'Product',
-            'In stock',
-            'On order',
-            'Suggested',
-            'Basis',
-            '',
-          ]}
-          minWidth={980}
-        >
-          {items.map((s) => (
-            <Fragment key={s.id}>
+      {!loading && !error && items.length > 0 ? (
+        <DataTable cols={['', 'Product', 'Available now', 'Already ordered', 'Order now', 'Why this quantity', '']} minWidth={980}>
+          {items.map((suggestion) => (
+            <Fragment key={suggestion.id}>
               <tr>
                 <td>
                   <input
                     type="checkbox"
-                    aria-label={`Select ${s.sku} for a draft purchase order`}
-                    checked={selected.has(s.id)}
-                    onChange={() => setSelected((prev) => toggle(prev, s.id))}
+                    aria-label={`Select ${suggestion.productName} for a draft purchase order`}
+                    checked={selected.has(suggestion.id)}
+                    disabled={!suggestion.supplierId}
+                    onChange={() => setSelected((current) => toggle(current, suggestion.id))}
                   />
                 </td>
-                <td className="t-mono t-strong">{s.sku}</td>
-                <td>{s.productName}</td>
-                <td className="num">
-                  {normalizeReorderReason(s.reason as unknown as Record<string, unknown>).currentStock}
-                </td>
-                <td className="num t-sub">
-                  {s.reason.onOrder}
-                </td>
-                <td className="num t-strong">
-                  {s.suggestedQuantity}
-                </td>
                 <td>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <Badge tone={METHOD_TONE[s.method] ?? 'blue'}>{s.method === 'forecast' ? '✦ Forecast' : METHOD_LABEL[s.method] ?? s.method}</Badge>
-                    <Badge tone={CONFIDENCE_TONE[s.confidence] ?? 'grey'}>
-                      {s.confidence} confidence
-                    </Badge>
-                  </div>
+                  <div className="t-strong">{suggestion.productName}</div>
+                  <div className="t-mono t-sub" style={{ marginTop: 3 }}>{suggestion.sku}</div>
                 </td>
+                <td className="num">{stockOnHand(suggestion)}</td>
+                <td className="num t-sub">{suggestion.reason.onOrder}</td>
+                <td className="num t-strong">{suggestion.suggestedQuantity}</td>
+                <td style={{ maxWidth: 390, color: 'var(--muted)', fontSize: 12.5 }}>{quantityExplanation(suggestion)}</td>
                 <td>
-                  <button className="btn btn-sm" onClick={() => setExpanded((prev) => toggle(prev, s.id))}>
-                    {expanded.has(s.id) ? 'Hide why' : 'Why?'}
+                  <button className="btn btn-sm" onClick={() => setExpanded((current) => toggle(current, suggestion.id))}>
+                    {expanded.has(suggestion.id) ? 'Hide details' : 'See why'}
                   </button>
                 </td>
               </tr>
-              {expanded.has(s.id) && (
-                <tr>
-                  <td colSpan={8} style={{ padding: '0 14px 12px' }}>
-                    <ReasonBreakdown suggestion={s} />
-                  </td>
-                </tr>
-              )}
+              {expanded.has(suggestion.id) ? (
+                <tr><td colSpan={7} style={{ padding: '0 14px 12px' }}><ReasonBreakdown suggestion={suggestion} /></td></tr>
+              ) : null}
             </Fragment>
           ))}
         </DataTable>
-      )}
-
-      {!loading && !error && skipped.length > 0 && (
-        <div style={{ padding: '13px 16px', borderTop: '1px solid var(--border-soft)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>
-                Considered but not suggested ({skipped.length})
-              </div>
-              {!showSkipped ? (
-                <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 3 }}>
-                  These items do not need an order based on stock, sales history or supplier setup.
-                </div>
-              ) : null}
-            </div>
-            <button
-              className="btn btn-sm"
-              type="button"
-              aria-expanded={showSkipped}
-              onClick={() => setShowSkipped((current) => !current)}
-            >
-              {showSkipped ? 'Hide details' : 'Show details'}
-            </button>
-          </div>
-          {showSkipped ? (
-            <div style={{ marginTop: 9 }}>
-              {skipped.slice(0, 8).map((item) => (
-                <div key={item.variantId} className="sum-row" style={{ fontSize: 12.5 }}>
-                  <span>
-                    <span className="t-mono">{item.sku}</span> · {item.productName}
-                  </span>
-                  <span style={{ color: 'var(--muted)' }}>
-                    {SKIPPED_LABEL[item.kind]}
-                    {item.kind === 'insufficient_history' && item.historyDays !== null
-                      ? ` (${item.historyDays} day${item.historyDays === 1 ? '' : 's'} so far)`
-                      : ''}
-                  </span>
-                </div>
-              ))}
-              {skipped.length > 8 && (
-                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-                  …and {skipped.length - 8} more.
-                </div>
-              )}
-            </div>
-          ) : null}
-        </div>
-      )}
-
-      {(manualRun?.status === 'completed' || manualRun?.status === 'failed') && manualItems.length > 0 ? (
-        <ForecastComparison items={manualItems} runId={manualRun.id} />
       ) : null}
     </Card>
   )

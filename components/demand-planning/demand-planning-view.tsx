@@ -18,7 +18,7 @@ export function DemandPlanningView() {
     <>
       <PageHead
         title="Demand Planning"
-        sub="Forecast demand, review replenishment recommendations and prepare purchase orders"
+        sub="See what needs ordering, understand each quantity and prepare purchase orders"
         actions={
           <Link className="btn" href={appPath('/app/purchases')}>
             <ClipboardList size={15} /> View purchases

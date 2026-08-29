@@ -470,15 +470,11 @@ function ReorderSummaryCard() {
   if (items.length === 0) return null
 
   const top = items.slice(0, 4)
-  const hasForecast = items.some((item) => item.method === 'forecast')
-  const hasHeuristic = items.some((item) => item.method === 'heuristic')
-  const basisLabel = hasForecast && hasHeuristic ? 'Rule-based + forecast' : hasForecast ? 'Forecast-backed' : 'Rule-based'
-
   return (
     <Card style={{ marginTop: 18 }}>
       <CardHead
-        title="Reorder suggestions"
-        sub={`${basisLabel} replenishment recommendations`}
+        title="Products to order"
+        sub="Items that may run short based on recent sales and delivery time"
         right={
           <Link className="btn btn-sm btn-pri" href={appPath('/app/demand-planning')}>
             <Sparkle size={14} /> Review all ({items.length})
@@ -491,9 +487,8 @@ function ReorderSummaryCard() {
             key={s.id}
             tone="blue"
             icon={<Boxes size={17} strokeWidth={1.85} />}
-            title={`${s.productName}: reorder ${s.suggestedQuantity} units`}
-            sub={`${s.sku} · ${s.reason.currentStock} in stock`}
-            action={<Badge tone={s.confidence === 'high' ? 'green' : s.confidence === 'medium' ? 'amber' : 'grey'}>{s.confidence} confidence</Badge>}
+            title={`Order ${s.suggestedQuantity} units of ${s.productName}`}
+            sub={`${s.sku} · ${s.reason.currentStock} available now`}
           />
         ))}
       </CardPad>

@@ -90,3 +90,15 @@ if (!isSupabaseConfigured && hasWindow) {
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl as string, supabaseAnonKey as string)
   : missingConfigClient()
+
+/**
+ * Admin has a separate browser storage namespace from the merchant POS.  Both
+ * clients may exist in one browser tab (for example while support is being
+ * investigated), but an employee session must never replace or refresh the
+ * merchant's session and vice versa.
+ */
+export const adminSupabase = isSupabaseConfigured
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string, {
+      auth: { storageKey: 'ambel.admin.auth.token' },
+    })
+  : missingConfigClient()

@@ -17,7 +17,7 @@ const freePlan = {
 }
 
 test.describe('India entitlement UI contract', () => {
-  test('shows the server-reported Free usage for implemented resources', async ({ authenticatedPage: page }) => {
+  test('does not show the entitlement usage block on the plans page', async ({ authenticatedPage: page }) => {
     await page.route('**/billing/plans*', (route) => route.fulfill({ json: { mode: 'test', region: 'IN', plans: [freePlan] } }))
     await page.route('**/billing/status', (route) => route.fulfill({
       json: {
@@ -53,10 +53,7 @@ test.describe('India entitlement UI contract', () => {
     }))
 
     await page.goto('/plans')
-    await expect(page.getByRole('region', { name: 'Plan usage' })).toContainText('free plan usage')
-    await expect(page.getByRole('region', { name: 'Plan usage' })).toContainText('POS transactions')
-    await expect(page.getByRole('region', { name: 'Plan usage' })).toContainText('50 / 50')
-    await expect(page.getByRole('region', { name: 'Plan usage' })).toContainText('Active users')
+    await expect(page.getByRole('region', { name: 'Plan usage' })).toHaveCount(0)
   })
 
   test('keeps the cart intact when the 51st sale is rejected by the entitlement adapter', async ({ authenticatedPage: page }) => {

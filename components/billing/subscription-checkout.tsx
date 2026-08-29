@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders as sharedAuthHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
-import { EntitlementUsagePanel } from './entitlement-usage-panel'
 import styles from './subscription-checkout.module.css'
 import { CurrencyMark } from '@/components/marketing/currency-mark'
 
@@ -369,7 +368,6 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                     : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate ->`}
             </button>
             <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
-            <EntitlementUsagePanel region={region} status={billingStatus} />
           </>
         )}
       </div>
