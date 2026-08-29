@@ -229,7 +229,12 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         name: 'Ambel POS',
         description: `${selected.name} · ${cycle === 'annual' ? 'Annual' : 'Monthly'} subscription`,
         theme: { color: '#0058BA' },
-        modal: { ondismiss: () => setMessage('Checkout was closed. Your payment attempt is saved; you can reopen it without creating a duplicate subscription.') },
+        modal: {
+          ondismiss: () => {
+            setPaying(false)
+            setMessage('Checkout was closed. You can reopen this payment or select another plan.')
+          },
+        },
         handler: async (checkout: CheckoutResponse) => {
           try {
             if (!checkout.razorpay_payment_id || !checkout.razorpay_subscription_id || !checkout.razorpay_signature) {
