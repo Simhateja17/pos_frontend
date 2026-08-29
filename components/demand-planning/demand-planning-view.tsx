@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ClipboardList } from 'lucide-react'
-import { ReorderSuggestions } from '@/components/inventory/reorder-suggestions'
+import { ReorderSuggestions } from '@/components/demand-planning/reorder-suggestions'
 import { PageHead } from '@/components/couture/ui'
 import { useAppRegion } from '@/lib/app-region'
 

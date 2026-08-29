@@ -16,7 +16,7 @@ import {
   getAuthenticatedReorderSuggestions,
   startAuthenticatedForecastRun,
 } from '@/lib/api/authenticated-client'
-import { Badge, type BadgeTone, Card, CardHead, DataTable } from '@/components/couture/ui'
+import { Badge, type BadgeTone, Card, CardHead, DataTable, KpiRow, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { normalizeReorderReason } from '@/lib/operational-display'
 
@@ -35,6 +35,26 @@ const METHOD_LABEL: Record<string, string> = {
 
 const METHOD_TONE: Record<string, BadgeTone> = { heuristic: 'grey', forecast: 'green' }
 
+type ComparisonFilter = 'written' | 'winners' | 'heuristic' | 'skipped' | 'all'
+
+const COMPARISON_DISPOSITION_LABEL: Record<ForecastRunItem['disposition'], string> = {
+  forecast_written: 'Forecast written',
+  heuristic_won: 'Rule-based kept',
+  ineligible: 'Not forecasted',
+  no_supplier: 'No supplier',
+  sufficient_stock: 'Sufficient stock',
+  failed: 'Forecast failed',
+}
+
+const COMPARISON_REASON_LABEL: Record<string, string> = {
+  no_recent_sales: 'No sales in the last 14 days',
+  insufficient_history: 'Not enough sales history',
+  insufficient_volume: 'Not enough total sales volume',
+  model_not_better: 'ML did not beat the rule-based forecast',
+  no_supplier: 'No supplier on file',
+  forecast_error: 'The model could not produce a forecast',
+}
+
 const SKIPPED_LABEL: Record<ReorderSkipped['kind'], string> = {
   insufficient_history: 'Not enough sales history yet',
   no_velocity: 'No sales in the last 30 days',
@@ -52,21 +72,68 @@ function evidenceText(value: unknown, fallback = '—'): string {
   return typeof value === 'string' && value ? value : fallback
 }
 
-function ForecastComparison({ items }: { items: ForecastRunItem[] }) {
+function comparisonReasonLabel(value: string): string {
+  return COMPARISON_REASON_LABEL[value] ?? value.replaceAll('_', ' ')
+}
+
+function isSkippedComparisonItem(item: ForecastRunItem): boolean {
+  return item.disposition === 'ineligible' || item.disposition === 'no_supplier' || item.disposition === 'failed'
+}
+
+function comparisonItemsForFilter(items: ForecastRunItem[], filter: ComparisonFilter): ForecastRunItem[] {
+  if (filter === 'all') return items
+  if (filter === 'written') return items.filter((item) => item.disposition === 'forecast_written')
+  if (filter === 'winners') return items.filter((item) => item.disposition === 'forecast_written' || item.disposition === 'sufficient_stock')
+  if (filter === 'heuristic') return items.filter((item) => item.disposition === 'heuristic_won')
+  return items.filter(isSkippedComparisonItem)
+}
+
+function ForecastComparison({ items, runId }: { items: ForecastRunItem[]; runId: string }) {
+  const [filter, setFilter] = useState<ComparisonFilter>('written')
+  const writtenCount = items.filter((item) => item.disposition === 'forecast_written').length
+  const winnerCount = items.filter((item) => item.disposition === 'forecast_written' || item.disposition === 'sufficient_stock').length
+  const heuristicCount = items.filter((item) => item.disposition === 'heuristic_won').length
+  const skippedCount = items.filter(isSkippedComparisonItem).length
+  const filteredItems = comparisonItemsForFilter(items, filter)
+
+  useEffect(() => {
+    setFilter(writtenCount > 0 ? 'written' : winnerCount > 0 ? 'winners' : 'all')
+  }, [runId, writtenCount, winnerCount])
+
   if (items.length === 0) {
     return <div style={{ padding: '13px 16px', color: 'var(--muted)', fontSize: 12.5 }}>No product comparison rows were returned.</div>
   }
 
+  const filterItems: readonly { label: string; value: ComparisonFilter }[] = [
+    { label: `Written (${writtenCount})`, value: 'written' },
+    { label: `ML winners (${winnerCount})`, value: 'winners' },
+    { label: `Rule-based kept (${heuristicCount})`, value: 'heuristic' },
+    { label: `Skipped (${skippedCount})`, value: 'skipped' },
+    { label: `All (${items.length})`, value: 'all' },
+  ]
+
   return (
     <div style={{ borderTop: '1px solid var(--border-soft)' }}>
       <div style={{ padding: '14px 16px 8px' }}>
-        <div style={{ fontSize: 13, fontWeight: 650 }}>Test comparison</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 13, fontWeight: 650 }}>Forecast test evidence</div>
+          <span style={{ color: 'var(--muted)', fontSize: 11.5 }}>Showing {filteredItems.length} of {items.length} evaluated variants</span>
+        </div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
-          Rule-based and ML evidence are shown together. Only a genuine winning forecast becomes a purchasable suggestion above.
+          Current reorder suggestions are above. This historical test evidence explains what happened to every evaluated variant.
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <Tabs items={filterItems} active={filter} onSelect={setFilter} ariaLabel="Forecast test evidence filter" />
         </div>
       </div>
-      <DataTable cols={['SKU', 'Product', 'Rule-based', 'ML forecast', 'Model / accuracy', 'Outcome']} minWidth={980}>
-        {items.map((item) => {
+
+      {filteredItems.length === 0 ? (
+        <div style={{ padding: '13px 16px 16px', color: 'var(--muted)', fontSize: 12.5 }}>
+          No variants match this evidence filter.
+        </div>
+      ) : (
+        <DataTable cols={['SKU', 'Product', 'Rule-based', 'ML forecast', 'Model / accuracy', 'Outcome']} minWidth={980}>
+          {filteredItems.map((item) => {
           const rule = item.ruleBased as Record<string, unknown>
           const ml = item.mlResult as Record<string, unknown>
           const ruleQuantity = evidenceNumber(rule.suggestedQuantity)
@@ -90,14 +157,39 @@ function ForecastComparison({ items }: { items: ForecastRunItem[] }) {
               </td>
               <td>
                 <Badge tone={item.disposition === 'forecast_written' ? 'green' : item.disposition === 'failed' ? 'red' : 'grey'}>
-                  {item.disposition.replaceAll('_', ' ')}
+                  {COMPARISON_DISPOSITION_LABEL[item.disposition]}
                 </Badge>
-                {item.reasonCode ? <div style={{ color: 'var(--muted)', fontSize: 11.5, marginTop: 4 }}>{item.reasonCode.replaceAll('_', ' ')}</div> : null}
+                {item.reasonCode ? <div style={{ color: 'var(--muted)', fontSize: 11.5, marginTop: 4 }}>{comparisonReasonLabel(item.reasonCode)}</div> : null}
               </td>
             </tr>
           )
-        })}
-      </DataTable>
+          })}
+        </DataTable>
+      )}
+    </div>
+  )
+}
+
+function ForecastRunSummary({ run }: { run: ForecastRun }) {
+  if (run.status !== 'completed') return null
+
+  return (
+    <div style={{ padding: '14px 16px 0', borderBottom: '1px solid var(--border-soft)' }}>
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 650 }}>Forecast test summary</div>
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
+          A forecast becomes actionable only when it beats the rule-based baseline and produces a positive reorder quantity. {run.productsSkipped} variants did not become model-backed purchase suggestions.
+        </div>
+      </div>
+      <KpiRow
+        cols={4}
+        items={[
+          { label: 'Evaluated', value: run.productsEvaluated, meta: 'Variants inspected' },
+          { label: 'Eligible', value: run.productsEligible, meta: 'Passed the sales gate' },
+          { label: 'ML wins', value: run.forecastsWon, meta: 'Beat rule-based WAPE' },
+          { label: 'Written', value: run.forecastsWritten, meta: 'Positive reorder quantity', lead: true },
+        ]}
+      />
     </div>
   )
 }
@@ -163,6 +255,7 @@ export function ReorderSuggestions() {
   const [manualItems, setManualItems] = useState<ForecastRunItem[]>([])
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
+  const [showSkipped, setShowSkipped] = useState(false)
   const pollingRef = useRef(false)
 
   const load = useCallback(async () => {
@@ -328,7 +421,7 @@ export function ReorderSuggestions() {
   return (
     <Card>
       <CardHead
-        title="Reorder suggestions"
+        title="Current reorder suggestions"
         sub={
           data?.generatedAt
             ? `${basisLabel} · worked out ${new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
@@ -371,7 +464,7 @@ export function ReorderSuggestions() {
             <b>Forecast test: {manualRun.status}</b>
             <span style={{ color: 'var(--muted)' }}>
               {manualRun.status === 'completed'
-                ? `${manualRun.productsEvaluated} evaluated · ${manualRun.productsEligible} eligible · ${manualRun.forecastsWritten} written`
+                ? `${manualRun.productsEvaluated} evaluated · ${manualRun.productsEligible} eligible · ${manualRun.forecastsWon} ML wins · ${manualRun.forecastsWritten} written`
                 : manualRun.status === 'running'
                   ? 'The model is evaluating this store in the background.'
                   : manualRun.status === 'queued'
@@ -382,6 +475,8 @@ export function ReorderSuggestions() {
           {manualError ? <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 5 }}>{manualError}</div> : null}
         </div>
       )}
+
+      {manualRun ? <ForecastRunSummary run={manualRun} /> : null}
 
       {forecastWasReplaced ? (
         <div style={{ padding: '11px 16px', borderBottom: '1px solid var(--border-soft)', color: 'var(--muted)', fontSize: 12.5 }} role="note">
@@ -473,32 +568,53 @@ export function ReorderSuggestions() {
 
       {!loading && !error && skipped.length > 0 && (
         <div style={{ padding: '13px 16px', borderTop: '1px solid var(--border-soft)' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', marginBottom: 7 }}>
-            Considered but not suggested ({skipped.length})
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>
+                Considered but not suggested ({skipped.length})
+              </div>
+              {!showSkipped ? (
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 3 }}>
+                  These items do not need an order based on stock, sales history or supplier setup.
+                </div>
+              ) : null}
+            </div>
+            <button
+              className="btn btn-sm"
+              type="button"
+              aria-expanded={showSkipped}
+              onClick={() => setShowSkipped((current) => !current)}
+            >
+              {showSkipped ? 'Hide details' : 'Show details'}
+            </button>
           </div>
-          {skipped.slice(0, 8).map((item) => (
-            <div key={item.variantId} className="sum-row" style={{ fontSize: 12.5 }}>
-              <span>
-                <span className="t-mono">{item.sku}</span> · {item.productName}
-              </span>
-              <span style={{ color: 'var(--muted)' }}>
-                {SKIPPED_LABEL[item.kind]}
-                {item.kind === 'insufficient_history' && item.historyDays !== null
-                  ? ` (${item.historyDays} day${item.historyDays === 1 ? '' : 's'} so far)`
-                  : ''}
-              </span>
+          {showSkipped ? (
+            <div style={{ marginTop: 9 }}>
+              {skipped.slice(0, 8).map((item) => (
+                <div key={item.variantId} className="sum-row" style={{ fontSize: 12.5 }}>
+                  <span>
+                    <span className="t-mono">{item.sku}</span> · {item.productName}
+                  </span>
+                  <span style={{ color: 'var(--muted)' }}>
+                    {SKIPPED_LABEL[item.kind]}
+                    {item.kind === 'insufficient_history' && item.historyDays !== null
+                      ? ` (${item.historyDays} day${item.historyDays === 1 ? '' : 's'} so far)`
+                      : ''}
+                  </span>
+                </div>
+              ))}
+              {skipped.length > 8 && (
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+                  …and {skipped.length - 8} more.
+                </div>
+              )}
             </div>
-          ))}
-          {skipped.length > 8 && (
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-              …and {skipped.length - 8} more.
-            </div>
-          )}
+          ) : null}
         </div>
       )}
 
       {(manualRun?.status === 'completed' || manualRun?.status === 'failed') && manualItems.length > 0 ? (
-        <ForecastComparison items={manualItems} />
+        <ForecastComparison items={manualItems} runId={manualRun.id} />
       ) : null}
     </Card>
   )
