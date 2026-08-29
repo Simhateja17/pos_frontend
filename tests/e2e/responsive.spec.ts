@@ -19,6 +19,7 @@ const ROUTES = [
   '/app/payments',
   '/app/purchases',
   '/app/reports',
+  '/app/demand-planning',
   '/app/offline-sync',
   '/checkout',
 ]

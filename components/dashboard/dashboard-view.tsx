@@ -439,8 +439,8 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
 
 /**
  * Compact surface for the ML wedge on the dashboard itself: the full
- * interactive table (recalculate, select, draft PO) stays on the Inventory
- * screen so there's one place suggestions are actually actioned from.
+ * interactive table (recalculate, select, draft PO) lives on Demand Planning
+ * so there's one place suggestions are actually actioned from.
  */
 function ReorderSummaryCard() {
   const { appPath } = useAppRegion()
@@ -470,14 +470,17 @@ function ReorderSummaryCard() {
   if (items.length === 0) return null
 
   const top = items.slice(0, 4)
+  const hasForecast = items.some((item) => item.method === 'forecast')
+  const hasHeuristic = items.some((item) => item.method === 'heuristic')
+  const basisLabel = hasForecast && hasHeuristic ? 'Rule-based + forecast' : hasForecast ? 'Forecast-backed' : 'Rule-based'
 
   return (
     <Card style={{ marginTop: 18 }}>
       <CardHead
         title="Reorder suggestions"
-        sub="Rule-based, worked out from sales rate and supplier lead time"
+        sub={`${basisLabel} replenishment recommendations`}
         right={
-          <Link className="btn btn-sm btn-pri" href={appPath('/app/inventory')}>
+          <Link className="btn btn-sm btn-pri" href={appPath('/app/demand-planning')}>
             <Sparkle size={14} /> Review all ({items.length})
           </Link>
         }

@@ -2,17 +2,16 @@
 
 import Link from 'next/link'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
-import { Barcode, Boxes, Package, Plus, Upload } from 'lucide-react'
+import { Barcode, BarChart3, Boxes, Package, Plus, Upload } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { LowStockBadge } from '@/components/low-stock-badge'
-import { money } from '@/lib/region'
+import { useAppRegion } from '@/lib/app-region'
 import { priceLabel, unitSuffix } from '@/lib/units'
 import { inventoryStatus, inventoryVariantMatches } from '@/lib/operational-display'
-import { ReorderSuggestions } from './reorder-suggestions'
 
 type LowStockVariant = {
   variantId: string
@@ -84,6 +83,7 @@ function inventoryCostSummary(products: Product[]) {
 }
 
 export function InventoryView() {
+  const { appPath, money } = useAppRegion()
   const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
   const [lowStock, setLowStock] = useState<LowStockVariant[]>([])
   const [loading, setLoading] = useState(true)
@@ -196,18 +196,21 @@ export function InventoryView() {
     <>
       <PageHead
         title="Inventory"
-        sub="Products, stock levels and reorder exceptions"
+        sub="Products, stock levels and stock exceptions"
         actions={
           <>
-            <Link className="btn" href="/app/inventory/labels">
+            <Link className="btn" href={appPath('/app/demand-planning')}>
+              <BarChart3 size={15} /> Demand planning
+            </Link>
+            <Link className="btn" href={appPath('/app/inventory/labels')}>
               <Barcode size={15} /> Print labels
             </Link>
             {role === 'owner' && (
-              <Link className="btn" href="/app/import">
+              <Link className="btn" href={appPath('/app/import')}>
                 <Upload size={15} /> Import file
               </Link>
             )}
-            <Link className="btn btn-pri" href="/app/inventory/catalog/new">
+            <Link className="btn btn-pri" href={appPath('/app/inventory/catalog/new')}>
               <Plus size={15} /> Add product
             </Link>
           </>
@@ -241,7 +244,7 @@ export function InventoryView() {
             title="No products yet"
             body="Add your first product, or import a supplier price list to load many at once."
             action={
-              <Link className="btn btn-pri" href="/app/inventory/catalog/new">
+              <Link className="btn btn-pri" href={appPath('/app/inventory/catalog/new')}>
                 <Plus size={15} /> Add product
               </Link>
             }
@@ -276,7 +279,7 @@ export function InventoryView() {
                 <Fragment key={product.id}>
                   <tr>
                     <td className="t-strong">
-                      <Link href={`/app/inventory/catalog/${firstVariant.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <Link href={appPath(`/app/inventory/catalog/${firstVariant.id}`)} style={{ textDecoration: 'none', color: 'inherit' }}>
                         {product.name}
                       </Link>
                       {product.category ? (
@@ -304,7 +307,7 @@ export function InventoryView() {
                     <tr key={variant.id}>
                       <td style={{ paddingLeft: 28 }}>
                         <Link
-                          href={`/app/inventory/catalog/${variant.id}`}
+                          href={appPath(`/app/inventory/catalog/${variant.id}`)}
                           className="t-nested"
                           style={{ textDecoration: 'none' }}
                         >
@@ -333,8 +336,6 @@ export function InventoryView() {
           </DataTable>
         )}
       </Card>
-
-      <ReorderSuggestions />
 
       <div ref={exceptionsRef} style={{ scrollMarginTop: 16 }}>
         <Card>

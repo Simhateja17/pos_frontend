@@ -219,7 +219,7 @@ export function SuppliersView() {
                   ? 'No suppliers yet'
                   : 'No suppliers match this filter'
             }
-            body="Add the vendors you buy stock from. Their lead time feeds the reorder suggestions on the Inventory screen."
+            body="Add the vendors you buy stock from. Their lead time feeds the reorder suggestions in Demand Planning."
             action={
               filter === 'all' && !term ? (
                 <button className="btn btn-pri" onClick={openCreate}>

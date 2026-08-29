@@ -109,7 +109,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     label: 'Insights',
     items: [
       { label: 'Reports', href: '/app/reports', icon: ClipboardList },
-      { label: 'Analytics', href: '/app/analytics', icon: BarChart3 },
+      { label: 'Demand Planning', href: '/app/demand-planning', icon: BarChart3 },
       { label: 'AI Copilot', href: '/app/copilot', icon: Sparkles },
     ],
   },
