@@ -23,6 +23,18 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
 }
 
+/**
+ * Supabase Auth already returns `totp.qr_code` as an SVG data URI. Older
+ * responses can contain the raw SVG, so only wrap values that are not already
+ * usable image sources. Wrapping an existing data URI produces a broken image
+ * URL (and is what made the enrollment QR appear as alt text).
+ */
+function qrImageSource(value: string) {
+  const source = value.trim()
+  if (/^(data:image\/|https?:\/\/)/i.test(source)) return source
+  return `data:image/svg+xml;utf-8,${encodeURIComponent(source)}`
+}
+
 function AdminMark() {
   return <div className={styles.mark} aria-hidden="true">A</div>
 }
@@ -147,7 +159,7 @@ export function AdminMfaSetupPage() {
     <AuthCard title="Protect your admin account" copy="Scan this QR code in an authenticator app. You must verify a code before any Admin Panel data can load.">
       {error && <div className={styles.error} role="alert">{error}</div>}
       {enrollment && <>
-        <img className={styles.qr} src={`data:image/svg+xml;utf-8,${encodeURIComponent(enrollment.totp.qr_code)}`} alt="Authenticator enrollment QR code" />
+        <img className={styles.qr} src={qrImageSource(enrollment.totp.qr_code)} alt="Authenticator enrollment QR code" />
         <span className={styles.secret}>{enrollment.totp.secret}</span>
         <p className={styles.muted} style={{ marginTop: 8 }}>If you cannot scan, add the secret manually as a time-based one-time password.</p>
         <form onSubmit={submit} style={{ marginTop: 18 }}>
@@ -208,4 +220,3 @@ export function AdminMfaChallengePage() {
     </AuthCard>
   )
 }
-
