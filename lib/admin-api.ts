@@ -38,9 +38,17 @@ export type TenantSearchResult = {
   id: string
   businessName: string
   tradeName: string | null
-  country: string
-  city: string
+  country: string | null
+  city: string | null
   createdAt: string
+}
+
+export type AdminTenantListResult = TenantSearchResult & {
+  userCount?: number
+  activeUserCount?: number
+  subscriptionCount?: number
+  activeSubscriptionCount?: number
+  latestSubscriptionStatus?: string | null
 }
 
 export type TenantDetail = {
@@ -123,6 +131,14 @@ export async function getAdminOverview() {
 
 export async function searchAdminTenants(query: string) {
   return request<{ query: string; region: AdminRegion; total: number; results: TenantSearchResult[] }>(`/admin/tenants/search?q=${encodeURIComponent(query)}`)
+}
+
+export async function listRecentAdminTenants(options: { limit?: number; cursor?: number } = {}) {
+  const params = new URLSearchParams({
+    limit: String(options.limit ?? 20),
+    cursor: String(options.cursor ?? 0),
+  })
+  return request<{ region: AdminRegion; total: number; cursor: number; limit: number; results: AdminTenantListResult[] }>(`/admin/tenants/recent?${params}`)
 }
 
 export async function getAdminTenant(tenantId: string) {

@@ -15,6 +15,7 @@ import {
   getAdminTeam,
   getAdminTenant,
   inviteAdmin,
+  listRecentAdminTenants,
   listSupportRequests,
   resetAdminMfa,
   resendMerchantInvitation,
@@ -27,6 +28,7 @@ import {
   type AdminContext,
   type AdminOverview,
   type AdminRole,
+  type AdminTenantListResult,
   type TenantDetail,
 } from '@/lib/admin-api'
 
@@ -169,16 +171,45 @@ function styleslistItem(value: number, label: string) {
 
 function BusinessesView({ context, onError, focus }: { context: AdminContext; onError: (message: string | null) => void; focus?: 'users' | 'subscriptions' }) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Array<{ id: string; businessName: string; tradeName: string | null; country: string; city: string; createdAt: string }>>([])
+  const [results, setResults] = useState<AdminTenantListResult[]>([])
+  const [resultMode, setResultMode] = useState<'recent' | 'search'>('recent')
+  const [total, setTotal] = useState(0)
   const [detail, setDetail] = useState<TenantDetail | null>(null)
   const [busy, setBusy] = useState(false)
   const [override, setOverride] = useState({ key: 'max_locations', value: '1', ticket: '', reason: '', expiresAt: '' })
+
+  useEffect(() => {
+    let cancelled = false
+    setBusy(true)
+    onError(null)
+    setResults([])
+    setTotal(0)
+    setResultMode('recent')
+    setDetail(null)
+    void listRecentAdminTenants().then((response) => {
+      if (cancelled) return
+      setResults(response.results)
+      setTotal(response.total)
+      setResultMode('recent')
+    }).catch((cause) => {
+      if (!cancelled) onError(errorMessage(cause))
+    }).finally(() => {
+      if (!cancelled) setBusy(false)
+    })
+    return () => { cancelled = true }
+  }, [focus, onError])
 
   async function search(event?: FormEvent) {
     event?.preventDefault()
     if (query.trim().length < 2) { onError('Enter at least two characters to search.'); return }
     setBusy(true); onError(null)
-    try { const response = await searchAdminTenants(query.trim()); setResults(response.results); setDetail(null) } catch (cause) { onError(errorMessage(cause)) } finally { setBusy(false) }
+    try {
+      const response = await searchAdminTenants(query.trim())
+      setResults(response.results)
+      setTotal(response.total)
+      setResultMode('search')
+      setDetail(null)
+    } catch (cause) { onError(errorMessage(cause)) } finally { setBusy(false) }
   }
   async function openTenant(id: string) {
     setBusy(true); onError(null)
@@ -198,9 +229,9 @@ function BusinessesView({ context, onError, focus }: { context: AdminContext; on
 
   return <>
     <h1 className={styles.heading}>{focus === 'users' ? 'Merchant users' : focus === 'subscriptions' ? 'Subscriptions' : 'Businesses'}</h1>
-    <p className={styles.subheading}>Search only the {context.admin.region === 'IN' ? 'India' : 'International'} database by business, merchant identity, store, tenant ID, or provider billing identifier.</p>
+    <p className={styles.subheading}>Showing the newest {context.admin.region === 'IN' ? 'India' : 'International'} records first. Search by business, merchant identity, store, tenant ID, or provider billing identifier.</p>
     <section className={styles.card}><div className={styles.cardBody}><form className={styles.formRow} onSubmit={search}><input className={styles.input} aria-label="Tenant search" placeholder="Business, email, tenant ID, provider ID…" value={query} onChange={(event) => setQuery(event.target.value)} /><button className={`${styles.button} ${styles.primary}`} disabled={busy} type="submit">{busy ? 'Searching…' : 'Search'}</button></form></div></section>
-    {results.length > 0 && <section className={styles.card} style={{ marginTop: 16 }}><div className={styles.cardHeader}><div className={styles.cardTitle}>Matches</div><span className={styles.muted}>{results.length} shown</span></div><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Business</th><th>Location</th><th>Region</th><th>Created</th></tr></thead><tbody>{results.map((result) => <tr key={result.id}><td><button type="button" className={styles.tableButton} onClick={() => void openTenant(result.id)}>{result.tradeName || result.businessName}</button><div className={styles.listMeta}>{result.businessName}<br />{result.id}</div></td><td>{result.city}</td><td>{result.country}</td><td>{dateLabel(result.createdAt)}</td></tr>)}</tbody></table></div></section>}
+    {results.length > 0 ? <section className={styles.card} style={{ marginTop: 16 }}><div className={styles.cardHeader}><div className={styles.cardTitle}>{resultMode === 'recent' ? 'Recent regional businesses' : 'Matches'}</div><span className={styles.muted}>{total || results.length} total · {results.length} shown</span></div><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Business</th>{focus === 'users' ? <th>Users</th> : focus === 'subscriptions' ? <th>Subscriptions</th> : <th>Location</th>}{focus === 'users' ? <th>Location</th> : focus === 'subscriptions' ? <th>Latest status</th> : <th>Region</th>}<th>Created</th></tr></thead><tbody>{results.map((result) => <tr key={result.id}><td><button type="button" className={styles.tableButton} onClick={() => void openTenant(result.id)}>{result.tradeName || result.businessName}</button><div className={styles.listMeta}>{result.businessName}<br />{result.id}</div></td>{focus === 'users' ? <><td>{result.activeUserCount == null ? '—' : `${result.activeUserCount} active · ${result.userCount ?? 0} total`}</td><td>{result.city || '—'}</td></> : focus === 'subscriptions' ? <><td>{result.subscriptionCount == null ? '—' : `${result.activeSubscriptionCount ?? 0} active · ${result.subscriptionCount} total`}</td><td>{result.latestSubscriptionStatus ? <Badge value={result.latestSubscriptionStatus} /> : <span className={styles.muted}>None</span>}</td></> : <><td>{result.city || '—'}</td><td>{result.country || '—'}</td></>}<td>{dateLabel(result.createdAt)}</td></tr>)}</tbody></table></div></section> : <section className={styles.card} style={{ marginTop: 16 }}><div className={styles.empty}>{resultMode === 'recent' ? 'No businesses have been created in this regional database yet.' : 'No businesses matched that search.'}</div></section>}
     {detail && <>
       <section className={styles.card} style={{ marginTop: 16 }}><div className={styles.cardHeader}><div><div className={styles.cardTitle}>{detail.tenant.tradeName || detail.tenant.businessName}</div><div className={styles.muted}>{detail.tenant.id}</div></div><div className={styles.formRow}><button className={styles.button} disabled={busy} type="button" onClick={() => void action(() => resendMerchantInvitation(detail.tenant.id), 'Resend the merchant Owner invitation?')}>Resend invite</button><button className={`${styles.button} ${styles.danger}`} disabled={busy} type="button" onClick={() => void action(() => revokeMerchantSessions(detail.tenant.id), 'Revoke active merchant sessions for this tenant?')}>Revoke sessions</button></div></div><div className={styles.cardBody}><div className={`${styles.grid} ${styles.detailGrid}`}><div><div className={styles.muted}>Address</div><div className={styles.detailValue}>{detail.tenant.address.city}, {detail.tenant.address.state}<br />{detail.tenant.address.country} {detail.tenant.address.postalCode}</div></div><div><div className={styles.muted}>Stores</div><div className={styles.detailValue}>{detail.stores.length}</div></div><div><div className={styles.muted}>Merchant users</div><div className={styles.detailValue}>{detail.users.length}</div></div></div></div></section>
       <section className={`${styles.grid} ${styles.columns}`} style={{ marginTop: 16 }}><section className={styles.card}><div className={styles.cardHeader}><div className={styles.cardTitle}>Users and stores</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.users.map((user) => <div className={styles.listItem} key={user.id}><div className={styles.split}><span className={styles.listMain}>{user.name}</span><Badge value={user.isActive ? user.role : 'suspended'} /></div><div className={styles.listMeta}>{user.email || 'No email account'} · {user.id}</div></div>)}</div></div></section><section className={styles.card}><div className={styles.cardHeader}><div className={styles.cardTitle}>Subscriptions</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.subscriptions.map((subscription) => <div className={styles.listItem} key={String(subscription.id)}><div className={styles.split}><span className={styles.listMain}>{String(subscription.planKey ?? subscription.plan_key ?? 'Plan')}</span><Badge value={subscription.status} /></div><div className={styles.listMeta}>{String(subscription.currency ?? '')} · entitlement {String(subscription.entitlementStatus ?? subscription.entitlement_status ?? '—')} · updated {dateLabel(subscription.updatedAt ?? subscription.updated_at)}</div></div>)}</div>{detail.subscriptions.length === 0 && <div className={styles.empty}>No subscription rows.</div>}</div></section></section>
