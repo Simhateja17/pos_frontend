@@ -1,16 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, Edit3, ExternalLink } from 'lucide-react'
-import { Badge, Card, CardHead, DataTable, Modal, PageHead, SearchField } from '@/components/couture/ui'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { ArrowLeft, Edit3, ExternalLink, HandCoins } from 'lucide-react'
+import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { Pagination } from '@/components/records/orders-view'
+import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import {
   getCustomer,
+  getCustomerCredit,
   getCustomerPurchases,
+  recordCustomerRepayment,
   updateCustomer,
   type Customer,
+  type CustomerCredit,
   type CustomerPurchaseList,
   type CustomerWrite,
 } from './api'
@@ -52,16 +56,25 @@ function matchesPurchase(purchase: CustomerPurchaseList['items'][number], query:
 export function CustomerDetailView({ customerId }: { customerId: string }) {
   const { money } = useAppRegion()
   const [customer, setCustomer] = useState<Customer | null>(null)
+  const [credit, setCredit] = useState<CustomerCredit | null>(null)
   const [purchases, setPurchases] = useState<CustomerPurchaseList | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
   const [loading, setLoading] = useState(true)
   const [historyLoading, setHistoryLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [historyError, setHistoryError] = useState<string | null>(null)
+  const [creditLoading, setCreditLoading] = useState(true)
+  const [creditError, setCreditError] = useState<string | null>(null)
   const [historySearch, setHistorySearch] = useState('')
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
+  const [repaymentOpen, setRepaymentOpen] = useState(false)
+  const [repaymentAmount, setRepaymentAmount] = useState('')
+  const [repaymentNote, setRepaymentNote] = useState('')
+  const [repaymentSaving, setRepaymentSaving] = useState(false)
+  const [repaymentError, setRepaymentError] = useState<string | null>(null)
 
   const loadCustomer = useCallback(async () => {
     setLoading(true)
@@ -91,10 +104,24 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     [customerId],
   )
 
+  const loadCredit = useCallback(async () => {
+    setCreditLoading(true)
+    setCreditError(null)
+    try {
+      setCredit(await getCustomerCredit(customerId))
+    } catch (cause) {
+      setCreditError(cause instanceof Error ? cause.message : 'Customer credit details are unavailable right now.')
+    } finally {
+      setCreditLoading(false)
+    }
+  }, [customerId])
+
   useEffect(() => {
     void loadCustomer()
     void loadPurchases()
-  }, [loadCustomer, loadPurchases])
+    void loadCredit()
+    void getAuthenticatedAppContext().then((context) => setRole(context.staff.role)).catch(() => setRole(null))
+  }, [loadCustomer, loadPurchases, loadCredit])
 
   async function save(body: CustomerWrite) {
     setSaving(true)
@@ -109,6 +136,36 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     }
   }
 
+  async function collectRepayment(event: FormEvent) {
+    event.preventDefault()
+    setRepaymentError(null)
+    const amount = Number(repaymentAmount)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setRepaymentError('Enter a repayment amount greater than zero.')
+      return
+    }
+    if (credit && amount > Number(credit.balance)) {
+      setRepaymentError(`Enter ₹${Number(credit.balance).toFixed(2)} or less.`)
+      return
+    }
+
+    setRepaymentSaving(true)
+    try {
+      await recordCustomerRepayment(customerId, {
+        amount: amount.toFixed(2),
+        note: repaymentNote.trim() || null,
+      })
+      setRepaymentOpen(false)
+      setRepaymentAmount('')
+      setRepaymentNote('')
+      await loadCredit()
+    } catch (cause) {
+      setRepaymentError(cause instanceof Error ? cause.message : 'That repayment could not be recorded.')
+    } finally {
+      setRepaymentSaving(false)
+    }
+  }
+
   if (loading) return <LoadingState label="Loading customer profile" />
   if (error || !customer) return <ErrorState message={error ?? 'Customer profile unavailable'} onRetry={() => void loadCustomer()} />
 
@@ -119,11 +176,11 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     <>
       <PageHead
         title={titleFor(customer)}
-        sub="Customer profile and persisted purchase history"
+        sub="Customer profile, khata balance and persisted purchase history"
         actions={
           <>
             <Link className="btn" href="/app/customers"><ArrowLeft size={15} /> Customers</Link>
-            <button className="btn btn-pri" onClick={() => { setFormError(null); setEditOpen(true) }}><Edit3 size={15} /> Edit profile</button>
+              <button className="btn btn-pri" onClick={() => { setFormError(null); setEditOpen(true) }}><Edit3 size={15} /> Edit profile</button>
           </>
         }
       />
@@ -147,11 +204,65 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
             <Info label="Address" value={address || 'No billing address on file'} />
             <Info label="Country" value={customer.country} />
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-              GSTIN and address are stored as customer billing identity. They are not a loyalty balance, credit balance, or receivable.
+              GSTIN and address are stored as customer billing identity. Khata is tracked separately below and is shared across this business’s stores.
             </div>
           </div>
         </Card>
       </div>
+
+      <Card>
+        <CardHead
+          title="Khata balance"
+          sub="Outstanding credit across all stores"
+          right={credit && Number(credit.balance) > 0 ? (
+            <button
+              className="btn btn-pri"
+              type="button"
+              onClick={() => { setRepaymentError(null); setRepaymentOpen(true) }}
+            >
+              <HandCoins size={15} /> Collect payment
+            </button>
+          ) : null}
+        />
+        {creditLoading && <LoadingState label="Loading khata balance" rows={2} />}
+        {!creditLoading && creditError && <ErrorState message={creditError} onRetry={() => void loadCredit()} />}
+        {!creditLoading && !creditError && credit && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'end', gap: 28, flexWrap: 'wrap', padding: '18px 18px 14px' }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Outstanding</div>
+                <div className="num" style={{ marginTop: 4, fontSize: 28, fontWeight: 700, color: Number(credit.balance) > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                  {money(Number(credit.balance))}
+                </div>
+              </div>
+              <Info label="Credit limit" value={credit.creditLimit ? money(Number(credit.creditLimit)) : 'No limit set'} mono />
+              <div style={{ fontSize: 12, color: 'var(--muted)', maxWidth: 390, lineHeight: 1.5 }}>
+                Credit sales add to this balance. Repayments reduce it. The balance is derived from the ledger, not typed in by the team.
+              </div>
+            </div>
+            {credit.transactions.length === 0 ? (
+              <EmptyState title="No khata entries" body="Credit sales and repayments for this customer will appear here." />
+            ) : (
+              <DataTable cols={['Entry', 'Date', 'Store', 'Amount', 'Note']} minWidth={760}>
+                {credit.transactions.map((transaction) => (
+                  <tr key={transaction.id}>
+                    <td>
+                      <div className="t-strong">{transaction.type === 'credit_sale' ? 'Credit sale' : 'Repayment'}</div>
+                      {transaction.saleId ? <Link className="t-sub t-mono" href={`/app/orders/${encodeURIComponent(transaction.saleId)}`}>Open bill</Link> : null}
+                    </td>
+                    <td className="t-sub">{dateTime.format(new Date(transaction.createdAt))}</td>
+                    <td className="t-sub">{transaction.storeName ?? 'Store unavailable'}</td>
+                    <td className={`t-mono t-strong ${transaction.type === 'repayment' ? 'text-success' : 'text-danger'}`}>
+                      {transaction.type === 'repayment' ? '−' : '+'}{money(Number(transaction.amount))}
+                    </td>
+                    <td className="t-sub">{transaction.note ?? '—'}</td>
+                  </tr>
+                ))}
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
 
       <Card>
         <CardHead
@@ -221,7 +332,40 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
             onCancel={() => setEditOpen(false)}
             saving={saving}
             serverError={formError}
+            canEditCreditLimit={role === 'owner' || role === 'manager'}
           />
+        </Modal>
+      )}
+
+      {repaymentOpen && credit && (
+        <Modal title={`Collect from ${titleFor(customer)}`} onClose={() => !repaymentSaving && setRepaymentOpen(false)}>
+          <form onSubmit={collectRepayment}>
+            <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
+              Outstanding balance: <strong className="num">{money(Number(credit.balance))}</strong>. This records a repayment entry at the active store.
+            </p>
+            {repaymentError && <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>{repaymentError}</div>}
+            <Fld id="customer-repayment-amount" label="Amount received">
+              <input
+                id="customer-repayment-amount"
+                type="number"
+                min={0.01}
+                max={Number(credit.balance)}
+                step="0.01"
+                inputMode="decimal"
+                value={repaymentAmount}
+                onChange={(event) => setRepaymentAmount(event.target.value)}
+                placeholder="₹0.00"
+                autoFocus
+              />
+            </Fld>
+            <Fld id="customer-repayment-note" label="Note (optional)">
+              <textarea id="customer-repayment-note" rows={3} value={repaymentNote} onChange={(event) => setRepaymentNote(event.target.value)} placeholder="e.g. Cash received at the counter" />
+            </Fld>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+              <button className="btn" type="button" onClick={() => setRepaymentOpen(false)} disabled={repaymentSaving}>Cancel</button>
+              <button className="btn btn-pri" type="submit" disabled={repaymentSaving}>{repaymentSaving ? 'Recording…' : 'Record repayment'}</button>
+            </div>
+          </form>
         </Modal>
       )}
     </>

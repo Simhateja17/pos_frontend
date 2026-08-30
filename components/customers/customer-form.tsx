@@ -28,6 +28,7 @@ type FormState = {
   stateCode: string
   postalCode: string
   notes: string
+  creditLimit: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -41,6 +42,7 @@ const EMPTY_FORM: FormState = {
   stateCode: '',
   postalCode: '',
   notes: '',
+  creditLimit: '',
 }
 
 function formFromCustomer(customer: Customer | null): FormState {
@@ -56,6 +58,7 @@ function formFromCustomer(customer: Customer | null): FormState {
     stateCode: customer.stateCode ?? '',
     postalCode: customer.postalCode ?? '',
     notes: customer.notes ?? '',
+    creditLimit: customer.creditLimit ?? '',
   }
 }
 
@@ -65,12 +68,14 @@ export function CustomerForm({
   onCancel,
   saving,
   serverError,
+  canEditCreditLimit = false,
 }: {
   customer: Customer | null
   onSave: (body: CustomerWrite) => Promise<void>
   onCancel: () => void
   saving: boolean
   serverError: string | null
+  canEditCreditLimit?: boolean
 }) {
   const [form, setForm] = useState<FormState>(() => formFromCustomer(customer))
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -105,6 +110,13 @@ export function CustomerForm({
       setValidationError('PIN code must be six digits.')
       return
     }
+    const rawCreditLimit = form.creditLimit.trim()
+    if (canEditCreditLimit && rawCreditLimit) {
+      if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(rawCreditLimit) || !Number.isFinite(Number(rawCreditLimit)) || Number(rawCreditLimit) < 0) {
+        setValidationError('Credit limit must be a non-negative amount.')
+        return
+      }
+    }
 
     await onSave({
       billingName: form.billingName.trim() || null,
@@ -118,6 +130,7 @@ export function CustomerForm({
       postalCode: form.postalCode || null,
       country: 'IN',
       notes: form.notes.trim() || null,
+      ...(canEditCreditLimit ? { creditLimit: rawCreditLimit ? Number(rawCreditLimit).toFixed(2) : null } : {}),
     })
   }
 
@@ -144,6 +157,26 @@ export function CustomerForm({
       <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
         Phone or email is required. Values are normalized before duplicate checking.
       </div>
+
+      {canEditCreditLimit && (
+        <>
+          <Fld id="customer-credit-limit" label="Credit limit (optional)">
+            <input
+              id="customer-credit-limit"
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={form.creditLimit}
+              onChange={(event) => setField('creditLimit', event.target.value)}
+              placeholder="Leave blank for no limit"
+            />
+          </Fld>
+          <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+            Managers and owners can set or clear this limit. A cashier can still use credit below the limit.
+          </div>
+        </>
+      )}
 
       <Fld id="customer-gstin" label="GSTIN (optional)">
         <input id="customer-gstin" value={form.gstin} onChange={(event) => setField('gstin', event.target.value.toUpperCase())} placeholder="27ABCDE1234F1Z5" maxLength={15} />

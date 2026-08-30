@@ -1810,6 +1810,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/master-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Search Ambel-curated regional item identities for inventory autocomplete. Manager+. */
+        get: {
+            parameters: {
+                query: {
+                    query: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ranked regional master-item suggestions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MasterItemList"];
+                    };
+                };
+                /** @description Search query is too short or invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/products/{productId}": {
         parameters: {
             query?: never;
@@ -1852,7 +1898,40 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Update shop-owned product details or activate/deactivate the product without deleting history. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProductRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated product */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description Product not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/products/{productId}/variants/{variantId}": {
@@ -2348,7 +2427,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** @description Complete a checkout sale — server recomputes totals, enforces payment-sum, gates above-threshold discounts behind manager+ approval (D-05), writes sale+lines+payments+stock movements atomically. Response includes the sale's payments array. */
+        /** @description Complete a checkout sale — server recomputes totals, enforces payment-sum, gates above-threshold discounts and customer-credit-limit overrides behind manager+ approval, and writes sale+lines+payments+stock movements plus any credit ledger row atomically. Response includes the sale's payments array. */
         post: {
             parameters: {
                 query?: never;
@@ -2378,7 +2457,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Discount exceeds the tenant's manager-approval threshold and the acting role is not manager+ */
+                /** @description Discount or customer credit limit requires manager or owner approval */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -2454,7 +2533,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    method?: "cash" | "card" | "check" | "upi";
+                    method?: "cash" | "card" | "check" | "upi" | "credit";
                     status?: "completed" | "refunded";
                     from?: string;
                     to?: string;
@@ -2943,6 +3022,339 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["Customer"][];
                     };
+                };
+            };
+        };
+        put?: never;
+        /** @description Create a tenant-wide customer profile for checkout or billing. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCustomerRequest"];
+                };
+            };
+            responses: {
+                /** @description Customer created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Customer"];
+                    };
+                };
+                /** @description Invalid customer profile */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Phone or email already belongs to a customer */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read one tenant-wide customer profile, including the optional credit limit. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Customer profile */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Customer"];
+                    };
+                };
+                /** @description Customer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Update customer identity/billing fields. Changing creditLimit requires a manager or owner. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateCustomerRequest"];
+                };
+            };
+            responses: {
+                /** @description Customer updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Customer"];
+                    };
+                };
+                /** @description Invalid customer update */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Changing a credit limit requires a manager or owner */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Customer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Phone or email already belongs to another customer */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/customers/{customerId}/purchases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read a customer’s store-scoped persisted purchase summaries. */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Customer purchases */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerPurchaseList"];
+                    };
+                };
+                /** @description Customer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}/credit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read a customer’s tenant-wide derived khata balance, optional limit, and recent store-tagged ledger entries. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Customer credit summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerCredit"];
+                    };
+                };
+                /** @description Customer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customers/{customerId}/credit/repayments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Append a standalone partial or full repayment to a customer’s khata at the active store. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCustomerCreditRepaymentRequest"];
+                };
+            };
+            responses: {
+                /** @description Repayment recorded */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerCreditRepaymentResponse"];
+                    };
+                };
+                /** @description Invalid repayment, no store selected, or repayment exceeds balance */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Customer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receivables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List tenant-wide customers with a positive derived khata balance. Store scope is intentionally not applied to the balance. */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    sort?: "balance_desc" | "balance_asc" | "name_asc" | "recent";
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Outstanding customer balances */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReceivablesList"];
+                    };
+                };
+                /** @description Invalid receivables filters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -6047,6 +6459,8 @@ export interface components {
         };
         CreateSubscriptionRequest: {
             planKey: string;
+            /** Format: uuid */
+            privateOfferId?: string;
             billingCycle: components["schemas"]["BillingCycle"];
             /** Format: uuid */
             idempotencyKey: string;
@@ -6518,6 +6932,12 @@ export interface components {
             id: string;
             name: string;
             /** Format: uuid */
+            masterItemId: string | null;
+            brand: string | null;
+            description: string | null;
+            internalNotes: string | null;
+            isActive: boolean;
+            /** Format: uuid */
             categoryId: string | null;
             category: string | null;
             createdAt: string;
@@ -6535,7 +6955,16 @@ export interface components {
             color: string | null;
             material: string | null;
             price: string;
+            mrp: string | null;
+            listPrice: string | null;
             movingAverageCost: string | null;
+            hsnSac: string | null;
+            purchaseUnit: string | null;
+            purchasePackSize: string | null;
+            trackInventory: boolean;
+            allowNegativeStock: boolean;
+            /** Format: date */
+            expiryDate: string | null;
             isTaxable: boolean;
             taxRatePercent: string | null;
             reorderThreshold: number;
@@ -6545,8 +6974,27 @@ export interface components {
         };
         /** @enum {string} */
         UnitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "box" | "pack" | "set" | "pair";
+        MasterItemList: components["schemas"]["MasterItem"][];
+        MasterItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            brand: string | null;
+            category: string;
+            subcategory: string | null;
+            packSize: string | null;
+            packUnit: components["schemas"]["UnitOfMeasure"];
+            sellUnit: components["schemas"]["UnitOfMeasure"];
+            barcode: string | null;
+            displayName: string;
+        };
         CreateProductRequest: {
             name: string;
+            /** Format: uuid */
+            masterItemId?: string;
+            brand?: string;
+            description?: string;
+            internalNotes?: string;
             /** Format: uuid */
             categoryId?: string;
             categoryName?: string;
@@ -6558,9 +7006,27 @@ export interface components {
                 color?: string;
                 material?: string;
                 price: number;
+                mrp?: number;
+                listPrice?: number;
+                initialCostPrice?: number;
+                hsnSac?: string;
+                purchaseUnit?: string;
+                purchasePackSize?: number;
+                /** @default true */
+                trackInventory: boolean;
+                /** @default false */
+                allowNegativeStock: boolean;
+                /** Format: date */
+                expiryDate?: string;
                 taxRatePercent: number;
                 reorderThreshold?: number;
             }[];
+        };
+        UpdateProductRequest: {
+            brand?: string | null;
+            description?: string | null;
+            internalNotes?: string | null;
+            isActive?: boolean;
         };
         UpdateVariantRequest: {
             size?: string;
@@ -6569,6 +7035,16 @@ export interface components {
             barcode?: string | null;
             unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
             price?: number;
+            costPrice?: number | null;
+            mrp?: number | null;
+            listPrice?: number | null;
+            hsnSac?: string | null;
+            purchaseUnit?: string | null;
+            purchasePackSize?: number | null;
+            trackInventory?: boolean;
+            allowNegativeStock?: boolean;
+            /** Format: date */
+            expiryDate?: string | null;
             taxRatePercent?: number;
             reorderThreshold?: number;
         };
@@ -6701,7 +7177,7 @@ export interface components {
             /** Format: uuid */
             saleId: string;
             /** @enum {string} */
-            method: "cash" | "card" | "check" | "upi";
+            method: "cash" | "card" | "check" | "upi" | "credit";
             /** @enum {string} */
             direction: "payment" | "refund";
             amount: string;
@@ -6739,7 +7215,7 @@ export interface components {
         };
         PaymentInput: {
             /** @enum {string} */
-            method: "cash" | "card" | "check" | "upi";
+            method: "cash" | "card" | "check" | "upi" | "credit";
             amount: string;
             referenceCode?: string;
         };
@@ -6951,8 +7427,114 @@ export interface components {
             postalCode: string | null;
             country: string;
             notes: string | null;
+            creditLimit: string | null;
             createdAt: string;
             updatedAt: string;
+        };
+        CreateCustomerRequest: {
+            name?: string | null;
+            billingName?: string | null;
+            phone?: string | null;
+            /** Format: email */
+            email?: string | null;
+            gstin?: string | null;
+            addressLine1?: string | null;
+            addressLine2?: string | null;
+            city?: string | null;
+            stateCode?: string | null;
+            postalCode?: string | null;
+            country?: string | null;
+            notes?: string | null;
+        };
+        UpdateCustomerRequest: {
+            name?: string | null;
+            billingName?: string | null;
+            phone?: string | null;
+            /** Format: email */
+            email?: string | null;
+            gstin?: string | null;
+            addressLine1?: string | null;
+            addressLine2?: string | null;
+            city?: string | null;
+            stateCode?: string | null;
+            postalCode?: string | null;
+            country?: string | null;
+            notes?: string | null;
+            creditLimit?: string | null;
+            credit_limit?: string | null;
+        };
+        CustomerPurchaseList: {
+            items: components["schemas"]["CustomerPurchase"][];
+            total: number;
+            nextCursor: string | null;
+        };
+        CustomerPurchase: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            documentId: string | null;
+            documentNumber: string | null;
+            documentType: string | null;
+            date: string;
+            store: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            total: string;
+            status: string;
+            paymentMethods: string[];
+        };
+        CustomerCredit: {
+            /** Format: uuid */
+            customerId: string;
+            balance: string;
+            creditLimit: string | null;
+            transactions: components["schemas"]["CustomerCreditTransaction"][];
+        };
+        CustomerCreditTransaction: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            customerId: string;
+            /** Format: uuid */
+            storeId: string;
+            storeName: string | null;
+            type: components["schemas"]["CustomerCreditTransactionType"];
+            amount: string;
+            /** Format: uuid */
+            saleId: string | null;
+            /** Format: uuid */
+            recordedBy: string;
+            note: string | null;
+            createdAt: string;
+        };
+        /** @enum {string} */
+        CustomerCreditTransactionType: "credit_sale" | "repayment";
+        CustomerCreditRepaymentResponse: {
+            transaction: components["schemas"]["CustomerCreditTransaction"];
+            balance: string;
+            creditLimit: string | null;
+        };
+        CreateCustomerCreditRepaymentRequest: {
+            amount: string;
+            note?: string | null;
+        };
+        ReceivablesList: {
+            items: components["schemas"]["Receivable"][];
+            total: number;
+            outstandingTotal: string;
+        };
+        Receivable: {
+            /** Format: uuid */
+            customerId: string;
+            name: string | null;
+            billingName: string | null;
+            phone: string | null;
+            email: string | null;
+            balance: string;
+            creditLimit: string | null;
+            recentActivityAt: string | null;
         };
         ResendReceiptResponse: {
             ok: boolean;

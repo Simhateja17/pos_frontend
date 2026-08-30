@@ -15,8 +15,29 @@ export type Customer = {
   postalCode: string | null
   country: string
   notes: string | null
+  creditLimit: string | null
   createdAt: string
   updatedAt: string
+}
+
+export type CustomerCreditTransaction = {
+  id: string
+  customerId: string
+  storeId: string
+  storeName: string | null
+  type: 'credit_sale' | 'repayment'
+  amount: string
+  saleId: string | null
+  recordedBy: string
+  note: string | null
+  createdAt: string
+}
+
+export type CustomerCredit = {
+  customerId: string
+  balance: string
+  creditLimit: string | null
+  transactions: CustomerCreditTransaction[]
 }
 
 export type CustomerList = {
@@ -55,6 +76,7 @@ export type CustomerWrite = {
   postalCode?: string | null
   country?: string | null
   notes?: string | null
+  creditLimit?: string | null
 }
 
 export class CustomerApiError extends Error {
@@ -135,5 +157,29 @@ export function getCustomerPurchases(customerId: string, cursor?: string): Promi
       headers: await headersOrThrow(),
     }),
     'Purchase history is unavailable right now. Please retry.',
+  )
+}
+
+export function getCustomerCredit(customerId: string): Promise<CustomerCredit> {
+  return read(
+    async () => untypedApiClient.GET('/customers/{customerId}/credit', {
+      params: { path: { customerId } },
+      headers: await headersOrThrow(),
+    }),
+    'Customer credit details are unavailable right now. Please retry.',
+  )
+}
+
+export function recordCustomerRepayment(
+  customerId: string,
+  body: { amount: string; note?: string | null },
+): Promise<{ transaction: CustomerCreditTransaction; balance: string; creditLimit: string | null }> {
+  return read(
+    async () => untypedApiClient.POST('/customers/{customerId}/credit/repayments', {
+      params: { path: { customerId } },
+      body,
+      headers: await headersOrThrow(),
+    }),
+    'That repayment could not be recorded. Please retry.',
   )
 }

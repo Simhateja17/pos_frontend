@@ -27,7 +27,7 @@ type Sale = {
     lineTotal: string
   }[]
   payments: {
-    method: 'cash' | 'card' | 'check' | 'upi'
+    method: 'cash' | 'card' | 'check' | 'upi' | 'credit'
     direction: 'payment' | 'refund'
     amount: string
     referenceCode: string | null

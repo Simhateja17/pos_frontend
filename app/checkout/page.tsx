@@ -47,6 +47,7 @@ type Variant = {
 type Product = {
   id: string
   name: string
+  isActive: boolean
   variants: Variant[]
 }
 
@@ -259,6 +260,7 @@ function CheckoutPageInner() {
   const [isCharging, setIsCharging] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [approvalReason, setApprovalReason] = useState<'discount' | 'credit'>('discount')
   const [pendingSaleBody, setPendingSaleBody] = useState<PendingSaleBody | null>(null)
 
   // Post-charge receipt (CHECK-06). Stays visible until the cashier starts a
@@ -371,6 +373,7 @@ function CheckoutPageInner() {
     }
     const hits: SearchHit[] = []
     for (const product of data as Product[]) {
+      if (!product.isActive) continue
       for (const variant of product.variants) {
         hits.push({ variant, productName: product.name })
       }
@@ -608,7 +611,7 @@ function CheckoutPageInner() {
   }
 
   function handleAddTenderRow() {
-    const availableMethods: TenderMethod[] = ['cash', 'card', 'upi']
+    const availableMethods: TenderMethod[] = ['cash', 'card', 'upi', 'credit']
     const next = availableMethods.find((m) => !tenderRows.some((r) => r.method === m))
     if (!next) return
     setTenderMethods([...tenderMethods, next])
@@ -756,8 +759,29 @@ function CheckoutPageInner() {
       return
     }
 
+    const creditAmount = tenderRows
+      .filter((row) => row.method === 'credit')
+      .reduce((sum, row) => sum + Number(row.amount || '0'), 0)
+    if (creditAmount > 0) {
+      const hasCustomerIdentity = Boolean(customer?.id || (showNewCustomerForm && (newCustomerPhone.trim() || newCustomerEmail.trim())))
+      if (!hasCustomerIdentity) {
+        setChargeError('Credit sales need a saved customer. Select one or create one with a phone or email.')
+        return
+      }
+      if (!isOnline) {
+        setChargeError('Credit sales need a live connection so Ambel can check the customer balance and credit limit.')
+        return
+      }
+    }
+
     const errorBody = error as { error?: string; code?: string } | undefined
     if (response?.status === 403 && errorBody?.code === 'discount_approval_required') {
+      setApprovalReason('discount')
+      setShowApprovalModal(true)
+      return
+    }
+    if (response?.status === 403 && errorBody?.code === 'credit_limit_override_required') {
+      setApprovalReason('credit')
       setShowApprovalModal(true)
       return
     }
@@ -1303,6 +1327,7 @@ function CheckoutPageInner() {
 
       <ManagerApprovalModal
         open={showApprovalModal}
+        reason={approvalReason}
         onApproved={handleApproved}
         onCancel={() => setShowApprovalModal(false)}
       />

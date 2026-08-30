@@ -29,7 +29,7 @@ export interface ReceiptSale {
   changeDue: string
   lines: ReceiptLine[]
   payments?: {
-    method: 'cash' | 'card' | 'check' | 'upi'
+    method: 'cash' | 'card' | 'check' | 'upi' | 'credit'
     direction: 'payment' | 'refund'
     amount: string
     referenceCode: string | null
@@ -43,6 +43,7 @@ const PAYMENT_LABELS: Record<ReceiptPayment['method'], string> = {
   card: 'Card',
   check: 'Check',
   upi: 'UPI',
+  credit: 'Credit',
 }
 
 const INR = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

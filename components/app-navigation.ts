@@ -102,7 +102,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Payments', href: '/app/payments', icon: BadgeIndianRupee },
       { label: 'Expenses', href: '/app/expenses', icon: Wallet },
-      { label: 'Receivables', href: '/app/receivables', icon: ReceiptText },
+      { label: 'Receivables', href: '/app/receivables', icon: ReceiptText, cashierAccessible: true },
       { label: 'GST Documents', href: '/app/documents', icon: ReceiptText, cashierAccessible: true },
     ],
   },

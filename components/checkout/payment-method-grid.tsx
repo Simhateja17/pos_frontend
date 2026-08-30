@@ -1,9 +1,9 @@
 'use client'
 
-import { Banknote, CreditCard, QrCode } from 'lucide-react'
+import { Banknote, CreditCard, HandCoins, QrCode } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-export type TenderMethod = 'cash' | 'card' | 'upi'
+export type TenderMethod = 'cash' | 'card' | 'upi' | 'credit'
 
 export interface TenderRow {
   method: TenderMethod
@@ -16,16 +16,18 @@ const METHOD_LABELS: Record<TenderMethod, string> = {
   cash: 'Cash',
   card: 'Card',
   upi: 'UPI',
+  credit: 'Credit',
 }
 
 const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
   cash: <Banknote size={16} strokeWidth={1.85} />,
   card: <CreditCard size={16} strokeWidth={1.85} />,
   upi: <QrCode size={16} strokeWidth={1.85} />,
+  credit: <HandCoins size={16} strokeWidth={1.85} />,
 }
 
 /** These are the persisted POS tender methods. UPI records an external UPI reference; it is not a gateway capture. */
-const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi']
+const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi', 'credit']
 
 const inrFormat = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
 

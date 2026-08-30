@@ -15,6 +15,7 @@ const PAYMENT_LABELS: Record<Sale['payments'][number]['method'], string> = {
   card: 'Card',
   check: 'Check',
   upi: 'UPI',
+  credit: 'Credit',
 }
 
 const STATUS_TONE: Record<string, BadgeTone> = {

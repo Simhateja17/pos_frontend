@@ -27,6 +27,15 @@ type Variant = {
   color: string | null
   material: string | null
   price: string
+  mrp: string | null
+  listPrice: string | null
+  movingAverageCost: string | null
+  hsnSac: string | null
+  purchaseUnit: string | null
+  purchasePackSize: string | null
+  trackInventory: boolean
+  allowNegativeStock: boolean
+  expiryDate: string | null
   taxRatePercent: string | null
   reorderThreshold: number
   identityLocked: boolean
@@ -37,6 +46,7 @@ type Variant = {
 type Product = {
   id: string
   name: string
+  isActive: boolean
   category: string | null
   createdAt: string
   variants: Variant[]
@@ -103,6 +113,14 @@ export default function VariantDetailPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const [editPrice, setEditPrice] = useState('')
+  const [editMrp, setEditMrp] = useState('')
+  const [editCostPrice, setEditCostPrice] = useState('')
+  const [editHsnSac, setEditHsnSac] = useState('')
+  const [editPurchaseUnit, setEditPurchaseUnit] = useState('')
+  const [editPurchasePackSize, setEditPurchasePackSize] = useState('')
+  const [editExpiryDate, setEditExpiryDate] = useState('')
+  const [editTrackInventory, setEditTrackInventory] = useState(true)
+  const [editAllowNegativeStock, setEditAllowNegativeStock] = useState(false)
   const [editTaxRatePercent, setEditTaxRatePercent] = useState('')
   const [editReorderThreshold, setEditReorderThreshold] = useState('')
   const [editBarcode, setEditBarcode] = useState('')
@@ -168,6 +186,14 @@ export default function VariantDetailPage() {
     setProduct(foundProduct)
     setVariant(foundVariant)
     setEditPrice(foundVariant.price)
+    setEditMrp(foundVariant.mrp ?? '')
+    setEditCostPrice(foundVariant.movingAverageCost ?? '')
+    setEditHsnSac(foundVariant.hsnSac ?? '')
+    setEditPurchaseUnit(foundVariant.purchaseUnit ?? '')
+    setEditPurchasePackSize(foundVariant.purchasePackSize ?? '')
+    setEditExpiryDate(foundVariant.expiryDate ?? '')
+    setEditTrackInventory(foundVariant.trackInventory)
+    setEditAllowNegativeStock(foundVariant.allowNegativeStock)
     setEditTaxRatePercent(foundVariant.taxRatePercent ?? '')
     setEditReorderThreshold(String(foundVariant.reorderThreshold))
     setEditBarcode(foundVariant.barcode ?? '')
@@ -304,6 +330,14 @@ export default function VariantDetailPage() {
       params: { path: { productId: product.id, variantId: variant.id } },
       body: {
         price: Number(editPrice),
+        mrp: Number(editMrp),
+        costPrice: editCostPrice.trim() ? Number(editCostPrice) : null,
+        hsnSac: editHsnSac.trim() || null,
+        purchaseUnit: editPurchaseUnit.trim() || null,
+        purchasePackSize: editPurchasePackSize.trim() ? Number(editPurchasePackSize) : null,
+        expiryDate: editExpiryDate || null,
+        trackInventory: editTrackInventory,
+        allowNegativeStock: editTrackInventory && editAllowNegativeStock,
         reorderThreshold: Number(editReorderThreshold),
         // Null clears a mis-typed code; undefined would leave it untouched.
         barcode: editBarcode.trim() || null,
@@ -320,6 +354,16 @@ export default function VariantDetailPage() {
       return
     }
 
+    await loadVariant()
+  }
+
+  async function toggleProductStatus() {
+    if (!product) return
+    const headers = await authHeaders()
+    const { error } = await apiClient.PATCH('/products/{productId}', {
+      params: { path: { productId: product.id } }, body: { isActive: !product.isActive }, headers,
+    })
+    if (error) { setEditError('Product status could not be changed. Try again.'); return }
     await loadVariant()
   }
 
@@ -467,13 +511,15 @@ export default function VariantDetailPage() {
         sub={`${variantAttributes(variant)} · SKU ${variant.sku}`}
         actions={
           <>
-            <button className="btn btn-pri" onClick={() => setReceiveOpen(true)}>
+            <Badge tone={product.isActive ? 'green' : 'grey'}>{product.isActive ? 'Active' : 'Inactive'}</Badge>
+            <button className="btn" onClick={() => void toggleProductStatus()}>{product.isActive ? 'Mark inactive' : 'Reactivate'}</button>
+            <button className="btn btn-pri" disabled={!variant.trackInventory} onClick={() => setReceiveOpen(true)}>
               Receive stock
             </button>
-            <button className="btn" onClick={() => setAdjustOpen(true)}>
+            <button className="btn" disabled={!variant.trackInventory} onClick={() => setAdjustOpen(true)}>
               Adjust stock
             </button>
-            <button className="btn" onClick={() => setTransferOpen(true)}>
+            <button className="btn" disabled={!variant.trackInventory} onClick={() => setTransferOpen(true)}>
               Transfer stock
             </button>
           </>
@@ -560,6 +606,9 @@ export default function VariantDetailPage() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 8 }}>
+                <Fld id="edit-mrp" label="MRP">
+                  <input id="edit-mrp" type="number" min="0" step="0.01" required value={editMrp} onChange={(e) => setEditMrp(e.target.value)} />
+                </Fld>
                 <Fld id="edit-price" label={unitSuffix(editUnit) ? `Price per ${unitSuffix(editUnit)}` : 'Price'}>
                   <input
                     id="edit-price"
@@ -594,6 +643,19 @@ export default function VariantDetailPage() {
                   />
                 </Fld>
               </div>
+
+              <details style={{ marginTop: 12 }}>
+                <summary className="t-strong" style={{ cursor: 'pointer' }}>Optional purchasing and stock details</summary>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, marginTop: 10 }}>
+                  <Fld id="edit-cost-price" label="Cost price"><input id="edit-cost-price" type="number" min="0" step="0.01" value={editCostPrice} onChange={(e) => setEditCostPrice(e.target.value)} placeholder="Optional" /></Fld>
+                  <Fld id="edit-expiry-date" label="Expiry date"><input id="edit-expiry-date" type="date" value={editExpiryDate} onChange={(e) => setEditExpiryDate(e.target.value)} /></Fld>
+                  <Fld id="edit-purchase-unit" label="Purchase unit"><input id="edit-purchase-unit" value={editPurchaseUnit} onChange={(e) => setEditPurchaseUnit(e.target.value)} placeholder="Carton, case, bag…" /></Fld>
+                  <Fld id="edit-purchase-pack-size" label="Units per purchase pack"><input id="edit-purchase-pack-size" type="number" min="0.001" step="0.001" value={editPurchasePackSize} onChange={(e) => setEditPurchasePackSize(e.target.value)} placeholder="Optional" /></Fld>
+                  <Fld id="edit-hsn-sac" label="HSN/SAC"><input id="edit-hsn-sac" inputMode="numeric" value={editHsnSac} onChange={(e) => setEditHsnSac(e.target.value)} placeholder="Optional" /></Fld>
+                </div>
+                <label style={{ display: 'flex', gap: 8, marginTop: 10 }}><input type="checkbox" checked={editTrackInventory} onChange={(e) => setEditTrackInventory(e.target.checked)} /> Track inventory</label>
+                <label style={{ display: 'flex', gap: 8, marginTop: 8, opacity: editTrackInventory ? 1 : 0.55 }}><input type="checkbox" checked={editAllowNegativeStock} disabled={!editTrackInventory} onChange={(e) => setEditAllowNegativeStock(e.target.checked)} /> Allow selling when stock reaches zero</label>
+              </details>
 
               <button type="submit" className="btn btn-pri" disabled={isSavingEdit} style={{ marginTop: 10 }}>
                 {isSavingEdit ? 'Saving…' : 'Save changes'}
