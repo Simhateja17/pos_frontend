@@ -70,6 +70,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
   const [contextError, setContextError] = useState<AuthenticatedRequestError | null>(null)
   const [isContextLoading, setIsContextLoading] = useState(true)
   const [deviceGate, setDeviceGate] = useState<'checking' | 'ready' | 'redirecting'>('checking')
+  const [billingGate, setBillingGate] = useState<Awaited<ReturnType<typeof getAuthenticatedBillingStatus>> | null>(null)
   const drawerRef = useRef<HTMLElement>(null)
 
   const loadContext = useCallback(async () => {
@@ -168,13 +169,15 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
     if (pathname === '/app' || deviceGate !== 'ready') return
     void getAuthenticatedBillingStatus()
       .then((status) => {
-        if (!status.accessAllowed) router.replace('/plans')
+        setBillingGate(status)
+        const billingPath = toIndiaPath(pathname) === '/app/subscription'
+        if (!status.accessAllowed && !billingPath) router.replace(`/plans?region=${region}`)
       })
       .catch(() => {
         // Operational API calls remain server-gated. A transient status read
         // must not turn a recoverable network failure into a logout.
       })
-  }, [deviceGate, pathname, router])
+  }, [deviceGate, pathname, region, router])
 
   useEffect(() => {
     if (context?.staff.role && !roleCanAccessAppPath(context.staff.role, pathname)) {
@@ -410,6 +413,11 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
          * user open a tour destination and still click/type in its fields.
          */}
         {contentReady && <GuidedTour />}
+        {contentReady && billingGate?.entitlementSource === 'trial' && (
+          <div role="status" style={{ padding: '12px 26px', borderBottom: '1px solid #f0cf8b', background: '#fff8e7', color: '#694c12', fontSize: 13 }}>
+            You are using a free trial. Review the exact recurring amount before the trial ends in <Link href={appPath('/app/subscription')}>Plan &amp; subscription</Link>.
+          </div>
+        )}
         <main className={`content ${styles.content}`} aria-busy={!contentReady || undefined}>
           {contentReady ? children : <ShellContentSkeleton />}
         </main>

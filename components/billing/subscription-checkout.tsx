@@ -20,6 +20,7 @@ type Props = {
   title?: string
   subtitle?: string
   initialPlanKey?: string
+  privateOfferId?: string
 }
 
 type CheckoutResponse = {
@@ -75,7 +76,7 @@ function providerError(error: unknown, fallback: string): string {
   return fallback
 }
 
-export function SubscriptionCheckout({ region, successPath, title, subtitle, initialPlanKey }: Props) {
+export function SubscriptionCheckout({ region, successPath, title, subtitle, initialPlanKey, privateOfferId }: Props) {
   const router = useRouter()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [cycle, setCycle] = useState<Cycle>('annual')
@@ -95,9 +96,9 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     ;(async () => {
       try {
         const headers = await authHeaders()
-        const { data, error: requestError } = await apiClient.GET('/billing/plans', {
-          params: { query: { region } }, headers,
-        })
+        const response = await fetch(`${process.env.NODE_ENV === 'production' ? '/_backend' : process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/billing/plans?region=${region}${privateOfferId ? `&offer=${encodeURIComponent(privateOfferId)}` : ''}`, { headers })
+        const data = response.ok ? await response.json() as Catalog : null
+        const requestError = response.ok ? null : await response.json().catch(() => ({ error: 'We could not load this offer.' }))
         if (requestError || !data) throw new Error(providerError(requestError, 'We could not load the plans right now.'))
         if (!active) return
         setCatalog(data)
@@ -109,7 +110,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       }
     })()
     return () => { active = false }
-  }, [region])
+  }, [region, privateOfferId])
 
   useEffect(() => {
     setAttemptKey(typeof window === 'undefined' ? null : window.sessionStorage.getItem(attemptStorageKey))
@@ -229,7 +230,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       }
       const { data, error: createError, response } = await apiClient.POST('/billing/subscription', {
         headers,
-        body: { planKey: selected.key, billingCycle: cycle, idempotencyKey: currentAttemptKey },
+        body: { planKey: selected.key, billingCycle: cycle, idempotencyKey: currentAttemptKey, ...(privateOfferId ? { privateOfferId } : {}) } as never,
       })
       if (createError || !data) {
         throw new Error(providerError(createError, response.status === 403 ? 'Only the account owner can start a subscription.' : 'We could not start this subscription.'))

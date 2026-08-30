@@ -12,7 +12,8 @@ import { SubscriptionCheckout } from '@/components/billing/subscription-checkout
 
 function PlansRouter() {
   const region = useSearchParams().get('region') === 'INTL' ? 'INTL' : 'IN'
-  return <SubscriptionCheckout region={region} successPath="/store-type" />
+  const offer = useSearchParams().get('offer') ?? undefined
+  return <SubscriptionCheckout region={region} successPath="/store-type" privateOfferId={offer} />
 }
 
 export default function PlansPage() {

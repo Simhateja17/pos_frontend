@@ -64,6 +64,7 @@ export type TenantDetail = {
   subscriptions: Array<Record<string, unknown>>
   billingTimeline: Array<Record<string, unknown>>
   entitlements: Array<Record<string, unknown>>
+  privateOffers: Array<Record<string, unknown>>
   operationalFailures: { emails: Array<Record<string, unknown>>; imports: Array<Record<string, unknown>>; forecasts: Array<Record<string, unknown>> }
 }
 
@@ -209,6 +210,16 @@ export async function getSupportTenant(requestId: string, sessionToken: string) 
 
 export async function createEntitlementOverride(payload: { tenantId: string; entitlementKey: string; overrideValue: number; justification: string; ticketId: string; expiresAt: string }) {
   return request<{ override: Record<string, unknown> }>('/admin/entitlement-overrides', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function createPrivateBillingOffer(payload: {
+  tenantId: string; basePlanKey: 'starter' | 'growth' | 'pro'; billingCycle: 'monthly' | 'annual'
+  negotiatedBaseAmountMinor: number; includedLocations: number; includedRegisters: number; includedUsers: number
+  additionalLocationUnitAmountMinor: number; additionalRegisterUnitAmountMinor: number; additionalUserUnitAmountMinor: number
+  trialDays: number; latestActivationAt: string; priceValidity: 'until_changed' | 'fixed_cycles'
+  fixedBillingCycles: number | null; internalReason: string; salesReference?: string | null
+}) {
+  return request<{ offer: Record<string, unknown> }>('/admin/private-billing-offers', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export async function retryAdminOperation(payload: { operationKind: string; operationId: string; idempotencyKey: string }) {
