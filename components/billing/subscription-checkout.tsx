@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders as sharedAuthHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
+import { billingCycleForCatalog } from '@/lib/billing/private-offer-path'
 import styles from './subscription-checkout.module.css'
 import { CurrencyMark } from '@/components/marketing/currency-mark'
 
@@ -110,7 +111,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         if (!active) return
         setCatalog(data)
         setResolvedPrivateOfferId(data.privateOfferId ?? privateOfferId ?? null)
-        if (privateOfferId && data.billingCycle) setCycle(data.billingCycle)
+        setCycle((current) => billingCycleForCatalog(current, data))
         if (!data.plans.some((plan) => plan.key === selectedKey)) setSelectedKey(data.plans[0]?.key ?? '')
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : 'We could not load the plans right now.')

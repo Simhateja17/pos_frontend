@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { checkoutPathWithOffer } from '../../lib/billing/private-offer-path.ts'
+import { billingCycleForCatalog, checkoutPathWithOffer } from '../../lib/billing/private-offer-path.ts'
 
 test('keeps a negotiated offer attached to the checkout redirect', () => {
   assert.equal(
@@ -11,4 +11,15 @@ test('keeps a negotiated offer attached to the checkout redirect', () => {
 
 test('falls back to the regional catalogue when there is no offer', () => {
   assert.equal(checkoutPathWithOffer('IN'), '/plans?region=IN')
+})
+
+test('uses the offer cycle when a bare checkout URL resolves to a private offer', () => {
+  assert.equal(
+    billingCycleForCatalog('annual', { privateOfferId: 'offer-1', billingCycle: 'monthly' }),
+    'monthly',
+  )
+})
+
+test('keeps the selected cycle for the public catalogue', () => {
+  assert.equal(billingCycleForCatalog('annual', {}), 'annual')
 })
