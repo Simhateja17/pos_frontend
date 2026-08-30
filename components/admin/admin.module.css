@@ -85,6 +85,9 @@
 .formRow { display: flex; gap: 9px; flex-wrap: wrap; }
 .input, .select { min-height: 39px; border-radius: 8px; border: 1px solid #cbd9e8; background: #fff; color: #17345b; padding: 0 11px; font: inherit; font-size: 12px; }
 .input { min-width: 220px; flex: 1; }
+.trialControl { display: flex; flex: 1 1 300px; min-width: 300px; gap: 9px; }
+.trialControl .input { min-width: 0; }
+.trialUnit { flex: 0 0 116px; }
 .button { min-height: 39px; border: 1px solid #bfd0e1; border-radius: 8px; padding: 0 13px; background: #fff; color: #315b87; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
 .button:hover { background: #f4f8fc; }
 .primary { border-color: #2869bf; background: #2869bf; color: #fff; }
