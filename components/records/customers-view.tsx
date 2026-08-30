@@ -14,10 +14,12 @@ import {
   type CustomerWrite,
 } from '@/components/customers/api'
 import { CustomerForm } from '@/components/customers/customer-form'
+import { useAppRegion } from '@/lib/app-region'
 
 const dateOnly = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' })
 
 export function CustomersView() {
+  const { appPath } = useAppRegion()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const [data, setData] = useState<CustomerList | null>(null)
@@ -119,7 +121,7 @@ export function CustomersView() {
                 <td className="t-mono t-sub">{customer.gstin ?? '-'}</td>
                 <td className="t-mono t-sub">{dateOnly.format(new Date(customer.createdAt))}</td>
                 <td>
-                  <Link className="btn btn-sm" href={`/app/customers/${customer.id}`}>
+                  <Link className="btn btn-sm" href={appPath(`/app/customers/${customer.id}`)}>
                     View profile
                   </Link>
                 </td>

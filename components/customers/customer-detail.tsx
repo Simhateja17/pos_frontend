@@ -54,7 +54,8 @@ function matchesPurchase(purchase: CustomerPurchaseList['items'][number], query:
 }
 
 export function CustomerDetailView({ customerId }: { customerId: string }) {
-  const { money } = useAppRegion()
+  const { money, region, appPath } = useAppRegion()
+  const showIndiaCredit = region === 'IN'
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [credit, setCredit] = useState<CustomerCredit | null>(null)
   const [purchases, setPurchases] = useState<CustomerPurchaseList | null>(null)
@@ -119,9 +120,15 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
   useEffect(() => {
     void loadCustomer()
     void loadPurchases()
-    void loadCredit()
+    if (showIndiaCredit) {
+      void loadCredit()
+    } else {
+      setCredit(null)
+      setCreditError(null)
+      setCreditLoading(false)
+    }
     void getAuthenticatedAppContext().then((context) => setRole(context.staff.role)).catch(() => setRole(null))
-  }, [loadCustomer, loadPurchases, loadCredit])
+  }, [loadCustomer, loadPurchases, loadCredit, showIndiaCredit])
 
   async function save(body: CustomerWrite) {
     setSaving(true)
@@ -176,10 +183,10 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     <>
       <PageHead
         title={titleFor(customer)}
-        sub="Customer profile, khata balance and persisted purchase history"
+        sub={showIndiaCredit ? 'Customer profile, khata balance and persisted purchase history' : 'Customer profile and persisted purchase history'}
         actions={
           <>
-            <Link className="btn" href="/app/customers"><ArrowLeft size={15} /> Customers</Link>
+            <Link className="btn" href={appPath('/app/customers')}><ArrowLeft size={15} /> Customers</Link>
               <button className="btn btn-pri" onClick={() => { setFormError(null); setEditOpen(true) }}><Edit3 size={15} /> Edit profile</button>
           </>
         }
@@ -204,65 +211,69 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
             <Info label="Address" value={address || 'No billing address on file'} />
             <Info label="Country" value={customer.country} />
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-              GSTIN and address are stored as customer billing identity. Khata is tracked separately below and is shared across this business’s stores.
+              {showIndiaCredit
+                ? 'GSTIN and address are stored as customer billing identity. Khata is tracked separately below and is shared across this business’s stores.'
+                : 'Customer identity and address are stored here as billing information for future documents.'}
             </div>
           </div>
         </Card>
       </div>
 
-      <Card>
-        <CardHead
-          title="Khata balance"
-          sub="Outstanding credit across all stores"
-          right={credit && Number(credit.balance) > 0 ? (
-            <button
-              className="btn btn-pri"
-              type="button"
-              onClick={() => { setRepaymentError(null); setRepaymentOpen(true) }}
-            >
-              <HandCoins size={15} /> Collect payment
-            </button>
-          ) : null}
-        />
-        {creditLoading && <LoadingState label="Loading khata balance" rows={2} />}
-        {!creditLoading && creditError && <ErrorState message={creditError} onRetry={() => void loadCredit()} />}
-        {!creditLoading && !creditError && credit && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'end', gap: 28, flexWrap: 'wrap', padding: '18px 18px 14px' }}>
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Outstanding</div>
-                <div className="num" style={{ marginTop: 4, fontSize: 28, fontWeight: 700, color: Number(credit.balance) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                  {money(Number(credit.balance))}
+      {showIndiaCredit && (
+        <Card>
+          <CardHead
+            title="Khata balance"
+            sub="Outstanding credit across all stores"
+            right={credit && Number(credit.balance) > 0 ? (
+              <button
+                className="btn btn-pri"
+                type="button"
+                onClick={() => { setRepaymentError(null); setRepaymentOpen(true) }}
+              >
+                <HandCoins size={15} /> Collect payment
+              </button>
+            ) : null}
+          />
+          {creditLoading && <LoadingState label="Loading khata balance" rows={2} />}
+          {!creditLoading && creditError && <ErrorState message={creditError} onRetry={() => void loadCredit()} />}
+          {!creditLoading && !creditError && credit && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'end', gap: 28, flexWrap: 'wrap', padding: '18px 18px 14px' }}>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Outstanding</div>
+                  <div className="num" style={{ marginTop: 4, fontSize: 28, fontWeight: 700, color: Number(credit.balance) > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                    {money(Number(credit.balance))}
+                  </div>
+                </div>
+                <Info label="Credit limit" value={credit.creditLimit ? money(Number(credit.creditLimit)) : 'No limit set'} mono />
+                <div style={{ fontSize: 12, color: 'var(--muted)', maxWidth: 390, lineHeight: 1.5 }}>
+                  Credit sales add to this balance. Repayments reduce it. The balance is derived from the ledger, not typed in by the team.
                 </div>
               </div>
-              <Info label="Credit limit" value={credit.creditLimit ? money(Number(credit.creditLimit)) : 'No limit set'} mono />
-              <div style={{ fontSize: 12, color: 'var(--muted)', maxWidth: 390, lineHeight: 1.5 }}>
-                Credit sales add to this balance. Repayments reduce it. The balance is derived from the ledger, not typed in by the team.
-              </div>
-            </div>
-            {credit.transactions.length === 0 ? (
-              <EmptyState title="No khata entries" body="Credit sales and repayments for this customer will appear here." />
-            ) : (
-              <DataTable cols={['Entry', 'Date', 'Store', 'Amount', 'Note']} minWidth={760}>
-                {credit.transactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td>
-                      <div className="t-strong">{transaction.type === 'credit_sale' ? 'Credit sale' : 'Repayment'}</div>
-                      {transaction.saleId ? <Link className="t-sub t-mono" href={`/app/orders/${encodeURIComponent(transaction.saleId)}`}>Open bill</Link> : null}
-                    </td>
-                    <td className="t-sub">{dateTime.format(new Date(transaction.createdAt))}</td>
-                    <td className="t-sub">{transaction.storeName ?? 'Store unavailable'}</td>
-                    <td className={`t-mono t-strong ${transaction.type === 'repayment' ? 'text-success' : 'text-danger'}`}>
-                      {transaction.type === 'repayment' ? '−' : '+'}{money(Number(transaction.amount))}
-                    </td>
-                    <td className="t-sub">{transaction.note ?? '—'}</td>
-                  </tr>
-                ))}
-              </DataTable>
-            )}
-          </>
-        )}
-      </Card>
+              {credit.transactions.length === 0 ? (
+                <EmptyState title="No khata entries" body="Credit sales and repayments for this customer will appear here." />
+              ) : (
+                <DataTable cols={['Entry', 'Date', 'Store', 'Amount', 'Note']} minWidth={760}>
+                  {credit.transactions.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td>
+                        <div className="t-strong">{transaction.type === 'credit_sale' ? 'Credit sale' : 'Repayment'}</div>
+                        {transaction.saleId ? <Link className="t-sub t-mono" href={appPath(`/app/orders/${encodeURIComponent(transaction.saleId)}`)}>Open bill</Link> : null}
+                      </td>
+                      <td className="t-sub">{dateTime.format(new Date(transaction.createdAt))}</td>
+                      <td className="t-sub">{transaction.storeName ?? 'Store unavailable'}</td>
+                      <td className={`t-mono t-strong ${transaction.type === 'repayment' ? 'text-success' : 'text-danger'}`}>
+                        {transaction.type === 'repayment' ? '−' : '+'}{money(Number(transaction.amount))}
+                      </td>
+                      <td className="t-sub">{transaction.note ?? '—'}</td>
+                    </tr>
+                  ))}
+                </DataTable>
+              )}
+            </>
+          )}
+        </Card>
+      )}
 
       <Card>
         <CardHead
@@ -304,8 +315,8 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
                 <td><Badge tone={purchase.status === 'completed' ? 'green' : 'grey'}>{purchase.status}</Badge></td>
                 <td>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(purchase.id)}`}><ExternalLink size={13} /> Open bill</Link>
-                    <Link className="btn btn-sm" href={`/app/returns?saleId=${encodeURIComponent(purchase.id)}`}>Bill / return</Link>
+                    <Link className="btn btn-sm" href={appPath(`/app/orders/${encodeURIComponent(purchase.id)}`)}><ExternalLink size={13} /> Open bill</Link>
+                    <Link className="btn btn-sm" href={appPath(`/app/returns?saleId=${encodeURIComponent(purchase.id)}`)}>Bill / return</Link>
                   </div>
                 </td>
               </tr>
@@ -332,7 +343,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
             onCancel={() => setEditOpen(false)}
             saving={saving}
             serverError={formError}
-            canEditCreditLimit={role === 'owner' || role === 'manager'}
+            canEditCreditLimit={showIndiaCredit && (role === 'owner' || role === 'manager')}
           />
         </Modal>
       )}
