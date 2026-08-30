@@ -11,13 +11,19 @@ type Offer = {
   id: string; basePlanKey: string; billingCycle: 'monthly' | 'annual'; currency: string
   baseAmountMinor: number; taxAmountMinor: number; totalAmountMinor: number
   includedLocations: number; includedRegisters: number; includedUsers: number
-  trialDays: number; latestActivationAt: string; priceValidity: string; fixedBillingCycles: number | null; status: string
+  trialDurationMinutes: number; latestActivationAt: string; priceValidity: string; fixedBillingCycles: number | null; status: string
 }
 
 const apiBase = process.env.NODE_ENV === 'production' ? '/_backend' : process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
 
 function money(minor: number, currency: string) {
   return new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', { style: 'currency', currency }).format(minor / 100)
+}
+
+function trialDuration(minutes: number) {
+  if (minutes % 1440 === 0) return `${minutes / 1440} day${minutes === 1440 ? '' : 's'}`
+  if (minutes % 60 === 0) return `${minutes / 60} hour${minutes === 60 ? '' : 's'}`
+  return `${minutes} minute${minutes === 1 ? '' : 's'}`
 }
 
 export function OwnerBillingView({ region }: { region: 'IN' | 'INTL' }) {
@@ -56,7 +62,7 @@ export function OwnerBillingView({ region }: { region: 'IN' | 'INTL' }) {
       <p>{activeOffer.includedLocations} locations · {activeOffer.includedRegisters} registers · {activeOffer.includedUsers} users</p>
       <p>Plan amount {money(activeOffer.baseAmountMinor, activeOffer.currency)} + tax {money(activeOffer.taxAmountMinor, activeOffer.currency)}</p>
       <p><strong>Recurring total: {money(activeOffer.totalAmountMinor, activeOffer.currency)} / {activeOffer.billingCycle === 'monthly' ? 'month' : 'year'}</strong></p>
-      {activeOffer.trialDays > 0 ? <p>Your {activeOffer.trialDays}-day trial starts on your first successful login before the activation deadline.</p> : null}
+      {activeOffer.trialDurationMinutes > 0 ? <p>Your {trialDuration(activeOffer.trialDurationMinutes)} trial starts on your first successful login before the activation deadline.</p> : null}
       <Link href={`/plans?region=${region}&offer=${activeOffer.id}`}>Review and authorise with Razorpay</Link>
     </CardPad></Card> : null}
     <Card><CardHead title="Payments and invoices" /><CardPad><p>Razorpay sends recurring payment receipts and invoices to the authorised owner. Detailed Ambel payment history will appear here as provider transactions are recorded.</p></CardPad></Card>

@@ -216,7 +216,7 @@ export async function createPrivateBillingOffer(payload: {
   tenantId: string; basePlanKey: 'starter' | 'growth' | 'pro'; billingCycle: 'monthly' | 'annual'
   negotiatedBaseAmountMinor: number; includedLocations: number; includedRegisters: number; includedUsers: number
   additionalLocationUnitAmountMinor: number; additionalRegisterUnitAmountMinor: number; additionalUserUnitAmountMinor: number
-  trialDays: number; latestActivationAt: string; priceValidity: 'until_changed' | 'fixed_cycles'
+  trialDurationMinutes: number; latestActivationAt: string; priceValidity: 'until_changed' | 'fixed_cycles'
   fixedBillingCycles: number | null; internalReason: string; salesReference?: string | null
 }) {
   return request<{ offer: Record<string, unknown> }>('/admin/private-billing-offers', { method: 'POST', body: JSON.stringify(payload) })

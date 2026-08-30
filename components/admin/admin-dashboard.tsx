@@ -68,6 +68,14 @@ function moneyLabel(amountMinor: unknown, currency: unknown) {
   }
 }
 
+function trialDurationLabel(minutesValue: unknown) {
+  const minutes = Number(minutesValue)
+  if (!Number.isFinite(minutes) || minutes <= 0) return 'No trial'
+  if (minutes % 1440 === 0) return `${minutes / 1440} day${minutes === 1440 ? '' : 's'}`
+  if (minutes % 60 === 0) return `${minutes / 60} hour${minutes === 60 ? '' : 's'}`
+  return `${minutes} minute${minutes === 1 ? '' : 's'}`
+}
+
 function statusClass(value: unknown) {
   const status = String(value ?? '').toLowerCase()
   if (['active', 'approved', 'replayed'].includes(status)) return styles.badgeGreen
@@ -188,7 +196,7 @@ function BusinessesView({ context, onError, focus }: { context: AdminContext; on
   const [detail, setDetail] = useState<TenantDetail | null>(null)
   const [busy, setBusy] = useState(false)
   const [override, setOverride] = useState({ key: 'max_locations', value: '1', ticket: '', reason: '', expiresAt: '' })
-  const [offer, setOffer] = useState({ plan: 'starter' as 'starter' | 'growth' | 'pro', cycle: 'monthly' as 'monthly' | 'annual', price: '599', locations: '2', registers: '3', users: '5', locationAddon: '299', registerAddon: '199', userAddon: '99', trialDays: '14', activation: '', reason: '', reference: '' })
+  const [offer, setOffer] = useState({ plan: 'starter' as 'starter' | 'growth' | 'pro', cycle: 'monthly' as 'monthly' | 'annual', price: '599', locations: '2', registers: '3', users: '5', locationAddon: '299', registerAddon: '199', userAddon: '99', trialDays: '14', trialUnit: 'days' as 'minutes' | 'hours' | 'days', activation: '', reason: '', reference: '' })
 
   useEffect(() => {
     let cancelled = false
@@ -252,7 +260,7 @@ function BusinessesView({ context, onError, focus }: { context: AdminContext; on
         additionalLocationUnitAmountMinor: Math.round(Number(offer.locationAddon) * multiplier),
         additionalRegisterUnitAmountMinor: Math.round(Number(offer.registerAddon) * multiplier),
         additionalUserUnitAmountMinor: Math.round(Number(offer.userAddon) * multiplier),
-        trialDays: Number(offer.trialDays), latestActivationAt: new Date(offer.activation).toISOString(),
+        trialDurationMinutes: Math.round(Number(offer.trialDays) * (offer.trialUnit === 'days' ? 1440 : offer.trialUnit === 'hours' ? 60 : 1)), latestActivationAt: new Date(offer.activation).toISOString(),
         priceValidity: 'until_changed', fixedBillingCycles: null, internalReason: offer.reason, salesReference: offer.reference || null,
       })
       setOffer((current) => ({ ...current, reason: '', reference: '' }))
@@ -269,6 +277,7 @@ function BusinessesView({ context, onError, focus }: { context: AdminContext; on
       <button className={styles.button} type="button" onClick={() => setDetail(null)}>← Back to {focus === 'subscriptions' ? 'subscriptions' : focus === 'users' ? 'users' : 'businesses'}</button>
       <h1 className={styles.heading} style={{ marginTop: 18 }}>{detail.tenant.tradeName || detail.tenant.businessName}</h1>
       <p className={styles.subheading}>Complete regional account detail · created {dateLabel(detail.tenant.createdAt)}</p>
+      {focus === 'subscriptions' && context.admin.role === 'platform_owner' && <div className={styles.notice} style={{ marginBottom: 16 }}>When creating a private offer below, enter the trial duration and select its unit: <select className={styles.select} aria-label="Trial duration unit" value={offer.trialUnit} onChange={(event) => setOffer((current) => ({ ...current, trialUnit: event.target.value as typeof current.trialUnit }))}><option value="minutes">minutes</option><option value="hours">hours</option><option value="days">days</option></select></div>}
       <section className={styles.card}><div className={styles.cardHeader}><div><div className={styles.cardTitle}>Business profile</div><div className={styles.muted}>{detail.tenant.id}</div></div><div className={styles.formRow}><button className={styles.button} disabled={busy} type="button" onClick={() => void action(() => resendMerchantInvitation(detail.tenant.id), 'Resend the merchant Owner invitation?')}>Resend invite</button><button className={`${styles.button} ${styles.danger}`} disabled={busy} type="button" onClick={() => void action(() => revokeMerchantSessions(detail.tenant.id), 'Revoke active merchant sessions for this tenant?')}>Revoke sessions</button></div></div><div className={styles.cardBody}><div className={`${styles.grid} ${styles.detailGrid}`}><div><div className={styles.muted}>Legal business</div><div className={styles.detailValue}>{detail.tenant.businessName}</div></div><div><div className={styles.muted}>Trading name</div><div className={styles.detailValue}>{detail.tenant.tradeName || '—'}</div></div><div><div className={styles.muted}>Address</div><div className={styles.detailValue}>{detail.tenant.address.city}, {detail.tenant.address.state}<br />{detail.tenant.address.country} {detail.tenant.address.postalCode}</div></div><div><div className={styles.muted}>Stores</div><div className={styles.detailValue}>{detail.stores.length}</div></div><div><div className={styles.muted}>Merchant users</div><div className={styles.detailValue}>{detail.users.length}</div></div><div><div className={styles.muted}>Subscription records</div><div className={styles.detailValue}>{detail.subscriptions.length}</div></div></div></div></section>
       <section className={`${styles.grid} ${styles.columns}`} style={{ marginTop: 16 }}>
         <section className={styles.card}><div className={styles.cardHeader}><div className={styles.cardTitle}>Stores</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.stores.map((store) => <div className={styles.listItem} key={store.id}><div className={styles.split}><span className={styles.listMain}>{store.name}</span><Badge value={store.isActive ? 'active' : 'suspended'} /></div><div className={styles.listMeta}>{store.city || 'No city'} · {store.country} · {store.id}</div></div>)}</div>{detail.stores.length === 0 && <div className={styles.empty}>No stores.</div>}</div></section>
@@ -276,7 +285,7 @@ function BusinessesView({ context, onError, focus }: { context: AdminContext; on
       </section>
       <section className={styles.card} style={{ marginTop: 16 }}><div className={styles.cardHeader}><div className={styles.cardTitle}>Subscriptions</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.subscriptions.map((subscription) => <div className={styles.listItem} key={String(subscription.id)}><div className={styles.split}><span className={styles.listMain}>{String(subscription.planKey ?? 'Plan')} · {String(subscription.billingCycle ?? '—')}</span><Badge value={subscription.status} /></div><div className={styles.listMeta}>{String(subscription.provider ?? '—')} · entitlement {String(subscription.entitlementStatus ?? '—')} · current period ends {dateLabel(subscription.currentEndAt)}<br />Provider subscription: {String(subscription.providerSubscriptionId ?? '—')} · plan: {String(subscription.providerPlanId ?? '—')}</div></div>)}</div>{detail.subscriptions.length === 0 && <div className={styles.empty}>No subscription records.</div>}</div></section>
       <section className={`${styles.grid} ${styles.columns}`} style={{ marginTop: 16 }}>
-        <section className={styles.card}><div className={styles.cardHeader}><div className={styles.cardTitle}>Private offers</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.privateOffers.map((offer) => <div className={styles.listItem} key={String(offer.id)}><div className={styles.split}><span className={styles.listMain}>{String(offer.basePlanKey)} · {String(offer.billingCycle)}</span><Badge value={offer.status} /></div><div className={styles.listMeta}>{moneyLabel(offer.baseAmountMinor, offer.currency)} + {moneyLabel(offer.taxAmountMinor, offer.currency)} tax = {moneyLabel(offer.totalAmountMinor, offer.currency)}<br />Trial {String(offer.trialDays ?? 0)} days · activate by {dateLabel(offer.latestActivationAt)} · {String(offer.providerMode ?? '—')}</div></div>)}</div>{detail.privateOffers.length === 0 && <div className={styles.empty}>No private offers.</div>}</div></section>
+        <section className={styles.card}><div className={styles.cardHeader}><div className={styles.cardTitle}>Private offers</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.privateOffers.map((offer) => <div className={styles.listItem} key={String(offer.id)}><div className={styles.split}><span className={styles.listMain}>{String(offer.basePlanKey)} · {String(offer.billingCycle)}</span><Badge value={offer.status} /></div><div className={styles.listMeta}>{moneyLabel(offer.baseAmountMinor, offer.currency)} + {moneyLabel(offer.taxAmountMinor, offer.currency)} tax = {moneyLabel(offer.totalAmountMinor, offer.currency)}<br />Trial: {trialDurationLabel(offer.trialDurationMinutes)} · activate by {dateLabel(offer.latestActivationAt)} · {String(offer.providerMode ?? '—')}</div></div>)}</div>{detail.privateOffers.length === 0 && <div className={styles.empty}>No private offers.</div>}</div></section>
         <section className={styles.card}><div className={styles.cardHeader}><div className={styles.cardTitle}>Billing timeline</div></div><div className={styles.cardBody}><div className={styles.list}>{detail.billingTimeline.map((event) => <div className={styles.listItem} key={String(event.id)}><div className={styles.split}><span className={styles.listMain}>{String(event.kind ?? 'Billing event')}</span><Badge value={event.status} /></div><div className={styles.listMeta}>{moneyLabel(event.amountMinor, event.currency)} · {dateLabel(event.createdAt)}</div></div>)}</div>{detail.billingTimeline.length === 0 && <div className={styles.empty}>No billing transactions.</div>}</div></section>
       </section>
       <section className={`${styles.grid} ${styles.columns}`} style={{ marginTop: 16 }}>
