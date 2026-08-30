@@ -50,6 +50,7 @@ export function OwnerBillingView({ region }: { region: 'IN' | 'INTL' }) {
   if (loading) return <LoadingState label="Loading subscription details…" />
   if (error) return <ErrorState message={error} onRetry={() => void load()} />
   const activeOffer = offers.find((offer) => offer.status === 'offered')
+  const activeTrial = Boolean(status?.accessAllowed && status.entitlementSource === 'trial')
   return <>
     <PageHead title="Plan & subscription" sub="See what your plan includes, review private offers, and manage payment without changing day-to-day POS billing." />
     <Card><CardHead title="Current access" right={status?.accessAllowed ? 'Access active' : 'Payment required'} /><CardPad>
@@ -62,8 +63,8 @@ export function OwnerBillingView({ region }: { region: 'IN' | 'INTL' }) {
       <p>{activeOffer.includedLocations} locations · {activeOffer.includedRegisters} registers · {activeOffer.includedUsers} users</p>
       <p>Plan amount {money(activeOffer.baseAmountMinor, activeOffer.currency)} + tax {money(activeOffer.taxAmountMinor, activeOffer.currency)}</p>
       <p><strong>Recurring total: {money(activeOffer.totalAmountMinor, activeOffer.currency)} / {activeOffer.billingCycle === 'monthly' ? 'month' : 'year'}</strong></p>
-      {activeOffer.trialDurationMinutes > 0 ? <p>Your {trialDuration(activeOffer.trialDurationMinutes)} trial starts on your first successful login before the activation deadline.</p> : null}
-      <Link href={`/plans?region=${region}&offer=${activeOffer.id}`}>Review and authorise with Razorpay</Link>
+      {activeOffer.trialDurationMinutes > 0 ? <p>{activeTrial ? 'Your free trial is active. No payment is due until the trial ends.' : `Your ${trialDuration(activeOffer.trialDurationMinutes)} trial starts on your first successful login before the activation deadline.`}</p> : null}
+      <Link href={`/plans?region=${region}&offer=${activeOffer.id}`}>{activeTrial ? 'Review offer (no payment due now)' : 'Review and authorise with Razorpay'}</Link>
     </CardPad></Card> : null}
     <Card><CardHead title="Payments and invoices" /><CardPad><p>Razorpay sends recurring payment receipts and invoices to the authorised owner. Detailed Ambel payment history will appear here as provider transactions are recorded.</p></CardPad></Card>
   </>

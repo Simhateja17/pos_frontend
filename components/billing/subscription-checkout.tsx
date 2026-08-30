@@ -9,7 +9,12 @@ import styles from './subscription-checkout.module.css'
 import { CurrencyMark } from '@/components/marketing/currency-mark'
 
 type Region = 'IN' | 'INTL'
-type Catalog = components['schemas']['BillingPlanCatalog']
+type Catalog = components['schemas']['BillingPlanCatalog'] & {
+  privateOfferId?: string
+  billingCycle?: Cycle
+  trialDurationMinutes?: number
+  latestActivationAt?: string
+}
 type Plan = components['schemas']['BillingPlanOption']
 type BillingStatus = components['schemas']['BillingStatus']
 type Cycle = 'monthly' | 'annual'
@@ -87,6 +92,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const [paying, setPaying] = useState(false)
   const [attemptKey, setAttemptKey] = useState<string | null>(null)
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null)
+  const [billingStatusLoading, setBillingStatusLoading] = useState(true)
 
   const storageKeyFor = (planKey: string, billingCycle: Cycle) => `couture.billing.attempt.${region}.${planKey}.${billingCycle}`
   const attemptStorageKey = storageKeyFor(selectedKey, cycle)
@@ -102,6 +108,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         if (requestError || !data) throw new Error(providerError(requestError, 'We could not load the plans right now.'))
         if (!active) return
         setCatalog(data)
+        if (privateOfferId && data.billingCycle) setCycle(data.billingCycle)
         if (!data.plans.some((plan) => plan.key === selectedKey)) setSelectedKey(data.plans[0]?.key ?? '')
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : 'We could not load the plans right now.')
@@ -126,6 +133,8 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       } catch {
         // Status is advisory until checkout starts. A failed status request
         // should not block a new payment attempt.
+      } finally {
+        if (active) setBillingStatusLoading(false)
       }
     })()
     return () => { active = false }
@@ -140,6 +149,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     && billingStatus.planKey === selectedKey
     && (!billingStatus.subscription || billingStatus.subscription.billingCycle === cycle)
   )
+  const activeTrial = Boolean(billingStatus?.accessAllowed && billingStatus.entitlementSource === 'trial')
 
   async function refreshBillingStatus(headers: Record<string, string>) {
     const { data } = await apiClient.GET('/billing/status', { headers })
@@ -186,6 +196,10 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     try {
       const headers = await authHeaders()
       const status = billingStatus ?? await refreshBillingStatus(headers)
+      if (status?.accessAllowed && status.entitlementSource === 'trial') {
+        router.push(region === 'IN' ? '/app' : '/us/dashboard')
+        return
+      }
       if (
         status?.accessAllowed
         && status.hasSubscription
@@ -307,6 +321,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       <div className={styles.canvas}>
         {error && <p className={`${styles.message} ${styles.error}`} role="alert">{error}</p>}
         {message && <p className={`${styles.message} ${styles.success}`} role="status">{message}</p>}
+        {activeTrial && <p className={`${styles.message} ${styles.success}`} role="status">Your free trial is active. No payment is due now. Continue to Ambel POS and review the recurring plan before the trial ends.</p>}
         {loading ? <p className={styles.message}>Loading plans…</p> : (
           <>
             <div className={`pricing-grid ${styles.grid}`}>
@@ -361,10 +376,12 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
               })}
             </div>
             <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:sales@Ambel.in">Contact sales</a>.</div>
-            <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || paying || (!available && !activeSelectedSubscription)}>
+            <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || paying || billingStatusLoading || (!available && !activeSelectedSubscription && !activeTrial)}>
               {paying
                   ? activeSelectedSubscription ? 'Continuing...' : 'Opening secure checkout...'
-                  : activeSelectedSubscription
+                  : activeTrial
+                    ? 'Continue to Ambel POS →'
+                    : activeSelectedSubscription
                     ? 'Continue setup ->'
                     : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate ->`}
             </button>
