@@ -20,7 +20,18 @@ import { getActiveStoreId } from '@/lib/store-context'
  * pad writes it — the acting operator is scoped to this terminal tab and is
  * cleared on idle-timeout/logout.
  */
-export async function authHeaders(): Promise<Record<string, string> | undefined> {
+export type AuthHeadersOptions = {
+  /**
+   * Some bootstrap calls (notably terminal discovery on the PIN screen) are
+   * single-store operations. When the owner has selected the combined
+   * business view, omitting the header lets the server safely fall back to
+   * the owner's membership store instead of sending `X-Store-Id: all` to a
+   * route that cannot operate on business-wide scope.
+   */
+  includeStore?: boolean
+}
+
+export async function authHeaders(options: AuthHeadersOptions = {}): Promise<Record<string, string> | undefined> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   if (!token) return undefined
@@ -32,7 +43,7 @@ export async function authHeaders(): Promise<Record<string, string> | undefined>
   if (operatorToken) headers['X-Operator-Token'] = operatorToken
 
   const storeId = getActiveStoreId()
-  if (storeId) headers['X-Store-Id'] = storeId
+  if (options.includeStore !== false && storeId) headers['X-Store-Id'] = storeId
 
   return headers
 }

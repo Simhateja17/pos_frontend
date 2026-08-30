@@ -34,6 +34,7 @@ import { StoreSwitcher } from '@/components/store-switcher'
 import { GlobalSearch } from '@/components/global-search'
 import { ShellContentSkeleton, ShellNavSkeleton } from '@/components/app-shell-skeleton'
 import { Sk } from '@/components/couture/states'
+import { checkoutPathWithOffer, getAuthenticatedPrivateOfferId } from '@/lib/billing/private-offer'
 
 const ALL_NAV_ITEMS = APP_NAVIGATION.flatMap((group) => group.items)
 
@@ -167,17 +168,29 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
 
   useEffect(() => {
     if (pathname === '/app' || deviceGate !== 'ready') return
+    let cancelled = false
     void getAuthenticatedBillingStatus()
-      .then((status) => {
+      .then(async (status) => {
         setBillingGate(status)
         const billingPath = toIndiaPath(pathname) === '/app/subscription'
-        if (!status.accessAllowed && !billingPath) router.replace(`/plans?region=${region}`)
+        if (!status.accessAllowed && !billingPath) {
+          // Keep an active negotiated offer attached to the redirect. Without
+          // it the owner lands on the public catalogue (and sees the standard
+          // annual price instead of the exact private total they were offered).
+          // The endpoint is owner-only and returns no id for managers/cashiers,
+          // so it is safe to probe before the context request has finished.
+          // Avoiding the context race is important here: billing status often
+          // resolves first on a just-expired trial.
+          const offerId = await getAuthenticatedPrivateOfferId()
+          if (!cancelled) router.replace(checkoutPathWithOffer(region === 'IN' ? 'IN' : 'INTL', offerId))
+        }
       })
       .catch(() => {
         // Operational API calls remain server-gated. A transient status read
         // must not turn a recoverable network failure into a logout.
       })
-  }, [deviceGate, pathname, region, router])
+    return () => { cancelled = true }
+  }, [context?.staff.role, deviceGate, pathname, region, router])
 
   useEffect(() => {
     if (context?.staff.role && !roleCanAccessAppPath(context.staff.role, pathname)) {

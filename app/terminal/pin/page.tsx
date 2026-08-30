@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Banknote, ChevronRight, LockKeyhole, LogOut, Monitor, Settings, Users } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { checkoutPathWithOffer, getAuthenticatedPrivateOfferId } from '@/lib/billing/private-offer'
 import { supabase } from '@/lib/supabase/client'
 import { useIdleTimer } from '@/lib/hooks/useIdleTimer'
 import { AmbelMark } from '@/components/brand/ambel-mark'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { getActiveStoreId } from '@/lib/store-context'
 
 type Staff = {
   id: string
@@ -48,6 +50,10 @@ const ROLE_BADGE_CLASS: Record<Staff['role'], string> = {
 }
 
 const GENERIC_LOAD_ERROR = "Couldn't load team members. Check your connection and try again."
+
+function terminalHeaders() {
+  return authHeaders({ includeStore: getActiveStoreId() !== 'all' })
+}
 
 export default function PinPadPage() {
   const router = useRouter()
@@ -96,7 +102,11 @@ export default function PinPadPage() {
     setIsLoadingStaff(true)
     setLoadError(null)
 
-    const headers = await authHeaders()
+    // Terminal discovery is a single-store operation. The owner may be
+    // looking at the combined business view (`X-Store-Id: all`) when a trial
+    // expires, but that header is not a valid scope for GET /terminals. Let
+    // the backend resolve the owner's membership store for this bootstrap.
+    const headers = await terminalHeaders()
     const [staffResult, deviceResult, terminalsResult] = await Promise.all([
       apiClient.GET('/members', { headers }),
       apiClient.GET('/terminals/device', { headers }),
@@ -109,6 +119,12 @@ export default function PinPadPage() {
       sessionStorage.removeItem('operatorToken')
       await supabase.auth.signOut({ scope: 'local' })
       router.replace('/login')
+      return
+    }
+
+    if ([staffResult, deviceResult, terminalsResult].some((result) => result.response.status === 402)) {
+      const offerId = await getAuthenticatedPrivateOfferId()
+      router.replace(checkoutPathWithOffer('IN', offerId))
       return
     }
 
@@ -176,7 +192,7 @@ export default function PinPadPage() {
     setPairError(null)
     const result = await apiClient.POST('/terminals/{terminalId}/pair', {
       params: { path: { terminalId } },
-      headers: await authHeaders(),
+      headers: await terminalHeaders(),
     })
     setPairingTerminalId(null)
     if (result.error || !result.data) {
