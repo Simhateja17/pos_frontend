@@ -23,6 +23,7 @@ export type AdminContext = {
   factors: Array<{ id: string; factor_type: string; status: string; friendly_name?: string | null }>
   hasTotp: boolean
   requiresMfaSetup: boolean
+  taxRateBps: number
 }
 
 export type AdminOverview = {
