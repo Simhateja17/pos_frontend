@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders as sharedAuthHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
-import { billingCycleForCatalog } from '@/lib/billing/private-offer-path'
+import { billingCycleForCatalog, billingCyclesForCatalog } from '@/lib/billing/private-offer-path'
 import styles from './subscription-checkout.module.css'
 import { CurrencyMark } from '@/components/marketing/currency-mark'
 
@@ -98,6 +98,10 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
 
   const storageKeyFor = (planKey: string, billingCycle: Cycle) => `couture.billing.attempt.${region}.${resolvedPrivateOfferId ?? 'standard'}.${planKey}.${billingCycle}`
   const attemptStorageKey = storageKeyFor(selectedKey, cycle)
+  const visibleCycles = billingCyclesForCatalog({
+    privateOfferId: resolvedPrivateOfferId,
+    billingCycle: catalog?.billingCycle,
+  })
 
   useEffect(() => {
     let active = true
@@ -323,8 +327,17 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         <h1>{title ?? <>Choose your <em>subscription plan.</em></>}</h1>
         <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
         <div className={styles.mode} role="group" aria-label="Billing cycle">
-          <button type="button" className={cycle === 'monthly' ? styles.active : ''} onClick={() => selectCycle('monthly')}>Monthly</button>
-          <button type="button" className={cycle === 'annual' ? styles.active : ''} onClick={() => selectCycle('annual')}>Annual</button>
+          {visibleCycles.map((visibleCycle) => (
+            <button
+              key={visibleCycle}
+              type="button"
+              className={cycle === visibleCycle ? styles.active : ''}
+              onClick={() => selectCycle(visibleCycle)}
+              aria-pressed={cycle === visibleCycle}
+            >
+              {visibleCycle === 'monthly' ? 'Monthly' : 'Annual'}
+            </button>
+          ))}
         </div>
       </header>
 

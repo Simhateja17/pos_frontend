@@ -9,3 +9,11 @@ export function billingCycleForCatalog(
 ): 'monthly' | 'annual' {
   return catalog.privateOfferId && catalog.billingCycle ? catalog.billingCycle : current
 }
+
+export function billingCyclesForCatalog(
+  catalog: { privateOfferId?: string | null; billingCycle?: 'monthly' | 'annual' },
+): Array<'monthly' | 'annual'> {
+  return catalog.privateOfferId && catalog.billingCycle
+    ? [catalog.billingCycle]
+    : ['monthly', 'annual']
+}
