@@ -86,6 +86,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [cycle, setCycle] = useState<Cycle>('annual')
   const [selectedKey, setSelectedKey] = useState(initialPlanKey ?? 'growth')
+  const [resolvedPrivateOfferId, setResolvedPrivateOfferId] = useState<string | null>(privateOfferId ?? null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -94,7 +95,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null)
   const [billingStatusLoading, setBillingStatusLoading] = useState(true)
 
-  const storageKeyFor = (planKey: string, billingCycle: Cycle) => `couture.billing.attempt.${region}.${planKey}.${billingCycle}`
+  const storageKeyFor = (planKey: string, billingCycle: Cycle) => `couture.billing.attempt.${region}.${resolvedPrivateOfferId ?? 'standard'}.${planKey}.${billingCycle}`
   const attemptStorageKey = storageKeyFor(selectedKey, cycle)
 
   useEffect(() => {
@@ -108,6 +109,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         if (requestError || !data) throw new Error(providerError(requestError, 'We could not load the plans right now.'))
         if (!active) return
         setCatalog(data)
+        setResolvedPrivateOfferId(data.privateOfferId ?? privateOfferId ?? null)
         if (privateOfferId && data.billingCycle) setCycle(data.billingCycle)
         if (!data.plans.some((plan) => plan.key === selectedKey)) setSelectedKey(data.plans[0]?.key ?? '')
       } catch (cause) {
@@ -118,6 +120,13 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     })()
     return () => { active = false }
   }, [region, privateOfferId])
+
+  useEffect(() => {
+    // Route changes can replace a private-offer URL with the public catalogue
+    // while this component remains mounted. Do not carry the old offer into a
+    // later standard checkout attempt.
+    setResolvedPrivateOfferId(privateOfferId ?? null)
+  }, [privateOfferId])
 
   useEffect(() => {
     setAttemptKey(typeof window === 'undefined' ? null : window.sessionStorage.getItem(attemptStorageKey))
@@ -244,7 +253,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       }
       const { data, error: createError, response } = await apiClient.POST('/billing/subscription', {
         headers,
-        body: { planKey: selected.key, billingCycle: cycle, idempotencyKey: currentAttemptKey, ...(privateOfferId ? { privateOfferId } : {}) } as never,
+        body: { planKey: selected.key, billingCycle: cycle, idempotencyKey: currentAttemptKey, ...(resolvedPrivateOfferId ? { privateOfferId: resolvedPrivateOfferId } : {}) } as never,
       })
       if (createError || !data) {
         throw new Error(providerError(createError, response.status === 403 ? 'Only the account owner can start a subscription.' : 'We could not start this subscription.'))
