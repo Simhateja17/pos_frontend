@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState, type CSSProperties, type KeyboardEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
@@ -191,6 +191,30 @@ function CheckoutPageInner() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [availabilityByVariant, setAvailabilityByVariant] = useState<Record<string, Availability>>({})
   const [availabilityLoading, setAvailabilityLoading] = useState<string | null>(null)
+  const scanInputRef = useRef<HTMLInputElement>(null)
+  const searchRequestRef = useRef(0)
+
+  const focusScanner = useCallback(() => {
+    scanInputRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    focusScanner()
+    const captureScannerStart = (event: globalThis.KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const editing = target instanceof HTMLInputElement
+        || target instanceof HTMLTextAreaElement
+        || target instanceof HTMLSelectElement
+        || Boolean(target?.isContentEditable)
+      if (editing || event.metaKey || event.ctrlKey || event.altKey || event.key.length !== 1) return
+      if (document.querySelector('[role="dialog"]')) return
+      event.preventDefault()
+      setScanQuery(event.key)
+      focusScanner()
+    }
+    window.addEventListener('keydown', captureScannerStart)
+    return () => window.removeEventListener('keydown', captureScannerStart)
+  }, [focusScanner])
 
   // Cart
   const [cart, setCart] = useState<CartLine[]>([])
@@ -326,6 +350,7 @@ function CheckoutPageInner() {
   }, [cart, cartDiscountMode, cartDiscountValue, tenderRows])
 
   async function runSearch(query: string) {
+    const requestId = ++searchRequestRef.current
     setSearchError(null)
     setActiveSearchIndex(-1)
     // Starting to scan/search for the next sale clears the prior receipt.
@@ -339,6 +364,7 @@ function CheckoutPageInner() {
       params: { query: { search: query } },
       headers,
     })
+    if (requestId !== searchRequestRef.current) return
     if (error || !data) {
       setSearchError(LOAD_ERROR)
       return
@@ -359,14 +385,31 @@ function CheckoutPageInner() {
     const exactSkuMatch = hits.filter((h) => h.variant.sku === trimmed || h.variant.barcode === trimmed)
     if (exactSkuMatch.length === 1) {
       selectSearchHit(exactSkuMatch[0])
+    } else if (hits.length === 0 && trimmed) {
+      setSearchError(`No product found for “${trimmed}”.`)
+      focusScanner()
     }
   }
+
+  useEffect(() => {
+    if (!scanQuery.trim()) {
+      setSearchResults([])
+      setSearchError(null)
+      return
+    }
+    const timer = window.setTimeout(() => { void runSearch(scanQuery) }, 180)
+    return () => window.clearTimeout(timer)
+  // runSearch deliberately reads the current checkout state and is invoked by
+  // the timer; making it a callback would add every cart dependency here.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanQuery])
 
   function selectSearchHit(hit: SearchHit) {
     addToCart(hit)
     setScanQuery('')
     setSearchResults([])
     setActiveSearchIndex(-1)
+    focusScanner()
   }
 
   function handleProductSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -762,6 +805,7 @@ function CheckoutPageInner() {
     setSplitEnabled(false)
     setPendingSaleBody(null)
     setChargeError(null)
+    focusScanner()
   }
 
   async function handleApproved(operatorToken: string) {
@@ -907,6 +951,8 @@ function CheckoutPageInner() {
                   <path d="M21 21l-4.3-4.3" />
                 </svg>
                 <input
+                  ref={scanInputRef}
+                  autoFocus
                   value={scanQuery}
                   aria-label={SCAN_PLACEHOLDER}
                   role="combobox"
@@ -916,14 +962,13 @@ function CheckoutPageInner() {
                   aria-activedescendant={activeSearchIndex >= 0 ? `billing-product-result-${searchResults[activeSearchIndex]?.variant.id}` : undefined}
                   onChange={(e) => {
                     setScanQuery(e.target.value)
-                    runSearch(e.target.value)
                   }}
                   onKeyDown={handleProductSearchKeyDown}
                   placeholder={SCAN_PLACEHOLDER}
                 />
               </div>
               <button className="btn" type="button" onClick={() => runSearch(scanQuery)}>
-                <ScanLine size={15} /> Scan
+                <ScanLine size={15} /> Search
               </button>
             </div>
 

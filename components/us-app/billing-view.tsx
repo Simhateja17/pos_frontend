@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { Check, Mail, Minus, Plus, Printer, Search, ShoppingCart } from 'lucide-react'
 import {
@@ -18,6 +18,7 @@ import {
 } from '@/lib/api/authenticated-client'
 import { useUsAppContext } from './us-app-shell'
 import { UsCard, UsCardBody, UsCardHeader, UsEmptyState, UsErrorState, UsInlineLoader, UsLoadingState, UsPageHead } from './states'
+import { exactScannerMatches } from '@/lib/hardware/barcode-scanner'
 
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
 const dateTime = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' })
@@ -51,6 +52,29 @@ export function UsBillingView() {
   const [receiptLines, setReceiptLines] = useState<CartLine[]>([])
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const scanInputRef = useRef<HTMLInputElement>(null)
+
+  const focusScanner = useCallback(() => {
+    scanInputRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    focusScanner()
+    const captureScannerStart = (event: globalThis.KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const editing = target instanceof HTMLInputElement
+        || target instanceof HTMLTextAreaElement
+        || target instanceof HTMLSelectElement
+        || Boolean(target?.isContentEditable)
+      if (editing || event.metaKey || event.ctrlKey || event.altKey || event.key.length !== 1) return
+      if (document.querySelector('[role="dialog"]')) return
+      event.preventDefault()
+      setSearch(event.key)
+      focusScanner()
+    }
+    window.addEventListener('keydown', captureScannerStart)
+    return () => window.removeEventListener('keydown', captureScannerStart)
+  }, [focusScanner])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -112,6 +136,22 @@ export function UsBillingView() {
       if (existing) return current.map((line) => line.variant.id === item.variant.id ? { ...line, quantity: Math.min(line.quantity + 1, item.variant.currentStock) } : line)
       return [...current, { ...item, quantity: 1 }]
     })
+    setSearch('')
+    focusScanner()
+  }
+
+  function handleScanKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    const value = search.trim()
+    const matches = exactScannerMatches(catalog, value)
+    if (matches.length === 1) {
+      addToCart(matches[0])
+      setNotice(`Added ${matches[0].product.name}. Scanner ready.`)
+    } else {
+      setError(matches.length > 1 ? 'More than one product uses that code.' : `No product found for “${value}”.`)
+      focusScanner()
+    }
   }
 
   function changeQuantity(variantId: string, delta: number) {
@@ -142,6 +182,7 @@ export function UsBillingView() {
       setCart([])
       setPaymentReference('')
       setNotice('Sale completed. The server returned an authoritative receipt record.')
+      focusScanner()
     } catch (nextError) {
       setError(errorMessage(nextError))
     } finally {
@@ -176,7 +217,7 @@ export function UsBillingView() {
 
       <div className="grid cols-checkout">
         <UsCard>
-          <UsCardHeader title="Product catalog" sub={`${catalog.length} variants returned by the live catalog`} right={<div className="search" style={{ maxWidth: 260 }}><Search className="search-icon" aria-hidden="true" /><input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, SKU, barcode…" aria-label="Search products" /></div>} />
+          <UsCardHeader title="Product catalog" sub={`${catalog.length} variants returned by the live catalog`} right={<div className="search" style={{ maxWidth: 260 }}><Search className="search-icon" aria-hidden="true" /><input ref={scanInputRef} autoFocus className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={handleScanKeyDown} placeholder="Scan barcode or search…" aria-label="Scan barcode or search products" /></div>} />
           {visibleCatalog.length === 0 ? <UsEmptyState icon={<ShoppingCart size={24} />} title={catalog.length === 0 ? 'No products in this store' : 'No matching variants'} body={catalog.length === 0 ? 'Products must be created or imported before checkout can sell them.' : 'Try a different product name, SKU, or barcode.'} /> : (
             <div className="product-grid">
               {visibleCatalog.map((item) => {

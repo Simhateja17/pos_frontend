@@ -8,7 +8,7 @@ import { Badge, Card, CardHead, CardPad, DataTable, PageHead } from '@/component
 import { ErrorState, LoadingState } from '@/components/couture/states'
 
 type Terminal = { id: string; name: string; cashMode?: 'cash' | 'none'; isCurrentDevice?: boolean }
-type Companion = { id: string; terminalId: string; machineName: string; os: string; version: string; lastSeenAt: string | null; online: boolean }
+type Companion = { id: string; terminalId: string; machineName: string; os: string; version: string; capabilities: Record<string, unknown>; lastSeenAt: string | null; online: boolean }
 
 const DEVICE_ROWS = [
   ['Barcode scanner', 'USB, Bluetooth or RF keyboard-wedge', 'Browser', 'Ready to test'],
@@ -153,8 +153,8 @@ export function HardwareDevicesView() {
               {companions.map((companion) => (
                 <div key={companion.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', padding: '10px 0', borderTop: '1px solid var(--border-soft)' }}>
                   <strong>{companion.machineName}</strong><Badge tone={companion.online ? 'green' : 'amber'}>{companion.online ? 'Online' : 'Offline'}</Badge><span className="t-sub">{companion.os} · v{companion.version}</span>
-                  <button className="btn btn-sm" type="button" onClick={() => void queueTest(companion.terminalId, 'test_print')}>Test print</button>
-                  <button className="btn btn-sm" type="button" onClick={() => void queueTest(companion.terminalId, 'open_drawer')}>Test drawer</button>
+                  <button className="btn btn-sm" type="button" disabled={!companion.online || companion.capabilities.print !== true} onClick={() => void queueTest(companion.terminalId, 'test_print')}>Test print</button>
+                  <button className="btn btn-sm" type="button" disabled title="Cash drawer support is not included in Companion 0.2" onClick={() => void queueTest(companion.terminalId, 'open_drawer')}>Test drawer unavailable</button>
                 </div>
               ))}
             </div>
