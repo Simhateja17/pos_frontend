@@ -333,6 +333,12 @@
   .fld span{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
   .fld input,.fld select{width:100%;height:40px;border:1px solid var(--border);border-radius:9px;background:var(--surface);padding:0 12px;font-size:14px;font-family:inherit;color:var(--ink)}
   .fld textarea{width:100%;border:1px solid var(--border);border-radius:9px;background:var(--surface);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--ink);resize:vertical;min-height:78px}
+  /* Native checkbox rendered inline with a label (e.g. "Track inventory").
+   * Unstyled, it renders at the browser's oversized native size and a blue
+   * that doesn't match the brand — accent-color keeps it a real, accessible
+   * <input> while bringing it in line with the rest of the form controls. */
+  .chk-row{display:flex;align-items:center;gap:8px;min-height:38px;font-size:14px;color:var(--ink)}
+  .chk-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--brand-1);cursor:pointer;flex-shrink:0}
   .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px var(--brand-soft)}
   /* Collapsible "more details" sections (native <details>/<summary>): suppress
    * every browser-default marker so only our own chevron renders — leaving both
