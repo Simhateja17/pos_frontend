@@ -2427,7 +2427,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** @description Complete a checkout sale — server recomputes totals, enforces payment-sum, gates above-threshold discounts and customer-credit-limit overrides behind manager+ approval, and writes sale+lines+payments+stock movements plus any credit ledger row atomically. Response includes the sale's payments array. */
+        /** @description Complete a checkout sale — server recomputes totals, enforces payment-sum, requires a customer credit sale to remain within the customer's configured credit limit, gates above-threshold discounts behind manager+ approval, and writes sale+lines+payments+stock movements plus any credit ledger row atomically. Response includes the sale's payments array. */
         post: {
             parameters: {
                 query?: never;
@@ -2457,7 +2457,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Discount or customer credit limit requires manager or owner approval */
+                /** @description Discount requires manager or owner approval, or the customer credit limit would be exceeded */
                 403: {
                     headers: {
                         [name: string]: unknown;

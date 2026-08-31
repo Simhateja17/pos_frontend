@@ -260,7 +260,6 @@ function CheckoutPageInner() {
   const [isCharging, setIsCharging] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showApprovalModal, setShowApprovalModal] = useState(false)
-  const [approvalReason, setApprovalReason] = useState<'discount' | 'credit'>('discount')
   const [pendingSaleBody, setPendingSaleBody] = useState<PendingSaleBody | null>(null)
 
   // Post-charge receipt (CHECK-06). Stays visible until the cashier starts a
@@ -776,13 +775,11 @@ function CheckoutPageInner() {
 
     const errorBody = error as { error?: string; code?: string } | undefined
     if (response?.status === 403 && errorBody?.code === 'discount_approval_required') {
-      setApprovalReason('discount')
       setShowApprovalModal(true)
       return
     }
-    if (response?.status === 403 && errorBody?.code === 'credit_limit_override_required') {
-      setApprovalReason('credit')
-      setShowApprovalModal(true)
+    if (response?.status === 403 && (errorBody?.code === 'credit_limit_exceeded' || errorBody?.code === 'credit_limit_override_required')) {
+      setChargeError(errorBody.error ?? 'This sale would exceed the customer credit limit. Increase the credit limit or collect payment through another payment method.')
       return
     }
     if (response?.status === 400) {
@@ -1327,7 +1324,6 @@ function CheckoutPageInner() {
 
       <ManagerApprovalModal
         open={showApprovalModal}
-        reason={approvalReason}
         onApproved={handleApproved}
         onCancel={() => setShowApprovalModal(false)}
       />

@@ -14,12 +14,10 @@ async function authHeader() {
 
 export function ManagerApprovalModal({
   open,
-  reason = 'discount',
   onApproved,
   onCancel,
 }: {
   open: boolean
-  reason?: 'discount' | 'credit'
   onApproved: (operatorToken: string) => void
   onCancel: () => void
 }) {
@@ -63,8 +61,6 @@ export function ManagerApprovalModal({
 
   if (!open) return null
 
-  const creditApproval = reason === 'credit'
-
   return (
     <Modal
       title="Manager approval required"
@@ -86,9 +82,7 @@ export function ManagerApprovalModal({
       }
     >
       <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 14 }}>
-        {creditApproval
-          ? 'This sale would exceed the customer credit limit. Ask a manager or owner to enter their PIN to continue.'
-          : 'This discount needs manager approval. Ask a manager or owner to enter their PIN to continue.'}
+        This discount needs manager approval. Ask a manager or owner to enter their PIN to continue.
       </p>
       <Fld id="approval-staff" label="Manager or owner">
         <select id="approval-staff" value={selectedStaffId ?? ''} onChange={(e) => setSelectedStaffId(e.target.value || null)}>
