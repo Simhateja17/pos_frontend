@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, Plus, ScanLine, Trash2 } from 'lucide-react'
@@ -73,7 +73,7 @@ export function NewProductForm() {
     let cancelled = false
     const timer = window.setTimeout(async () => {
       setSearching(true)
-      const result = await apiClient.GET('/master-items', { params: { query: { query, limit: 8 } }, headers: await authHeaders() })
+      const result = await apiClient.GET('/master-items', { params: { query: { query, limit: 20 } }, headers: await authHeaders() })
       if (!cancelled) { setSuggestions(result.data ?? []); setSearching(false) }
     }, 250)
     return () => { cancelled = true; window.clearTimeout(timer) }
@@ -83,6 +83,29 @@ export function NewProductForm() {
     const query = name.trim().toLocaleLowerCase()
     return query.length < 2 ? [] : existingProducts.filter((product) => product.name.toLocaleLowerCase().includes(query)).slice(0, 4)
   }, [existingProducts, name])
+
+  useEffect(() => {
+    if (searching || !showSuggestions || name.trim().length < 2) return
+    if (suggestions.length === 0 && localMatches.length === 0) setShowSuggestions(false)
+  }, [searching, showSuggestions, name, suggestions, localMatches])
+
+  type SuggestionOption = { key: string; select: () => void } & ({ kind: 'existing'; product: ExistingProduct } | { kind: 'master'; item: MasterItem })
+  const suggestionOptions = useMemo<SuggestionOption[]>(() => [
+    ...localMatches.map((product): SuggestionOption => ({ kind: 'existing', key: `existing-${product.id}`, product, select: () => { if (product.variants[0]) router.push(appPath(`/app/inventory/catalog/${product.variants[0].id}`)) } })),
+    ...suggestions.map((item): SuggestionOption => ({ kind: 'master', key: `master-${item.id}`, item, select: () => selectMaster(item) })),
+  ], [localMatches, suggestions]) // eslint-disable-line react-hooks/exhaustive-deps
+  const existingOptions = suggestionOptions.filter((option): option is Extract<SuggestionOption, { kind: 'existing' }> => option.kind === 'existing')
+  const masterOptions = suggestionOptions.filter((option): option is Extract<SuggestionOption, { kind: 'master' }> => option.kind === 'master')
+  const [activeIndex, setActiveIndex] = useState(-1)
+  useEffect(() => { setActiveIndex(-1) }, [suggestionOptions, showSuggestions])
+
+  function handleNameKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!showSuggestions || suggestionOptions.length === 0) return
+    if (event.key === 'ArrowDown') { event.preventDefault(); setActiveIndex((current) => (current + 1) % suggestionOptions.length) }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex((current) => (current - 1 + suggestionOptions.length) % suggestionOptions.length) }
+    else if (event.key === 'Enter' && activeIndex >= 0) { event.preventDefault(); suggestionOptions[activeIndex].select() }
+    else if (event.key === 'Escape') { setShowSuggestions(false) }
+  }
 
   function setRow(index: number, patch: Partial<VariantFormRow>) {
     setRows((current) => current.map((row, rowIndex) => rowIndex === index ? { ...row, ...patch } : row))
@@ -151,11 +174,11 @@ export function NewProductForm() {
       {error && <Card><CardPad style={{ color: 'var(--danger)', fontSize: 13 }}><div role="alert">{error}</div></CardPad></Card>}
       <Card><CardHead title="Product" sub="Type a product name to search Ambel’s catalogue, or continue with your own item" /><CardPad>
         <div style={grid(220)}>
-          <Fld id="product-name" label="Product name"><div style={{ position: 'relative' }}><input id="product-name" required autoComplete="off" value={name} onFocus={() => setShowSuggestions(true)} onChange={(event) => { setName(event.target.value); setMasterItemId(undefined); setShowSuggestions(true) }} placeholder="e.g. Milk" aria-autocomplete="list" aria-expanded={showSuggestions} />
-            {showSuggestions && name.trim().length >= 2 && <div role="listbox" style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: 'calc(100% + 4px)', background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, boxShadow: '0 12px 30px rgba(15,23,42,.14)', maxHeight: 320, overflowY: 'auto' }}>
-              {localMatches.length > 0 && <><div style={{ padding: '8px 10px 4px', fontSize: 11, fontWeight: 700, color: 'var(--muted)' }}>YOUR PRODUCTS</div>{localMatches.map((product) => <button key={product.id} type="button" role="option" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0 }} onClick={() => product.variants[0] && router.push(appPath(`/app/inventory/catalog/${product.variants[0].id}`))}>{product.name}<span style={{ marginLeft: 'auto', color: 'var(--muted)', fontSize: 11 }}>Open existing</span></button>)}</>}
+          <Fld id="product-name" label="Product name"><div style={{ position: 'relative' }}><input id="product-name" required autoComplete="off" value={name} onFocus={() => setShowSuggestions(true)} onChange={(event) => { setName(event.target.value); setMasterItemId(undefined); setShowSuggestions(true) }} onKeyDown={handleNameKeyDown} placeholder="e.g. Milk" role="combobox" aria-autocomplete="list" aria-expanded={showSuggestions} aria-controls="product-name-listbox" aria-activedescendant={activeIndex >= 0 ? suggestionOptions[activeIndex]?.key : undefined} />
+            {showSuggestions && name.trim().length >= 2 && <div id="product-name-listbox" role="listbox" style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: 'calc(100% + 4px)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: '0 12px 30px rgba(15,23,42,.14)', maxHeight: 320, overflowY: 'auto' }}>
+              {localMatches.length > 0 && <><div style={{ padding: '8px 10px 4px', fontSize: 11, fontWeight: 700, color: 'var(--muted)' }}>YOUR PRODUCTS</div>{existingOptions.map((option) => { const index = suggestionOptions.indexOf(option); return <button key={option.key} id={option.key} type="button" role="option" aria-selected={index === activeIndex} className="btn btn-ghost" style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0, background: index === activeIndex ? 'var(--brand-soft)' : undefined }} onMouseEnter={() => setActiveIndex(index)} onClick={option.select}>{option.product.name}<span style={{ marginLeft: 'auto', color: 'var(--muted)', fontSize: 11 }}>Open existing</span></button> })}</>}
               <div style={{ padding: '8px 10px 4px', fontSize: 11, fontWeight: 700, color: 'var(--muted)' }}>AMBEL MASTER ITEMS</div>
-              {suggestions.map((item) => <button key={item.id} type="button" role="option" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0 }} onClick={() => selectMaster(item)}>{item.displayName}<span style={{ marginLeft: 'auto', color: 'var(--muted)', fontSize: 11 }}>{item.category}</span></button>)}
+              {masterOptions.map((option) => { const index = suggestionOptions.indexOf(option); return <button key={option.key} id={option.key} type="button" role="option" aria-selected={index === activeIndex} className="btn btn-ghost" style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0, background: index === activeIndex ? 'var(--brand-soft)' : undefined }} onMouseEnter={() => setActiveIndex(index)} onClick={option.select}>{option.item.displayName}<span style={{ marginLeft: 'auto', color: 'var(--muted)', fontSize: 11 }}>{option.item.category}</span></button> })}
               {!searching && suggestions.length === 0 && <div style={{ padding: 10, fontSize: 12, color: 'var(--muted)' }}>No master match. Keep typing to add “{name.trim()}” as your own product.</div>}{searching && <div style={{ padding: 10, fontSize: 12, color: 'var(--muted)' }}>Searching…</div>}
             </div>}
           </div></Fld>
