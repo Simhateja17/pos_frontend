@@ -35,10 +35,10 @@ export default function USPrivacyPage() {
           <p>We do not sell your store data or your customers&apos; data to third parties, and we do not share it for cross-context behavioral advertising. We do not use one merchant&apos;s transaction data to benefit another merchant on the platform.</p>
 
           <h2>4. Data storage &amp; security</h2>
-          <p>Data for the US edition is encrypted in transit and at rest and hosted on infrastructure located in the United States, with role-based access controls and audit logging on every account. Offline checkout data is encrypted locally and synced once connectivity returns.</p>
+          <p>Data for the International edition is encrypted in transit and at rest and hosted on infrastructure assigned to that edition, with role-based access controls and audit logging on every account. Offline checkout data is encrypted locally and synced once connectivity returns.</p>
 
           <h2>5. Your rights</h2>
-          <p>Depending on your state of residence, you may have the right to access, correct, delete or port your personal information, and to opt out of its sale or sharing. We honor these requests from residents of every US state, not only those with a comprehensive privacy law. Write to <a href="mailto:privacy@ambelpos.com">privacy@ambelpos.com</a> and we will respond within 45 days. Certain records, such as sales-tax invoices, are retained as required by state law even after account closure.</p>
+          <p>Depending on where you live, you may have the right to access, correct, delete or port your personal information, and to opt out of its sale or sharing. We honor requests under the privacy frameworks that apply to our users. Write to <a href="mailto:privacy@ambelpos.com">privacy@ambelpos.com</a> and we will respond within 45 days. Certain records, such as sales-tax invoices, are retained as required by applicable law even after account closure.</p>
 
           <h2>6. Children&apos;s privacy</h2>
           <p>Ambel POS is a business tool and is not directed to children under 13. We do not knowingly collect personal information from children.</p>

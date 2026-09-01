@@ -25,10 +25,10 @@ export const metadata = { title: "Pricing | Ambel POS" };
 
 const FAQ: [string, string][] = [
   ["Do you charge per POS transaction?", "No. Starter, Growth and Pro all include unlimited POS transactions. You pay a flat monthly price for the plan."],
-  ["How is sales tax handled on my subscription?", "US subscription prices are shown exclusive of tax. Any applicable state or local tax is calculated and shown in the secure checkout."],
+  ["How is sales tax handled on my subscription?", "Subscription prices are shown exclusive of tax. Any applicable regional or local tax is calculated and shown in the secure checkout."],
   ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
   ["How do Pro add-ons work?", "Pro includes a generous base allowance of locations, users and registers. Add more of any of the three at a small per-unit price once you outgrow it."],
-  ["What is included in every plan?", "Checkout, inventory management, ML reorder intelligence, multi-state sales tax reports with CSV export, and offline checkout with sync."],
+  ["What is included in every plan?", "Checkout, inventory management, ML reorder intelligence, multi-jurisdiction sales tax reports with CSV export, and offline checkout with sync."],
 ];
 
 export default async function USPricingPage() {

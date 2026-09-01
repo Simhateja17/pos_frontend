@@ -29,10 +29,10 @@ export default function USFeaturesPage() {
       <section className="content-hero">
         <div className="section-tag">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7z" /></svg>
-          Built for US retail
+          Built for modern retail
         </div>
         <h1>Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h1>
-        <p>Deeply-integrated modules designed around multi-state sales tax, US payment rails, and the real complexity of omnichannel specialty retail.</p>
+        <p>Deeply-integrated modules designed around multi-jurisdiction sales tax, card-present payment rails, and the real complexity of omnichannel specialty retail.</p>
       </section>
 
       <section className="content-section">

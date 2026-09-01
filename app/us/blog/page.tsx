@@ -8,10 +8,10 @@ import SiteFooter from "@/components/marketing/site-footer";
 export const metadata = { title: "Blog | Ambel POS" };
 
 const POSTS: [string, string, string, string, string][] = [
-  ["Sales Tax", "#0A2348", "Economic nexus in 2026: the thresholds that changed this year", "Jan 18, 2026 · 6 min read", "N"],
+  ["Sales Tax", "#0A2348", "Retail tax in 2026: the thresholds that changed this year", "Jan 18, 2026 · 6 min read", "N"],
   ["Product", "#06337A", "Inside the AI Copilot: how we designed for trust, not automation", "Jan 9, 2026 · 8 min read", "A"],
   ["Retail Ops", "#1A3A5C", "Why offline-first checkout matters more than your Wi-Fi contract", "Dec 22, 2025 · 5 min read", "O"],
-  ["Case Study", "#0E2642", "How The Dresser cut checkout time 40% across 3 Austin stores", "Dec 12, 2025 · 7 min read", "D"],
+  ["Case Study", "#0E2642", "How The Dresser cut checkout time 40% across three stores", "Dec 12, 2025 · 7 min read", "D"],
   ["Inventory", "#0A2348", "Size-curve analysis: reordering apparel without guesswork", "Nov 28, 2025 · 6 min read", "S"],
   ["Omnichannel", "#06337A", "BOPIS that customers actually trust: promise times, staging, follow-up", "Nov 14, 2025 · 5 min read", "B"],
 ];
@@ -26,7 +26,7 @@ export default function USBlogPage() {
           The Ambel POS blog
         </div>
         <h1>Notes on retail,<br /><em>sales tax and building product.</em></h1>
-        <p>Practical guides for US retailers, product updates, and stories from stores running Ambel POS.</p>
+        <p>Practical guides for retailers worldwide, product updates, and stories from stores running Ambel POS.</p>
       </section>
 
       <section className="content-section">

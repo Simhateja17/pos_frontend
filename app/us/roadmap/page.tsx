@@ -12,7 +12,7 @@ const COLUMNS: [string, string, [string, string][]][] = [
     "In progress",
     "#0058BA",
     [
-      ["Automated sales tax filing", "Prepare and submit state returns from inside Ambel POS, with a filing calendar per nexus state."],
+      ["Automated sales tax filing", "Prepare and submit jurisdiction returns from inside Ambel POS, with a filing calendar for each tax region."],
       ["Marketplace order sync", "Two-way order and stock sync with Amazon and Etsy seller accounts."],
       ["Copilot for staff scheduling", "AI-suggested shift rosters based on foot-traffic forecasts and labor budget."],
     ],

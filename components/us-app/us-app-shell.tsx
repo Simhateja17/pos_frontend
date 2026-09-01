@@ -86,9 +86,9 @@ export function UsAppShell({ children }: { children: ReactNode }) {
         <div className="bg-canvas"><div className="orb orb-1" /><div className="orb orb-2" /><div className="orb orb-3" /></div>
         <div className="us-app">
           <aside className="sidebar">
-            <Link className="brand" href="/us/dashboard" aria-label="Ambel POS US dashboard">
+            <Link className="brand" href="/us/dashboard" aria-label="Ambel POS dashboard">
               <div className="brand-mark">AP</div>
-              <div className="brand-text"><strong>Ambel POS</strong><span>US retail edition</span></div>
+              <div className="brand-text"><strong>Ambel POS</strong><span>International retail</span></div>
             </Link>
             <nav aria-label="International POS navigation">
               {NAV_GROUPS.map((group) => (

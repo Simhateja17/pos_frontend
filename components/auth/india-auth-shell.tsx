@@ -133,7 +133,7 @@ export function IndiaAuthShell({ mode, children }: AuthShellProps) {
 const internationalContent = {
   signup: {
     heading: <>One platform.<br />Every store detail.</>,
-    description: 'Sales, inventory and ML reorder intelligence, built for retailers outside India.',
+    description: 'Sales, inventory and ML reorder intelligence, built for modern retailers.',
     benefits: [
       'ML reorder intelligence from day 1',
       'Offline billing, works without internet',

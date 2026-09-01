@@ -40,10 +40,10 @@ export function UsDashboardView() {
   useEffect(() => { void load() }, [load])
 
   if (loading && !dashboard) {
-    return <><UsPageHead title="US Dashboard" sub="Current tenant performance and operational signals" /><UsLoadingState label="Loading dashboard" rows={8} /></>
+    return <><UsPageHead title="Dashboard" sub="Current tenant performance and operational signals" /><UsLoadingState label="Loading dashboard" rows={8} /></>
   }
   if (error && !dashboard) {
-    return <><UsPageHead title="US Dashboard" sub="Current tenant performance and operational signals" /><UsCard><UsErrorState message={error} onRetry={() => void load()} /></UsCard></>
+    return <><UsPageHead title="Dashboard" sub="Current tenant performance and operational signals" /><UsCard><UsErrorState message={error} onRetry={() => void load()} /></UsCard></>
   }
   if (!dashboard) return null
 
@@ -56,7 +56,7 @@ export function UsDashboardView() {
   return (
     <>
       <UsPageHead
-        title="US Dashboard"
+        title="Dashboard"
         sub={`${dateOnly.format(new Date(dashboard.period.endsAt))} · Business-day window ${dateOnly.format(new Date(dashboard.period.startsAt))}–${dateOnly.format(new Date(dashboard.period.endsAt))}`}
         actions={
           <>

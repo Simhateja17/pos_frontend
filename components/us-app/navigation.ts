@@ -13,7 +13,7 @@ import {
 export type UsNavId = 'dash' | 'checkout' | 'tax' | 'sync' | 'stock' | 'orders' | 'hardware' | 'reports'
 
 export const NAMES: Record<UsNavId, string> = {
-  dash: 'US Dashboard',
+  dash: 'Dashboard',
   checkout: 'Fast Checkout',
   tax: 'Sales Tax',
   sync: 'Offline Sync',

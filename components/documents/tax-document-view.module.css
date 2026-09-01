@@ -393,12 +393,12 @@
   }
 
   .thermal80 {
-    width: 80mm;
+    width: 72mm;
     page: document80;
   }
 
   .thermal58 {
-    width: 58mm;
+    width: 50mm;
     page: document58;
   }
 
@@ -440,11 +440,11 @@
 
   @page document80 {
     size: 80mm 297mm;
-    margin: 0;
+    margin: 0 4mm;
   }
 
   @page document58 {
     size: 58mm 297mm;
-    margin: 0;
+    margin: 0 4mm;
   }
 }

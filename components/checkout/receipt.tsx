@@ -177,7 +177,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         WhatsApp bill delivery is unavailable for this store. Print or email the confirmed bill instead.
       </p>
 
-      {/* Off-screen, natural-scale, 80mm-print-ready container: same sr-only
+      {/* Off-screen, natural-scale, selected-width print container: same sr-only
           pattern as Phase 2's label-sheet container (frontend/app/app/inventory/labels/page.tsx).
           Kept in the DOM at all times so contentRef always has content to print. */}
       <div className="sr-only">

@@ -31,15 +31,15 @@ const MOCK_KPI = [
   ["Margin", "58.4%", false],
 ];
 const MOCK_LIST = [
-  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "AUS-24850", who: "Harper Lee · Tap", amt: "$251.97" },
-  { bg: "#FEF3E0", color: "#B45309", bill: "AUS-24849", who: "Walk-in · Cash", amt: "$48.20" },
+  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "POS-24850", who: "Harper Lee · Tap", amt: "$251.97" },
+  { bg: "#FEF3E0", color: "#B45309", bill: "POS-24849", who: "Walk-in · Cash", amt: "$48.20" },
   { bg: "#ECFDF5", color: "#0f8f63", bill: "WEB-1842", who: "Nora Patel · BOPIS", amt: "$164.50" },
 ];
 const MOCK_BARS = [38, 52, 44, 68, 60, 72, 58, 80, 70, 76];
 
 const STEPS = [
-  ["Store\nProfile", "Set your EIN, store address, timezone and receipt header"],
-  ["Sales Tax\nNexus", "Register your states; rates and districts resolve automatically"],
+  ["Store\nProfile", "Set your business ID, store address, timezone and receipt header"],
+  ["Sales Tax\nRules", "Register your tax jurisdictions; rates and local rules resolve automatically"],
   ["Import\nCatalog", "CSV import or manual: 4,826 SKUs with variants in minutes"],
   ["Pair\nHardware", "Card reader, scanner, receipt printer and cash drawer in one screen"],
   ["First\nSale", "Run a test transaction, verify the receipt, open for business"],
@@ -48,7 +48,7 @@ const STEPS = [
 const GALLERY = [
   ["Dashboard", "#0A2348", "Net sales, tickets, tax collected, action center"],
   ["Checkout", "#06337A", "Cart, variant picker, tax, tender, receipt in one screen"],
-  ["Sales Tax", "#1A3A5C", "Nexus states, jurisdiction split, taxability, filing alerts"],
+  ["Sales Tax", "#1A3A5C", "Tax jurisdictions, taxability, filing alerts"],
   ["Offline Sync", "#0E2642", "Local-first register, store-and-forward, conflict resolver"],
   ["Inventory", "#0A2348", "Variant matrix, transfers, purchase orders, reorder points"],
   ["Online Orders", "#06337A", "Shopify sync, BOPIS queue, ship-from-store, pickup shelves"],
@@ -58,7 +58,7 @@ const GALLERY = [
   ["Onboarding", "#06337A", "Guided first-run setup with a live launch checklist"],
   ["Dashboard", "#0A2348", "Net sales, tickets, tax collected, action center"],
   ["Checkout", "#06337A", "Cart, variant picker, tax, tender, receipt in one screen"],
-  ["Sales Tax", "#1A3A5C", "Nexus states, jurisdiction split, taxability, filing alerts"],
+  ["Sales Tax", "#1A3A5C", "Tax jurisdictions, taxability, filing alerts"],
   ["Offline Sync", "#0E2642", "Local-first register, store-and-forward, conflict resolver"],
   ["Inventory", "#0A2348", "Variant matrix, transfers, purchase orders, reorder points"],
   ["Online Orders", "#06337A", "Shopify sync, BOPIS queue, ship-from-store, pickup shelves"],
@@ -67,9 +67,9 @@ const GC_BAR_W = [88, 72, 94];
 const GC_BAR_BG = ["#EEF4FF", "#F5F6F9", "#fff"];
 
 const TESTIMONIALS = [
-  ["AM", "#0058BA", "Ambel POS runs checkout, tax and our Shopify stock pool from one place. Ringing up a customer takes half the taps it used to.", "Ava Mitchell", "Owner, The Dresser · Austin, TX"],
-  ["RK", "#0E7490", "Multi-state nexus used to be a monthly panic. Now the rates resolve per transaction and the filing alerts land before the deadline.", "Ryan Keller", "CFO, Style & Co · Denver, CO"],
-  ["PS", "#6D28D9", "A storm took our internet out on a Saturday. We kept selling all afternoon and everything reconciled the moment we reconnected.", "Priya Shah", "Store Manager, Urban Fits · Chicago, IL"],
+  ["AM", "#0058BA", "Ambel POS runs checkout, tax and our Shopify stock pool from one place. Ringing up a customer takes half the taps it used to.", "Ava Mitchell", "Owner, The Dresser · Multi-location retailer"],
+  ["RK", "#0E7490", "Multi-jurisdiction tax used to be a monthly panic. Now the rates resolve per transaction and the filing alerts land before the deadline.", "Ryan Keller", "CFO, Style & Co · Retail group"],
+  ["PS", "#6D28D9", "A storm took our internet out on a Saturday. We kept selling all afternoon and everything reconciled the moment we reconnected.", "Priya Shah", "Store Manager, Urban Fits · Independent retailer"],
 ];
 
 function featBadges(b3, b4) {
@@ -219,8 +219,8 @@ export default function USLandingPage() {
         <div className="hero-bg"></div>
         <div className="hero-grid"></div>
         <div className="hero-badge"><span></span> Sales-tax native · Omnichannel · Offline-first</div>
-        <h1 className="hero-h1">US retail, run from<br /><em>one register.</em></h1>
-        <p className="hero-sub">Checkout, sales tax, inventory, online orders, receipts and reports, unified in one beautiful POS built for American boutiques and multi-location retailers.</p>
+        <h1 className="hero-h1">Retail, run from<br /><em>one register.</em></h1>
+        <p className="hero-sub">Checkout, sales tax, inventory, online orders, receipts and reports, unified in one beautiful POS built for independent boutiques and multi-location retailers.</p>
         <div className="hero-actions">
           <button className="btn-hero btn-hero-pri" onClick={goAuth}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
@@ -235,7 +235,7 @@ export default function USLandingPage() {
           <span className="dot"></span>
           <span>✓ Works offline</span>
           <span className="dot"></span>
-          <span>✓ Secure USD checkout</span>
+          <span>✓ Secure checkout</span>
         </div>
 
         {/* product mock */}
@@ -311,7 +311,7 @@ export default function USLandingPage() {
       {/* STATS BAND */}
       <div className="stats-band animate-in">
         <div className="stats-inner">
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="500">0</span><span>+</span></div><div className="stat-label">US retailers on Ambel POS</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="500">0</span><span>+</span></div><div className="stat-label">Retailers on Ambel POS</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="240" data-prefix="$" data-suffix="M+">$0M+</span></div><div className="stat-label">GMV processed annually</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="99.98" data-suffix="%">0%</span></div><div className="stat-label">Uptime SLA</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="12000">0</span><span>+</span></div><div className="stat-label">Tax jurisdictions covered</div></div>
@@ -323,10 +323,10 @@ export default function USLandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7z" /></svg>
-            Built for US retail
+            Built for modern retail
           </div>
           <h2 className="section-h animate-in">Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h2>
-          <p className="section-sub animate-in">Deeply-integrated modules, all designed around US sales tax, card-present payments, and the real complexity of multi-location omnichannel retail.</p>
+          <p className="section-sub animate-in">Deeply-integrated modules, designed around sales-tax workflows, card-present payments, and the real complexity of multi-location omnichannel retail.</p>
           <div className="features-grid">
             {US_FEATURES.map((f, i) => (
               <div className="feat-card animate-in" key={i}>
@@ -426,7 +426,7 @@ export default function USLandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="3.6" /><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0" /></svg>
-            Trusted by retailers across the US
+            Trusted by retailers worldwide
           </div>
           <h2 className="section-h animate-in">Real stores, <em>real results.</em></h2>
           <div className="social-grid">
@@ -448,7 +448,7 @@ export default function USLandingPage() {
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
         <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Join 500+ US retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
+        <p className="animate-in">Join retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goAuth}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>

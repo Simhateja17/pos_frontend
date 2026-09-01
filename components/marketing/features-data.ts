@@ -31,7 +31,7 @@ export const FEATURES: Feature[] = [
  */
 export const US_FEATURES: Feature[] = [
   ["bill", "Fast Checkout", "Payment-first checkout with barcode scan, variant picker, split tender and tap/chip card capture in a handful of taps.", "EXISTING", ""],
-  ["reports", "Sales Tax Automation", "State, county, city and special-district nexus resolved per transaction, with product taxability and exemption certificates.", "NEW", "★"],
+  ["reports", "Sales Tax Automation", "Regional and local tax jurisdictions resolved per transaction, with product taxability and exemption certificates.", "NEW", "★"],
   ["channels", "Omnichannel Sync", "One stock pool across store POS, Shopify storefront and social shops. BOPIS and ship-from-store fulfil out of the same inventory.", "NEW", ""],
   ["bolt", "Offline-First Billing", "Keep selling when the internet drops. Sales, tax and card authorisations are stored locally and reconciled the moment you reconnect.", "", "★"],
   ["inventory", "Inventory & Variants", "Size × colour × material matrix, multi-location transfers, purchase orders and reorder suggestions across every channel.", "", "★"],

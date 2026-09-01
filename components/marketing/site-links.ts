@@ -121,7 +121,7 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
     signupHref: '/us/auth',
     appHref: '/us/dashboard',
     appLabel: 'Back to Checkout',
-    tagline: 'The complete US retail suite: sales-tax-native, omnichannel, offline-first.',
+    tagline: 'The complete retail suite: sales-tax-native, omnichannel, offline-first.',
     footerColumns: [
       [
         'Product',
@@ -139,6 +139,6 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
       ['Privacy', '/us/privacy'],
       ['Terms', '/us/terms'],
     ],
-    footerMeta: ['US retail edition'],
+    footerMeta: ['International retail edition'],
   },
 }

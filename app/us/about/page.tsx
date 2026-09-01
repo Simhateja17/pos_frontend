@@ -8,7 +8,7 @@ import SiteFooter from "@/components/marketing/site-footer";
 export const metadata = { title: "About | Ambel POS" };
 
 const VALUES = [
-  ["Built for US retail", "Every workflow, from multi-state nexus and product taxability to BOPIS and ship-from-store, is designed around how American specialty retail actually operates."],
+  ["Built for modern retail", "Every workflow, from multi-jurisdiction tax and product taxability to BOPIS and ship-from-store, is designed around how specialty retail actually operates."],
   ["Offline is not optional", "Internet drops. Checkout shouldn't. Every core workflow works offline-first and syncs the moment connectivity returns."],
   ["AI that shows its work", "Our Copilot proposes actions with the data behind them, and always asks before it touches your store."],
   ["Ship with retailers, not at them", "Roadmap priorities come from store owners and associates using the product daily, not from a boardroom."],
@@ -37,7 +37,7 @@ export default function USAboutPage() {
         <div className="content-wrap content-prose">
           <h2>Our story</h2>
           <p>Ambel POS was founded by two former retail-tech engineers who watched a boutique owner run checkout on one app, inventory on a spreadsheet, and sales tax through an accountant. Every month, by hand. We built the first version over a weekend to fix that one store&apos;s workflow. Three years later it runs thousands of storefronts.</p>
-          <p>The US edition ships on its own infrastructure, with its own tax engine and payment integrations, so nothing about the product reads like a port of software built for another market.</p>
+          <p>The International edition ships on its own infrastructure, with its own tax engine and payment integrations, so nothing about the product reads like a port of software built for another market.</p>
           <h2>What we believe</h2>
         </div>
         <div className="features-grid" style={{ marginTop: 24 }}>

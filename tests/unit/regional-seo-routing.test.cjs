@@ -8,6 +8,14 @@ const siteLinks = fs.readFileSync(
   path.join(process.cwd(), "components/marketing/site-links.ts"),
   "utf8",
 );
+const internationalLanding = fs.readFileSync(
+  path.join(process.cwd(), "app/us/page.js"),
+  "utf8",
+);
+const indiaLanding = fs.readFileSync(
+  path.join(process.cwd(), "app/page.js"),
+  "utf8",
+);
 
 test("regional SEO headers declare canonical and all three alternates", () => {
   assert.match(middleware, /rel=\"canonical\"/);
@@ -26,4 +34,10 @@ test("International marketing chrome uses the canonical root homepage", () => {
   assert.match(internationalBlock, /home: '\/'/);
   assert.match(internationalBlock, /\['How it works', '\/#how'\]/);
   assert.match(internationalBlock, /\['Screens', '\/#screens'\]/);
+});
+
+test("International landing copy is country-neutral while India copy stays regional", () => {
+  assert.match(internationalLanding, /Retail, run from/);
+  assert.doesNotMatch(internationalLanding, /US retail, run from|American boutiques|across the US/);
+  assert.match(indiaLanding, /India(?:'|&apos;)s retail suite/);
 });

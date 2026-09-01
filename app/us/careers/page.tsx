@@ -9,19 +9,19 @@ import SiteFooter from "@/components/marketing/site-footer";
 export const metadata = { title: "Careers | Ambel POS" };
 
 const PERKS = [
-  ["Remote-friendly", "Work from our Austin hub, or remotely from anywhere in the US."],
+  ["Remote-friendly", "Work remotely across time zones, with optional team hubs."],
   ["Health cover", "Medical, dental and vision for you and your dependents."],
   ["Learning budget", "Annual budget for courses, books and conferences."],
   ["Equity", "Every full-time hire gets stock options in the company."],
 ];
 
 const ROLES: [string, string, string][] = [
-  ["Senior Backend Engineer", "Engineering · Austin, TX / Remote", "Full-time"],
-  ["Frontend Engineer, Checkout", "Engineering · Austin, TX / Remote", "Full-time"],
-  ["ML Engineer, Forecasting", "Engineering · Austin, TX", "Full-time"],
-  ["Product Designer", "Product · Austin, TX / Remote", "Full-time"],
-  ["Retail Success Manager", "Customer Success · Denver, CO", "Full-time"],
-  ["Sales Tax & Compliance Analyst", "Operations · Remote (US)", "Full-time"],
+  ["Senior Backend Engineer", "Engineering · Remote / Flexible", "Full-time"],
+  ["Frontend Engineer, Checkout", "Engineering · Remote / Flexible", "Full-time"],
+  ["ML Engineer, Forecasting", "Engineering · Remote / Flexible", "Full-time"],
+  ["Product Designer", "Product · Remote / Flexible", "Full-time"],
+  ["Retail Success Manager", "Customer Success · Remote / Flexible", "Full-time"],
+  ["Sales Tax & Compliance Analyst", "Operations · Remote / Flexible", "Full-time"],
 ];
 
 export default function USCareersPage() {

@@ -293,7 +293,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
 
       <aside
         ref={drawerRef}
-        aria-label={`${region === 'IN' ? 'India' : 'US'} application navigation`}
+        aria-label={`${region === 'IN' ? 'India' : 'International'} application navigation`}
         aria-modal={mobileOpen ? true : undefined}
         role={mobileOpen ? 'dialog' : undefined}
         className={`sidebar ${styles.sidebar} ${mobileOpen ? styles.drawerOpen : styles.drawerClosed}`}

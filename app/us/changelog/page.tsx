@@ -10,7 +10,7 @@ import SiteFooter from "@/components/marketing/site-footer";
 export const metadata = { title: "Changelog | Ambel POS" };
 
 const ENTRIES: [string, string, string, string][] = [
-  ["Jan 2026", "NEW", "District-level tax resolution", "Sales tax now resolves down to special-purpose districts, not just state and county, so rooftop-accurate rates apply on every ticket."],
+  ["Jan 2026", "NEW", "Local tax-jurisdiction resolution", "Sales tax now resolves down to local jurisdictions, not just regional ones, so accurate rates apply on every ticket."],
   ["Jan 2026", "IMPROVED", "Faster multi-location sync", "Cross-location stock sync latency reduced from ~4s to under 900ms on the standard plan."],
   ["Dec 2025", "NEW", "Exemption certificate vault", "Store and expire resale and non-profit certificates per customer, applied automatically at checkout."],
   ["Dec 2025", "FIX", "Rounding on mixed-rate tickets", "Fixed a penny discrepancy when a single ticket mixed taxable and tax-exempt lines across two jurisdictions."],

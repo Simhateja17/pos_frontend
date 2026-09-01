@@ -23,7 +23,7 @@ export default function USOnboardingCompletePage() {
           router.replace('/us/onboarding/1')
           return
         }
-        if (active) setMessage('Your subscription is active. Your US store account is ready.')
+        if (active) setMessage('Your subscription is active. Your store account is ready.')
       } catch (cause) {
         if (active) setMessage(cause instanceof Error ? cause.message : 'We could not confirm the subscription.')
       }

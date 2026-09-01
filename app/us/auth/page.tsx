@@ -166,7 +166,7 @@ export default function USAuthPage() {
       <p className={styles.subheading}>
         {mode === 'login'
           ? 'Enter your store credentials to continue.'
-          : 'Create your account, then choose a paid USD subscription to activate your store.'}
+          : 'Create your account, then choose a paid subscription to activate your store.'}
       </p>
 
       <div className={styles.tabs} role="tablist" aria-label="Authentication mode">
@@ -245,22 +245,22 @@ export default function USAuthPage() {
           </label>
           <label className={styles.field}>
             <span className={styles.label}>Business address<span className={styles.required}>*</span></span>
-            <input className={styles.input} id="us-address" placeholder="100 Congress Ave" required value={signup.addressLine1} onChange={(event) => updateSignup('addressLine1', event.target.value)} />
+            <input className={styles.input} id="us-address" placeholder="Street and number" required value={signup.addressLine1} onChange={(event) => updateSignup('addressLine1', event.target.value)} />
           </label>
           <label className={styles.field}>
             <span className={styles.label}>City<span className={styles.required}>*</span></span>
-            <input className={styles.input} id="us-city" placeholder="Austin" required value={signup.city} onChange={(event) => updateSignup('city', event.target.value)} />
+            <input className={styles.input} id="us-city" placeholder="City" required value={signup.city} onChange={(event) => updateSignup('city', event.target.value)} />
           </label>
           {/* `actions` is the module's two-column row; the same pairing India
               uses for City / State and PIN code / GSTIN. */}
           <div className={styles.actions}>
             <label className={styles.field}>
-              <span className={styles.label}>State<span className={styles.required}>*</span></span>
-              <input className={styles.input} id="us-state" placeholder="Texas" required value={signup.state} onChange={(event) => updateSignup('state', event.target.value)} />
+              <span className={styles.label}>Region<span className={styles.required}>*</span></span>
+              <input className={styles.input} id="us-state" placeholder="State, province or region" required value={signup.state} onChange={(event) => updateSignup('state', event.target.value)} />
             </label>
             <label className={styles.field}>
-              <span className={styles.label}>ZIP code<span className={styles.required}>*</span></span>
-              <input className={styles.input} id="us-postal" inputMode="numeric" placeholder="78701" required value={signup.postalCode} onChange={(event) => updateSignup('postalCode', event.target.value)} />
+              <span className={styles.label}>Postal code<span className={styles.required}>*</span></span>
+              <input className={styles.input} id="us-postal" placeholder="Postal code" required value={signup.postalCode} onChange={(event) => updateSignup('postalCode', event.target.value)} />
             </label>
           </div>
           <label className={styles.agreement}>
@@ -294,7 +294,7 @@ export default function USAuthPage() {
 
       <div className={styles.separator}>or</div>
       <p className={styles.footerText}>
-        <Link className={styles.link} href="/us">← Back to US retail</Link>
+        <Link className={styles.link} href="/us">← Back to Ambel POS</Link>
       </p>
     </InternationalAuthShell>
   )

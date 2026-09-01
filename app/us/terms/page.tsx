@@ -23,12 +23,12 @@ export default function USTermsPage() {
           <p>By creating an account or using Ambel POS, you agree to these terms on behalf of yourself and the business you represent. If you don&apos;t agree, please don&apos;t use the product.</p>
 
           <h2>2. Subscription &amp; billing</h2>
-          <p>Plans are billed monthly or annually per the pricing shown at signup, in US dollars and exclusive of applicable sales tax. Fees are non-refundable except where required by law. You can cancel any time; access continues until the end of the current billing period.</p>
+          <p>Plans are billed monthly or annually in the displayed billing currency, exclusive of applicable sales tax. Fees are non-refundable except where required by law. You can cancel any time; access continues until the end of the current billing period.</p>
 
           <h2>3. Your responsibilities</h2>
           <ul>
             <li>Keep your account credentials secure and restrict staff access using role-based permissions.</li>
-            <li>Ensure the tax data entered into the platform — nexus states, product taxability and exemption certificates — is accurate. Ambel POS assists with sales tax calculation and reporting but does not file returns on your behalf unless you use our filing add-on.</li>
+            <li>Ensure the tax data entered into the platform — tax jurisdictions, product taxability and exemption certificates — is accurate. Ambel POS assists with sales tax calculation and reporting but does not file returns on your behalf unless you use our filing add-on.</li>
             <li>Do not use the platform for unlawful transactions or to circumvent tax obligations.</li>
           </ul>
 
