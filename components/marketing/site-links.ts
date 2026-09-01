@@ -110,11 +110,11 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
     footerMeta: ['GST: 37AAMCC4557F1ZF'],
   },
   INTL: {
-    home: '/us',
+    home: '/',
     navLinks: [
       ['Features', '/us/features'],
-      ['How it works', '/us#how'],
-      ['Screens', '/us#screens'],
+      ['How it works', '/#how'],
+      ['Screens', '/#screens'],
       ['Pricing', '/us/pricing'],
     ],
     loginHref: '/us/auth',

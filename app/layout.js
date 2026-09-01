@@ -14,7 +14,6 @@ export const metadata = {
     title: "Ambel POS — Point of Sale & Inventory Software for Retail",
     description:
       "Retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting.",
-    url: "https://www.ambelpos.com",
   },
   twitter: {
     card: "summary",
