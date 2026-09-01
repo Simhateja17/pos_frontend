@@ -311,7 +311,7 @@ export default function USLandingPage() {
       {/* STATS BAND */}
       <div className="stats-band animate-in">
         <div className="stats-inner">
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="500">0</span><span>+</span></div><div className="stat-label">US retailers on Ambel</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="500">0</span><span>+</span></div><div className="stat-label">US retailers on Ambel POS</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="240" data-prefix="$" data-suffix="M+">$0M+</span></div><div className="stat-label">GMV processed annually</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="99.98" data-suffix="%">0%</span></div><div className="stat-label">Uptime SLA</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="12000">0</span><span>+</span></div><div className="stat-label">Tax jurisdictions covered</div></div>

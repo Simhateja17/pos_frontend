@@ -5,7 +5,7 @@ import { useState } from 'react'
 import type { TaxDocument } from '@/lib/api/authenticated-client'
 import styles from './tax-document-view.module.css'
 
-type DocumentMode = 'a4' | 'thermal'
+type DocumentMode = 'a4' | 'thermal80' | 'thermal58'
 
 const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 })
 
@@ -84,15 +84,18 @@ export function TaxDocumentView({ document, initialMode = 'a4' }: { document: Ta
         <button className="btn btn-sm" type="button" onClick={() => setMode('a4')} aria-pressed={mode === 'a4'}>
           A4 view
         </button>
-        <button className="btn btn-sm" type="button" onClick={() => setMode('thermal')} aria-pressed={mode === 'thermal'}>
+        <button className="btn btn-sm" type="button" onClick={() => setMode('thermal80')} aria-pressed={mode === 'thermal80'}>
           80mm view
+        </button>
+        <button className="btn btn-sm" type="button" onClick={() => setMode('thermal58')} aria-pressed={mode === 'thermal58'}>
+          58mm view
         </button>
         <button className="btn btn-pri btn-sm" type="button" onClick={() => window.print()}>
           Print / Save PDF
         </button>
       </div>
 
-      <article className={`${styles.document} ${mode === 'a4' ? styles.a4 : styles.thermal}`}>
+      <article className={`${styles.document} ${mode === 'a4' ? styles.a4 : `${styles.thermal} ${mode === 'thermal58' ? styles.thermal58 : styles.thermal80}`}`}>
         <header className={styles.header}>
           <div className={styles.titleRow}>
             <div>

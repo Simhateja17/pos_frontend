@@ -15,8 +15,15 @@
   max-width: 210mm;
 }
 
-.thermal {
+.thermal80 {
   max-width: 80mm;
+}
+
+.thermal58 {
+  max-width: 58mm;
+}
+
+.thermal {
   font-size: 11px;
 }
 
@@ -226,6 +233,32 @@
   min-width: 80px;
 }
 
+.thermal58 .header,
+.thermal58 .parties,
+.thermal58 .summaryGrid,
+.thermal58 .footer {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.thermal58 .tableWrap {
+  padding: 0 8px;
+}
+
+.thermal58 .lines {
+  font-size: 9px;
+}
+
+.thermal58 .lineDescription {
+  min-width: 62px;
+}
+
+.thermal58 .payment,
+.thermal58 .totalRow {
+  gap: 6px;
+  font-size: 10px;
+}
+
 .summaryGrid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(210px, .8fr);
@@ -356,10 +389,17 @@
 
   .a4 {
     width: 210mm;
+    page: documentA4;
   }
 
-  .thermal {
+  .thermal80 {
     width: 80mm;
+    page: document80;
+  }
+
+  .thermal58 {
+    width: 58mm;
+    page: document58;
   }
 
   /* Chrome's print paginator treats flex/grid containers as unbreakable
@@ -391,5 +431,20 @@
   .lines tr {
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+
+  @page documentA4 {
+    size: A4;
+    margin: 0;
+  }
+
+  @page document80 {
+    size: 80mm 297mm;
+    margin: 0;
+  }
+
+  @page document58 {
+    size: 58mm 297mm;
+    margin: 0;
   }
 }

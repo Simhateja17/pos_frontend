@@ -3,9 +3,51 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
-  title: "Ambel POS | India's Most Complete Retail Suite",
+  metadataBase: new URL("https://www.ambelpos.com"),
+  title: "Ambel POS — Point of Sale & Inventory Software for Retail",
   description:
-    "Ultra-fast retail billing, inventory, multi-store management, GST-ready reports, and AI-powered insights for Indian retailers.",
+    "Ambel POS is retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting. Built for retail chains and independent stores.",
+  applicationName: "Ambel POS",
+  openGraph: {
+    type: "website",
+    siteName: "Ambel POS",
+    title: "Ambel POS — Point of Sale & Inventory Software for Retail",
+    description:
+      "Retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting.",
+    url: "https://www.ambelpos.com",
+  },
+  twitter: {
+    card: "summary",
+    title: "Ambel POS — Point of Sale & Inventory Software for Retail",
+    description:
+      "Retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting.",
+  },
+};
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://www.ambelpos.com/#organization",
+      name: "Ambel POS",
+      legalName: "Couture Services Private Limited",
+      url: "https://www.ambelpos.com",
+      logo: "https://www.ambelpos.com/icon.svg",
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://www.ambelpos.com/#software",
+      name: "Ambel POS",
+      url: "https://www.ambelpos.com",
+      applicationCategory: "Point of Sale and Retail Inventory Software",
+      applicationSubCategory: "Retail Management Software",
+      operatingSystem: "Web",
+      publisher: { "@id": "https://www.ambelpos.com/#organization" },
+      description:
+        "Retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting for retail chains and independent stores.",
+    },
+  ],
 };
 
 export const viewport = {
@@ -30,6 +72,10 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-11LY3VZ1DB"
           strategy="afterInteractive"

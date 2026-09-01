@@ -70,6 +70,7 @@ function formatStamp(iso: string): string {
 export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessName: string }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const printFn = useReactToPrint({ contentRef })
+  const [paperWidth, setPaperWidth] = useState<'58' | '80'>('80')
   const [email, setEmail] = useState('')
   const [emailStatus, setEmailStatus] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
@@ -111,8 +112,22 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         <span className="rounded-full bg-[#E8F7F0] px-3 py-1 text-sm font-semibold text-[#047857]">Completed</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex min-h-11 overflow-hidden rounded-md border" aria-label="Bill paper width" style={{ borderColor: '#CBD5E1' }}>
+          {(['58', '80'] as const).map((width) => (
+            <button
+              key={width}
+              type="button"
+              aria-pressed={paperWidth === width}
+              onClick={() => setPaperWidth(width)}
+              className="px-3 text-sm font-medium"
+              style={{ background: paperWidth === width ? '#E6FFFB' : '#FFFFFF', color: paperWidth === width ? '#0F766E' : '#475569' }}
+            >
+              {width} mm
+            </button>
+          ))}
+        </div>
         <Button type="button" onClick={() => printFn()} style={{ minHeight: 44 }}>
-          Print bill
+          Print / Save PDF
         </Button>
         <a
           href={`/app/documents?saleId=${encodeURIComponent(sale.id)}`}
@@ -166,7 +181,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           pattern as Phase 2's label-sheet container (frontend/app/app/inventory/labels/page.tsx).
           Kept in the DOM at all times so contentRef always has content to print. */}
       <div className="sr-only">
-        <div ref={contentRef} className="receipt-print">
+        <div ref={contentRef} className={`receipt-print receipt-print--${paperWidth}`}>
           <div className="receipt-store">{businessName}</div>
           <div className="receipt-sub">Tax Invoice</div>
           <div className="receipt-rule-strong" />

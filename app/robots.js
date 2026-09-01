@@ -1,5 +1,3 @@
-const SITE_URL = "https://www.ambelpos.com";
-
 export default function robots() {
   return {
     rules: {
@@ -22,6 +20,9 @@ export default function robots() {
         "/_backend",
       ],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: [
+      "https://in.ambelpos.com/sitemap-india.xml",
+      "https://www.ambelpos.com/sitemap-international.xml",
+    ],
   };
 }

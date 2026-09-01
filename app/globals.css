@@ -890,6 +890,26 @@
   line-height: 1.35;
   -webkit-font-smoothing: none;
 }
+.receipt-print--58 {
+  width: 50mm;
+  font-size: 8pt;
+}
+.receipt-print--58 .receipt-store {
+  font-size: 11pt;
+}
+.receipt-print--58 .receipt-meta {
+  display: block;
+}
+.receipt-print--58 .receipt-meta span {
+  display: block;
+}
+.receipt-print--58 .receipt-item-calc {
+  padding-left: 1.5mm;
+}
+.receipt-print--58 .receipt-row,
+.receipt-print--58 .receipt-total {
+  gap: 1.5mm;
+}
 .receipt-store {
   font-size: 12pt;
   font-weight: 700;
@@ -976,10 +996,17 @@
     position: absolute;
     top: 0;
     left: 0;
-    page: receipt;
+    page: receipt80;
   }
-  @page receipt {
-    size: 80mm auto;
+  .receipt-print--58 {
+    page: receipt58;
+  }
+  @page receipt80 {
+    size: 80mm 297mm;
+    margin: 0 4mm;
+  }
+  @page receipt58 {
+    size: 58mm 297mm;
     margin: 0 4mm;
   }
 }
