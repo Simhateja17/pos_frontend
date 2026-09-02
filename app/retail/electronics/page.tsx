@@ -1,7 +1,10 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
-export const metadata = { title: "Electronics POS | Ambel POS" };
+export const metadata = {
+  title: "Electronics POS | Ambel POS",
+  description: "Electronics POS with IMEI/serial capture at billing, warranty and AMC tracking, manager approval on high-value discounts, and EMI settlement matching.",
+};
 
 export default function Page() {
   return (
@@ -11,9 +14,9 @@ export default function Page() {
       emphasis="and AMC, sorted."
       subtitle="Track IMEI/serial numbers, manage manufacturer warranties and AMC renewals, and bill high-value items with confidence."
       stats={[
-        ["340+", "Electronics stores"],
-        ["1.8 Cr+", "Serials tracked"],
-        ["0.02%", "Warranty mismatch rate"],
+        ["₹799", "Starting plan, per month"],
+        ["18%", "GST built into every bill"],
+        ["Offline", "Billing works without signal"],
       ]}
       features={[
         { title: "IMEI & Serial Capture", body: "Scan or enter serial/IMEI at the point of sale, automatically linked to the invoice for warranty claims." },

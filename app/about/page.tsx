@@ -2,7 +2,10 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "About | Ambel POS" };
+export const metadata = {
+  title: "About | Ambel POS",
+  description: "Ambel POS is built by a Bengaluru-based founding team to replace the patchwork of billing apps, spreadsheets and manual GST filing Indian retailers stitch together today.",
+};
 
 const VALUES = [
   ["Built for Indian retail", "Every workflow, from GST and HSN codes to UPI settlement and DLT-compliant WhatsApp, is designed around how Indian retailers actually operate, not adapted from a Western template."],
@@ -33,8 +36,8 @@ export default function AboutPage() {
       <section className="content-section">
         <div className="content-wrap content-prose">
           <h2>Our story</h2>
-          <p>Ambel POS was founded by two former retail-tech engineers who watched a Jaipur boutique owner run billing on one app, inventory on a spreadsheet, and GST filing through a CA. Every month, by hand. We built the first version of Ambel POS over a weekend to fix that one store's workflow. Three years later, it runs 2,400+ stores across India.</p>
-          <p>We&apos;re headquartered in Bengaluru with team members across Jaipur, Mumbai and Pune, the same cities where our earliest customers opened their doors to us.</p>
+          <p>Ambel POS was founded by a small team of retail-tech engineers who kept seeing the same pattern: billing on one app, inventory on a spreadsheet, GST filing through a CA, every month, by hand. We set out to build the one system that connects billing, stock and compliance from the first sale, with guided setup so a store doesn&apos;t start from an empty screen.</p>
+          <p>We&apos;re headquartered in Bengaluru and building this store by store, working directly with the retailers who use it.</p>
           <h2>What we believe</h2>
         </div>
         <div className="features-grid" style={{ marginTop: 24 }}>
@@ -65,9 +68,9 @@ export default function AboutPage() {
 
       <section className="cta-section">
         <h2>Want to build this with us?</h2>
-        <p>We&apos;re hiring across engineering, product and retail success.</p>
+        <p>We&apos;re a small founding team and always open to talking to people who want to work on this problem.</p>
         <div className="cta-actions">
-          <a className="btn-cta-w" href="/careers">View open roles</a>
+          <a className="btn-cta-w" href="/careers">See how hiring works</a>
           <a className="btn-cta-g" href="/contact">Get in touch →</a>
         </div>
       </section>

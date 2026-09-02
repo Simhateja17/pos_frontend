@@ -2,22 +2,15 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Careers | Ambel POS" };
+export const metadata = {
+  title: "Careers | Ambel POS",
+  description: "Ambel POS is a small founding team building GST-native retail software from Bengaluru. No fixed job listings right now, write to us if you want to build it with us.",
+};
 
 const PERKS = [
+  ["Founding-team equity", "Join early and hold real equity in the company, not a token grant."],
   ["Remote-friendly", "Work from Bengaluru, or remotely from anywhere in India."],
-  ["Health cover", "Comprehensive health insurance for you and your family."],
-  ["Learning budget", "Annual budget for courses, books and conferences."],
-  ["ESOPs", "Every full-time hire gets equity in the company."],
-];
-
-const ROLES: [string, string, string][] = [
-  ["Senior Backend Engineer", "Engineering · Bengaluru / Remote", "Full-time"],
-  ["Frontend Engineer, POS Billing", "Engineering · Bengaluru / Remote", "Full-time"],
-  ["ML Engineer, Forecasting", "Engineering · Bengaluru", "Full-time"],
-  ["Product Designer", "Product · Bengaluru / Remote", "Full-time"],
-  ["Retail Success Manager", "Customer Success · Jaipur", "Full-time"],
-  ["GST & Compliance Analyst", "Operations · Mumbai", "Full-time"],
+  ["Direct ownership", "No layers between you and the retailers using what you build."],
 ];
 
 export default function CareersPage() {
@@ -30,12 +23,12 @@ export default function CareersPage() {
           Careers at Ambel POS
         </div>
         <h1>Help India&apos;s retailers<br /><em>run better stores.</em></h1>
-        <p>We&apos;re a small team solving a big, unglamorous problem: making retail software that actually fits how Indian stores work. Come build it with us.</p>
+        <p>We&apos;re a small founding team solving a big, unglamorous problem: making retail software that actually fits how Indian stores work. There&apos;s no large open-roles board here, because there isn&apos;t a large team yet, but if that problem interests you, we want to hear from you.</p>
       </section>
 
       <section className="features-section" style={{ paddingTop: 0 }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 className="section-h">Why work here.</h2>
+          <h2 className="section-h">Why join early.</h2>
           <div className="features-grid" style={{ marginTop: 32 }}>
             {PERKS.map(([title, body]) => (
               <div className="feat-card" key={title}>
@@ -48,20 +41,12 @@ export default function CareersPage() {
       </section>
 
       <section className="content-section">
-        <div className="content-wrap" style={{ maxWidth: 860, marginBottom: 32 }}>
-          <h2 className="section-h" style={{ maxWidth: "none" }}>Open roles.</h2>
+        <div className="content-wrap" style={{ maxWidth: 860, marginBottom: 8 }}>
+          <h2 className="section-h" style={{ maxWidth: "none" }}>How hiring works here.</h2>
+          <p>We hire in person, not against a fixed requisition list. If you have backend, frontend, ML/forecasting, or retail-operations experience and want to work on GST-native billing, offline-first stock ledgers, or reorder intelligence for Indian retailers, send us a note about what you&apos;d want to build and why this problem interests you.</p>
         </div>
-        {ROLES.map(([title, meta, type]) => (
-          <div className="job-card" key={title}>
-            <div>
-              <h4>{title}</h4>
-              <span>{meta}</span>
-            </div>
-            <span className="job-tag">{type}</span>
-          </div>
-        ))}
         <p style={{ textAlign: "center", marginTop: 24, color: "var(--muted)", fontSize: 14.5 }}>
-          Don&apos;t see a fit? Write to us at <a href="mailto:careers@Ambel.in" style={{ color: "var(--brand-1)" }}>careers@Ambel.in</a>.
+          Write to us at <a href="mailto:careers@Ambel.in" style={{ color: "var(--brand-1)" }}>careers@Ambel.in</a>.
         </p>
       </section>
       <SiteFooter />

@@ -1,7 +1,10 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
-export const metadata = { title: "Fashion & Apparel POS | Ambel POS" };
+export const metadata = {
+  title: "Fashion & Apparel POS | Ambel POS",
+  description: "Fashion POS with size x colour variant matrices, season and collection tags, barcode labels, exchanges without refunds, and sell-through reporting.",
+};
 
 export default function Page() {
   return (
@@ -11,9 +14,9 @@ export default function Page() {
       emphasis="colour and season."
       subtitle="Manage size × colour matrices, seasonal collections and fast-moving SKUs without spreadsheets, purpose-built for apparel, footwear and accessories retailers."
       stats={[
-        ["1,100+", "Fashion stores"],
-        ["4.2 Cr+", "SKUs tracked"],
-        ["38%", "Faster billing"],
+        ["₹799", "Starting plan, per month"],
+        ["18%", "GST built into every bill"],
+        ["Offline", "Billing works without signal"],
       ]}
       features={[
         { title: "Size × Colour Matrix", body: "Add a style once and generate every size/colour variant instantly, with per-variant stock, MRP and barcode." },

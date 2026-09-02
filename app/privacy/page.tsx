@@ -2,7 +2,10 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Privacy Policy | Ambel POS" };
+export const metadata = {
+  title: "Privacy Policy | Ambel POS",
+  description: "How Ambel POS collects, uses and stores your store's data: what we never do, data security, your rights, and how to reach us about privacy.",
+};
 
 export default function PrivacyPage() {
   return (

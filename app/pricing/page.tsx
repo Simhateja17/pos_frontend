@@ -6,7 +6,10 @@ import { PricingPeriod } from "@/components/marketing/pricing-period";
 import { detectRegion } from "@/lib/marketing/region";
 import { getLivePlans } from "@/lib/marketing/pricing";
 
-export const metadata = { title: "Pricing | Ambel POS" };
+export const metadata = {
+  title: "Pricing | Ambel POS",
+  description: "Ambel POS pricing starts at ₹799/month for 2 locations, tax-inclusive. Unlimited POS transactions, ML reorder intelligence and offline billing on every plan.",
+};
 
 function faqFor(region: "IN" | "INTL"): [string, string][] {
   return [

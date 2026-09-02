@@ -2,7 +2,10 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Changelog | Ambel POS" };
+export const metadata = {
+  title: "Changelog | Ambel POS",
+  description: "What's new in Ambel POS: recent releases across billing, inventory, GST reporting, WhatsApp messaging and AI reorder intelligence.",
+};
 
 const ENTRIES: [string, string, string, string][] = [
   ["Jan 2026", "NEW", "AI Copilot for Inventory", "Copilot now proposes reorder quantities using Prophet-based forecasting, with the data basis shown before you approve any purchase order."],

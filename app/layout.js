@@ -6,7 +6,7 @@ export const metadata = {
   metadataBase: new URL("https://www.ambelpos.com"),
   title: "Ambel POS — Point of Sale & Inventory Software for Retail",
   description:
-    "Ambel POS is retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting. Built for retail chains and independent stores.",
+    "GST-native POS for Indian retail with guided WhatsApp catalogue setup, offline billing, multi-store inventory and AI-powered reorder forecasting.",
   applicationName: "Ambel POS",
   openGraph: {
     type: "website",

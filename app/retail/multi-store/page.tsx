@@ -1,7 +1,10 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
-export const metadata = { title: "Multi-store Retail POS | Ambel POS" };
+export const metadata = {
+  title: "Multi-store Retail POS | Ambel POS",
+  description: "Run multi-location retail on one account: central stock pool, per-branch pricing, role-based access and consolidated GST filing across up to 8 locations.",
+};
 
 export default function Page() {
   return (
@@ -9,11 +12,11 @@ export default function Page() {
       tag="Multi-store"
       title="One dashboard for"
       emphasis="every branch you own."
-      subtitle="Centralized stock, staff and reporting across unlimited stores, with per-branch pricing, transfers and consolidated GST filing."
+      subtitle="Centralized stock, staff and reporting across your branches, with per-branch pricing, transfers and consolidated GST filing."
       stats={[
-        ["2,400+", "Stores connected"],
-        ["18 Cr+", "Monthly GMV across branches"],
-        ["99.98%", "Sync uptime"],
+        ["8", "Locations included, largest plan"],
+        ["1", "Central stock pool, every branch"],
+        ["18%", "GST, consolidated across branches"],
       ]}
       features={[
         { title: "Central Stock Pool", body: "See stock across every branch in real time, and raise inter-branch transfers with delivery challans in a click." },
@@ -23,6 +26,7 @@ export default function Page() {
         { title: "Cross-branch Reporting", body: "Compare footfall, margin and sell-through across stores side by side, down to a single counter." },
         { title: "Franchise-ready Billing", body: "Support franchise and company-owned stores on the same account with separate settlement rules." },
       ]}
+      relatedLink={{ href: "/retail/grocery-supermarket", label: "Running a multi-location supermarket or grocery chain? See the grocery & supermarket page →" }}
     />
   );
 }

@@ -2,7 +2,10 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Roadmap | Ambel POS" };
+export const metadata = {
+  title: "Roadmap | Ambel POS",
+  description: "What Ambel POS is building next: in-progress, planned and exploratory features across GST filing, marketplace sync, billing and store operations.",
+};
 
 const COLUMNS: [string, string, [string, string][]][] = [
   [
@@ -51,10 +54,10 @@ export default function RoadmapPage() {
         <div className="roadmap-board">
           {COLUMNS.map(([title, color, items]) => (
             <div className="roadmap-col" key={title}>
-              <h3><span className="roadmap-dot" style={{ background: color }}></span>{title}</h3>
+              <h2 className="roadmap-col-h"><span className="roadmap-dot" style={{ background: color }}></span>{title}</h2>
               {items.map(([h, body]) => (
                 <div className="roadmap-card" key={h}>
-                  <h4>{h}</h4>
+                  <h3>{h}</h3>
                   <p>{body}</p>
                 </div>
               ))}

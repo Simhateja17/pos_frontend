@@ -53,12 +53,6 @@ const GALLERY = [
 const GC_BAR_W = [88, 72, 94];
 const GC_BAR_BG = ["#EEF4FF", "#F5F6F9", "#fff"];
 
-const TESTIMONIALS = [
-  ["AM", "#0058BA", "Ambel POS handles our 3-store billing, inventory sync and WhatsApp campaigns in one place. Our staff billing time dropped by 40%.", "Ananya Mehta", "Owner, Rangreza Ethnic · Jaipur"],
-  ["RK", "#0E7490", "The GST reports save us 2 hours every month-end. GSTR-1 export is error-free and our CA is happy.", "Rohan Khanna", "CFO, Threads & Threads · Mumbai"],
-  ["PS", "#6D28D9", "The offline mode is a lifesaver during monsoons when our internet drops. Bills keep printing and sync later.", "Priya Sharma", "Store Manager, Silkworm · Pune"],
-];
-
 function featBadges(b3, b4) {
   return (
     <>
@@ -203,8 +197,8 @@ export default function LandingPage() {
         <div className="hero-bg"></div>
         <div className="hero-grid"></div>
         <div className="hero-badge"><span></span> Now with AI Copilot · GST-native · Offline-first</div>
-        <h1 className="hero-h1">India&apos;s retail suite,<br /><em>finally complete.</em></h1>
-        <p className="hero-sub">Billing, inventory, staff, loyalty, analytics and compliance, unified in one beautiful POS built for the modern Indian retailer.</p>
+        <h1 className="hero-h1">Start with a POS ready<br />for your store, <em>not an empty screen.</em></h1>
+        <p className="hero-sub">Send your product photos, supplier bills, Excel file or handwritten list on WhatsApp, and we help prepare your catalogue so billing, inventory, staff, loyalty, analytics and GST compliance are connected from your first sale.</p>
         <div className="hero-actions">
           <button className="btn-hero btn-hero-pri" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
@@ -292,13 +286,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* STATS BAND */}
+      {/* STATS BAND — real product facts only, no customer/usage numbers we
+          can't back with retained evidence (see docs/AMBEL_POS_SEO_AUDIT_2026-09-02.html) */}
       <div className="stats-band animate-in">
         <div className="stats-inner">
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="2400">0</span><span>+</span></div><div className="stat-label">Stores across India</div></div>
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="18" data-prefix="₹" data-suffix=" Cr+">₹0 Cr+</span></div><div className="stat-label">GMV processed monthly</div></div>
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="99.98" data-suffix="%">0%</span></div><div className="stat-label">Uptime SLA</div></div>
-          <div className="stat-item"><div className="stat-num"><span>#</span><span className="cv" data-count="22">0</span></div><div className="stat-label">Integrated modules</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count={FEATURES.length}>0</span></div><div className="stat-label">Integrated modules</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="799" data-prefix="₹">₹0</span></div><div className="stat-label">Starting plan, per month</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="18" data-suffix="%">0%</span></div><div className="stat-label">GST built into every bill</div></div>
+          <div className="stat-item"><div className="stat-num">Offline</div><div className="stat-label">Billing works without signal</div></div>
         </div>
       </div>
 
@@ -310,7 +305,7 @@ export default function LandingPage() {
             Built for Indian retail
           </div>
           <h2 className="section-h animate-in">Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h2>
-          <p className="section-sub animate-in">22 deeply-integrated modules, all designed around GST compliance, Indian payment rails, and the real complexity of multi-store fashion retail.</p>
+          <p className="section-sub animate-in">{FEATURES.length} deeply-integrated modules, all designed around GST compliance, Indian payment rails, and the real complexity of multi-store retail.</p>
           <div className="features-grid">
             {FEATURES.map((f, i) => (
               <div className="feat-card animate-in" key={i}>
@@ -357,7 +352,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4.5" width="18" height="11" rx="2.2" /></svg>
-            22 screens, zero compromises
+Built for retail professionals
           </div>
           <h2 className="section-h animate-in">Every screen designed<br />for <em>retail professionals.</em></h2>
         </div>
@@ -405,26 +400,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* SETUP PROMISE — replaces the removed testimonials section, which
+          named customers we had no retained evidence for (see the SEO audit) */}
       <section className="social-section">
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="3.6" /><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0" /></svg>
-            Trusted by retailers across India
+            Guided setup, not a blank dashboard
           </div>
-          <h2 className="section-h animate-in">Real stores, <em>real results.</em></h2>
-          <div className="social-grid">
-            {TESTIMONIALS.map((t, i) => (
-              <div className="soc-card animate-in" key={i}>
-                <div className="stars">★★★★★</div>
-                <p className="soc-quote">&quot;{t[2]}&quot;</p>
-                <div className="soc-author">
-                  <div className="soc-ava" style={{ background: t[1] }}>{t[0]}</div>
-                  <div><div className="soc-name">{t[3]}</div><div className="soc-role">{t[4]}</div></div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h2 className="section-h animate-in">Start billing on day one, <em>not week three.</em></h2>
+          <p className="section-sub animate-in">Send your product photos, supplier bills, an Excel file or a handwritten list on WhatsApp. We help prepare your catalogue so sales and stock are connected from your first bill. Running a <a href="/retail/grocery-supermarket">grocery or supermarket</a>? See how it fits your counter.</p>
         </div>
       </section>
 
@@ -432,7 +417,7 @@ export default function LandingPage() {
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
         <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Join 2,400+ retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
+        <p className="animate-in">Choose a paid plan, send us your catalogue, and activate your store.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>

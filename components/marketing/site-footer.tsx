@@ -19,7 +19,9 @@ export default function SiteFooter({ region = "IN" }: { region?: MarketingRegion
         </div>
         {site.footerColumns.map(([title, links]) => (
           <div className="footer-col" key={title}>
-            <h4>{title}</h4>
+            {/* A footer nav label, not page content — a heading tag here would
+                interrupt every page's H1→H2→H3 outline with a stray Hn. */}
+            <p className="footer-col-title">{title}</p>
             {links.map(([label, href]) => (
               <a href={href} key={label}>{label}</a>
             ))}

@@ -2,7 +2,10 @@ import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 
-export const metadata = { title: "Terms of Service | Ambel POS" };
+export const metadata = {
+  title: "Terms of Service | Ambel POS",
+  description: "Ambel POS Terms of Service: subscription and billing, your responsibilities, AI Copilot use, service availability, termination and governing law.",
+};
 
 export default function TermsPage() {
   return (

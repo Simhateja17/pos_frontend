@@ -3,7 +3,10 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
 
-export const metadata = { title: "Features | Ambel POS" };
+export const metadata = {
+  title: "Features | Ambel POS",
+  description: "Billing, inventory, staff, loyalty, GST reporting and AI reorder intelligence in one POS, with catalogue-based demos for fashion, electronics, beauty and grocery retail.",
+};
 
 function featBadges(b3: string, b4: string) {
   return (
@@ -26,7 +29,7 @@ export default function FeaturesPage() {
           Built for Indian retail
         </div>
         <h1>Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h1>
-        <p>22 deeply-integrated modules, all designed around GST compliance, Indian payment rails, and the real complexity of multi-store fashion retail.</p>
+        <p>{FEATURES.length} deeply-integrated modules, all designed around GST compliance, Indian payment rails, and the real complexity of multi-store retail.</p>
       </section>
 
       <section className="content-section">
@@ -46,7 +49,7 @@ export default function FeaturesPage() {
 
       <section className="cta-section">
         <h2>See it running<br />on your own catalog.</h2>
-        <p>Import your products in minutes and choose the plan that fits your active locations, users and registers.</p>
+        <p>Import your products in minutes and choose the plan that fits your active locations, users and registers. Running a <a href="/retail/grocery-supermarket" style={{ color: "#fff", textDecoration: "underline" }}>grocery or supermarket</a>, or another store type? See how it fits.</p>
         <div className="cta-actions">
           <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>

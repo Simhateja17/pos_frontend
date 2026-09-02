@@ -4,7 +4,10 @@ import SiteFooter from "@/components/marketing/site-footer";
 import { BlogIndex } from "@/components/marketing/blog-pages";
 import { getPublishedPosts } from "@/lib/marketing/blogs";
 
-export const metadata = { title: "Blog | Ambel POS" };
+export const metadata = {
+  title: "Blog | Ambel POS",
+  description: "Practical guides on GST billing, inventory and running a retail store in India, plus product updates from the Ambel POS team.",
+};
 
 export default async function BlogPage() {
   const posts = await getPublishedPosts('IN')

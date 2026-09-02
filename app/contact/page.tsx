@@ -29,17 +29,19 @@ export default function ContactPage() {
       <section className="content-section">
         <div className="contact-grid">
           <div>
+            <h2 className="section-h" style={{ maxWidth: "none", marginBottom: 20 }}>Reach us directly.</h2>
             {INFO.map(([, icon, label, value]) => (
               <div className="contact-info-item" key={label}>
                 <div className="ico"><svg viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: icon }} /></div>
                 <div>
-                  <h4>{label}</h4>
+                  <h3>{label}</h3>
                   <p>{value}</p>
                 </div>
               </div>
             ))}
           </div>
           <div>
+            <h2 className="section-h" style={{ maxWidth: "none", marginBottom: 20 }}>Or send a message.</h2>
             {submitted ? (
               <div className="feat-card" style={{ padding: 32 }}>
                 <div className="feat-h">Thanks, message sent.</div>
@@ -63,6 +65,20 @@ export default function ContactPage() {
               </form>
             )}
           </div>
+        </div>
+      </section>
+
+      <section className="content-section" style={{ paddingTop: 0 }}>
+        <div className="content-wrap" style={{ maxWidth: 860 }}>
+          <h2 className="section-h" style={{ maxWidth: "none" }}>Starting a new store on Ambel POS?</h2>
+          <p>Send your product photos, supplier bills, an Excel sheet, or even a handwritten list on WhatsApp to {" "}
+            <a href="https://wa.me/918047182600" style={{ color: "var(--brand-1)" }}>+91 80 4718 2600</a>. We help prepare your
+            catalogue so billing, stock and reporting are connected from your first sale, no manual product entry required on your side.
+          </p>
+          <p style={{ marginTop: 14 }}>
+            For a demo, email or message us with your store type (grocery, fashion, electronics, beauty, or multi-location) and
+            the number of locations and counters you run, and we&apos;ll walk you through the plan that fits.
+          </p>
         </div>
       </section>
       <SiteFooter />

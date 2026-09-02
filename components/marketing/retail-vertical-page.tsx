@@ -16,6 +16,7 @@ export default function RetailVerticalPage({
   stats,
   features,
   region = "IN",
+  relatedLink,
 }: {
   tag: string;
   title: string;
@@ -25,6 +26,8 @@ export default function RetailVerticalPage({
   features: Feature[];
   /** Which edition's chrome and CTA destinations to render. */
   region?: MarketingRegion;
+  /** Optional cross-link to a related retail vertical page. */
+  relatedLink?: { href: string; label: string };
 }) {
   const site = REGION_SITE[region];
 
@@ -66,6 +69,12 @@ export default function RetailVerticalPage({
           </div>
         </div>
       </section>
+
+      {relatedLink && (
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 8px", textAlign: "center" }}>
+          <a href={relatedLink.href} style={{ color: "var(--brand-1)", fontSize: 14.5 }}>{relatedLink.label}</a>
+        </section>
+      )}
 
       <section className="cta-section">
         <h2>Ready to run {tag.toLowerCase()}<br />on Ambel POS?</h2>

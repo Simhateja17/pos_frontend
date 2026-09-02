@@ -49,6 +49,7 @@ const IN_COMPANY_COLUMN: [string, [string, string][]] = [
 const IN_RETAIL_COLUMN: [string, [string, string][]] = [
   'Retail',
   [
+    ['Grocery & Supermarket', '/retail/grocery-supermarket'],
     ['Fashion & Apparel', '/retail/fashion-apparel'],
     ['Beauty & Wellness', '/retail/beauty-wellness'],
     ['Electronics', '/retail/electronics'],

@@ -1,7 +1,10 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
-export const metadata = { title: "Beauty & Wellness POS | Ambel POS" };
+export const metadata = {
+  title: "Beauty & Wellness POS | Ambel POS",
+  description: "Beauty and wellness POS with batch and expiry tracking, combined service and retail billing, tiered loyalty and appointment-aware checkout.",
+};
 
 export default function Page() {
   return (
@@ -11,9 +14,9 @@ export default function Page() {
       emphasis="with your counter."
       subtitle="Batch tracking, expiry alerts and service + retail billing in one screen, built for cosmetics, skincare, salons and wellness stores."
       stats={[
-        ["620+", "Beauty & wellness stores"],
-        ["99.2%", "Expiry-alert accuracy"],
-        ["2.5x", "Faster checkout"],
+        ["₹799", "Starting plan, per month"],
+        ["18%", "GST built into every bill"],
+        ["Offline", "Billing works without signal"],
       ]}
       features={[
         { title: "Batch & Expiry Tracking", body: "Every batch is tracked from goods-in to sale, with automatic expiry alerts before stock goes unsellable." },
