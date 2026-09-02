@@ -198,13 +198,11 @@ section{padding:80px 5vw}
 /* Targeted by class, not `.price-h span`: the price line now nests spans, and a
    bare descendant selector shrank the whole amount to the /mo suffix's size. */
 .price-per{font-size:16px;font-weight:600;opacity:.7}
-/* Anchor for the struck price. Being inline-block it shrink-wraps the amount, so
-   it stays centred under the plan name no matter how wide the list price is. */
 .price-now{position:relative;display:inline-block}
-/* Struck list price, hung to the left of the live one and out of flow so it adds
-   nothing to the centred width. Same display face at ~half the size, so the two
-   still read as a single price line. */
-.price-was{position:absolute;right:100%;top:50%;transform:translateY(-50%);margin-right:9px;white-space:nowrap;font-size:20px;font-weight:600;letter-spacing:-.02em;opacity:.45;text-decoration-line:line-through;text-decoration-thickness:2px}
+/* Struck list price, stacked above the live one. A tight price-card grid has no
+   gutter for the old left-hung layout to overflow into without clipping the
+   neighbouring card, so this reads top-to-bottom instead of side-by-side. */
+.price-was{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.02em;opacity:.45;text-decoration-line:line-through;text-decoration-thickness:2px;margin-bottom:2px}
 /* Lifted on the blue card, where .45 white loses too much of the number. */
 .price-card.featured .price-was{opacity:.6}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

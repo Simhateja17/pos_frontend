@@ -22,9 +22,13 @@ export function PricingGrid({ plans, animate = false, cycle = "monthly" }: { pla
         <div className={cls(plan.popular ? "price-card featured" : "price-card")} style={plan.popular ? { position: "relative" } : undefined} key={plan.key}>
           {plan.popular && <div className="price-popular">Most popular</div>}
           <div className="price-plan" style={plan.popular ? { color: "rgba(255,255,255,.75)" } : undefined}>{plan.name}</div>
+          {cycle === "annual" && (
+            <div className="price-was" style={plan.popular ? { color: "rgba(255,255,255,.6)" } : undefined}>
+              {formatMoney(plan.monthly.totalAmountMinor, plan.currency)}<span className="price-per">/mo</span>
+            </div>
+          )}
           <div className="price-h">
             <span className="price-now">
-              {cycle === "annual" && <span className="price-was">{formatMoney(plan.monthly.totalAmountMinor, plan.currency)}</span>}
               {formatMoney(cycle === "annual" ? Math.round(plan.annual.totalAmountMinor / 12) : plan.monthly.totalAmountMinor, plan.currency)}
               <span className="price-per" style={plan.popular ? { color: "rgba(255,255,255,.7)" } : undefined}>/mo</span>
             </span>
