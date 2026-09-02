@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './admin.module.css'
+import { AdminBlogView } from './admin-blog-view'
 import {
   AdminApiError,
   activateAdmin,
@@ -33,10 +34,11 @@ import {
   type TenantDetail,
 } from '@/lib/admin-api'
 
-type View = 'overview' | 'businesses' | 'users' | 'subscriptions' | 'support' | 'operations' | 'audit' | 'team' | 'settings'
+type View = 'overview' | 'blog' | 'businesses' | 'users' | 'subscriptions' | 'support' | 'operations' | 'audit' | 'team' | 'settings'
 
 const NAV: Array<{ id: View; label: string; group?: string }> = [
   { id: 'overview', label: 'Overview' },
+  { id: 'blog', label: 'Blog', group: 'Publishing' },
   { id: 'businesses', label: 'Businesses', group: 'Diagnostics' },
   { id: 'users', label: 'Users' },
   { id: 'subscriptions', label: 'Subscriptions' },
@@ -167,6 +169,7 @@ export function AdminDashboard() {
         <div className={styles.content}>
           {error && <div className={styles.error} style={{ marginBottom: 16 }} role="alert">{error}</div>}
           {view === 'overview' && <OverviewView overview={overview} />}
+          {view === 'blog' && <AdminBlogView context={context} onError={setError} />}
           {view === 'businesses' && <BusinessesView context={context} onError={setError} />}
           {view === 'users' && <BusinessesView context={context} onError={setError} focus="users" />}
           {view === 'subscriptions' && <BusinessesView context={context} onError={setError} focus="subscriptions" />}

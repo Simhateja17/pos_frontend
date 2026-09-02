@@ -35,6 +35,13 @@ export type AdminOverview = {
   operationalFailures: { windowHours: number; emails: number; imports: number; forecasts: number }
 }
 
+export type AdminBlogPost = {
+  id: string; slug: string; title: string; excerpt: string; body: string; category: string
+  author_name: string; cover_image_url: string | null; seo_title: string | null; seo_description: string | null
+  status: 'draft' | 'published'; published_at: string | null; updated_at: string
+}
+export type AdminBlogPostInput = { slug: string; title: string; excerpt: string; body: string; category: string; authorName: string; coverImageUrl: string; seoTitle: string; seoDescription: string; status: 'draft' | 'published' }
+
 export type TenantSearchResult = {
   id: string
   businessName: string
@@ -226,6 +233,10 @@ export async function createPrivateBillingOffer(payload: {
 export async function retryAdminOperation(payload: { operationKind: string; operationId: string; idempotencyKey: string }) {
   return request<{ retry: Record<string, unknown> }>('/admin/operations/retry', { method: 'POST', body: JSON.stringify(payload) })
 }
+
+export async function listAdminBlogPosts() { return request<{ posts: AdminBlogPost[] }>('/admin/blog-posts') }
+export async function createAdminBlogPost(payload: AdminBlogPostInput) { return request<{ post: AdminBlogPost }>('/admin/blog-posts', { method: 'POST', body: JSON.stringify(payload) }) }
+export async function updateAdminBlogPost(postId: string, payload: AdminBlogPostInput) { return request<{ post: AdminBlogPost }>(`/admin/blog-posts/${encodeURIComponent(postId)}`, { method: 'PUT', body: JSON.stringify(payload) }) }
 
 export async function enrollTotp(friendlyName = 'Ambel Admin') {
   const result = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName, issuer: 'Ambel POS' })

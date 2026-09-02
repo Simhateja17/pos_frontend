@@ -1,19 +1,13 @@
 import "@/app/landing.css";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
+import { BlogIndex } from "@/components/marketing/blog-pages";
+import { getPublishedPosts } from "@/lib/marketing/blogs";
 
 export const metadata = { title: "Blog | Ambel POS" };
 
-const POSTS: [string, string, string, string, string][] = [
-  ["GST", "#0A2348", "GSTR-1 filing checklist for multi-store retailers in 2026", "Jan 18, 2026 · 6 min read", "M"],
-  ["Product", "#06337A", "Inside the AI Copilot: how we designed for trust, not automation", "Jan 9, 2026 · 8 min read", "A"],
-  ["Retail Ops", "#1A3A5C", "Why offline-first billing matters more than ever this monsoon", "Dec 22, 2025 · 5 min read", "O"],
-  ["Case Study", "#0E2642", "How Rangreza Ethnic cut billing time 40% across 3 stores", "Dec 12, 2025 · 7 min read", "R"],
-  ["Inventory", "#0A2348", "Size-curve analysis: reordering apparel without guesswork", "Nov 28, 2025 · 6 min read", "S"],
-  ["Payments", "#06337A", "UPI settlement reconciliation, explained for non-accountants", "Nov 14, 2025 · 5 min read", "P"],
-];
-
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getPublishedPosts('IN')
   return (
     <>
       <SiteHeader />
@@ -26,22 +20,7 @@ export default function BlogPage() {
         <p>Practical guides for Indian retailers, product updates, and stories from stores running on Ambel POS.</p>
       </section>
 
-      <section className="content-section">
-        <div className="blog-grid">
-          {POSTS.map(([cat, color, title, meta, initial]) => (
-            <div className="blog-card" key={title}>
-              <div className="blog-thumb" style={{ background: color }}>
-                <span style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 34, color: "rgba(255,255,255,.85)" }}>{initial}</span>
-              </div>
-              <div className="blog-body">
-                <div className="blog-cat">{cat}</div>
-                <div className="blog-title">{title}</div>
-                <div className="blog-meta">{meta}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <BlogIndex posts={posts} region="IN" />
       <SiteFooter />
     </>
   );

@@ -118,6 +118,9 @@
 .label { display: block; color: #5c7693; font-size: 11px; font-weight: 800; margin-bottom: 6px; }
 .field { margin-bottom: 14px; }
 .textarea { width: 100%; min-height: 84px; padding: 10px; resize: vertical; border: 1px solid #cbd9e8; border-radius: 8px; font: inherit; font-size: 12px; }
+.editorGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+.editorGrid .input { width: 100%; min-width: 0; }
+.articleEditor { min-height: 320px; line-height: 1.65; }
 .loginShell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at top right, #d9eaff, transparent 42%), #f4f7fb; color: #17345b; }
 .loginCard { width: min(430px, 100%); padding: 34px; border: 1px solid #dfe8f2; border-radius: 16px; background: #fff; box-shadow: 0 16px 50px rgba(34,62,94,.1); }
 .loginBrand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
@@ -127,4 +130,4 @@
 .secret { display: block; padding: 10px; border-radius: 8px; background: #f4f7fb; color: #355b84; font: 12px "JetBrains Mono", monospace; word-break: break-all; }
 .banner { padding: 10px 14px; margin-bottom: 18px; border-radius: 9px; background: #fff7df; border: 1px solid #efdca4; color: #7c5c16; font-size: 12px; font-weight: 700; }
 @media (max-width: 980px) { .rail { width: 210px; flex-basis: 210px; } .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .columns { grid-template-columns: 1fr; } }
-@media (max-width: 680px) { .shell { display: block; } .rail { width: 100%; min-height: auto; padding: 14px; } .brand { padding-bottom: 14px; } .nav { display: flex; overflow-x: auto; } .navGroup { display: none; } .navButton { white-space: nowrap; } .railFooter { display: none; } .topbar { height: auto; padding: 16px 18px; } .content { padding: 22px 16px 50px; } .kpis, .detailGrid { grid-template-columns: 1fr 1fr; } .loginCard { padding: 24px; } }
+@media (max-width: 680px) { .shell { display: block; } .rail { width: 100%; min-height: auto; padding: 14px; } .brand { padding-bottom: 14px; } .nav { display: flex; overflow-x: auto; } .navGroup { display: none; } .navButton { white-space: nowrap; } .railFooter { display: none; } .topbar { height: auto; padding: 16px 18px; } .content { padding: 22px 16px 50px; } .kpis, .detailGrid, .editorGrid { grid-template-columns: 1fr; } .loginCard { padding: 24px; } }

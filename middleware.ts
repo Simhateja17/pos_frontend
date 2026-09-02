@@ -56,18 +56,20 @@ export function middleware(request: NextRequest) {
   const isIndia = hostname === INDIA_HOST
   const isInternational = hostname === INTERNATIONAL_HOST
   const pathname = request.nextUrl.pathname
+  const indiaBlogArticle = /^\/blog\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pathname)
+  const internationalBlogArticle = /^\/us\/blog\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pathname)
 
   // A regional marketing path on the wrong production hostname is a duplicate
   // of the intended page. Permanently consolidate it before adding canonicals.
   // Application routes stay untouched so sessions never cross domains.
-  if (isIndia && INDIA_PATH_FOR.has(pathname) && pathname !== '/') {
+  if (isIndia && ((INDIA_PATH_FOR.has(pathname) && pathname !== '/') || internationalBlogArticle)) {
     const target = new URL(request.url)
     target.hostname = INTERNATIONAL_HOST
     target.pathname = pathname === '/us' ? '/' : pathname
     return NextResponse.redirect(target, 308)
   }
 
-  if (isInternational && MARKETING_EQUIVALENTS.has(pathname) && pathname !== '/') {
+  if (isInternational && ((MARKETING_EQUIVALENTS.has(pathname) && pathname !== '/') || indiaBlogArticle)) {
     const target = new URL(request.url)
     target.hostname = INDIA_HOST
     return NextResponse.redirect(target, 308)
@@ -105,6 +107,10 @@ export function middleware(request: NextRequest) {
     pathname === '/' && !isIndia
       ? NextResponse.rewrite(new URL('/us', request.url))
       : NextResponse.next()
+
+  if ((isIndia && indiaBlogArticle) || (isInternational && internationalBlogArticle)) {
+    response.headers.set('Link', `<https://${hostname}${pathname}>; rel="canonical"`)
+  }
 
   const indiaPath = isIndia
     ? (MARKETING_EQUIVALENTS.has(pathname) ? pathname : undefined)

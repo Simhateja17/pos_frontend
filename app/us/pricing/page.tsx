@@ -18,7 +18,7 @@ import "@/app/landing.css";
 import { CurrencyMark } from "@/components/marketing/currency-mark";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
-import { PricingGrid } from "@/components/marketing/pricing-plans";
+import { PricingPeriod } from "@/components/marketing/pricing-period";
 import { getLivePlans, type LivePlan } from "@/lib/marketing/pricing";
 
 export const metadata = { title: "Pricing | Ambel POS" };
@@ -61,7 +61,7 @@ export default async function USPricingPage() {
             we&apos;ll walk you through the plans.
           </p>
         ) : (
-          <PricingGrid plans={plans} />
+          <PricingPeriod plans={plans} />
         )}
       </section>
 

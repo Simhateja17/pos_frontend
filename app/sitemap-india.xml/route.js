@@ -1,9 +1,11 @@
-import { indiaSitemapXml } from "@/lib/seo/sitemaps";
+import { INDIA_ORIGIN, INDIA_ROUTES, sitemapXmlWithPosts } from "@/lib/seo/sitemaps";
+import { getPublishedPosts } from "@/lib/marketing/blogs";
 
-export const dynamic = "force-static";
+export const revalidate = 300;
 
-export function GET() {
-  return new Response(indiaSitemapXml(), {
+export async function GET() {
+  const posts = await getPublishedPosts('IN');
+  return new Response(sitemapXmlWithPosts(INDIA_ORIGIN, INDIA_ROUTES, posts, '/blog'), {
     headers: { "Content-Type": "application/xml; charset=utf-8" },
   });
 }

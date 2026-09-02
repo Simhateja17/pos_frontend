@@ -2,8 +2,7 @@ import "@/app/landing.css";
 import { CurrencyMark } from "@/components/marketing/currency-mark";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
-import { PricingGrid } from "@/components/marketing/pricing-plans";
-import { RegionSwitcher } from "@/components/marketing/region-switcher";
+import { PricingPeriod } from "@/components/marketing/pricing-period";
 import { detectRegion } from "@/lib/marketing/region";
 import { getLivePlans } from "@/lib/marketing/pricing";
 
@@ -36,13 +35,10 @@ export default async function PricingPage() {
         </div>
         <h1>Choose clearly.<br /><em>Grow with confidence.</em></h1>
         <p>Three straightforward plans. Prices are per month, with no per-transaction fees and no free tier.</p>
-        <div style={{ marginTop: 20 }}>
-          <RegionSwitcher region={region} />
-        </div>
       </section>
 
       <section className="content-section">
-        <PricingGrid plans={plans} />
+        <PricingPeriod plans={plans} />
       </section>
 
       <section className="how-section">
