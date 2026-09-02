@@ -59,6 +59,23 @@ export function middleware(request: NextRequest) {
   const indiaBlogArticle = /^\/blog\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pathname)
   const internationalBlogArticle = /^\/us\/blog\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pathname)
 
+  // `/us` is an explicit visitor choice, even when geo detection says India.
+  // Remember it before consolidating to the canonical International homepage
+  // so the following `/` request cannot bounce the visitor back to India.
+  if (pathname === '/us') {
+    const target = new URL(request.url)
+    target.hostname = INTERNATIONAL_HOST
+    target.pathname = '/'
+    const response = NextResponse.redirect(target, 308)
+    response.cookies.set(REGION_COOKIE, 'INTL', {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+    return response
+  }
+
   // A regional marketing path on the wrong production hostname is a duplicate
   // of the intended page. Permanently consolidate it before adding canonicals.
   // Application routes stay untouched so sessions never cross domains.
@@ -72,14 +89,6 @@ export function middleware(request: NextRequest) {
   if (isInternational && ((MARKETING_EQUIVALENTS.has(pathname) && pathname !== '/') || indiaBlogArticle)) {
     const target = new URL(request.url)
     target.hostname = INDIA_HOST
-    return NextResponse.redirect(target, 308)
-  }
-
-  // www.ambelpos.com/ is the public International homepage. `/us` remains the
-  // internal page implementation, but should not compete as a second URL.
-  if (isInternational && pathname === '/us') {
-    const target = new URL(request.url)
-    target.pathname = '/'
     return NextResponse.redirect(target, 308)
   }
 

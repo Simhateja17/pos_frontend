@@ -36,8 +36,17 @@ test("International marketing chrome uses the canonical root homepage", () => {
   assert.match(internationalBlock, /\['Screens', '\/#screens'\]/);
 });
 
+test("explicit /us navigation remembers International before canonical redirect", () => {
+  const usRedirect = middleware.slice(
+    middleware.indexOf("if (pathname === '/us')"),
+    middleware.indexOf("// A regional marketing path"),
+  );
+  assert.match(usRedirect, /response\.cookies\.set\(REGION_COOKIE, 'INTL'/);
+  assert.match(usRedirect, /return response/);
+});
+
 test("International landing copy is country-neutral while India copy stays regional", () => {
   assert.match(internationalLanding, /Retail, run from/);
   assert.doesNotMatch(internationalLanding, /US retail, run from|American boutiques|across the US/);
-  assert.match(indiaLanding, /India(?:'|&apos;)s retail suite/);
+  assert.match(indiaLanding, /GST-native|Indian retail|₹/);
 });
