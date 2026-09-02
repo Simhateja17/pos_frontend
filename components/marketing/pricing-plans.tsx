@@ -24,6 +24,7 @@ export function PricingGrid({ plans, animate = false, cycle = "monthly" }: { pla
           <div className="price-plan" style={plan.popular ? { color: "rgba(255,255,255,.75)" } : undefined}>{plan.name}</div>
           <div className="price-h">
             <span className="price-now">
+              {cycle === "annual" && <span className="price-was">{formatMoney(plan.monthly.totalAmountMinor, plan.currency)}</span>}
               {formatMoney(cycle === "annual" ? Math.round(plan.annual.totalAmountMinor / 12) : plan.monthly.totalAmountMinor, plan.currency)}
               <span className="price-per" style={plan.popular ? { color: "rgba(255,255,255,.7)" } : undefined}>/mo</span>
             </span>

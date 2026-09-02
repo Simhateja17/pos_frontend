@@ -8,7 +8,7 @@ import { AmbelMark } from "@/components/brand/ambel-mark";
 import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
-import { PricingGrid } from "@/components/marketing/pricing-plans";
+import { PricingPeriod } from "@/components/marketing/pricing-period";
 
 const MOCK_SB = ["Dashboard", "Billing", "Sales / Bills", "Inventory", "Customers", "Staff", "Payments", "Reports", "Analytics"];
 const MOCK_KPI = [
@@ -390,7 +390,7 @@ Built for retail professionals
           </div>
           <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Choose clearly. <em>Scale with confidence.</em></h2>
           <p className="section-sub animate-in" style={{ margin: "14px auto 0" }}>No per-transaction fees. No hidden charges. Cancel any time.</p>
-          {plansState === "loaded" && plans.length > 0 && <PricingGrid plans={plans} />}
+          {plansState === "loaded" && plans.length > 0 && <PricingPeriod plans={plans} />}
           {plansState === "error" && (
             <p className="section-sub" style={{ margin: "28px auto 0" }}>
               Pricing is temporarily unavailable. Please refresh, or see the{" "}
