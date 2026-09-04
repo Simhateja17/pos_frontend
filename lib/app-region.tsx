@@ -21,6 +21,7 @@ import type { MarketingRegion } from '@/lib/marketing/region'
 type RegionPack = {
   locale: string
   currency: string
+  currencySymbol: string
   /**
    * Business-day boundaries come from the backend already resolved to the
    * tenant's timezone. India pins a display timezone because every India tenant
@@ -40,6 +41,7 @@ export const REGION_PACKS: Record<MarketingRegion, RegionPack> = {
   IN: {
     locale: 'en-IN',
     currency: 'INR',
+    currencySymbol: '₹',
     timeZone: 'Asia/Kolkata',
     taxLabel: 'GST',
     basePath: '/app',
@@ -48,6 +50,7 @@ export const REGION_PACKS: Record<MarketingRegion, RegionPack> = {
   INTL: {
     locale: 'en-US',
     currency: 'USD',
+    currencySymbol: '$',
     taxLabel: 'Sales tax',
     basePath: '/us/dashboard',
     signInPath: '/us/auth',

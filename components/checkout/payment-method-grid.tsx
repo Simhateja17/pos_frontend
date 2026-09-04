@@ -2,6 +2,7 @@
 
 import { Banknote, CreditCard, HandCoins, QrCode } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useAppRegion } from '@/lib/app-region'
 
 export type TenderMethod = 'cash' | 'card' | 'upi' | 'credit'
 
@@ -29,11 +30,9 @@ const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
 /** These are the persisted POS tender methods. UPI records an external UPI reference; it is not a gateway capture. */
 const ALL_METHODS: TenderMethod[] = ['cash', 'card', 'upi', 'credit']
 
-const inrFormat = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
-
-function formatAmount(value: string): string {
+function formatAmount(value: string, formatMoney: (value: string | number) => string): string {
   const amount = Number(value)
-  return Number.isFinite(amount) ? inrFormat.format(amount) : value
+  return Number.isFinite(amount) ? formatMoney(amount) : value
 }
 
 export function PaymentMethodGrid({
@@ -57,6 +56,7 @@ export function PaymentMethodGrid({
   onToggleSplit: (enabled: boolean) => void
   disabled?: boolean
 }) {
+  const { money } = useAppRegion()
   const availableMethodsForNewRow = ALL_METHODS.filter((m) => !rows.some((r) => r.method === m))
 
   return (
@@ -130,7 +130,7 @@ export function PaymentMethodGrid({
                 disabled={disabled}
                 aria-label={`${METHOD_LABELS[row.method]} amount`}
                 onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
-                placeholder="₹0.00"
+                placeholder={money(0)}
               />
             ) : (
               <div
@@ -138,7 +138,7 @@ export function PaymentMethodGrid({
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 38, padding: '0 10px', border: '1px solid var(--border-soft)', borderRadius: 8, background: 'var(--surface)' }}
               >
                 <span className="t-sub">Amount applied</span>
-                <strong className="num">{formatAmount(row.amount)}</strong>
+                <strong className="num">{formatAmount(row.amount, money)}</strong>
               </div>
             )}
 
@@ -161,7 +161,7 @@ export function PaymentMethodGrid({
                     disabled={disabled}
                     inputMode="decimal"
                     onChange={(e) => onRowChange(index, { ...row, cashReceived: e.target.value })}
-                    placeholder={row.amount ? formatAmount(row.amount) : '₹0.00'}
+                    placeholder={row.amount ? formatAmount(row.amount, money) : money(0)}
                   />
                 </label>
               )

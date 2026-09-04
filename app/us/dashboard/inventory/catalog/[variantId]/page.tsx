@@ -14,6 +14,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { UNITS, allowsFractionalQuantity, unitSuffix } from '@/lib/units'
+import { useAppRegion } from '@/lib/app-region'
 import {
   type Supplier,
   type SupplierProduct,
@@ -105,6 +106,7 @@ function movementTypeLabel(type: StockMovement['movementType']) {
 }
 
 export default function VariantDetailPage() {
+  const { money, pack } = useAppRegion()
   const params = useParams<{ variantId: string }>()
   const variantId = params.variantId
 
@@ -697,7 +699,7 @@ export default function VariantDetailPage() {
                   <tr key={link.id}>
                     <td className="t-strong">{link.supplierName}</td>
                     <td className="num">{link.leadTimeDays} days</td>
-                    <td className="num t-sub">{link.unitCost ? `₹${link.unitCost}` : '-'}</td>
+                    <td className="num t-sub">{link.unitCost ? money(link.unitCost) : '-'}</td>
                     <td className="t-sub">{link.supplierSku ?? '-'}</td>
                     <td className="num t-sub">{link.minOrderQty ?? '-'}</td>
                     <td>{link.isPrimary && <Badge tone="green">Primary</Badge>}</td>
@@ -893,7 +895,7 @@ export default function VariantDetailPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <Fld id="link-cost" label="Unit cost (₹)">
+              <Fld id="link-cost" label={`Unit cost (${pack.currencySymbol})`}>
                 <input
                   id="link-cost"
                   type="number"

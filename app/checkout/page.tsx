@@ -28,6 +28,7 @@ import { useConnectivity } from '@/lib/offline/connectivity'
 import { enqueueSale, countPending } from '@/lib/offline/queue'
 import { startSyncEngine } from '@/lib/offline/sync'
 import { equalIntraStateTaxSplit } from '@/lib/operational-display'
+import { useAppRegion } from '@/lib/app-region'
 
 type Variant = {
   id: string
@@ -105,13 +106,6 @@ function money(n: number): string {
   return n.toFixed(2)
 }
 
-const inrFormat = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
-
-/** Display-only currency formatting. Server figures remain authoritative. */
-function inr(n: number | string): string {
-  return inrFormat.format(Number(n))
-}
-
 interface PendingSaleBody {
   clientSaleId: string
   shiftId: string
@@ -138,6 +132,7 @@ type OpenShiftEntry = {
 }
 
 function CheckoutPageInner() {
+  const { money: formatMoney, pack } = useAppRegion()
   const searchParams = useSearchParams()
   const customerIdParam = searchParams.get('customerId')
 
@@ -674,7 +669,7 @@ function CheckoutPageInner() {
     if (Math.abs(diff) > 0.001) {
       const direction = diff > 0 ? 'over' : 'under'
       setChargeError(
-        `Tender entries must match the current cart estimate (₹${money(total)}). Currently ₹${money(paymentSum)}, ₹${money(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
+        `Tender entries must match the current cart estimate (${formatMoney(total)}). Currently ${formatMoney(paymentSum)}, ${formatMoney(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
       )
       return
     }
@@ -684,7 +679,7 @@ function CheckoutPageInner() {
       const received = Number(cashRow.cashReceived)
       const allocated = Number(cashRow.amount)
       if (!Number.isFinite(received) || received < allocated) {
-        setChargeError(`Enter cash received of at least ₹${money(allocated)} so Ambel can calculate the change.`)
+        setChargeError(`Enter cash received of at least ${formatMoney(allocated)} so Ambel can calculate the change.`)
         return
       }
     }
@@ -731,7 +726,7 @@ function CheckoutPageInner() {
         })
         await refreshQueueCount()
         setQueuedMessage(
-          `Sale queued offline: ${inr(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
+          `Sale queued offline: ${formatMoney(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
         )
         setCart([])
         setCartDiscountMode('none')
@@ -790,7 +785,7 @@ function CheckoutPageInner() {
   }
 
   function onChargeSuccess(sale: SaleResponse) {
-    setSuccessMessage(`Sale complete: ₹${sale.totalAmount} charged and recorded by the server.`)
+    setSuccessMessage(`Sale complete: ${formatMoney(Number(sale.totalAmount))} charged and recorded by the server.`)
 
     // Keep the cart name as a compatibility fallback for older backends; new
     // sale responses also carry the server-resolved product name. The Total
@@ -1106,7 +1101,7 @@ function CheckoutPageInner() {
                     onChange={(e) => setCartDiscountMode(e.target.value as 'percent' | 'amount')}
                   >
                     <option value="percent">%</option>
-                    <option value="amount">₹</option>
+                    <option value="amount">{pack.currencySymbol}</option>
                   </select>
                   <input
                     className="fld-input num"
@@ -1221,40 +1216,40 @@ function CheckoutPageInner() {
 
             <div className="sum-row">
               <span>Subtotal</span>
-              <span className="num">{inr(grossSubtotal)}</span>
+              <span className="num">{formatMoney(grossSubtotal)}</span>
             </div>
             <div className="sum-row">
               <span>Discount</span>
               <span className="num" style={{ color: totalDiscount > 0 ? 'var(--success)' : undefined }}>
-                {totalDiscount > 0 ? `−${inr(totalDiscount)}` : inr(totalDiscount)}
+                {totalDiscount > 0 ? `−${formatMoney(totalDiscount)}` : formatMoney(totalDiscount)}
               </span>
             </div>
             {taxTreatment === 'cgst_sgst' ? (
               <>
                 <div className="sum-row">
                   <span>CGST (item rates)</span>
-                  <span className="num">{inr(estimatedCgst)}</span>
+                  <span className="num">{formatMoney(estimatedCgst)}</span>
                 </div>
                 <div className="sum-row">
                   <span>SGST (item rates)</span>
-                  <span className="num">{inr(estimatedSgst)}</span>
+                  <span className="num">{formatMoney(estimatedSgst)}</span>
                 </div>
                 {estimatedTaxRounding !== 0 ? (
                   <div className="sum-row">
                     <span>Tax rounding adjustment</span>
-                    <span className="num">{estimatedTaxRounding > 0 ? '+' : '−'}{inr(Math.abs(estimatedTaxRounding))}</span>
+                    <span className="num">{estimatedTaxRounding > 0 ? '+' : '−'}{formatMoney(Math.abs(estimatedTaxRounding))}</span>
                   </div>
                 ) : null}
               </>
             ) : (
               <div className="sum-row">
                 <span>IGST (item rates)</span>
-                <span className="num">{inr(taxEstimate)}</span>
+                <span className="num">{formatMoney(taxEstimate)}</span>
               </div>
             )}
             <div className="sum-row">
               <span>Tax total</span>
-              <span className="num">{inr(taxEstimate)}</span>
+              <span className="num">{formatMoney(taxEstimate)}</span>
             </div>
             <div className="sum-row">
               <span>Final total</span>
@@ -1273,7 +1268,7 @@ function CheckoutPageInner() {
             >
               <b style={{ fontSize: 15 }}>Current cart estimate</b>
               <b className="num" style={{ fontSize: 22, color: 'var(--brand-1)' }}>
-                {inr(preChargeEstimate)}
+                {formatMoney(preChargeEstimate)}
               </b>
             </div>
 
@@ -1310,7 +1305,7 @@ function CheckoutPageInner() {
               aria-busy={isCharging}
               style={{ width: '100%', height: 46, marginTop: 12, justifyContent: 'center', fontSize: 15 }}
             >
-              {isCharging ? 'Charging sale…' : isOnline ? `Charge ${inr(preChargeEstimate)}` : `Queue ${inr(preChargeEstimate)} offline`}
+              {isCharging ? 'Charging sale…' : isOnline ? `Charge ${formatMoney(preChargeEstimate)}` : `Queue ${formatMoney(preChargeEstimate)} offline`}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>

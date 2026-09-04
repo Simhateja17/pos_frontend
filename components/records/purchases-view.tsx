@@ -34,7 +34,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 type DraftLine = { variantId: string; quantityOrdered: string; unitCost: string }
 
 export function PurchasesView() {
-  const { money } = useAppRegion()
+  const { money, pack } = useAppRegion()
   const [orders, setOrders] = useState<PurchaseOrder[] | null>(null)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -429,7 +429,7 @@ export function PurchasesView() {
                           onChange={(e) => setLine(index, 'quantityOrdered', e.target.value)}
                         />
                       </Fld>
-                      <Fld id={`po-cost-${index}`} label="Unit cost (₹)">
+                      <Fld id={`po-cost-${index}`} label={`Unit cost (${pack.currencySymbol})`}>
                         <input
                           id={`po-cost-${index}`}
                           type="number"
@@ -500,7 +500,7 @@ export function PurchasesView() {
                       onChange={(e) => setReceiptQty((q) => ({ ...q, [line.id]: e.target.value }))}
                     />
                   </Fld>
-                  <Fld id={`rcv-cost-${line.id}`} label="Unit cost (₹)">
+                  <Fld id={`rcv-cost-${line.id}`} label={`Unit cost (${pack.currencySymbol})`}>
                     <input
                       id={`rcv-cost-${line.id}`}
                       type="number"

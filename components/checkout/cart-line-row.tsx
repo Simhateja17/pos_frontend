@@ -44,14 +44,14 @@ export function CartLineRow({
   onRemove: (variantId: string) => void
   disabled?: boolean
 }) {
-  const { money } = useAppRegion()
+  const { money, pack } = useAppRegion()
   const [showDiscountInput, setShowDiscountInput] = useState(Number(line.discountAmount || '0') > 0)
   const discount = Number(line.discountAmount || '0')
   const taxLabel = !line.isTaxable
     ? 'Tax exempt'
     : line.taxRatePercent === null || line.taxRatePercent === undefined
       ? 'Store fallback tax'
-      : `${Number(line.taxRatePercent).toFixed(2)}% GST`
+      : `${Number(line.taxRatePercent).toFixed(2)}% ${pack.taxLabel}`
   const exceedsStock = line.quantity > line.currentStock
 
   return (
@@ -142,7 +142,7 @@ export function CartLineRow({
       <td>
         {showDiscountInput ? (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span aria-hidden="true">₹</span>
+            <span aria-hidden="true">{pack.currencySymbol}</span>
             <input
               type="number"
               min={0}
@@ -150,7 +150,7 @@ export function CartLineRow({
               step={0.01}
               value={line.discountAmount}
               disabled={disabled}
-              aria-label={`Discount amount in rupees for ${line.name}`}
+              aria-label={`Discount amount in ${pack.currency} for ${line.name}`}
               onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
               className="fld-input num"
               style={{ maxWidth: 92 }}

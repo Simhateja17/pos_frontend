@@ -16,7 +16,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, CardPad, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { BarcodeLabel, type BarcodeLabelFormat } from '@/components/barcode-label'
-import { money } from '@/lib/region'
+import { useAppRegion } from '@/lib/app-region'
 
 type Variant = {
   id: string
@@ -69,6 +69,7 @@ export default function LabelsPage() {
 }
 
 function LabelsPageContent() {
+  const { money } = useAppRegion()
   const searchParams = useSearchParams()
   const preselectVariantId = searchParams.get('variantId')
 

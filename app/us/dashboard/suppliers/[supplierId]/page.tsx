@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useParams } from 'next/navigation'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useAppRegion } from '@/lib/app-region'
 import {
   type Supplier,
   type SupplierProductWithVariant,
@@ -37,6 +38,7 @@ function variantLabel(row: { size: string | null; color: string | null; material
 }
 
 export default function SupplierDetailPage() {
+  const { money, pack } = useAppRegion()
   const params = useParams<{ supplierId: string }>()
   const supplierId = params.supplierId
 
@@ -380,7 +382,7 @@ export default function SupplierDetailPage() {
                       <div className="t-sub">{variantLabel(row)}</div>
                     </td>
                     <td className="num">{row.leadTimeDays} days</td>
-                    <td className="num t-sub">{row.unitCost ? `₹${row.unitCost}` : '-'}</td>
+                    <td className="num t-sub">{row.unitCost ? money(row.unitCost) : '-'}</td>
                     <td className="t-sub">{row.supplierSku ?? '-'}</td>
                     <td className="num t-sub">{row.minOrderQty ?? '-'}</td>
                     <td>{row.isPrimary && <Badge tone="green">Primary</Badge>}</td>
@@ -486,7 +488,7 @@ export default function SupplierDetailPage() {
                     onChange={(e) => setBatchLeadTimeDays(e.target.value)}
                   />
                 </Fld>
-                <Fld id="batch-cost" label="Unit cost (₹)">
+                <Fld id="batch-cost" label={`Unit cost (${pack.currencySymbol})`}>
                   <input
                     id="batch-cost"
                     type="number"

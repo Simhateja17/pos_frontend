@@ -3,25 +3,25 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import type { TaxDocument } from '@/lib/api/authenticated-client'
+import { useAppRegion } from '@/lib/app-region'
 import styles from './tax-document-view.module.css'
 
 type DocumentMode = 'a4' | 'thermal80' | 'thermal58'
 
-const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 })
-
-function money(value: string): string {
+function formatDocumentMoney(value: string, formatMoney: (value: string | number) => string): string {
   const parsed = Number(value)
-  return Number.isFinite(parsed) ? INR.format(parsed) : `₹${value}`
+  return Number.isFinite(parsed) ? formatMoney(parsed) : value
 }
 
 function text(value: string | null | undefined, fallback = 'Not provided'): string {
   return value?.trim() || fallback
 }
 
-function dateTime(value: string): string {
-  return new Date(value).toLocaleString('en-IN', {
+function dateTime(value: string, locale: string, timeZone?: string): string {
+  return new Date(value).toLocaleString(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
+    ...(timeZone ? { timeZone } : {}),
   })
 }
 
@@ -65,16 +65,18 @@ function Party({ label, party }: { label: string; party: TaxDocument['seller'] |
   )
 }
 
-function TotalRow({ label, value, grand = false }: { label: string; value: string; grand?: boolean }) {
+function TotalRow({ label, value, grand = false, formatMoney }: { label: string; value: string; grand?: boolean; formatMoney: (value: string) => string }) {
   return (
     <div className={`${styles.totalRow} ${grand ? styles.grand : ''}`}>
       <span>{label}</span>
-      <strong>{money(value)}</strong>
+      <strong>{formatMoney(value)}</strong>
     </div>
   )
 }
 
 export function TaxDocumentView({ document, initialMode = 'a4' }: { document: TaxDocument; initialMode?: DocumentMode }) {
+  const { money: formatMoney, pack } = useAppRegion()
+  const money = (value: string) => formatDocumentMoney(value, formatMoney)
   const [mode, setMode] = useState<DocumentMode>(initialMode)
   const isCreditNote = document.documentType === 'credit_note'
 
@@ -105,7 +107,7 @@ export function TaxDocumentView({ document, initialMode = 'a4' }: { document: Ta
             </div>
             <div className={styles.meta}>
               <span>
-                <b>Document date</b><br />{dateTime(document.documentDate)}
+                <b>Document date</b><br />{dateTime(document.documentDate, pack.locale, pack.timeZone)}
               </span>
               <span>
                 <b>Financial year</b><br />{document.financialYear}
@@ -208,15 +210,15 @@ export function TaxDocumentView({ document, initialMode = 'a4' }: { document: Ta
           </div>
           <div className={styles.totals}>
             <p className={styles.summaryLabel}>Tax summary</p>
-            <TotalRow label="Subtotal" value={document.subtotal} />
-            <TotalRow label="Discount" value={document.discountTotal} />
-            <TotalRow label="Taxable value" value={document.taxableTotal} />
-            <TotalRow label="CGST" value={document.cgstTotal} />
-            <TotalRow label="SGST" value={document.sgstTotal} />
-            <TotalRow label="IGST" value={document.igstTotal} />
-            <TotalRow label="Cess" value={document.cessTotal} />
-            <TotalRow label="Rounding" value={document.roundingAmount} />
-            <TotalRow label={isCreditNote ? 'Credit note total' : 'Grand total'} value={document.grandTotal} grand />
+            <TotalRow label="Subtotal" value={document.subtotal} formatMoney={money} />
+            <TotalRow label="Discount" value={document.discountTotal} formatMoney={money} />
+            <TotalRow label="Taxable value" value={document.taxableTotal} formatMoney={money} />
+            <TotalRow label="CGST" value={document.cgstTotal} formatMoney={money} />
+            <TotalRow label="SGST" value={document.sgstTotal} formatMoney={money} />
+            <TotalRow label="IGST" value={document.igstTotal} formatMoney={money} />
+            <TotalRow label="Cess" value={document.cessTotal} formatMoney={money} />
+            <TotalRow label="Rounding" value={document.roundingAmount} formatMoney={money} />
+            <TotalRow label={isCreditNote ? 'Credit note total' : 'Grand total'} value={document.grandTotal} grand formatMoney={money} />
           </div>
         </section>
 

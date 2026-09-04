@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useAppRegion } from '@/lib/app-region'
 
 type Terminal = {
   id: string
@@ -27,6 +28,7 @@ function safeReturnTo(value: string | null): string | null {
 }
 
 export function TerminalsView() {
+  const { money } = useAppRegion()
   const router = useRouter()
   const [returnTo, setReturnTo] = useState<string | null>(null)
   const [terminals, setTerminals] = useState<Terminal[] | null>(null)
@@ -263,7 +265,7 @@ export function TerminalsView() {
             <Fld id="terminal-mode" label="Cash handling">
               <select id="terminal-mode" value={cashMode} onChange={(e) => setCashMode(e.target.value as 'cash' | 'none')}>
                 <option value="cash">Cash counter, count opening cash</option>
-                <option value="none">No cash drawer, opening cash is ₹0.00</option>
+                <option value="none">No cash drawer, opening cash is {money(0)}</option>
               </select>
             </Fld>
             <p className="t-sub" style={{ fontSize: 12 }}>

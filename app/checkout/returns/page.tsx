@@ -8,6 +8,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { getAuthenticatedTaxInvoiceForSale, type TaxDocument } from '@/lib/api/authenticated-client'
 import { Card, CardHead, CardPad, Checkbox, DataTable, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState } from '@/components/couture/states'
+import { useAppRegion } from '@/lib/app-region'
 
 type Sale = {
   id: string
@@ -74,6 +75,7 @@ function money(value: number | string) {
 }
 
 function ReturnsPageInner() {
+  const { money: formatMoney, appPath } = useAppRegion()
   const router = useRouter()
   const searchParams = useSearchParams()
   const requestedShiftId = searchParams.get('shiftId')
@@ -505,7 +507,7 @@ function ReturnsPageInner() {
                 >
                   <span style={{ display: 'block', fontWeight: 700, fontSize: 13 }}>{match.id}</span>
                   <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                    {new Date(match.createdAt).toLocaleString()} · ₹{money(match.totalAmount)}
+                    {new Date(match.createdAt).toLocaleString()} · {formatMoney(match.totalAmount)}
                   </span>
                 </button>
               ))}
@@ -551,7 +553,7 @@ function ReturnsPageInner() {
                         <span className="t-sub">
                           {[line.sku, line.size, line.color, line.material].filter(Boolean).join(' · ') || line.variantId}
                         </span>
-                        <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>₹{money(line.unitPrice)} each</span>
+                        <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatMoney(line.unitPrice)} each</span>
                       </td>
                       <td>{line.quantity}</td>
                       <td>
@@ -566,7 +568,7 @@ function ReturnsPageInner() {
                         />
                       </td>
                       <td>
-                        ₹{money((Number(line.lineTotal) / line.quantity) * quantity)}
+                        {formatMoney((Number(line.lineTotal) / line.quantity) * quantity)}
                       </td>
                     </tr>
                   )
@@ -643,7 +645,7 @@ function ReturnsPageInner() {
                       Selected-line estimate
                     </div>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 26, fontWeight: 700, color: 'var(--danger)', marginTop: 4 }}>
-                      ₹{money(refundTotal)}
+                      {formatMoney(refundTotal)}
                     </div>
                   </div>
                   <button
@@ -671,11 +673,11 @@ function ReturnsPageInner() {
         <Card style={{ marginTop: 18 }}>
           <CardPad style={{ background: 'var(--success-soft)', borderRadius: 'var(--r)' }}>
             <p style={{ fontWeight: 700, color: '#0f8f63', fontSize: 14 }}>
-              Refund of ₹{successAmount} recorded by the server.
+              Refund of {formatMoney(Number(successAmount))} recorded by the server.
             </p>
             {creditNote ? (
               <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
-                Credit note <Link href={`/app/documents/${creditNote.id}`} style={{ fontWeight: 700 }}>{creditNote.number}</Link> is linked to the original Tax Invoice.
+                Credit note <Link href={appPath(`/app/documents/${creditNote.id}`)} style={{ fontWeight: 700 }}>{creditNote.number}</Link> is linked to the original Tax Invoice.
               </p>
             ) : null}
             <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
@@ -715,7 +717,7 @@ function ReturnsPageInner() {
           }
         >
           <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-            Refund ₹{money(refundTotal)} for {taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : `bill ${sale.id}`}? This sends the selected {selectedLines.length} line
+            Refund {formatMoney(refundTotal)} for {taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : `bill ${sale.id}`}? This sends the selected {selectedLines.length} line
             {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
             {originalMethods.join(', ')}), records “{effectiveReason}”, and returns approved units to stock.
           </p>

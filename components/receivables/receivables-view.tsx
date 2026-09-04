@@ -140,7 +140,7 @@ export function ReceivablesView() {
             </p>
             {formError && <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>{formError}</div>}
             <Fld id="receivable-repayment-amount" label="Amount received">
-              <input id="receivable-repayment-amount" type="number" min={0.01} max={Number(selected.balance)} step="0.01" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="₹0.00" autoFocus />
+              <input id="receivable-repayment-amount" type="number" min={0.01} max={Number(selected.balance)} step="0.01" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={money(0)} autoFocus />
             </Fld>
             <Fld id="receivable-repayment-note" label="Note (optional)">
               <textarea id="receivable-repayment-note" rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder="e.g. Cash received at the counter" />
@@ -155,4 +155,3 @@ export function ReceivablesView() {
     </>
   )
 }
-

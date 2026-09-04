@@ -13,6 +13,7 @@ import { CloudOff, RefreshCw } from 'lucide-react'
 import { Card, CardHead, CardPad, DataTable, KpiRow, PageHead, type KpiItem } from '@/components/couture/ui'
 import { EmptyState } from '@/components/couture/states'
 import { useConnectivity } from '@/lib/offline/connectivity'
+import { useAppRegion } from '@/lib/app-region'
 import {
   discardDead,
   listQueue,
@@ -22,9 +23,6 @@ import {
   type SyncHistoryEntry,
 } from '@/lib/offline/queue'
 import { drainQueue } from '@/lib/offline/sync'
-
-const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
-const when = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
 
 /** A sale whose server total differed from what the customer was quoted offline. */
 function isDivergent(entry: SyncHistoryEntry) {
@@ -36,12 +34,18 @@ function isDivergent(entry: SyncHistoryEntry) {
 }
 
 export default function OfflineSyncPage() {
+  const { money, pack } = useAppRegion()
   const { isOnline, checkedAt } = useConnectivity()
   const [queue, setQueue] = useState<QueuedSale[]>([])
   const [history, setHistory] = useState<SyncHistoryEntry[]>([])
   const [isSyncing, setIsSyncing] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [supported, setSupported] = useState(true)
+  const when = new Intl.DateTimeFormat(pack.locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    ...(pack.timeZone ? { timeZone: pack.timeZone } : {}),
+  })
 
   const refresh = useCallback(async () => {
     try {
@@ -132,7 +136,7 @@ export default function OfflineSyncPage() {
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
                 <td className="num">{e.attempts}</td>
                 <td className="t-sub">{e.lastError ?? '-'}</td>
-                <td className="num t-strong">{inr.format(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{money(Number(e.estimatedTotal))}</td>
                 <td>
                   <span className={`badge ${e.status === 'sending' ? 'b-blue' : 'b-amber'}`}>
                     {e.status === 'sending' ? 'Sending' : 'Pending'}
@@ -157,7 +161,7 @@ export default function OfflineSyncPage() {
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
                 <td className="t-sub">{e.lastError ?? 'Rejected'}</td>
-                <td className="num t-strong">{inr.format(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{money(Number(e.estimatedTotal))}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button
                     className="btn btn-sm"
@@ -173,7 +177,7 @@ export default function OfflineSyncPage() {
                     style={{ color: 'var(--danger)' }}
                     onClick={async () => {
                       const reason = window.prompt(
-                        `Discard bill ${e.clientSaleId.slice(0, 8).toUpperCase()} (${inr.format(Number(e.estimatedTotal))})?\n\nThis sale will never reach the server. Give a reason. It is recorded.`,
+                        `Discard bill ${e.clientSaleId.slice(0, 8).toUpperCase()} (${money(Number(e.estimatedTotal))})?\n\nThis sale will never reach the server. Give a reason. It is recorded.`,
                       )
                       if (!reason?.trim()) return
                       await discardDead(e.clientSaleId, reason.trim())
@@ -201,8 +205,8 @@ export default function OfflineSyncPage() {
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.at))}</td>
-                <td className="num">{inr.format(Number(e.estimatedTotal))}</td>
-                <td className="num t-strong">{inr.format(Number(e.confirmedTotal))}</td>
+                <td className="num">{money(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{money(Number(e.confirmedTotal))}</td>
                 <td>
                   {e.saleId ? (
                     <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(e.saleId)}`}>

@@ -152,7 +152,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       return
     }
     if (credit && amount > Number(credit.balance)) {
-      setRepaymentError(`Enter ₹${Number(credit.balance).toFixed(2)} or less.`)
+      setRepaymentError(`Enter ${money(Number(credit.balance))} or less.`)
       return
     }
 
@@ -365,7 +365,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
                 inputMode="decimal"
                 value={repaymentAmount}
                 onChange={(event) => setRepaymentAmount(event.target.value)}
-                placeholder="₹0.00"
+                placeholder={money(0)}
                 autoFocus
               />
             </Fld>

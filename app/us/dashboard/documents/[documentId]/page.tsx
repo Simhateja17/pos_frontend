@@ -20,8 +20,10 @@ import {
 import { Card, CardHead, CardPad, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { TaxDocumentView } from '@/components/documents/tax-document-view'
+import { useAppRegion } from '@/lib/app-region'
 
 export default function TaxDocumentDetailPage() {
+  const { money, fullDate, appPath } = useAppRegion()
   const params = useParams<{ documentId: string }>()
   const documentId = params.documentId
   const [document, setDocument] = useState<TaxDocument | null>(null)
@@ -56,7 +58,7 @@ export default function TaxDocumentDetailPage() {
       <PageHead
         title={document?.documentType === 'credit_note' ? 'Credit note' : 'Tax Invoice'}
         sub="Immutable document snapshot"
-        actions={<Link className="btn btn-sm" href="/app/documents">Back to documents</Link>}
+        actions={<Link className="btn btn-sm" href={appPath('/app/documents')}>Back to documents</Link>}
       />
       {isLoading ? <LoadingState label="Loading GST document" rows={8} /> : null}
       {error ? <ErrorState message={error} onRetry={() => void load()} /> : null}
@@ -73,14 +75,14 @@ export default function TaxDocumentDetailPage() {
                 {creditNotes.map((creditNote) => (
                   <Link
                     key={creditNote.id}
-                    href={`/app/documents/${creditNote.id}`}
+                    href={appPath(`/app/documents/${creditNote.id}`)}
                     className="lrow"
                     style={{ color: 'inherit', textDecoration: 'none' }}
                   >
                     <span className="lico b-green"><FileText size={16} /></span>
                     <span style={{ flex: 1 }}>
                       <span className="lt">{creditNote.documentNumber}</span>
-                      <span className="ls">{new Date(creditNote.documentDate).toLocaleDateString('en-IN')} · ₹{creditNote.grandTotal}</span>
+                      <span className="ls">{fullDate(new Date(creditNote.documentDate))} · {money(creditNote.grandTotal)}</span>
                     </span>
                   </Link>
                 ))}

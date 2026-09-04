@@ -21,6 +21,7 @@ import {
 import { Card, CardHead, CardPad, DataTable, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { TaxDocumentView } from '@/components/documents/tax-document-view'
+import { useAppRegion } from '@/lib/app-region'
 
 type DocumentFilter = 'all' | 'tax_invoice' | 'credit_note'
 
@@ -29,11 +30,6 @@ const FILTERS = [
   { label: 'Tax invoices', value: 'tax_invoice' as const },
   { label: 'Credit notes', value: 'credit_note' as const },
 ]
-
-function money(value: string): string {
-  const amount = Number(value)
-  return Number.isFinite(amount) ? amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : `₹${value}`
-}
 
 function documentLabel(document: TaxDocumentSummary): string {
   return document.documentType === 'credit_note' ? 'Credit note' : 'Tax invoice'
@@ -56,6 +52,7 @@ function matchesDocument(document: TaxDocumentSummary, query: string): boolean {
 }
 
 function DocumentsPageInner() {
+  const { money, fullDate } = useAppRegion()
   const searchParams = useSearchParams()
   const saleId = searchParams.get('saleId')
   const [filter, setFilter] = useState<DocumentFilter>('all')
@@ -161,7 +158,7 @@ function DocumentsPageInner() {
                     </Link>
                   </td>
                   <td style={{ fontFamily: 'var(--mono)' }}>{document.documentNumber}</td>
-                  <td>{new Date(document.documentDate).toLocaleDateString('en-IN')}</td>
+                  <td>{fullDate(new Date(document.documentDate))}</td>
                   <td>{document.financialYear}</td>
                   <td>{buyerName(document)}</td>
                   <td style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal)}</td>
