@@ -76,14 +76,19 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
   useEffect(() => { void load() }, [load])
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setInviting(true); setInviteError(null)
+    // A new staff member always belongs to one store. Omitting the header
+    // when the owner has the combined "All stores" view open lets the
+    // server fall back to the owner's own membership store instead of
+    // sending X-Store-Id: all to a route that cannot act business-wide —
+    // this screen has no store picker to resolve that any other way.
     const result = accessMode === 'pin'
       ? await apiClient.POST('/members', {
           body: { name: inviteName, role: inviteRole, temporaryPin },
-          headers: await authHeaders(),
+          headers: await authHeaders({ includeStore: false }),
         })
       : await apiClient.POST('/members/invite', {
           body: { name: inviteName, email: inviteEmail, role: inviteRole },
-          headers: await authHeaders(),
+          headers: await authHeaders({ includeStore: false }),
         })
     setInviting(false)
     if (result.error) {
@@ -114,10 +119,12 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
   async function resetStaffPin() {
     if (!resetTarget) return
     setResetting(true); setResetError(null)
+    // Same single-store fallback as invite() above — a PIN reset is scoped
+    // to the member's own store, and this modal has no store picker.
     const { error } = await apiClient.POST('/members/{memberId}/reset-pin', {
       params: { path: { memberId: resetTarget.id } },
       body: { pin: resetPin },
-      headers: await authHeaders(),
+      headers: await authHeaders({ includeStore: false }),
     })
     setResetting(false)
     if (error) {
