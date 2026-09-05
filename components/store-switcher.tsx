@@ -44,6 +44,15 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
   // to a single-shop owner but every business-scoped screen (Counters,
   // Settings, staff PIN setup — none of which offer a store picker of their
   // own) throws them into a dead end when it's active.
+  //
+  // Self-correct via setActiveStoreId ONLY — never a hard reload here. This
+  // effect can legitimately observe a momentarily-stale `all` scope while
+  // another in-flight transition (e.g. store-workspace.tsx opening a store
+  // detail page) is already correcting it through the same soft mechanism
+  // (dispatch -> AppShell's ACTIVE_STORE_CHANGED_EVENT listener refetches
+  // context in place). A forced window.location.reload() here previously
+  // collided with that in-flight transition and froze the app on a skeleton
+  // mid-navigation (2026-09-05 incident).
   useEffect(() => {
     let cancelled = false
     async function loadStores() {
@@ -53,7 +62,6 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
         setStores(payload.stores)
         if (payload.stores.length === 1 && activeStoreId !== payload.stores[0].id) {
           setActiveStoreId(payload.stores[0].id)
-          window.location.reload()
         }
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
