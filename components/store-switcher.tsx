@@ -37,21 +37,39 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
     }
   }, [open])
 
-  async function toggle() {
-    const nextOpen = !open
-    setOpen(nextOpen)
-    if (!nextOpen || stores) return
-
-    setError(null)
-    try {
-      const payload = await getAuthenticatedStores()
-      // Closed stores remain selectable for historical reads. The backend
-      // blocks writes in that scope, while Orders, Documents and Inventory
-      // continue to expose the records the business must retain.
-      setStores(payload.stores)
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+  // Fetch eagerly, not only on toggle: a one-store business must never see
+  // "All stores" at all, and a stale `all` selection left over from before
+  // the business dropped to one store has to self-correct even if the owner
+  // never opens this menu. "All stores" vs. "the one store" is meaningless
+  // to a single-shop owner but every business-scoped screen (Counters,
+  // Settings, staff PIN setup — none of which offer a store picker of their
+  // own) throws them into a dead end when it's active.
+  useEffect(() => {
+    let cancelled = false
+    async function loadStores() {
+      try {
+        const payload = await getAuthenticatedStores()
+        if (cancelled) return
+        setStores(payload.stores)
+        if (payload.stores.length === 1 && activeStoreId !== payload.stores[0].id) {
+          setActiveStoreId(payload.stores[0].id)
+          window.location.reload()
+        }
+      } catch (cause) {
+        if (!cancelled) setError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+      }
     }
+    void loadStores()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const singleStore = stores?.length === 1 ? stores[0] : null
+
+  function toggle() {
+    setOpen((prev) => !prev)
   }
 
   function selectStore(storeId: string) {
@@ -79,7 +97,7 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
         aria-label={`Current store: ${label}`}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => void toggle()}
+        onClick={toggle}
       >
         <span className={styles.triggerLabel}>{label}</span>
         <ChevronDown size={15} aria-hidden="true" />
@@ -88,22 +106,26 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
       {open ? (
         <div className={styles.menu} role="menu" aria-label="Switch store">
           <div className={styles.heading}>Switch store</div>
-          <button
-            type="button"
-            role="menuitemradio"
-            aria-checked={activeStoreId === 'all'}
-            className={styles.option}
-            onClick={() => selectStore('all')}
-          >
-            <span className={styles.optionIcon}><StoreIcon size={16} /></span>
-            <span className={styles.optionText}>
-              <strong>All stores</strong>
-              <small>Combined business view</small>
-            </span>
-            {activeStoreId === 'all' ? <Check size={16} className={styles.check} /> : null}
-          </button>
+          {!singleStore ? (
+            <>
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={activeStoreId === 'all'}
+                className={styles.option}
+                onClick={() => selectStore('all')}
+              >
+                <span className={styles.optionIcon}><StoreIcon size={16} /></span>
+                <span className={styles.optionText}>
+                  <strong>All stores</strong>
+                  <small>Combined business view</small>
+                </span>
+                {activeStoreId === 'all' ? <Check size={16} className={styles.check} /> : null}
+              </button>
 
-          <div className={styles.divider} />
+              <div className={styles.divider} />
+            </>
+          ) : null}
           {stores === null && !error ? <div className={styles.status}>Loading stores…</div> : null}
           {error ? <div className={styles.error}>{error}</div> : null}
           {stores?.map((store) => (
