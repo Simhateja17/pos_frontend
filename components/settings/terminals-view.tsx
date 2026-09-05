@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Monitor, Plus } from 'lucide-react'
+import { Monitor, Plus, Store as StoreIcon } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
-import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead } from '@/components/couture/ui'
+import { Badge, Card, CardHead, CardPad, DataTable, Fld, ListRow, Modal, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { useAppRegion } from '@/lib/app-region'
+import { getActiveStoreId, setActiveStoreId } from '@/lib/store-context'
+import { getAuthenticatedStores, type Store } from '@/lib/api/authenticated-client'
 
 type Terminal = {
   id: string
@@ -34,6 +36,9 @@ export function TerminalsView() {
   const [terminals, setTerminals] = useState<Terminal[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [chooseStoreMode, setChooseStoreMode] = useState(false)
+  const [stores, setStores] = useState<Store[]>([])
+  const [storePickerError, setStorePickerError] = useState<string | null>(null)
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Terminal | null>(null)
@@ -45,14 +50,50 @@ export function TerminalsView() {
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
+
+    // Counters are a single-store surface, same as Settings: "All stores" has
+    // no single till list to show. Check before the request rather than
+    // rendering the backend's rejection as a generic load failure.
+    if (getActiveStoreId() === 'all') {
+      setChooseStoreMode(true)
+      try {
+        const payload = await getAuthenticatedStores()
+        setStores(payload.stores.filter((store) => store.isActive))
+        setStorePickerError(null)
+      } catch (cause) {
+        setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+      }
+      setLoading(false)
+      return
+    }
+    setChooseStoreMode(false)
+
     const { data, error: requestError } = await apiClient.GET('/terminals', { headers: await authHeaders() })
     setLoading(false)
     if (requestError || !data) {
-      setError('We couldn’t load your counters. Check your connection and try again.')
+      const serverError = requestError as { code?: string; error?: string } | undefined
+      if (serverError?.code === 'choose_store') {
+        setChooseStoreMode(true)
+        try {
+          const payload = await getAuthenticatedStores()
+          setStores(payload.stores.filter((store) => store.isActive))
+          setStorePickerError(null)
+        } catch (cause) {
+          setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+        }
+        return
+      }
+      setError(serverError?.error ?? 'We couldn’t load your counters. Check your connection and try again.')
       return
     }
     setTerminals(data as Terminal[])
   }, [])
+
+  function chooseStore(storeId: string) {
+    setActiveStoreId(storeId)
+    setChooseStoreMode(false)
+    void load()
+  }
 
   useEffect(() => {
     setReturnTo(safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')))
@@ -148,6 +189,30 @@ export function TerminalsView() {
     // replaced counter. Do not send that now-invalid token on the refresh.
     sessionStorage.removeItem('operatorToken')
     router.push(returnTo ? `/terminal/pin?returnTo=${encodeURIComponent(returnTo)}` : '/terminal/pin')
+  }
+
+  if (chooseStoreMode) {
+    return (
+      <>
+        <PageHead title="Counters" sub="Choose a store" />
+        <Card>
+          <CardHead title="Which store do you want to manage counters for?" sub="A counter belongs to one store." />
+          <CardPad>
+            {storePickerError ? <ErrorState message={storePickerError} onRetry={() => void load()} /> : null}
+            {!storePickerError && stores.length === 0 ? <LoadingState label="Loading stores" /> : null}
+            {stores.map((store) => (
+              <ListRow
+                key={store.id}
+                icon={<StoreIcon size={17} strokeWidth={1.85} />}
+                title={store.name}
+                sub={[store.city, store.state].filter(Boolean).join(' · ') || 'Address not set'}
+                action={<button className="btn btn-sm btn-pri" onClick={() => chooseStore(store.id)}>Open counters</button>}
+              />
+            ))}
+          </CardPad>
+        </Card>
+      </>
+    )
   }
 
   return (
