@@ -49,7 +49,9 @@ export default function RetailVerticalPage({
         <div className="stats-inner" style={{ "--stat-cols": stats.length } as CSSProperties}>
           {stats.map(([num, label]) => (
             <div className="stat-item" key={label}>
-              <div className="stat-num">{num}</div>
+              {/* word stats ("Offline") sit smaller than numeric ones so the
+                  row reads as one line of type */}
+              <div className={`stat-num${/\d/.test(num) ? "" : " is-word"}`}>{num}</div>
               <div className="stat-label">{label}</div>
             </div>
           ))}

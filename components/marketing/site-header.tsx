@@ -47,7 +47,7 @@ export default function SiteHeader({
         ) : (
           <>
             <a className="btn-outline" style={{ display: "inline-flex", alignItems: "center" }} href={site.loginHref}>Log in</a>
-            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href={site.signupHref}>Choose a plan</a>
+            <a className="btn-primary" style={{ display: "inline-flex", alignItems: "center" }} href={site.signupHref}>Sign up</a>
           </>
         )}
       </div>

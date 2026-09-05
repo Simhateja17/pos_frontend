@@ -93,6 +93,10 @@ export default function USLandingPage() {
     window.location.href = "/us/auth";
   };
 
+  const watchDemo = () => {
+    window.open("https://youtu.be/ngv2Bx-u-c4", "_blank", "noopener,noreferrer");
+  };
+
   useEffect(() => {
     let active = true;
     // Same-origin through the existing /_backend rewrite (see lib/api/client.ts)
@@ -226,7 +230,7 @@ export default function USLandingPage() {
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
             Choose a plan
           </button>
-          <button className="btn-hero btn-hero-sec">Watch 2-min demo</button>
+          <button className="btn-hero btn-hero-sec" onClick={watchDemo}>Watch 2-min demo</button>
         </div>
         <div className="hero-trust">
           <span>✓ No setup fee</span>

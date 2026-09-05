@@ -129,7 +129,13 @@ section{padding:80px 5vw}
 .stat-item{text-align:center;padding:20px;position:relative}
 .stat-item+.stat-item::before{content:"";position:absolute;left:0;top:20%;height:60%;width:1px;background:rgba(255,255,255,.2)}
 .stat-num{font-family:var(--display);font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-.04em;line-height:1}
-.stat-num span{font-size:.5em;font-weight:600;opacity:.85;vertical-align:super;font-size:22px}
+/* only a bare marker span (the "+" on /us) is a superscript suffix; the .cv
+   counter span holds the whole value and must stay at full size */
+.stat-num span:not(.cv){font-size:22px;font-weight:600;opacity:.85;vertical-align:super}
+.stat-num .cv{font:inherit;letter-spacing:inherit;opacity:1;vertical-align:baseline}
+/* a word instead of a number: digits are narrow, so a word needs a smaller
+   cap height to carry the same optical weight in the column */
+.stat-num.is-word{font-size:clamp(26px,3.4vw,38px);letter-spacing:-.02em}
 .stat-label{font-size:13px;color:rgba(255,255,255,.75);margin-top:6px;font-weight:500}
 
 /* ============ FEATURES ============ */

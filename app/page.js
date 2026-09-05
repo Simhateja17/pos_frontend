@@ -74,6 +74,10 @@ export default function LandingPage() {
     window.location.href = "/app/dashboard";
   };
 
+  const watchDemo = () => {
+    window.open("https://youtu.be/ngv2Bx-u-c4", "_blank", "noopener,noreferrer");
+  };
+
   useEffect(() => {
     let active = true;
     // Same-origin through the existing /_backend rewrite (see lib/api/client.ts)
@@ -204,7 +208,7 @@ export default function LandingPage() {
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
             Explore prototype
           </button>
-          <button className="btn-hero btn-hero-sec">Watch 2-min demo</button>
+          <button className="btn-hero btn-hero-sec" onClick={watchDemo}>Watch 2-min demo</button>
         </div>
         <div className="hero-trust">
           <span>✓ No setup fee</span>
@@ -293,7 +297,7 @@ export default function LandingPage() {
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count={FEATURES.length}>0</span></div><div className="stat-label">Integrated modules</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="799" data-prefix="₹">₹0</span></div><div className="stat-label">Starting plan, per month</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="18" data-suffix="%">0%</span></div><div className="stat-label">GST built into every bill</div></div>
-          <div className="stat-item"><div className="stat-num">Offline</div><div className="stat-label">Billing works without signal</div></div>
+          <div className="stat-item"><div className="stat-num is-word">Offline</div><div className="stat-label">Billing works without signal</div></div>
         </div>
       </div>
 
