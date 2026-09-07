@@ -48,7 +48,7 @@ export default function USTermsPage() {
           <p>These terms are governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules, and the state and federal courts located in Delaware have exclusive jurisdiction over any dispute.</p>
 
           <h2>9. Contact</h2>
-          <p>Questions about these terms can be sent to <a href="mailto:legal@ambelpos.com">legal@ambelpos.com</a> or via our <a href="/us/contact">contact page</a>.</p>
+          <p>Questions about these terms can be sent to <a href="mailto:support@ambelpos.com">support@ambelpos.com</a> or via our <a href="/us/contact">contact page</a>.</p>
         </div>
       </section>
       <SiteFooter region="INTL" />

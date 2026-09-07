@@ -46,7 +46,7 @@ export default function CareersPage() {
           <p>We hire in person, not against a fixed requisition list. If you have backend, frontend, ML/forecasting, or retail-operations experience and want to work on GST-native billing, offline-first stock ledgers, or reorder intelligence for Indian retailers, send us a note about what you&apos;d want to build and why this problem interests you.</p>
         </div>
         <p style={{ textAlign: "center", marginTop: 24, color: "var(--muted)", fontSize: 14.5 }}>
-          Write to us at <a href="mailto:careers@Ambel.in" style={{ color: "var(--brand-1)" }}>careers@Ambel.in</a>.
+          Write to us at <a href="mailto:support@ambelpos.com" style={{ color: "var(--brand-1)" }}>support@ambelpos.com</a>.
         </p>
       </section>
       <SiteFooter />

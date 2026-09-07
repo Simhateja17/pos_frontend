@@ -38,7 +38,7 @@ export default function USPrivacyPage() {
           <p>Data for the International edition is encrypted in transit and at rest and hosted on infrastructure assigned to that edition, with role-based access controls and audit logging on every account. Offline checkout data is encrypted locally and synced once connectivity returns.</p>
 
           <h2>5. Your rights</h2>
-          <p>Depending on where you live, you may have the right to access, correct, delete or port your personal information, and to opt out of its sale or sharing. We honor requests under the privacy frameworks that apply to our users. Write to <a href="mailto:privacy@ambelpos.com">privacy@ambelpos.com</a> and we will respond within 45 days. Certain records, such as sales-tax invoices, are retained as required by applicable law even after account closure.</p>
+          <p>Depending on where you live, you may have the right to access, correct, delete or port your personal information, and to opt out of its sale or sharing. We honor requests under the privacy frameworks that apply to our users. Write to <a href="mailto:support@ambelpos.com">support@ambelpos.com</a> and we will respond within 45 days. Certain records, such as sales-tax invoices, are retained as required by applicable law even after account closure.</p>
 
           <h2>6. Children&apos;s privacy</h2>
           <p>Ambel POS is a business tool and is not directed to children under 13. We do not knowingly collect personal information from children.</p>
@@ -47,7 +47,7 @@ export default function USPrivacyPage() {
           <p>We&apos;ll notify account owners by email at least 14 days before any material change to this policy takes effect.</p>
 
           <h2>8. Contact</h2>
-          <p>Questions about this policy can be sent to <a href="mailto:privacy@ambelpos.com">privacy@ambelpos.com</a> or via our <a href="/us/contact">contact page</a>.</p>
+          <p>Questions about this policy can be sent to <a href="mailto:support@ambelpos.com">support@ambelpos.com</a> or via our <a href="/us/contact">contact page</a>.</p>
         </div>
       </section>
       <SiteFooter region="INTL" />

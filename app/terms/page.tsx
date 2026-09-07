@@ -47,7 +47,7 @@ export default function TermsPage() {
           <p>These terms are governed by the laws of India, with courts in Bengaluru, Karnataka having exclusive jurisdiction.</p>
 
           <h2>9. Contact</h2>
-          <p>Questions about these terms can be sent to <a href="mailto:legal@Ambel.in">legal@Ambel.in</a> or via our <a href="/contact">contact page</a>.</p>
+          <p>Questions about these terms can be sent to <a href="mailto:support@ambelpos.com">support@ambelpos.com</a> or via our <a href="/contact">contact page</a>.</p>
         </div>
       </section>
       <SiteFooter />

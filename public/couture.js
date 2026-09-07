@@ -635,7 +635,7 @@ SCREENS.whatsapp=()=>{
       <div style="display:flex;align-items:center;gap:16px;padding:15px 18px;flex-wrap:wrap">
         <div style="width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,#1FA855,#25D366);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 16px rgba(31,168,85,.3);flex-shrink:0">${ic('wa',26)}</div>
         <div style="flex:1;min-width:220px">
-          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><b style="font-size:15px">WhatsApp Business · +91 90000 12345</b><span class="badge b-green"><span class="dot-g"></span>Connected</span><span class="badge b-blue">Green-tick verified</span></div>
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><b style="font-size:15px">WhatsApp Business · +91 6301658275</b><span class="badge b-green"><span class="dot-g"></span>Connected</span><span class="badge b-blue">Green-tick verified</span></div>
           <div class="t-sub" style="margin-top:3px">Provider: Gupshup (Meta Cloud API) · Quality rating: <b style="color:#0f8f63">High</b> · Messaging limit: 100K / day</div>
         </div>
         <button class="btn" onclick="toast('Connection healthy · last sync just now')">${ic('sync')} Test connection</button>
@@ -928,8 +928,8 @@ const OB_CONTENT=[
    <label class="fld"><span>GSTIN</span><input type="text" value="27ABCDE1234F1Z5"></label>
    <label class="fld"><span>Invoice prefix</span><input type="text" value="INV-"></label>
    <label class="fld" style="grid-column:1/-1"><span>Registered address</span><input type="text" value="12 Hill Rd, Bandra West, Mumbai 400050"></label>
-   <label class="fld"><span>Contact phone</span><input type="text" value="+91 22 4000 1200"></label>
-   <label class="fld"><span>Support email</span><input type="text" value="ops@Ambel.in"></label>
+   <label class="fld"><span>Contact phone</span><input type="text" value="+91 6301658275"></label>
+   <label class="fld"><span>Support email</span><input type="text" value="support@ambelpos.com"></label>
  </div>
  <div style="margin-top:16px">
    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Bill options</div>
@@ -1112,12 +1112,12 @@ SCREENS.settings=()=>{
 /* ============ SETTINGS DETAIL ============ */
 let SETTING_CUR='Business Profile';
 const SETTING_DEF={
- 'Business Profile':{ic:'settings',sub:'Store identity, GSTIN & invoice header',fields:[['Legal business name','Ambel Retail Pvt Ltd'],['Store display name','Ambel · Bandra'],['GSTIN','27ABCDE1234F1Z5'],['Invoice prefix','INV-'],['Registered address','12 Hill Rd, Bandra West, Mumbai 400050'],['Support phone','+91 22 4000 1200']],toggles:[['Print GSTIN on receipt',1],['Show HSN per line',1],['Email invoice copy to customer',0]]},
+ 'Business Profile':{ic:'settings',sub:'Store identity, GSTIN & invoice header',fields:[['Legal business name','Ambel Retail Pvt Ltd'],['Store display name','Ambel · Bandra'],['GSTIN','27ABCDE1234F1Z5'],['Invoice prefix','INV-'],['Registered address','12 Hill Rd, Bandra West, Mumbai 400050'],['Support phone','+91 6301658275']],toggles:[['Print GSTIN on receipt',1],['Show HSN per line',1],['Email invoice copy to customer',0]]},
  'Tax & GST':{ic:'expenses',sub:'Slabs, HSN/SAC mapping & round-off',fields:[['Default GST slab','5%'],['Composition scheme','No'],['Round-off rule','Nearest ₹1'],['Place of supply','Maharashtra (27)']],toggles:[['Auto-pick slab from HSN',1],['Block sale if HSN missing',0],['Inclusive-of-tax pricing',1]]},
  'Payment Methods':{ic:'payments',sub:'Cash, card, UPI, wallets, gift cards',fields:[['Primary UPI VPA','Ambel@hdfcbank'],['Card PSP','Pine Labs'],['UPI PSP','Razorpay'],['Default tender','UPI']],toggles:[['Accept cash',1],['Accept card',1],['Accept UPI QR',1],['Accept gift cards',1],['Allow split payment',1]]},
  'Hardware':{ic:'hardware',sub:'Printer, scanner, drawer & scale',fields:[['Receipt printer','Thermal 80mm · Cloud'],['Barcode scanner','USB · Counter 1'],['Cash drawer','Auto-open on pay'],['Weighing scale','Not paired']],toggles:[['Auto cash-drawer kick',1],['Self-test on register open',1],['Buzzer on scan error',0]]},
  'Team & Roles':{ic:'staff',sub:'Roles, permission matrix & approval limits',fields:[['Default new-hire role','Cashier'],['Manager approval over','₹2,000'],['Auto clock-out after','10 hours'],['PIN length','4 digits']],toggles:[['Require PIN for refunds',1],['Require PIN for discounts',1],['Lock settings to Admin',1]]},
- 'Notifications':{ic:'bell',sub:'Email, SMS, WhatsApp & in-app alerts',fields:[['Alert email','ops@Ambel.in'],['WhatsApp sender','+91 90000 12345'],['Low-stock threshold','At reorder level'],['Daily summary at','21:30']],toggles:[['Stock-out alerts',1],['Payment failure alerts',1],['Late clock-in alerts',1],['Daily GST summary',1],['Marketing opt-ins only (DND-safe)',1]]},
+ 'Notifications':{ic:'bell',sub:'Email, SMS, WhatsApp & in-app alerts',fields:[['Alert email','support@ambelpos.com'],['WhatsApp sender','+91 6301658275'],['Low-stock threshold','At reorder level'],['Daily summary at','21:30']],toggles:[['Stock-out alerts',1],['Payment failure alerts',1],['Late clock-in alerts',1],['Daily GST summary',1],['Marketing opt-ins only (DND-safe)',1]]},
  'API & Webhooks':{ic:'api',sub:'Connect ERP, loyalty apps & e-commerce',fields:[['Live API key','sk_live_••••••4f2a'],['Webhook URL','https://erp.Ambel.in/hooks'],['Rate limit','600 req/min'],['API version','2026-04']],toggles:[['order.created webhook',1],['inventory.updated webhook',1],['payment.settled webhook',0]]},
  'Integration Marketplace':{ic:'supplier',sub:'Tally, WhatsApp, Razorpay, Shiprocket…',fields:[],apps:[['Tally','Accounting sync','b-green','Connected'],['WhatsApp Business','Campaigns & receipts','b-green','Connected'],['Razorpay','Payments','b-green','Connected'],['Shiprocket','Logistics','b-amber','Disconnected'],['Zoho Books','Accounting','b-amber','Disconnected'],['Shopify','E-commerce','b-grey','Available']]},
  'Document Vault':{ic:'doc',sub:'GST, FSSAI & lease per store / supplier',fields:[],docs:[['GST Registration Certificate','Ambel Retail · valid','b-green'],['FSSAI License','Beauty counter · exp 2027','b-green'],['Shop & Establishment','Bandra · valid','b-green'],['Lease Agreement · Bandra','exp Mar 2028','b-green'],['Supplier GST: HUL','missing','b-red']]},
@@ -1410,7 +1410,7 @@ function doGenReport(){const t=val('rp_type');const f=val('rp_fmt');closeModal()
 function scheduleReportForm(){openModal('Schedule a report',
   fld('sr_type','Report',{type:'select',options:['Daily Sales Summary','GST Output (GSTR-1)','Stock Valuation','Profit & Loss']})
   +row2(fld('sr_freq','Frequency',{type:'select',options:['Daily','Weekly','Monthly']}),fld('sr_time','Send at',{type:'time',val:'21:30'}))
-  +fld('sr_to','Email to',{ph:'ops@Ambel.in'}),'Schedule','doScheduleReport');}
+  +fld('sr_to','Email to',{ph:'support@ambelpos.com'}),'Schedule','doScheduleReport');}
 function doScheduleReport(){closeModal();toast(val('sr_type')+' scheduled · '+val('sr_freq'));}
 
 function runSettlement(){openModal('Run settlement · 03 May',

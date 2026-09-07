@@ -398,7 +398,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                 )
               })}
             </div>
-            <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:sales@Ambel.in">Contact sales</a>.</div>
+            <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:support@ambelpos.com">Contact sales</a>.</div>
             <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || paying || billingStatusLoading || (!available && !activeSelectedSubscription && !activeTrial)}>
               {paying
                   ? activeSelectedSubscription ? 'Continuing...' : 'Opening secure checkout...'

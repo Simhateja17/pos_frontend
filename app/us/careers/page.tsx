@@ -65,7 +65,7 @@ export default function USCareersPage() {
           </div>
         ))}
         <p style={{ textAlign: "center", marginTop: 24, color: "var(--muted)", fontSize: 14.5 }}>
-          Don&apos;t see a fit? Write to us at <a href="mailto:careers@ambelpos.com" style={{ color: "var(--brand-1)" }}>careers@ambelpos.com</a>.
+          Don&apos;t see a fit? Write to us at <a href="mailto:support@ambelpos.com" style={{ color: "var(--brand-1)" }}>support@ambelpos.com</a>.
         </p>
       </section>
       <SiteFooter region="INTL" />
