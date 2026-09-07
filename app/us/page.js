@@ -90,8 +90,8 @@ export default function USLandingPage() {
   // "loading" | "loaded" | "error" — distinguishes "hasn't returned yet" from
   // "failed", since both start out as an empty plans array.
   const [plansState, setPlansState] = useState("loading");
-  const goAuth = () => {
-    window.location.href = "/us/auth";
+  const watchDemo = () => {
+    window.open("https://youtu.be/ngv2Bx-u-c4", "_blank", "noopener,noreferrer");
   };
 
   useEffect(() => {
@@ -223,18 +223,16 @@ export default function USLandingPage() {
         <h1 className="hero-h1">Retail, run from<br /><em>one register.</em></h1>
         <p className="hero-sub">Checkout, sales tax, inventory, online orders, receipts and reports, unified in one beautiful POS built for independent boutiques and multi-location retailers.</p>
         <div className="hero-actions">
-          <button className="btn-hero btn-hero-pri" onClick={goAuth}>
-            <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
-            Choose a plan
-          </button>
           <a
-            className="btn-hero btn-hero-sec"
+            className="btn-hero btn-hero-pri"
             href={REGION_SITE.INTL.demoHref}
             target="_blank"
             rel="noopener noreferrer"
           >
+            <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
             Book a demo
           </a>
+          <button className="btn-hero btn-hero-sec" onClick={watchDemo}>Watch 2-min demo</button>
         </div>
         <div className="hero-trust">
           <span>✓ No setup fee</span>
