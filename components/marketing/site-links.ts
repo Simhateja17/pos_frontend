@@ -24,6 +24,8 @@ type SiteLinks = {
   navLinks: [label: string, href: string][]
   loginHref: string
   signupHref: string
+  /** External scheduling page for this edition. */
+  demoHref: string
   /** Signed-in CTA. */
   appHref: string
   appLabel: string
@@ -88,6 +90,7 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
     ],
     loginHref: '/login',
     signupHref: '/signup',
+    demoHref: 'https://calendly.com/ambelpos-support/30-minute-meeting-clone',
     appHref: '/app/dashboard',
     appLabel: 'Back to Billing',
     tagline: "India's most complete retail suite: GST-native, AI-powered, offline-first.",
@@ -120,6 +123,7 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
     ],
     loginHref: '/us/auth',
     signupHref: '/us/auth',
+    demoHref: 'https://calendly.com/ambelpos-support/30min',
     appHref: '/us/dashboard',
     appLabel: 'Back to Checkout',
     tagline: 'The complete retail suite: sales-tax-native, omnichannel, offline-first.',

@@ -36,6 +36,27 @@ test("International marketing chrome uses the canonical root homepage", () => {
   assert.match(internationalBlock, /\['Screens', '\/#screens'\]/);
 });
 
+test("Book a demo uses the correct Calendly event for each region", () => {
+  const indiaBlock = siteLinks.slice(
+    siteLinks.indexOf("IN: {"),
+    siteLinks.indexOf("INTL: {"),
+  );
+  const internationalBlock = siteLinks.slice(siteLinks.indexOf("INTL: {"));
+
+  assert.match(
+    indiaBlock,
+    /demoHref: 'https:\/\/calendly\.com\/ambelpos-support\/30-minute-meeting-clone'/,
+  );
+  assert.match(
+    internationalBlock,
+    /demoHref: 'https:\/\/calendly\.com\/ambelpos-support\/30min'/,
+  );
+  assert.match(indiaLanding, /href=\{REGION_SITE\.IN\.demoHref\}/);
+  assert.match(internationalLanding, /href=\{REGION_SITE\.INTL\.demoHref\}/);
+  assert.match(indiaLanding, /Book a demo/);
+  assert.match(internationalLanding, /Book a demo/);
+});
+
 test("explicit /us navigation remembers International before canonical redirect", () => {
   const usRedirect = middleware.slice(
     middleware.indexOf("if (pathname === '/us')"),

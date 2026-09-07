@@ -22,6 +22,7 @@ import SiteHeader from "@/components/marketing/site-header";
 import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, US_FEATURES } from "@/components/marketing/features-data";
 import { PricingPeriod } from "@/components/marketing/pricing-period";
+import { REGION_SITE } from "@/components/marketing/site-links";
 
 const MOCK_SB = ["Dashboard", "Checkout", "Sales Tax", "Offline Sync", "Inventory", "Online Orders", "Receipts", "Hardware", "Reports"];
 const MOCK_KPI = [
@@ -226,7 +227,14 @@ export default function USLandingPage() {
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
             Choose a plan
           </button>
-          <button className="btn-hero btn-hero-sec">Watch 2-min demo</button>
+          <a
+            className="btn-hero btn-hero-sec"
+            href={REGION_SITE.INTL.demoHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Book a demo
+          </a>
         </div>
         <div className="hero-trust">
           <span>✓ No setup fee</span>
