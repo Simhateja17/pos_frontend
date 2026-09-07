@@ -71,6 +71,10 @@ export default function LandingPage() {
   // "loading" | "loaded" | "error" — distinguishes "hasn't returned yet" from
   // "failed", since both start out as an empty plans array.
   const [plansState, setPlansState] = useState("loading");
+  const goApp = () => {
+    window.location.href = "/app/dashboard";
+  };
+
   const watchDemo = () => {
     window.open("https://youtu.be/ngv2Bx-u-c4", "_blank", "noopener,noreferrer");
   };
