@@ -8,6 +8,14 @@ export const metadata = {
   description:
     "GST-native POS for Indian retail with guided WhatsApp catalogue setup, offline billing, multi-store inventory and AI-powered reorder forecasting.",
   applicationName: "Ambel POS",
+  icons: {
+    icon: [
+      { url: "/favicon-48x48-v2.png", type: "image/png", sizes: "48x48" },
+      { url: "/favicon-192x192-v2.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon-48x48-v2.png",
+  },
   openGraph: {
     type: "website",
     siteName: "Ambel POS",
