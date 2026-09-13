@@ -6,6 +6,7 @@ tools/openapi-gen/node_modules
 .DS_Store
 *.pem
 .env*.local
+.env*.backup*
 .env
 npm-debug.log*
 .vercel

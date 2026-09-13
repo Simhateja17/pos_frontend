@@ -1,6 +1,7 @@
 import type { components, paths } from './schema'
 import { apiClient } from './client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { localizeMessage } from '@/lib/i18n/client-messages'
 
 export type AppContext = components['schemas']['AppContext']
 export type BillingStatus = components['schemas']['BillingStatus']
@@ -95,7 +96,9 @@ export class AuthenticatedRequestError extends Error {
     public readonly kind: 'unauthenticated' | 'forbidden' | 'register_locked' | 'network' | 'unavailable',
     message: string,
   ) {
-    super(message)
+    // Every message raised here is shown to the user as-is, so it is
+    // localized once at construction rather than at each of ~60 call sites.
+    super(localizeMessage(message))
     this.name = 'AuthenticatedRequestError'
   }
 }

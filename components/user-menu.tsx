@@ -9,6 +9,7 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import type { AppContext } from '@/lib/api/authenticated-client'
 import styles from './user-menu.module.css'
 import { setActiveStoreId } from '@/lib/store-context'
+import { useT } from '@/lib/i18n/i18n'
 
 function initials(name?: string | null) {
   if (!name?.trim()) return '-'
@@ -30,6 +31,7 @@ export function UserMenu({
   className?: string
 }) {
   const router = useRouter()
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -84,19 +86,23 @@ export function UserMenu({
       >
         <div className="tb-ava">{initials(context?.staff.name)}</div>
         <div>
-          <div className="nm">{isContextLoading ? 'Loading staff…' : (context?.staff.name ?? 'Staff unavailable')}</div>
-          <div className="rl">{context?.staff.role ?? (hasError ? 'Retry to load access' : 'Loading access…')}</div>
+          <div className="nm">{isContextLoading ? t('shell.user.loadingStaff') : (context?.staff.name ?? t('shell.user.staffUnavailable'))}</div>
+          <div className="rl">
+            {context?.staff.role
+              ? t(`shell.user.roles.${context.staff.role}`)
+              : hasError ? t('shell.user.retryAccess') : t('shell.user.loadingAccess')}
+          </div>
         </div>
       </button>
 
       {open && (
-        <div className={styles.panel} role="menu" aria-label="Account menu">
+        <div className={styles.panel} role="menu" aria-label={t('shell.user.accountMenu')}>
           <button type="button" className={styles.item} role="menuitem" onClick={() => void lockRegister()}>
-            <LockKeyhole size={15} strokeWidth={1.85} /> Lock register
+            <LockKeyhole size={15} strokeWidth={1.85} /> {t('shell.user.lockRegister')}
           </button>
           {allowOrganizationSignOut && (
             <button type="button" className={styles.item} role="menuitem" onClick={() => void signOut()} disabled={signingOut}>
-              <LogOut size={15} strokeWidth={1.85} /> {signingOut ? 'Signing out…' : 'Sign out organisation'}
+              <LogOut size={15} strokeWidth={1.85} /> {signingOut ? t('shell.user.signingOut') : t('shell.user.signOut')}
             </button>
           )}
         </div>

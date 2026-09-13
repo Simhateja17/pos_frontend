@@ -1,0 +1,25 @@
+export const states = {
+  loadErrorTitle: 'We couldn’t load these records',
+  loadingRecords: 'Loading records',
+  notTracked: 'Not tracked yet',
+  notAvailableBuild: 'Not available in this build',
+  moduleNotEnabled: '{title} isn’t enabled yet',
+  thisModule: 'This module',
+  moduleBody:
+    '{capability} has no backend contract in the current build, so there is nothing real to show here. Rather than display sample records, this screen stays empty until the capability ships.',
+  backToDashboard: 'Back to dashboard',
+  modules: {
+    'feature-map': { title: 'Feature Map', sub: 'Product capability overview' },
+    'sales-channels': { title: 'Sales Channels', sub: 'Omnichannel orders and stock sync' },
+    'delivery-challan': { title: 'Delivery Challan', sub: 'Goods dispatched before invoicing' },
+    'whatsapp-connect': { title: 'WhatsApp Connect', sub: 'Customer messaging and campaigns' },
+    expenses: { title: 'Expenses', sub: 'Store spend and petty cash' },
+    receivables: { title: 'Receivables', sub: 'Credit customers and outstanding dues' },
+    'credit-notes': { title: 'Credit / Debit Notes', sub: 'Post-Tax Invoice adjustments' },
+    analytics: { title: 'Analytics', sub: 'Trends and performance insight' },
+    copilot: { title: 'AI Copilot', sub: 'Assisted retail operations' },
+    'offline-sync': { title: 'Offline & Sync', sub: 'Resilience and queued writes' },
+    hardware: { title: 'Hardware & Devices', sub: 'Terminals, printers and scanners' },
+    'customer-display': { title: 'Customer Display', sub: 'Second-screen checkout view' },
+  },
+}

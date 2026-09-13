@@ -60,6 +60,8 @@ export const REGION_PACKS: Record<MarketingRegion, RegionPack> = {
 export type AppRegionValue = {
   region: MarketingRegion
   pack: RegionPack
+  /** Locale for date/time text: the pack locale, or the viewer's language (`te-IN`). */
+  dateLocale: string
   /** Formats a decimal string from the API in this edition's currency. */
   money: (value: string | number) => string
   /** "01 Aug 2026" — for page headers. */
@@ -79,7 +81,12 @@ export type AppRegionValue = {
 
 const AppRegionContext = createContext<AppRegionValue | null>(null)
 
-export function buildRegionValue(region: MarketingRegion): AppRegionValue {
+/**
+ * `dateLocale` lets the India edition render month names in the viewer's
+ * chosen language (e.g. `te-IN`). Currency keeps the pack locale: Indian
+ * digit grouping with Western numerals is what Telugu shopkeepers read.
+ */
+export function buildRegionValue(region: MarketingRegion, dateLocale?: string): AppRegionValue {
   const pack = REGION_PACKS[region]
 
   const currencyFormat = new Intl.NumberFormat(pack.locale, {
@@ -87,13 +94,13 @@ export function buildRegionValue(region: MarketingRegion): AppRegionValue {
     currency: pack.currency,
     maximumFractionDigits: 2,
   })
-  const fullDateFormat = new Intl.DateTimeFormat(pack.locale, {
+  const fullDateFormat = new Intl.DateTimeFormat(dateLocale ?? pack.locale, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     timeZone: pack.timeZone,
   })
-  const shortDateFormat = new Intl.DateTimeFormat(pack.locale, {
+  const shortDateFormat = new Intl.DateTimeFormat(dateLocale ?? pack.locale, {
     day: 'numeric',
     month: 'short',
     timeZone: pack.timeZone,
@@ -102,6 +109,7 @@ export function buildRegionValue(region: MarketingRegion): AppRegionValue {
   return {
     region,
     pack,
+    dateLocale: dateLocale ?? pack.locale,
     money: (value) => currencyFormat.format(Number(value)),
     fullDate: (value) => fullDateFormat.format(value),
     shortDate: (value) => shortDateFormat.format(typeof value === 'string' ? new Date(value) : value),
@@ -109,8 +117,16 @@ export function buildRegionValue(region: MarketingRegion): AppRegionValue {
   }
 }
 
-export function AppRegionProvider({ region, children }: { region: MarketingRegion; children: ReactNode }) {
-  const value = useMemo(() => buildRegionValue(region), [region])
+export function AppRegionProvider({
+  region,
+  dateLocale,
+  children,
+}: {
+  region: MarketingRegion
+  dateLocale?: string
+  children: ReactNode
+}) {
+  const value = useMemo(() => buildRegionValue(region, dateLocale), [region, dateLocale])
   return <AppRegionContext.Provider value={value}>{children}</AppRegionContext.Provider>
 }
 

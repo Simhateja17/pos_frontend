@@ -1,0 +1,15 @@
+export const common = {
+  retry: 'మళ్లీ ప్రయత్నించండి',
+  cancel: 'రద్దు చేయండి',
+  close: 'మూసివేయండి',
+  save: 'సేవ్ చేయండి',
+  saving: 'సేవ్ అవుతోంది…',
+  open: 'తెరవండి',
+  review: 'చూడండి',
+  next: 'తర్వాత',
+  back: 'వెనక్కి',
+  loading: 'లోడ్ అవుతోంది…',
+  language: 'భాష',
+  english: 'English',
+  telugu: 'తెలుగు',
+}

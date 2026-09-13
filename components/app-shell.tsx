@@ -7,9 +7,12 @@ import { Menu, X } from 'lucide-react'
 import { AmbelMark } from '@/components/brand/ambel-mark'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { UserMenu } from '@/components/user-menu'
+import { LanguageSwitch } from '@/components/language-switch'
+import { useI18n } from '@/lib/i18n/i18n'
 import {
   APP_NAVIGATION,
   cashierCanAccessAppPath,
+  localizeNavigation,
   navigationForRegionRole,
   roleCanAccessAppPath,
   toIndiaPath,
@@ -64,7 +67,9 @@ function matchedNavHref(pathname: string, items: AppNavItem[] = ALL_NAV_ITEMS): 
  */
 export function AppShell({ region = 'IN', children }: { region?: MarketingRegion; children: ReactNode }) {
   const pathname = usePathname()
-  const { appPath, pack } = useMemo(() => buildRegionValue(region), [region])
+  const { locale, t } = useI18n()
+  const dateLocale = locale === 'te' ? 'te-IN' : undefined
+  const { appPath, pack } = useMemo(() => buildRegionValue(region, dateLocale), [region, dateLocale])
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [context, setContext] = useState<AppContext | null>(null)
@@ -95,11 +100,13 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
       setContextError(
         error instanceof AuthenticatedRequestError
           ? error
-          : new AuthenticatedRequestError('unavailable', 'Store context is unavailable right now. Please retry.'),
+          : new AuthenticatedRequestError('unavailable', t('shell.contextUnavailable')),
       )
     } finally {
       setIsContextLoading(false)
     }
+    // `t` is deliberately omitted: switching language must not refetch context.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, pack.signInPath])
 
   useEffect(() => {
@@ -265,7 +272,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
   const contentReady =
     deviceGate === 'ready' && !isContextLoading && !cashierIsRedirecting && !roleIsRedirecting
 
-  const navigation = navigationForRegionRole(region, context?.staff.role)
+  const navigation = localizeNavigation(navigationForRegionRole(region, context?.staff.role), locale, t)
   const visibleNavItems = navigation.flatMap((group) => group.items)
   const matchedHref = matchedNavHref(toIndiaPath(pathname), visibleNavItems)
   const current = visibleNavItems.find((item) => item.href === matchedHref)?.label ?? 'Ambel POS'
@@ -274,10 +281,10 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
   const storeFull = context
     ? context.store
       ? [context.store.name, context.store.locality].filter(Boolean).join(' · ')
-      : `${context.tenant.businessName} · All stores`
+      : `${context.tenant.businessName} · ${t('shell.allStores')}`
     : isContextLoading
-      ? 'Loading store…'
-      : 'Store unavailable'
+      ? t('shell.loadingStore')
+      : t('shell.storeUnavailable')
 
   /**
    * The pill mirrors the design's compact "Mumbai · Bandra" store chip, so it
@@ -285,15 +292,15 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
    * sentence: it stays in the title/tooltip rather than the chip.
    */
   return (
-    <AppRegionProvider region={region}>
+    <AppRegionProvider region={region} dateLocale={dateLocale}>
     <div className={`app ${styles.shell}`}>
       {mobileOpen && (
-        <button className={styles.scrim} aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
+        <button className={styles.scrim} aria-label={t('shell.closeNav')} onClick={() => setMobileOpen(false)} />
       )}
 
       <aside
         ref={drawerRef}
-        aria-label={`${region === 'IN' ? 'India' : 'International'} application navigation`}
+        aria-label={region === 'IN' ? t('shell.navLabel') : 'International application navigation'}
         aria-modal={mobileOpen ? true : undefined}
         role={mobileOpen ? 'dialog' : undefined}
         className={`sidebar ${styles.sidebar} ${mobileOpen ? styles.drawerOpen : styles.drawerClosed}`}
@@ -304,9 +311,9 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
           </div>
           <div>
             <h1>Ambel POS</h1>
-            <p>Retail operations suite</p>
+            <p>{t('shell.brandTagline')}</p>
           </div>
-          <button className={styles.closeDrawer} aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
+          <button className={styles.closeDrawer} aria-label={t('shell.closeNav')} onClick={() => setMobileOpen(false)}>
             <X size={18} />
           </button>
         </div>
@@ -341,7 +348,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
 
       <div className="main">
         <header className={`topbar ${styles.topbar}`}>
-          <button className={styles.mobileMenu} aria-label="Open navigation" onClick={() => setMobileOpen(true)}>
+          <button className={styles.mobileMenu} aria-label={t('shell.openNav')} onClick={() => setMobileOpen(true)}>
             <Menu size={18} />
           </button>
 
@@ -378,6 +385,8 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
               )}
             </div>
 
+            <LanguageSwitch />
+
             {/* Held back until the role is known: the bell polls on mount. */}
             {context && !isCashier && <NotificationBell />}
 
@@ -410,11 +419,11 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
             <span>{contextError.message}</span>
             {contextError.kind === 'unauthenticated' ? (
               <button className="btn btn-sm" onClick={() => void reauthenticate()}>
-                Sign in again
+                {t('shell.signInAgain')}
               </button>
             ) : (
               <button className="btn btn-sm" onClick={() => void loadContext()}>
-                Retry context
+                {t('shell.retryContext')}
               </button>
             )}
           </div>
@@ -428,7 +437,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
         {contentReady && <GuidedTour />}
         {contentReady && billingGate?.entitlementSource === 'trial' && (
           <div role="status" style={{ padding: '12px 26px', borderBottom: '1px solid #f0cf8b', background: '#fff8e7', color: '#694c12', fontSize: 13 }}>
-            You are using a free trial. Review the exact recurring amount before the trial ends in <Link href={appPath('/app/subscription')}>Plan &amp; subscription</Link>.
+            {t('shell.trialBanner')} <Link href={appPath('/app/subscription')}>{t('nav.items.subscription')}</Link>.
           </div>
         )}
         <main className={`content ${styles.content}`} aria-busy={!contentReady || undefined}>

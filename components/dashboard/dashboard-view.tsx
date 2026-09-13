@@ -15,6 +15,7 @@ import { Badge, Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2,
 import { SetupPrompt } from '@/components/onboarding/setup-prompt'
 import { EmptyState, ErrorState, InlineLoader, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 
 const RANGES = [
   { label: '7D', value: '7d' },
@@ -24,6 +25,7 @@ const RANGES = [
 
 export function DashboardView() {
   const { fullDate, appPath } = useAppRegion()
+  const t = useT()
   const [range, setRange] = useState<DashboardRange>('7d')
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
   const [hasCatalog, setHasCatalog] = useState<boolean | null>(null)
@@ -42,11 +44,12 @@ export function DashboardView() {
     try {
       setDashboard(await getAuthenticatedDashboard(nextRange))
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'We couldn’t load current store data.')
+      setError(loadError instanceof Error ? loadError.message : t('dashboard.loadError'))
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -63,16 +66,16 @@ export function DashboardView() {
   return (
     <>
       <PageHead
-        title="Dashboard"
-        sub={`Today · ${fullDate(new Date())}`}
+        title={t('dashboard.title')}
+        sub={t('dashboard.today', { date: fullDate(new Date()) })}
         actions={
           hasCatalog === false ? (
             <Link className="btn btn-grad" href={appPath('/app/inventory/catalog/new')}>
-              <Zap size={15} /> Add Product
+              <Zap size={15} /> {t('dashboard.addProduct')}
             </Link>
           ) : (
             <Link className="btn btn-grad" href={appPath('/app/shifts')}>
-              <Zap size={15} /> Open Register
+              <Zap size={15} /> {t('dashboard.openRegister')}
             </Link>
           )
         }
@@ -88,7 +91,7 @@ export function DashboardView() {
         <>
           <KpiSkeleton cols={6} />
           <Card>
-            <LoadingState label="Loading dashboard" rows={4} />
+            <LoadingState label={t('dashboard.loading')} rows={4} />
           </Card>
         </>
       )}
@@ -120,27 +123,29 @@ function DashboardContent({
   hasCatalog: boolean | null
 }) {
   const { money, shortDate: dateLabel, appPath } = useAppRegion()
+  const t = useT()
   const hasActivity = dashboard.sales.billCount > 0
   const drawer = dashboard.cashDrawer
+  const billCount = dashboard.sales.billCount
 
   const metrics: KpiItem[] = [
     {
-      label: 'Sales',
+      label: t('dashboard.kpi.sales'),
       value: money(dashboard.sales.totalAmount),
-      meta: `${dashboard.sales.billCount} completed bill${dashboard.sales.billCount === 1 ? '' : 's'}`,
+      meta: billCount === 1 ? t('dashboard.kpi.billsOne') : t('dashboard.kpi.bills', { count: billCount }),
       href: '/app/reports',
     },
     {
-      label: 'Avg Bill Value',
+      label: t('dashboard.kpi.avgBill'),
       value: money(dashboard.sales.averageBillAmount),
-      meta: hasActivity ? `Across ${dashboard.sales.billCount} completed bills` : 'No completed bills in this period',
+      meta: hasActivity ? t('dashboard.kpi.across', { count: billCount }) : t('dashboard.kpi.noBills'),
       href: '/app/reports',
     },
     {
       // Available since Phase 5: goods receipt now persists a moving-average
       // cost per variant. Still a union: a tenant whose sold items have never
       // been received against a PO genuinely has no cost basis and is told so.
-      label: 'Gross Margin',
+      label: t('dashboard.kpi.grossMargin'),
       value:
         dashboard.sales.grossMargin.status === 'available' ? (
           `${dashboard.sales.grossMargin.percent}%`
@@ -149,27 +154,30 @@ function DashboardContent({
         ),
       meta:
         dashboard.sales.grossMargin.status === 'available'
-          ? `${money(dashboard.sales.grossMargin.amount)} on ${money(dashboard.sales.grossMargin.costedRevenue)} of costed sales` +
+          ? t('dashboard.kpi.marginMeta', {
+              margin: money(dashboard.sales.grossMargin.amount),
+              costed: money(dashboard.sales.grossMargin.costedRevenue),
+            }) +
             (Number(dashboard.sales.grossMargin.uncostedRevenue) > 0
-              ? ` · ${money(dashboard.sales.grossMargin.uncostedRevenue)} has no cost recorded yet`
+              ? t('dashboard.kpi.uncosted', { amount: money(dashboard.sales.grossMargin.uncostedRevenue) })
               : '')
           : dashboard.sales.grossMargin.reason,
     },
     {
-      label: 'Cash Drawer',
+      label: t('dashboard.kpi.cashDrawer'),
       value:
         drawer.status === 'open' ? (
           money(drawer.openingCash)
         ) : (
-          <UnavailableValue reason="Open a register before taking sales" text="No open shift" />
+          <UnavailableValue reason={t('dashboard.kpi.openFirst')} text={t('dashboard.kpi.noShift')} />
         ),
-      meta: drawer.status === 'open' ? `Opened ${dateLabel(drawer.openedAt)}` : 'Open a register before taking sales',
+      meta: drawer.status === 'open' ? t('dashboard.kpi.opened', { date: dateLabel(drawer.openedAt) }) : t('dashboard.kpi.openFirst'),
       href: '/app/shifts',
     },
     {
-      label: 'Low Stock',
+      label: t('dashboard.kpi.lowStock'),
       value: String(dashboard.lowStock.count),
-      meta: dashboard.lowStock.count > 0 ? 'At or below reorder point' : 'All stock levels reported healthy',
+      meta: dashboard.lowStock.count > 0 ? t('dashboard.kpi.atReorder') : t('dashboard.kpi.healthy'),
       href: '/app/inventory',
     },
     {
@@ -177,7 +185,7 @@ function DashboardContent({
       // owner migrating from a POS that showed settlement needs to know we
       // deliberately do not, rather than wonder where it went. It states why
       // rather than showing a zero.
-      label: 'Settlement',
+      label: t('dashboard.kpi.settlement'),
       value: <UnavailableValue reason={dashboard.settlement.reason} />,
       meta: dashboard.settlement.reason,
     },
@@ -190,12 +198,12 @@ function DashboardContent({
       <Split2>
         <Card>
           <CardHead
-            title="Sales trend"
-            sub={`Last ${range.replace('d', '')} days · completed revenue`}
+            title={t('dashboard.trend.title')}
+            sub={t('dashboard.trend.sub', { days: range.replace('d', '') })}
             right={
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {isRefreshing && <InlineLoader label="Updating" />}
-                <Seg items={RANGES} active={range} onSelect={onRange} ariaLabel="Dashboard date range" />
+                {isRefreshing && <InlineLoader label={t('dashboard.trend.updating')} />}
+                <Seg items={RANGES} active={range} onSelect={onRange} ariaLabel={t('dashboard.trend.rangeLabel')} />
               </div>
             }
           />
@@ -204,22 +212,22 @@ function DashboardContent({
               hasCatalog === false ? (
                 <EmptyState
                   icon={<PackageOpen size={24} strokeWidth={1.8} />}
-                  title="Add your first products to get started"
-                  body="A store needs a catalog before it can sell anything. Add products, then open the register to make your first sale."
+                  title={t('dashboard.trend.firstProductsTitle')}
+                  body={t('dashboard.trend.firstProductsBody')}
                   action={
                     <Link className="btn btn-pri" href={appPath('/app/inventory/catalog/new')}>
-                      Add products
+                      {t('dashboard.trend.addProducts')}
                     </Link>
                   }
                 />
               ) : (
                 <EmptyState
                   icon={<PackageOpen size={24} strokeWidth={1.8} />}
-                  title="No sales in this range"
-                  body="Choose a longer date range or open the register to record the next sale."
+                  title={t('dashboard.trend.noSalesTitle')}
+                  body={t('dashboard.trend.noSalesBody')}
                   action={
                     <Link className="btn btn-pri" href={appPath('/app/shifts')}>
-                      Open register
+                      {t('dashboard.trend.openRegister')}
                     </Link>
                   }
                 />
@@ -230,7 +238,7 @@ function DashboardContent({
           </CardPad>
           {dashboard.trend.revenue.length > 0 && (
             <CardPad style={{ paddingTop: 0, fontSize: 11.5, color: 'var(--muted)' }}>
-              Profit series: {dashboard.trend.profit.reason}
+              {t('dashboard.trend.profitSeries', { reason: dashboard.trend.profit.reason })}
             </CardPad>
           )}
         </Card>
@@ -251,6 +259,7 @@ function DashboardContent({
  */
 function RevenueChart({ points }: { points: { date: string; amount: string }[] }) {
   const { money, fullDate, shortDate: dateLabel } = useAppRegion()
+  const t = useT()
   const { area, line, dots, max } = useMemo(() => {
     const w = 640
     const h = 175
@@ -305,7 +314,7 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
         preserveAspectRatio="none"
         style={{ width: '100%', height: 210, overflow: 'visible' }}
         role="img"
-        aria-label="Completed revenue trend"
+        aria-label={t('dashboard.trend.chartLabel')}
         onMouseMove={onMove}
         onMouseLeave={() => setHover(null)}
       >
@@ -354,7 +363,7 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
             </text>
           )
         })}
-        <title>{`Peak ${money(max)}`}</title>
+        <title>{t('dashboard.trend.peak', { amount: money(max) })}</title>
       </svg>
 
       {active && activePoint && (
@@ -384,21 +393,23 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
 
 function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
   const { shortDate: dateLabel, appPath } = useAppRegion()
+  const t = useT()
   const items = dashboard.actionable.items
 
   return (
     <Card style={{ display: 'flex', flexDirection: 'column' }}>
       <CardHead
-        title="Action Center"
-        sub="Operational items that need attention"
-        right={<span className="badge b-blue">{items.length} item{items.length === 1 ? '' : 's'}</span>}
+        title={t('dashboard.actions.title')}
+        sub={t('dashboard.actions.sub')}
+        right={
+          <span className="badge b-blue">
+            {items.length === 1 ? t('dashboard.actions.itemsOne') : t('dashboard.actions.items', { count: items.length })}
+          </span>
+        }
       />
       {items.length === 0 ? (
         <CardPad style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <EmptyState
-            title="Nothing needs attention"
-            body="Low stock, open registers and other operational alerts appear here as soon as the store records them."
-          />
+          <EmptyState title={t('dashboard.actions.emptyTitle')} body={t('dashboard.actions.emptyBody')} />
         </CardPad>
       ) : (
         <CardPad style={{ paddingTop: 4, flex: 1 }}>
@@ -408,11 +419,11 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
                 key={item.variantId}
                 tone="red"
                 icon={<Boxes size={17} strokeWidth={1.85} />}
-                title={`${item.productName} is low on stock`}
-                sub={`${item.sku} · ${item.quantity} remaining · reorder at ${item.reorderThreshold}`}
+                title={t('dashboard.actions.lowTitle', { product: item.productName })}
+                sub={t('dashboard.actions.lowSub', { sku: item.sku, quantity: item.quantity, threshold: item.reorderThreshold })}
                 action={
                   <Link className="btn btn-sm btn-ghost" href={appPath('/app/inventory')}>
-                    Review
+                    {t('common.review')}
                   </Link>
                 }
               />
@@ -421,11 +432,11 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
                 key={item.shiftId}
                 tone="amber"
                 icon={<RotateCcw size={17} strokeWidth={1.85} />}
-                title="Register is open"
-                sub={`Opened ${dateLabel(item.openedAt)} · review the current shift`}
+                title={t('dashboard.actions.registerOpen')}
+                sub={t('dashboard.actions.registerSub', { date: dateLabel(item.openedAt) })}
                 action={
                   <Link className="btn btn-sm btn-ghost" href={appPath('/app/shifts')}>
-                    Open
+                    {t('common.open')}
                   </Link>
                 }
               />
@@ -444,6 +455,7 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
  */
 function ReorderSummaryCard() {
   const { appPath } = useAppRegion()
+  const t = useT()
   const [data, setData] = useState<ReorderSuggestionList | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -473,11 +485,11 @@ function ReorderSummaryCard() {
   return (
     <Card style={{ marginTop: 18 }}>
       <CardHead
-        title="Products to order"
-        sub="Items that may run short based on recent sales and delivery time"
+        title={t('dashboard.reorder.title')}
+        sub={t('dashboard.reorder.sub')}
         right={
           <Link className="btn btn-sm btn-pri" href={appPath('/app/demand-planning')}>
-            <Sparkle size={14} /> Review all ({items.length})
+            <Sparkle size={14} /> {t('dashboard.reorder.reviewAll', { count: items.length })}
           </Link>
         }
       />
@@ -487,8 +499,8 @@ function ReorderSummaryCard() {
             key={s.id}
             tone="blue"
             icon={<Boxes size={17} strokeWidth={1.85} />}
-            title={`Order ${s.suggestedQuantity} units of ${s.productName}`}
-            sub={`${s.sku} · ${s.reason.currentStock} available now`}
+            title={t('dashboard.reorder.orderLine', { quantity: s.suggestedQuantity, product: s.productName })}
+            sub={t('dashboard.reorder.available', { sku: s.sku, stock: s.reason.currentStock })}
           />
         ))}
       </CardPad>

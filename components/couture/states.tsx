@@ -12,6 +12,7 @@ import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import { AlertTriangle, Inbox, Loader2, PackageOpen } from 'lucide-react'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 import { Card, CardPad, PageHead } from './ui'
 
 export function EmptyState({
@@ -53,6 +54,7 @@ export function EmptyState({
 }
 
 export function ErrorState({ message, onRetry }: { message: ReactNode; onRetry: () => void }) {
+  const t = useT()
   return (
     <div role="alert" style={{ padding: '34px 24px', textAlign: 'center' }}>
       <div
@@ -69,10 +71,10 @@ export function ErrorState({ message, onRetry }: { message: ReactNode; onRetry: 
       >
         <AlertTriangle size={24} strokeWidth={1.8} />
       </div>
-      <div style={{ fontFamily: 'var(--display)', fontSize: 15, fontWeight: 700 }}>We couldn’t load these records</div>
+      <div style={{ fontFamily: 'var(--display)', fontSize: 15, fontWeight: 700 }}>{t('states.loadErrorTitle')}</div>
       <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 5, maxWidth: 460, marginInline: 'auto' }}>{message}</div>
       <button className="btn btn-sm" style={{ marginTop: 14 }} onClick={onRetry}>
-        Retry
+        {t('common.retry')}
       </button>
     </div>
   )
@@ -112,9 +114,10 @@ export function Sk({
 }
 
 /** Skeleton rows that keep the table's rhythm while loading. */
-export function LoadingState({ label = 'Loading records', rows = 5 }: { label?: string; rows?: number }) {
+export function LoadingState({ label, rows = 5 }: { label?: string; rows?: number }) {
+  const t = useT()
   return (
-    <div aria-label={label} aria-busy="true" style={{ padding: '14px 16px' }}>
+    <div aria-label={label ?? t('states.loadingRecords')} aria-busy="true" style={{ padding: '14px 16px' }}>
       {Array.from({ length: rows }, (_, i) => (
         <Sk key={i} h={42} r={9} style={{ marginBottom: 8 }} />
       ))}
@@ -139,10 +142,11 @@ export function KpiSkeleton({ cols = 4 }: { cols?: number }) {
  * Value shown for a metric the server explicitly reports as unavailable.
  * Deliberately quiet: an unavailable metric must not read as a real figure.
  */
-export function UnavailableValue({ reason, text = 'Not tracked yet' }: { reason?: string; text?: string }) {
+export function UnavailableValue({ reason, text }: { reason?: string; text?: string }) {
+  const t = useT()
   return (
     <span title={reason} style={{ fontFamily: 'var(--display)', fontSize: 15, fontWeight: 600, color: 'var(--muted-2)' }}>
-      {text}
+      {text ?? t('states.notTracked')}
     </span>
   )
 }
@@ -153,24 +157,20 @@ export function UnavailableModulePage({ title, sub, capability }: { title: strin
   // /app/dashboard sent a US visitor out of /us/dashboard and into the India
   // edition; appPath() keeps the link on the edition they are already in.
   const { appPath } = useAppRegion()
+  const t = useT()
 
   return (
     <>
-      <PageHead title={title} sub={sub ?? 'Not available in this build'} />
+      <PageHead title={title} sub={sub ?? t('states.notAvailableBuild')} />
       <Card>
         <CardPad>
           <EmptyState
             icon={<PackageOpen size={24} strokeWidth={1.8} />}
-            title={`${title} isn’t enabled yet`}
-            body={
-              <>
-                {capability ?? 'This module'} has no backend contract in the current build, so there is nothing real to
-                show here. Rather than display sample records, this screen stays empty until the capability ships.
-              </>
-            }
+            title={t('states.moduleNotEnabled', { title })}
+            body={t('states.moduleBody', { capability: capability ?? t('states.thisModule') })}
             action={
               <Link className="btn btn-pri" href={appPath('/app/dashboard')}>
-                Back to dashboard
+                {t('states.backToDashboard')}
               </Link>
             }
           />

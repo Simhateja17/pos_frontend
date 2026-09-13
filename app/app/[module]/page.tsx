@@ -1,20 +1,11 @@
-import { UnavailableModulePage } from '@/components/couture/states'
+'use client'
 
-/** Human labels for routes announced in navigation but not yet backed by an API. */
-const MODULE_LABELS: Record<string, { title: string; sub: string }> = {
-  'feature-map': { title: 'Feature Map', sub: 'Product capability overview' },
-  'sales-channels': { title: 'Sales Channels', sub: 'Omnichannel orders and stock sync' },
-  'delivery-challan': { title: 'Delivery Challan', sub: 'Goods dispatched before invoicing' },
-  'whatsapp-connect': { title: 'WhatsApp Connect', sub: 'Customer messaging and campaigns' },
-  expenses: { title: 'Expenses', sub: 'Store spend and petty cash' },
-  receivables: { title: 'Receivables', sub: 'Credit customers and outstanding dues' },
-  'credit-notes': { title: 'Credit / Debit Notes', sub: 'Post-Tax Invoice adjustments' },
-  analytics: { title: 'Analytics', sub: 'Trends and performance insight' },
-  copilot: { title: 'AI Copilot', sub: 'Assisted retail operations' },
-  'offline-sync': { title: 'Offline & Sync', sub: 'Resilience and queued writes' },
-  hardware: { title: 'Hardware & Devices', sub: 'Terminals, printers and scanners' },
-  'customer-display': { title: 'Customer Display', sub: 'Second-screen checkout view' },
-}
+import { UnavailableModulePage } from '@/components/couture/states'
+import { useI18n, type MessageKey } from '@/lib/i18n/i18n'
+import { en } from '@/lib/i18n/messages/en'
+
+/** Routes announced in navigation but not yet backed by an API; labels live in the `states.modules` dictionary. */
+const KNOWN_MODULES = new Set(Object.keys(en.states.modules))
 
 function titleFromSlug(slug: string) {
   return slug
@@ -25,8 +16,12 @@ function titleFromSlug(slug: string) {
 }
 
 export default function ModulePage({ params }: { params: { module: string } }) {
-  const known = MODULE_LABELS[params.module]
-  const title = known?.title ?? titleFromSlug(params.module) ?? 'This module'
+  const { t } = useI18n()
+  const known = KNOWN_MODULES.has(params.module)
+  const title = known
+    ? t(`states.modules.${params.module}.title` as MessageKey)
+    : titleFromSlug(params.module) || t('states.thisModule')
+  const sub = known ? t(`states.modules.${params.module}.sub` as MessageKey) : undefined
 
-  return <UnavailableModulePage title={title} sub={known?.sub} capability={title} />
+  return <UnavailableModulePage title={title} sub={sub} capability={title} />
 }

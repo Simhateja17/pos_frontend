@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Download, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
@@ -13,17 +13,11 @@ import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, Tabs, type Ba
 import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { downloadCsv } from '@/lib/csv'
 import { useAppRegion } from '@/lib/app-region'
+import { enumLabel, useT, type Translate } from '@/lib/i18n/i18n'
 
-const timeOnly = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })
-const dateShort = new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' })
+const RANGE_VALUES = ['today', '7d', 'month'] as const
 
-const RANGES = [
-  { label: 'Today', value: 'today' },
-  { label: 'Last 7 days', value: '7d' },
-  { label: 'This month', value: 'month' },
-] as const
-
-type Range = (typeof RANGES)[number]['value']
+type Range = (typeof RANGE_VALUES)[number]
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   completed: 'green',
@@ -35,15 +29,17 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   voided: 'red',
 }
 
-function customerLabel(sale: SaleList['items'][number]): string {
+function customerLabel(sale: SaleList['items'][number], t: Translate): string {
   const customer = sale.customer
   return customer?.name
     ?? customer?.billingName
     ?? customer?.phone
     ?? customer?.email
-    ?? (sale.customerId ? 'Customer linked' : 'Walk-in')
+    ?? (sale.customerId ? t('orders.customerLinked') : t('orders.walkIn'))
 }
 
+// CSV exports stay in English on purpose: they feed spreadsheets and
+// accounting imports that expect stable column names and codes.
 function customerExportValue(sale: SaleList['items'][number]): string {
   const customer = sale.customer
   if (!customer) return sale.customerId ? 'Customer linked' : 'Walk-in'
@@ -51,7 +47,8 @@ function customerExportValue(sale: SaleList['items'][number]): string {
 }
 
 export function OrdersView() {
-  const { money } = useAppRegion()
+  const { money, dateLocale } = useAppRegion()
+  const t = useT()
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [range, setRange] = useState<Range>('today')
@@ -62,6 +59,15 @@ export function OrdersView() {
   const [error, setError] = useState<string | null>(null)
   const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
   const isCashier = role === 'cashier'
+
+  const ranges = RANGE_VALUES.map((value) => ({ value, label: t(`orders.ranges.${value}`) }))
+  const { timeOnly, dateShort } = useMemo(
+    () => ({
+      timeOnly: new Intl.DateTimeFormat(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' }),
+      dateShort: new Intl.DateTimeFormat(dateLocale, { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' }),
+    }),
+    [dateLocale],
+  )
 
   const load = useCallback(
     async (nextCursor?: string) => {
@@ -79,11 +85,12 @@ export function OrdersView() {
         )
         setCursor(nextCursor)
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Sales records are unavailable right now.')
+        setError(cause instanceof Error ? cause.message : t('orders.loadError'))
       } finally {
         setIsLoading(false)
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [range, role, search, status],
   )
 
@@ -108,17 +115,17 @@ export function OrdersView() {
   }, [isCashier, range, router, search, status])
 
   const metrics: KpiItem[] = [
-    { label: 'Matching Bills', value: data ? String(data.total) : '-', meta: 'Server-filtered records' },
-    { label: 'Held Bills', value: <UnavailableValue />, meta: 'No held-bill aggregate is available' },
-    { label: 'Paid Sales', value: <UnavailableValue />, meta: 'No sales aggregate is available' },
-    { label: 'Cancelled / Refunded', value: <UnavailableValue />, meta: 'No aggregate is available' },
+    { label: t('orders.kpi.matching'), value: data ? String(data.total) : '-', meta: t('orders.kpi.matchingMeta') },
+    { label: t('orders.kpi.held'), value: <UnavailableValue />, meta: t('orders.kpi.heldMeta') },
+    { label: t('orders.kpi.paid'), value: <UnavailableValue />, meta: t('orders.kpi.paidMeta') },
+    { label: t('orders.kpi.cancelled'), value: <UnavailableValue />, meta: t('orders.kpi.cancelledMeta') },
   ]
 
   return (
     <>
       <PageHead
-        title="Sales / Bills"
-        sub="Completed and held-bill history"
+        title={t('orders.title')}
+        sub={t('orders.sub')}
         actions={
           <>
             {!isCashier && (
@@ -126,7 +133,7 @@ export function OrdersView() {
                 className="btn"
                 type="button"
                 disabled={!data || data.items.length === 0}
-                title={data?.items.length ? 'Download the sales shown below' : 'There is nothing to export yet'}
+                title={data?.items.length ? t('orders.exportTitle') : t('orders.nothingToExport')}
                 onClick={() =>
                   data &&
                   downloadCsv(
@@ -147,11 +154,11 @@ export function OrdersView() {
                   )
                 }
               >
-                <Download size={15} /> Export
+                <Download size={15} /> {t('orders.export')}
               </button>
             )}
             <Link className="btn btn-pri" href="/app/billing">
-              <Plus size={15} /> New Bill
+              <Plus size={15} /> {t('orders.newBill')}
             </Link>
           </>
         }
@@ -163,31 +170,31 @@ export function OrdersView() {
         <CardHead
           title={
             isCashier
-              ? 'Sales on this counter\'s current shift'
-              : <Tabs items={RANGES} active={range} onSelect={setRange} ariaLabel="Sales date range" />
+              ? t('orders.cashierShift')
+              : <Tabs items={ranges} active={range} onSelect={setRange} ariaLabel={t('orders.rangeLabel')} />
           }
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <SearchField value={search} onChange={setSearch} placeholder="Bill number or customer" ariaLabel="Search bills" width={200} />
+              <SearchField value={search} onChange={setSearch} placeholder={t('orders.searchPlaceholder')} ariaLabel={t('orders.searchLabel')} width={200} />
               {!isCashier && (
-                <select className="fld-select" aria-label="Sales status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="">All statuses</option>
-                  <option value="completed">Completed</option>
+                <select className="fld-select" aria-label={t('orders.statusLabel')} value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <option value="">{t('orders.allStatuses')}</option>
+                  <option value="completed">{enumLabel(t, 'status', 'completed')}</option>
                 </select>
               )}
             </div>
           }
         />
 
-        {isLoading && <LoadingState label="Loading sales" />}
+        {isLoading && <LoadingState label={t('orders.loading')} />}
         {!isLoading && error && <ErrorState message={error} onRetry={() => void load(cursor)} />}
         {!isLoading && !error && data?.items.length === 0 && (
           <EmptyState
-            title="No bills match this view"
-            body="Completed sales appear here as soon as the server records them. Nothing is previewed in the meantime."
+            title={t('orders.emptyTitle')}
+            body={t('orders.emptyBody')}
             action={
               <Link className="btn btn-pri" href="/app/billing">
-                Start a bill
+                {t('orders.startBill')}
               </Link>
             }
           />
@@ -195,7 +202,16 @@ export function OrdersView() {
 
         {!isLoading && !error && data && data.items.length > 0 && (
           <DataTable
-            cols={['Bill No.', 'Customer', 'Cashier', 'Time', 'Method', 'Status', 'Amount', '']}
+            cols={[
+              t('orders.cols.bill'),
+              t('orders.cols.customer'),
+              t('orders.cols.cashier'),
+              t('orders.cols.time'),
+              t('orders.cols.method'),
+              t('orders.cols.status'),
+              t('orders.cols.amount'),
+              '',
+            ]}
             minWidth={900}
           >
             {data.items.map((sale) => {
@@ -204,22 +220,22 @@ export function OrdersView() {
               return (
                 <tr key={sale.id}>
                   <td className="t-mono t-strong">{billReference}</td>
-                  <td>{customerLabel(sale)}</td>
-                  <td className="t-sub">{sale.cashierName ?? 'Not recorded'}</td>
+                  <td>{customerLabel(sale, t)}</td>
+                  <td className="t-sub">{sale.cashierName ?? t('orders.notRecorded')}</td>
                   <td className="t-mono t-sub">
                     {timeOnly.format(created)}
                     <div className="t-sub">{dateShort.format(created)}</div>
                   </td>
-                  <td>{sale.payments.map((p) => p.method).join(', ') || '-'}</td>
+                  <td>{sale.payments.map((p) => enumLabel(t, 'method', p.method)).join(', ') || '-'}</td>
                   <td>
-                    <span className={`badge b-${STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'}`}>{sale.status}</span>
+                    <span className={`badge b-${STATUS_TONE[sale.status.toLowerCase()] ?? 'grey'}`}>{enumLabel(t, 'status', sale.status)}</span>
                   </td>
                   <td className="num t-strong">
                     {money(Number(sale.totalAmount))}
                   </td>
                   <td>
                     <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(sale.id)}`}>
-                      View
+                      {t('orders.view')}
                     </Link>
                   </td>
                 </tr>
@@ -267,6 +283,7 @@ export function Pagination({
   onPrevious: () => void
   onNext: () => void
 }) {
+  const t = useT()
   if (total === 0) return null
   return (
     <div
@@ -281,15 +298,13 @@ export function Pagination({
         color: 'var(--muted)',
       }}
     >
-      <span>
-        Showing {shown} of {total}
-      </span>
+      <span>{t('orders.showing', { shown, total })}</span>
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="btn btn-sm" disabled={!previous} onClick={onPrevious}>
-          First page
+          {t('orders.firstPage')}
         </button>
         <button className="btn btn-sm" disabled={!next} onClick={onNext}>
-          Next page
+          {t('orders.nextPage')}
         </button>
       </div>
     </div>

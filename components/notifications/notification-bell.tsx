@@ -9,6 +9,8 @@ import {
   type NotificationList,
 } from '@/lib/api/authenticated-client'
 import styles from './notification-bell.module.css'
+import { useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 /**
  * Top-bar bell. Opening the panel marks every unread notification read (V1's
@@ -16,6 +18,8 @@ import styles from './notification-bell.module.css'
  * keep this a lightweight tray rather than a full inbox).
  */
 export function NotificationBell() {
+  const t = useT()
+  const { appPath } = useAppRegion()
   const [list, setList] = useState<NotificationList | null>(null)
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -54,7 +58,7 @@ export function NotificationBell() {
       <button
         type="button"
         className="tb-icon"
-        aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+        aria-label={unread > 0 ? t('shell.bell.unread', { count: unread }) : t('shell.bell.notifications')}
         onClick={() => void toggle()}
         style={{ position: 'relative', border: 0, background: 'none', cursor: 'pointer' }}
       >
@@ -63,10 +67,10 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className={styles.panel} role="dialog" aria-label="Notifications">
-          <div className={styles.panelHead}>Notifications</div>
+        <div className={styles.panel} role="dialog" aria-label={t('shell.bell.notifications')}>
+          <div className={styles.panelHead}>{t('shell.bell.notifications')}</div>
           {recent.length === 0 && digests.length === 0 ? (
-            <div className={styles.empty}>Nothing yet. You're all caught up.</div>
+            <div className={styles.empty}>{t('shell.bell.empty')}</div>
           ) : (
             <>
             {digests.map((digest) => (
@@ -77,7 +81,9 @@ export function NotificationBell() {
                 onClick={() => setOpen(false)}
               >
                 <div className={styles.itemTitle}>{digest.storeName} · {digest.date}</div>
-                <div className={styles.itemBody}>{digest.totalCount} alert{digest.totalCount === 1 ? '' : 's'} · {digest.sampleTitles.join(', ')}</div>
+                <div className={styles.itemBody}>
+                  {digest.totalCount === 1 ? t('shell.bell.alertCountOne') : t('shell.bell.alertCount', { count: digest.totalCount })} · {digest.sampleTitles.join(', ')}
+                </div>
               </Link>
             ))}
             {recent.map((n) => (
@@ -93,8 +99,8 @@ export function NotificationBell() {
             ))}
             </>
           )}
-          <Link href="/app/notifications" className={styles.viewAll} onClick={() => setOpen(false)}>
-            View all
+          <Link href={appPath('/app/notifications')} className={styles.viewAll} onClick={() => setOpen(false)}>
+            {t('shell.bell.viewAll')}
           </Link>
         </div>
       )}

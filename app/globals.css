@@ -68,7 +68,8 @@
   --shadow-lg:0 8px 28px rgba(15,23,41,.08);
   --r-sm:8px; --r:12px; --r-lg:16px;
   --mono:'JetBrains Mono',ui-monospace,monospace;
-  --display:'Space Grotesk','Plus Jakarta Sans',system-ui,sans-serif;
+  /* --font-telugu is defined only under /app (Noto Sans Telugu); elsewhere the fallback keeps the declaration valid. */
+  --display:'Space Grotesk','Plus Jakarta Sans',var(--font-telugu,system-ui),system-ui,sans-serif;
   --ease:cubic-bezier(.22,.68,0,1);
   --ease-spring:cubic-bezier(.34,1.56,.64,1);
 }
@@ -90,7 +91,7 @@
   a{color:inherit;text-decoration:none}
 
   /* ---------- Layout ---------- */
-  .app{display:flex;min-height:100vh}
+  .app{display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',var(--font-telugu,system-ui),system-ui,-apple-system,sans-serif}
   .sidebar{width:248px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
   .sb-brand{display:flex;align-items:center;gap:11px;padding:18px 18px 14px;flex-shrink:0}
   .sb-logo{width:38px;height:38px;border-radius:11px;background:var(--brand-grad);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--shadow-sm);flex-shrink:0}

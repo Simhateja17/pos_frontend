@@ -5,14 +5,16 @@ import { Check, ChevronDown, Store as StoreIcon } from 'lucide-react'
 import { getAuthenticatedStores, type AppContext, type Store } from '@/lib/api/authenticated-client'
 import { setActiveStoreId } from '@/lib/store-context'
 import styles from '@/components/store-switcher.module.css'
+import { useT } from '@/lib/i18n/i18n'
 
 export function StoreSwitcher({ context }: { context: AppContext }) {
+  const t = useT()
   const isOwner = context.staff.role === 'owner'
   const activeStoreId = context.store?.id ?? 'all'
-  const label = context.store?.name ?? 'All stores'
+  const label = context.store?.name ?? t('shell.allStores')
   const fullLabel = context.store
     ? [context.store.name, context.store.locality].filter(Boolean).join(' · ')
-    : `${context.tenant.businessName} · All stores`
+    : `${context.tenant.businessName} · ${t('shell.allStores')}`
   const [open, setOpen] = useState(false)
   const [stores, setStores] = useState<Store[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -64,7 +66,7 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
           setActiveStoreId(payload.stores[0].id)
         }
       } catch (cause) {
-        if (!cancelled) setError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+        if (!cancelled) setError(cause instanceof Error ? cause.message : t('shell.storeSwitcher.loadError'))
       }
     }
     void loadStores()
@@ -102,7 +104,7 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
         type="button"
         className={`store-pill active ${styles.trigger}`}
         title={fullLabel}
-        aria-label={`Current store: ${label}`}
+        aria-label={t('shell.storeSwitcher.currentStore', { store: label })}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggle}
@@ -112,8 +114,8 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
       </button>
 
       {open ? (
-        <div className={styles.menu} role="menu" aria-label="Switch store">
-          <div className={styles.heading}>Switch store</div>
+        <div className={styles.menu} role="menu" aria-label={t('shell.storeSwitcher.switchStore')}>
+          <div className={styles.heading}>{t('shell.storeSwitcher.switchStore')}</div>
           {!singleStore ? (
             <>
               <button
@@ -125,8 +127,8 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
               >
                 <span className={styles.optionIcon}><StoreIcon size={16} /></span>
                 <span className={styles.optionText}>
-                  <strong>All stores</strong>
-                  <small>Combined business view</small>
+                  <strong>{t('shell.allStores')}</strong>
+                  <small>{t('shell.storeSwitcher.combinedView')}</small>
                 </span>
                 {activeStoreId === 'all' ? <Check size={16} className={styles.check} /> : null}
               </button>
@@ -134,7 +136,7 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
               <div className={styles.divider} />
             </>
           ) : null}
-          {stores === null && !error ? <div className={styles.status}>Loading stores…</div> : null}
+          {stores === null && !error ? <div className={styles.status}>{t('shell.storeSwitcher.loadingStores')}</div> : null}
           {error ? <div className={styles.error}>{error}</div> : null}
           {stores?.map((store) => (
             <button
@@ -150,8 +152,8 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
                 <strong>{store.name}</strong>
                 <small>
                   {store.isActive
-                    ? ([store.city, store.state].filter(Boolean).join(' · ') || 'Store')
-                    : 'Closed · history only'}
+                    ? ([store.city, store.state].filter(Boolean).join(' · ') || t('shell.storeSwitcher.store'))
+                    : t('shell.storeSwitcher.closedHistory')}
                 </small>
               </span>
               {activeStoreId === store.id ? <Check size={16} className={styles.check} /> : null}

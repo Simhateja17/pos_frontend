@@ -27,6 +27,7 @@ import {
   type Supplier,
 } from '@/lib/api/authenticated-client'
 import styles from './global-search.module.css'
+import { useT, type Translate } from '@/lib/i18n/i18n'
 
 type SearchKind = 'command' | 'product' | 'order' | 'customer' | 'supplier'
 
@@ -73,10 +74,10 @@ function productItems(products: Product[], query: string, appPath: (path: string
   return items.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, MAX_PER_GROUP)
 }
 
-function orderItems(sales: Sale[], query: string, appPath: (path: string) => string, storeName: string): SearchItem[] {
+function orderItems(sales: Sale[], query: string, appPath: (path: string) => string, storeName: string, t: Translate): SearchItem[] {
   return sales.map((sale) => {
     const bill = sale.invoiceNumber ?? sale.id.slice(0, 8).toUpperCase()
-    const customer = sale.customer?.name ?? sale.customer?.billingName ?? sale.customer?.phone ?? 'Walk-in'
+    const customer = sale.customer?.name ?? sale.customer?.billingName ?? sale.customer?.phone ?? t('shell.search.walkIn')
     return {
       id: `order:${sale.id}`,
       kind: 'order' as const,
@@ -90,47 +91,47 @@ function orderItems(sales: Sale[], query: string, appPath: (path: string) => str
   }).sort((a, b) => b.score - a.score).slice(0, MAX_PER_GROUP)
 }
 
-function supplierItems(suppliers: Supplier[], query: string, appPath: (path: string) => string): SearchItem[] {
+function supplierItems(suppliers: Supplier[], query: string, appPath: (path: string) => string, t: Translate): SearchItem[] {
   return suppliers.map((supplier) => ({
     id: `supplier:${supplier.id}`,
     kind: 'supplier' as const,
     group: 'Suppliers',
     title: supplier.name,
-    detail: [supplier.contactName, supplier.phone, supplier.email].filter(Boolean).join(' · ') || 'Supplier',
+    detail: [supplier.contactName, supplier.phone, supplier.email].filter(Boolean).join(' · ') || t('shell.search.supplier'),
     href: appPath(`/app/suppliers/${supplier.id}`),
     icon: Truck,
     score: globalSearchMatchScore(query, [supplier.name, supplier.contactName, supplier.phone, supplier.email]),
   })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, MAX_PER_GROUP)
 }
 
-function customerItems(customers: Awaited<ReturnType<typeof getAuthenticatedCustomers>>['items'], query: string, appPath: (path: string) => string): SearchItem[] {
+function customerItems(customers: Awaited<ReturnType<typeof getAuthenticatedCustomers>>['items'], query: string, appPath: (path: string) => string, t: Translate): SearchItem[] {
   return customers.map((customer) => ({
     id: `customer:${customer.id}`,
     kind: 'customer' as const,
     group: 'Customers',
-    title: customer.billingName ?? customer.name ?? 'Unnamed customer',
-    detail: [customer.phone, customer.email].filter(Boolean).join(' · ') || 'Customer profile',
+    title: customer.billingName ?? customer.name ?? t('shell.search.unnamedCustomer'),
+    detail: [customer.phone, customer.email].filter(Boolean).join(' · ') || t('shell.search.customerProfile'),
     href: appPath(`/app/customers/${customer.id}`),
     icon: Users,
     score: globalSearchMatchScore(query, [customer.billingName, customer.name, customer.phone, customer.email]),
   })).sort((a, b) => b.score - a.score).slice(0, MAX_PER_GROUP)
 }
 
-function commandItems(navigation: AppNavGroup[], appPath: (path: string) => string): SearchItem[] {
+function commandItems(navigation: AppNavGroup[], appPath: (path: string) => string, t: Translate): SearchItem[] {
   const navigationCommands = navigation.flatMap((group) => group.items.map((item) => ({
     id: `command:${item.href}`,
     kind: 'command' as const,
     group: 'Commands',
-    title: `Go to ${item.label}`,
+    title: t('shell.search.goTo', { page: item.label }),
     detail: group.label,
     href: appPath(item.href),
     icon: item.icon,
     score: 1,
   })))
   return [
-    { id: 'command:new-sale', kind: 'command', group: 'Commands', title: 'New Sale', detail: 'Start checkout', href: appPath('/app/billing'), icon: Plus, score: 1 },
-    { id: 'command:add-product', kind: 'command', group: 'Commands', title: 'Add Product', detail: 'Create a catalog item', href: appPath('/app/inventory/catalog/new'), icon: Boxes, score: 1 },
-    { id: 'command:add-customer', kind: 'command', group: 'Commands', title: 'Add Customer', detail: 'Create a customer profile', href: `${appPath('/app/customers')}?new=1`, icon: UserPlus, score: 1 },
+    { id: 'command:new-sale', kind: 'command', group: 'Commands', title: t('shell.search.newSale'), detail: t('shell.search.newSaleDetail'), href: appPath('/app/billing'), icon: Plus, score: 1 },
+    { id: 'command:add-product', kind: 'command', group: 'Commands', title: t('shell.search.addProduct'), detail: t('shell.search.addProductDetail'), href: appPath('/app/inventory/catalog/new'), icon: Boxes, score: 1 },
+    { id: 'command:add-customer', kind: 'command', group: 'Commands', title: t('shell.search.addCustomer'), detail: t('shell.search.addCustomerDetail'), href: `${appPath('/app/customers')}?new=1`, icon: UserPlus, score: 1 },
     ...navigationCommands,
   ] as SearchItem[]
 }
@@ -159,6 +160,7 @@ export function GlobalSearch({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const t = useT()
   const rootRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const requestRef = useRef(0)
@@ -169,7 +171,7 @@ export function GlobalSearch({
   const [activeIndex, setActiveIndex] = useState(0)
   const [searchFailed, setSearchFailed] = useState(false)
   const [shortcut, setShortcut] = useState('Ctrl K')
-  const commands = useMemo(() => commandItems(navigation, appPath), [appPath, navigation])
+  const commands = useMemo(() => commandItems(navigation, appPath, t), [appPath, navigation, t])
   const visibleCommands = useMemo(() => commandMatches(commands, query), [commands, query])
   const items = useMemo(() => [...visibleCommands, ...records], [records, visibleCommands])
 
@@ -227,10 +229,11 @@ export function GlobalSearch({
       ]).then(([products, sales, customers, suppliers]) => {
         if (requestRef.current !== requestId) return
         const next: SearchItem[] = []
-        if (products.status === 'fulfilled') next.push(...productItems(products.value, trimmed, appPath, context.store?.name ?? 'Business-wide'))
-        if (sales.status === 'fulfilled') next.push(...orderItems(sales.value.items, trimmed, appPath, context.store?.name ?? 'Business-wide'))
-        if (customers.status === 'fulfilled') next.push(...customerItems(customers.value.items, trimmed, appPath))
-        if (suppliers.status === 'fulfilled') next.push(...supplierItems(suppliers.value, trimmed, appPath))
+        const scope = context.store?.name ?? t('shell.search.businessWide')
+        if (products.status === 'fulfilled') next.push(...productItems(products.value, trimmed, appPath, scope))
+        if (sales.status === 'fulfilled') next.push(...orderItems(sales.value.items, trimmed, appPath, scope, t))
+        if (customers.status === 'fulfilled') next.push(...customerItems(customers.value.items, trimmed, appPath, t))
+        if (suppliers.status === 'fulfilled') next.push(...supplierItems(suppliers.value, trimmed, appPath, t))
         setRecords(next)
         setSearchFailed([products, sales, customers, suppliers].every((result) => result.status === 'rejected'))
         setLoading(false)
@@ -240,7 +243,7 @@ export function GlobalSearch({
       })
     }, 250)
     return () => window.clearTimeout(timer)
-  }, [appPath, choose, context.store?.name, query])
+  }, [appPath, choose, context.store?.name, query, t])
 
   useEffect(() => setActiveIndex((current) => Math.min(current, Math.max(items.length - 1, 0))), [items.length])
 
@@ -256,12 +259,12 @@ export function GlobalSearch({
         ref={inputRef}
         value={query}
         role="combobox"
-        aria-label="Search products, orders, customers, suppliers, or commands"
+        aria-label={t('shell.search.ariaLabel')}
         aria-expanded={open}
         aria-controls="global-search-results"
         aria-activedescendant={open && items[activeIndex] ? `global-search-${items[activeIndex].id}` : undefined}
         autoComplete="off"
-        placeholder="Search products, orders, customers, suppliers, or commands..."
+        placeholder={t('shell.search.placeholder')}
         onFocus={() => setOpen(true)}
         onChange={(event) => { setQuery(event.target.value); setOpen(true); setActiveIndex(0) }}
         onKeyDown={(event) => {
@@ -274,10 +277,10 @@ export function GlobalSearch({
       <span className={`kbd ${styles.shortcut}`}>{shortcut}</span>
 
       {open && (
-        <div className={styles.panel} id="global-search-results" role="listbox" aria-label="Global search results">
+        <div className={styles.panel} id="global-search-results" role="listbox" aria-label={t('shell.search.results')}>
           {grouped.map((entry) => (
-            <section className={styles.group} key={entry.group} aria-label={entry.group}>
-              <div className={styles.groupLabel}>{entry.group}</div>
+            <section className={styles.group} key={entry.group} aria-label={t(`shell.search.groups.${entry.group as 'Commands'}`)}>
+              <div className={styles.groupLabel}>{t(`shell.search.groups.${entry.group as 'Commands'}`)}</div>
               {entry.items.map((item) => {
                 const index = items.indexOf(item)
                 const Icon = item.icon
@@ -300,11 +303,11 @@ export function GlobalSearch({
               })}
             </section>
           ))}
-          {loading && <div className={styles.status}><LoaderCircle className={styles.spinner} /> Searching current business scope...</div>}
-          {!loading && query.trim().length === 1 && <div className={styles.status}>Type one more character to search records.</div>}
-          {!loading && query.trim().length >= 2 && records.length === 0 && !searchFailed && <div className={styles.status}>No matching records found.</div>}
-          {!loading && searchFailed && <div className={styles.error}>Search is temporarily unavailable. Check your connection and try again.</div>}
-          <footer className={styles.footer}><span>↑↓ Navigate</span><span>↵ Open</span><span>Esc Close</span></footer>
+          {loading && <div className={styles.status}><LoaderCircle className={styles.spinner} /> {t('shell.search.searching')}</div>}
+          {!loading && query.trim().length === 1 && <div className={styles.status}>{t('shell.search.oneMore')}</div>}
+          {!loading && query.trim().length >= 2 && records.length === 0 && !searchFailed && <div className={styles.status}>{t('shell.search.noMatches')}</div>}
+          {!loading && searchFailed && <div className={styles.error}>{t('shell.search.failed')}</div>}
+          <footer className={styles.footer}><span>{t('shell.search.navigate')}</span><span>{t('shell.search.openKey')}</span><span>{t('shell.search.closeKey')}</span></footer>
         </div>
       )}
     </div>

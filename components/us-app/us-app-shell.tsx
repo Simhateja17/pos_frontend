@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronRight, LogOut, Search } from 'lucide-react'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import { supabase } from '@/lib/supabase/client'
 import { AuthenticatedRequestError, getAuthenticatedAppContext, type AppContext } from '@/lib/api/authenticated-client'
 import { NAV_GROUPS, NAMES, navIdForPath } from './navigation'
@@ -87,7 +88,7 @@ export function UsAppShell({ children }: { children: ReactNode }) {
         <div className="us-app">
           <aside className="sidebar">
             <Link className="brand" href="/us/dashboard" aria-label="Ambel POS dashboard">
-              <div className="brand-mark">AP</div>
+              <AmbelMark size={34} />
               <div className="brand-text"><strong>Ambel POS</strong><span>International retail</span></div>
             </Link>
             <nav aria-label="International POS navigation">

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import styles from './admin.module.css'
 import {
   AdminApiError,
@@ -36,7 +37,7 @@ function qrImageSource(value: string) {
 }
 
 function AdminMark() {
-  return <div className={styles.mark} aria-hidden="true">A</div>
+  return <AmbelMark size={34} />
 }
 
 function AuthCard({ title, copy, children }: { title: string; copy: string; children: ReactNode }) {

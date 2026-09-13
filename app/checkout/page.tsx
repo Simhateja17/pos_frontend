@@ -29,6 +29,7 @@ import { enqueueSale, countPending } from '@/lib/offline/queue'
 import { startSyncEngine } from '@/lib/offline/sync'
 import { equalIntraStateTaxSplit } from '@/lib/operational-display'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 
 type Variant = {
   id: string
@@ -87,17 +88,6 @@ type SaleResponse = {
   }[]
 }
 
-const SCAN_PLACEHOLDER = 'Scan barcode or search by name…'
-const CART_EMPTY_HEADING = 'Cart is empty'
-const CART_EMPTY_BODY = 'Scan a barcode or search a product above to start a sale.'
-const CLEAR_CART_CONFIRM = (n: number) =>
-  `Clear cart: Remove all ${n} items from this sale? This can't be undone.`
-const TAX_DISCLOSURE =
-  'This is a pre-charge estimate from the current cart. The server validates price, discounts, tax, stock, tender, and the final total when you charge.'
-const GENERIC_CHARGE_FAILURE =
-  'Something went wrong completing this sale. Nothing was charged. Try again.'
-const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
-
 function variantAttributes(v: Variant): string {
   return [v.size, v.color, v.material].filter(Boolean).join(' / ') || '-'
 }
@@ -133,6 +123,17 @@ type OpenShiftEntry = {
 
 function CheckoutPageInner() {
   const { money: formatMoney, pack } = useAppRegion()
+  const t = useT()
+  const SCAN_PLACEHOLDER = t('checkout.scanPlaceholder')
+  const GENERIC_CHARGE_FAILURE = t('checkout.chargeFailure')
+  const blockedReason = (shiftFallback: 'checkout.noShift' | 'checkout.noShiftTerminal') =>
+    hasMultipleOpenShifts
+      ? t('checkout.multipleShifts')
+      : counterState === 'none'
+        ? t('checkout.noCounters')
+        : counterState === 'unpaired'
+          ? t('checkout.unpaired')
+          : t(shiftFallback)
   const searchParams = useSearchParams()
   const customerIdParam = searchParams.get('customerId')
 
@@ -362,7 +363,7 @@ function CheckoutPageInner() {
     })
     if (requestId !== searchRequestRef.current) return
     if (error || !data) {
-      setSearchError(LOAD_ERROR)
+      setSearchError(t('checkout.loadError'))
       return
     }
     const hits: SearchHit[] = []
@@ -383,7 +384,7 @@ function CheckoutPageInner() {
     if (exactSkuMatch.length === 1) {
       selectSearchHit(exactSkuMatch[0])
     } else if (hits.length === 0 && trimmed) {
-      setSearchError(`No product found for “${trimmed}”.`)
+      setSearchError(t('checkout.noProduct', { query: trimmed }))
       focusScanner()
     }
   }
@@ -473,7 +474,7 @@ function CheckoutPageInner() {
     })
     setAvailabilityLoading(null)
     if (error || !data) {
-      setSearchError('Could not check the other shops right now.')
+      setSearchError(t('checkout.otherShopsError'))
       return
     }
     setAvailabilityByVariant((current) => ({ ...current, [variantId]: data }))
@@ -497,7 +498,7 @@ function CheckoutPageInner() {
 
   function handleClearCart() {
     if (cart.length === 0) return
-    if (window.confirm(CLEAR_CART_CONFIRM(cart.length))) {
+    if (window.confirm(t('checkout.clearConfirm', { count: cart.length }))) {
       setCart([])
       setCartDiscountMode('none')
       setCartDiscountValue('')
@@ -650,15 +651,7 @@ function CheckoutPageInner() {
     }
 
     if (!shiftId) {
-      setChargeError(
-        hasMultipleOpenShifts
-          ? 'You have shifts open on more than one counter. Close the extra one before taking a sale.'
-          : counterState === 'none'
-            ? 'This store has no counters. Add a counter before taking a sale.'
-            : counterState === 'unpaired'
-              ? 'This browser is not paired to a counter. Pair it before taking a sale.'
-          : 'No open shift. Open a shift before taking a sale.',
-      )
+      setChargeError(blockedReason('checkout.noShift'))
       return
     }
     if (cart.length === 0) return
@@ -667,9 +660,13 @@ function CheckoutPageInner() {
     const total = preChargeEstimate
     const diff = paymentSum - total
     if (Math.abs(diff) > 0.001) {
-      const direction = diff > 0 ? 'over' : 'under'
       setChargeError(
-        `Tender entries must match the current cart estimate (${formatMoney(total)}). Currently ${formatMoney(paymentSum)}, ${formatMoney(Math.abs(diff))} ${direction}. The server confirms the final total at charge.`,
+        t('checkout.tenderMismatch', {
+          total: formatMoney(total),
+          paid: formatMoney(paymentSum),
+          diff: formatMoney(Math.abs(diff)),
+          direction: diff > 0 ? t('checkout.over') : t('checkout.under'),
+        }),
       )
       return
     }
@@ -679,7 +676,7 @@ function CheckoutPageInner() {
       const received = Number(cashRow.cashReceived)
       const allocated = Number(cashRow.amount)
       if (!Number.isFinite(received) || received < allocated) {
-        setChargeError(`Enter cash received of at least ${formatMoney(allocated)} so Ambel can calculate the change.`)
+        setChargeError(t('checkout.cashTooLow', { amount: formatMoney(allocated) }))
         return
       }
     }
@@ -725,9 +722,7 @@ function CheckoutPageInner() {
           estimatedTotal: preChargeEstimate.toFixed(2),
         })
         await refreshQueueCount()
-        setQueuedMessage(
-          `Sale queued offline: ${formatMoney(preChargeEstimate)}. It syncs automatically when the connection returns. The final total is confirmed by the server at that point.`,
-        )
+        setQueuedMessage(t('checkout.queuedOffline', { amount: formatMoney(preChargeEstimate) }))
         setCart([])
         setCartDiscountMode('none')
         setCartDiscountValue('')
@@ -737,9 +732,7 @@ function CheckoutPageInner() {
         setSplitEnabled(false)
         return
       } catch {
-        setChargeError(
-          'This device cannot store offline sales, so the sale was not taken. Restore the connection before charging.',
-        )
+        setChargeError(t('checkout.cannotQueue'))
         return
       }
     }
@@ -759,11 +752,11 @@ function CheckoutPageInner() {
     if (creditAmount > 0) {
       const hasCustomerIdentity = Boolean(customer?.id || (showNewCustomerForm && (newCustomerPhone.trim() || newCustomerEmail.trim())))
       if (!hasCustomerIdentity) {
-        setChargeError('Credit sales need a saved customer. Select one or create one with a phone or email.')
+        setChargeError(t('checkout.creditNeedsCustomer'))
         return
       }
       if (!isOnline) {
-        setChargeError('Credit sales need a live connection so Ambel can check the customer balance and credit limit.')
+        setChargeError(t('checkout.creditNeedsOnline'))
         return
       }
     }
@@ -774,7 +767,7 @@ function CheckoutPageInner() {
       return
     }
     if (response?.status === 403 && (errorBody?.code === 'credit_limit_exceeded' || errorBody?.code === 'credit_limit_override_required')) {
-      setChargeError(errorBody.error ?? 'This sale would exceed the customer credit limit. Increase the credit limit or collect payment through another payment method.')
+      setChargeError(errorBody.error ?? t('checkout.creditLimit'))
       return
     }
     if (response?.status === 400) {
@@ -785,7 +778,7 @@ function CheckoutPageInner() {
   }
 
   function onChargeSuccess(sale: SaleResponse) {
-    setSuccessMessage(`Sale complete: ${formatMoney(Number(sale.totalAmount))} charged and recorded by the server.`)
+    setSuccessMessage(t('checkout.saleComplete', { amount: formatMoney(Number(sale.totalAmount)) }))
 
     // Keep the cart name as a compatibility fallback for older backends; new
     // sale responses also carry the server-resolved product name. The Total
@@ -850,26 +843,26 @@ function CheckoutPageInner() {
   return (
     <>
       <PageHead
-        title="Billing"
+        title={t('checkout.title')}
         sub={
           shiftId
-            ? 'Scan products, collect tender, then let the server confirm the sale.'
+            ? t('checkout.sub.ready')
             : hasMultipleOpenShifts
-              ? 'You have more than one shift open'
+              ? t('checkout.sub.multiple')
               : counterState === 'none'
-                ? 'No counters configured for this store'
+                ? t('checkout.sub.noCounters')
                 : counterState === 'unpaired'
-                  ? 'This browser is not paired to a counter'
-                  : 'No open shift for this terminal'
+                  ? t('checkout.sub.unpaired')
+                  : t('checkout.sub.noShift')
         }
         actions={
           isOnline ? (
             <span className="badge b-green">
-              <span className="dot-g" /> Online
+              <span className="dot-g" /> {t('checkout.online')}
             </span>
           ) : (
             <span className="badge b-amber">
-              <span className="dot-a" /> Offline, sales are queued
+              <span className="dot-a" /> {t('checkout.offlineQueued')}
             </span>
           )
         }
@@ -878,11 +871,8 @@ function CheckoutPageInner() {
       {!isOnline && (
         <Card style={{ borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span className="flag improve">OFFLINE</span>
-            <span style={{ fontSize: 13, color: '#8a6410' }}>
-              No connection to the server. Sales are recorded on this device and sync automatically when the
-              connection returns. Tax and the final total are confirmed by the server at sync.
-            </span>
+            <span className="flag improve">{t('checkout.offlineFlag')}</span>
+            <span style={{ fontSize: 13, color: '#8a6410' }}>{t('checkout.offlineBody')}</span>
           </CardPad>
         </Card>
       )}
@@ -890,12 +880,12 @@ function CheckoutPageInner() {
       {queuedCount > 0 && (
         <Card>
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span className="badge b-blue">{queuedCount} queued</span>
+            <span className="badge b-blue">{t('checkout.queuedCount', { count: queuedCount })}</span>
             <span style={{ fontSize: 13, color: 'var(--muted)' }}>
-              {queuedCount === 1 ? 'A sale is' : 'Sales are'} waiting to sync.
+              {queuedCount === 1 ? t('checkout.waitingOne') : t('checkout.waitingMany')}
             </span>
             <Link className="btn btn-sm" href="/app/offline-sync" style={{ marginLeft: 'auto' }}>
-              Review queue
+              {t('checkout.reviewQueue')}
             </Link>
           </CardPad>
         </Card>
@@ -910,26 +900,18 @@ function CheckoutPageInner() {
       {!shiftId && (
         <Card style={{ borderColor: '#F3DFB8', background: 'var(--warning-soft)' }}>
           <CardPad style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span className="flag improve">ACTION</span>
-            <span style={{ fontSize: 13, color: '#8a6410' }}>
-              {hasMultipleOpenShifts
-                ? 'You have shifts open on more than one counter. Close the extra one before taking a sale.'
-                : counterState === 'none'
-                  ? 'This store has no counters. Add a counter before taking a sale.'
-                  : counterState === 'unpaired'
-                    ? 'This browser is not paired to a counter. Pair it before taking a sale.'
-                    : 'No open shift for this terminal. Open a shift before taking a sale.'}
-            </span>
+            <span className="flag improve">{t('checkout.actionFlag')}</span>
+            <span style={{ fontSize: 13, color: '#8a6410' }}>{blockedReason('checkout.noShiftTerminal')}</span>
             <Link
               className="btn btn-sm"
               href={counterState === 'none' || counterState === 'unpaired' ? '/app/settings/terminals' : '/app/shifts'}
               style={{ marginLeft: 'auto' }}
             >
               {hasMultipleOpenShifts
-                ? 'Manage shifts'
+                ? t('checkout.manageShifts')
                 : counterState === 'none' || counterState === 'unpaired'
-                  ? 'Manage counters'
-                  : 'Open register'}
+                  ? t('checkout.manageCounters')
+                  : t('checkout.openRegister')}
             </Link>
           </CardPad>
         </Card>
@@ -984,7 +966,7 @@ function CheckoutPageInner() {
                 />
               </div>
               <button className="btn" type="button" onClick={() => runSearch(scanQuery)}>
-                <ScanLine size={15} /> Search
+                <ScanLine size={15} /> {t('checkout.search')}
               </button>
             </div>
 
@@ -995,7 +977,7 @@ function CheckoutPageInner() {
             )}
 
             {searchResults.length > 0 && (
-              <div id="billing-product-search-results" className="res-box" role="listbox" aria-label="Product search results" style={{ marginTop: 10 }}>
+              <div id="billing-product-search-results" className="res-box" role="listbox" aria-label={t('checkout.productResults')} style={{ marginTop: 10 }}>
                 {searchResults.map((hit, index) => (
                   <div
                     key={hit.variant.id}
@@ -1026,25 +1008,25 @@ function CheckoutPageInner() {
                     <div style={{ minWidth: 0 }}>
                       <div className="t-strong">{hit.productName}</div>
                       <div className="t-sub t-mono">
-                        {hit.variant.sku} · {variantAttributes(hit.variant)} · {hit.variant.currentStock} here
+                        {hit.variant.sku} · {variantAttributes(hit.variant)} · {t('checkout.here', { count: hit.variant.currentStock })}
                       </div>
                       {availabilityByVariant[hit.variant.id] ? (
                         <div className="t-sub" style={{ marginTop: 4 }}>
                           {availabilityByVariant[hit.variant.id].stores
                             .filter((store) => !store.isOwnStore && Number(store.quantity) > 0)
                             .map((store) => `${store.storeName}: ${store.quantity}`)
-                            .join(' · ') || 'No other shop has stock'}
+                            .join(' · ') || t('checkout.noOtherStock')}
                         </div>
                       ) : null}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {hit.variant.currentStock <= 0 ? (
                         <button className="btn btn-sm" type="button" onClick={(event) => { event.stopPropagation(); void checkAvailability(hit.variant.id) }} disabled={availabilityLoading === hit.variant.id}>
-                          {availabilityLoading === hit.variant.id ? 'Checking…' : 'Other shops'}
+                          {availabilityLoading === hit.variant.id ? t('checkout.checking') : t('checkout.otherShops')}
                         </button>
                       ) : null}
                       <button className="btn btn-sm" type="button" onClick={(event) => { event.stopPropagation(); selectSearchHit(hit) }}>
-                        + Add
+                        {t('checkout.add')}
                       </button>
                     </div>
                   </div>
@@ -1055,11 +1037,11 @@ function CheckoutPageInner() {
 
           <Card>
             <CardHead
-              title={`Cart · ${cart.length} item${cart.length === 1 ? '' : 's'}`}
+              title={cart.length === 1 ? t('checkout.cartOne') : t('checkout.cartMany', { count: cart.length })}
               right={
                 cart.length > 0 ? (
                   <button className="btn btn-sm" type="button" onClick={handleClearCart} style={{ color: 'var(--danger)' }}>
-                    Clear
+                    {t('checkout.clear')}
                   </button>
                 ) : null
               }
@@ -1068,11 +1050,14 @@ function CheckoutPageInner() {
             {cart.length === 0 ? (
               <EmptyState
                 icon={<ShoppingCart size={24} strokeWidth={1.8} />}
-                title={CART_EMPTY_HEADING}
-                body={CART_EMPTY_BODY}
+                title={t('checkout.cartEmptyTitle')}
+                body={t('checkout.cartEmptyBody')}
               />
             ) : (
-              <DataTable cols={['Item', 'Qty', 'Price', 'Discount', 'Total', '']} minWidth={720}>
+              <DataTable
+                cols={[t('checkout.cols.item'), t('checkout.cols.qty'), t('checkout.cols.price'), t('checkout.cols.discount'), t('checkout.cols.total'), '']}
+                minWidth={720}
+              >
                 {cart.map((line) => (
                   <CartLineRow
                     key={line.variantId}
@@ -1087,16 +1072,16 @@ function CheckoutPageInner() {
             )}
 
             <CardPad style={{ borderTop: '1px solid var(--border-soft)' }}>
-              <SectionLabel>Whole-bill discount</SectionLabel>
+              <SectionLabel>{t('checkout.wholeBillDiscount')}</SectionLabel>
               {cartDiscountMode === 'none' ? (
                 <button className="btn btn-sm btn-ghost" type="button" onClick={() => setCartDiscountMode('percent')}>
-                  Discount entire sale
+                  {t('checkout.discountEntire')}
                 </button>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <select
                     className="fld-select"
-                    aria-label="Discount type"
+                    aria-label={t('checkout.discountType')}
                     value={cartDiscountMode}
                     onChange={(e) => setCartDiscountMode(e.target.value as 'percent' | 'amount')}
                   >
@@ -1109,7 +1094,7 @@ function CheckoutPageInner() {
                     min={0}
                     max={cartDiscountMode === 'percent' ? 100 : subtotal}
                     step={0.01}
-                    aria-label="Discount value"
+                    aria-label={t('checkout.discountValue')}
                     value={cartDiscountValue}
                     onChange={(e) => setCartDiscountValue(e.target.value)}
                     style={{ maxWidth: 120 }}
@@ -1122,7 +1107,7 @@ function CheckoutPageInner() {
                       setCartDiscountValue('')
                     }}
                   >
-                    Remove
+                    {t('checkout.remove')}
                   </button>
                 </div>
               )}
@@ -1133,7 +1118,7 @@ function CheckoutPageInner() {
         {/* ---------------- Summary column ---------------- */}
         <div>
           <Card className="card-pad">
-            <SectionLabel style={{ margin: 0 }}>Customer</SectionLabel>
+            <SectionLabel style={{ margin: 0 }}>{t('checkout.customer')}</SectionLabel>
             {customer ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 12 }}>
@@ -1142,23 +1127,23 @@ function CheckoutPageInner() {
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div className="t-strong" style={{ fontSize: 15 }}>
-                      {isReturningCustomer ? 'Returning customer' : (customer.name ?? 'Customer attached')}
+                      {isReturningCustomer ? t('checkout.returningCustomer') : (customer.name ?? t('checkout.customerAttached'))}
                     </div>
-                    <div className="t-sub">{customer.phone ?? customer.email ?? 'No contact on file'}</div>
+                    <div className="t-sub">{customer.phone ?? customer.email ?? t('checkout.noContact')}</div>
                   </div>
                 </div>
                 <button className="btn btn-sm" type="button" onClick={clearCustomer} style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}>
-                  Remove customer
+                  {t('checkout.removeCustomer')}
                 </button>
               </>
             ) : (
               <>
-                <div className="t-sub" style={{ marginTop: 6 }}>Walk-in customer</div>
+                <div className="t-sub" style={{ marginTop: 6 }}>{t('checkout.walkInCustomer')}</div>
                 <input
                   className="fld-input"
                   style={{ width: '100%', marginTop: 8, height: 38 }}
                   value={customerSearchQuery}
-                  aria-label="Search customers"
+                  aria-label={t('checkout.searchCustomers')}
                   role="combobox"
                   aria-autocomplete="list"
                   aria-expanded={customerSearchResults.length > 0}
@@ -1166,10 +1151,10 @@ function CheckoutPageInner() {
                   aria-activedescendant={activeCustomerSearchIndex >= 0 ? `billing-customer-result-${customerSearchResults[activeCustomerSearchIndex]?.id}` : undefined}
                   onChange={(e) => runCustomerSearch(e.target.value)}
                   onKeyDown={handleCustomerSearchKeyDown}
-                  placeholder="Search by phone, email, or name…"
+                  placeholder={t('checkout.customerPlaceholder')}
                 />
                 {customerSearchResults.length > 0 && (
-                  <div id="billing-customer-search-results" className="res-box" role="listbox" aria-label="Customer search results" style={{ marginTop: 8 }}>
+                  <div id="billing-customer-search-results" className="res-box" role="listbox" aria-label={t('checkout.customerResults')} style={{ marginTop: 8 }}>
                     {customerSearchResults.map((c, index) => (
                       <button
                         key={c.id}
@@ -1190,7 +1175,7 @@ function CheckoutPageInner() {
                         }}
                         aria-selected={activeCustomerSearchIndex === index}
                       >
-                        <span className="t-strong">{c.name ?? 'Unnamed'}</span>
+                        <span className="t-strong">{c.name ?? t('checkout.unnamed')}</span>
                         <span className="t-sub"> · {c.phone ?? c.email ?? ''}</span>
                       </button>
                     ))}
@@ -1198,13 +1183,13 @@ function CheckoutPageInner() {
                 )}
                 {!showNewCustomerForm ? (
                   <button className="btn btn-sm btn-ghost" type="button" onClick={() => setShowNewCustomerForm(true)} style={{ marginTop: 8 }}>
-                    + New customer
+                    {t('checkout.newCustomer')}
                   </button>
                 ) : (
                   <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
-                    <input className="fld-input" style={{ height: 38 }} value={newCustomerName} aria-label="Customer name" onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Name" />
-                    <input className="fld-input" style={{ height: 38 }} value={newCustomerPhone} aria-label="Customer phone" onChange={(e) => setNewCustomerPhone(e.target.value)} placeholder="Phone" />
-                    <input className="fld-input" style={{ height: 38 }} value={newCustomerEmail} aria-label="Customer email" onChange={(e) => setNewCustomerEmail(e.target.value)} placeholder="Email" />
+                    <input className="fld-input" style={{ height: 38 }} value={newCustomerName} aria-label={t('checkout.customerName')} onChange={(e) => setNewCustomerName(e.target.value)} placeholder={t('checkout.name')} />
+                    <input className="fld-input" style={{ height: 38 }} value={newCustomerPhone} aria-label={t('checkout.customerPhone')} onChange={(e) => setNewCustomerPhone(e.target.value)} placeholder={t('checkout.phone')} />
+                    <input className="fld-input" style={{ height: 38 }} value={newCustomerEmail} aria-label={t('checkout.customerEmail')} onChange={(e) => setNewCustomerEmail(e.target.value)} placeholder={t('checkout.email')} />
                   </div>
                 )}
               </>
@@ -1212,14 +1197,14 @@ function CheckoutPageInner() {
           </Card>
 
           <Card className="card-pad">
-            <SectionLabel>Bill summary</SectionLabel>
+            <SectionLabel>{t('checkout.billSummary')}</SectionLabel>
 
             <div className="sum-row">
-              <span>Subtotal</span>
+              <span>{t('checkout.subtotal')}</span>
               <span className="num">{formatMoney(grossSubtotal)}</span>
             </div>
             <div className="sum-row">
-              <span>Discount</span>
+              <span>{t('checkout.discount')}</span>
               <span className="num" style={{ color: totalDiscount > 0 ? 'var(--success)' : undefined }}>
                 {totalDiscount > 0 ? `−${formatMoney(totalDiscount)}` : formatMoney(totalDiscount)}
               </span>
@@ -1227,33 +1212,33 @@ function CheckoutPageInner() {
             {taxTreatment === 'cgst_sgst' ? (
               <>
                 <div className="sum-row">
-                  <span>CGST (item rates)</span>
+                  <span>{t('checkout.cgst')}</span>
                   <span className="num">{formatMoney(estimatedCgst)}</span>
                 </div>
                 <div className="sum-row">
-                  <span>SGST (item rates)</span>
+                  <span>{t('checkout.sgst')}</span>
                   <span className="num">{formatMoney(estimatedSgst)}</span>
                 </div>
                 {estimatedTaxRounding !== 0 ? (
                   <div className="sum-row">
-                    <span>Tax rounding adjustment</span>
+                    <span>{t('checkout.taxRounding')}</span>
                     <span className="num">{estimatedTaxRounding > 0 ? '+' : '−'}{formatMoney(Math.abs(estimatedTaxRounding))}</span>
                   </div>
                 ) : null}
               </>
             ) : (
               <div className="sum-row">
-                <span>IGST (item rates)</span>
+                <span>{t('checkout.igst')}</span>
                 <span className="num">{formatMoney(taxEstimate)}</span>
               </div>
             )}
             <div className="sum-row">
-              <span>Tax total</span>
+              <span>{t('checkout.taxTotal')}</span>
               <span className="num">{formatMoney(taxEstimate)}</span>
             </div>
             <div className="sum-row">
-              <span>Final total</span>
-              <span className="t-sub">Confirmed by server</span>
+              <span>{t('checkout.finalTotal')}</span>
+              <span className="t-sub">{t('checkout.confirmedByServer')}</span>
             </div>
 
             <div
@@ -1266,17 +1251,17 @@ function CheckoutPageInner() {
                 marginTop: 6,
               }}
             >
-              <b style={{ fontSize: 15 }}>Current cart estimate</b>
+              <b style={{ fontSize: 15 }}>{t('checkout.cartEstimate')}</b>
               <b className="num" style={{ fontSize: 22, color: 'var(--brand-1)' }}>
                 {formatMoney(preChargeEstimate)}
               </b>
             </div>
 
-            <p style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)', lineHeight: 1.5 }}>{TAX_DISCLOSURE}</p>
+            <p style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)', lineHeight: 1.5 }}>{t('checkout.taxDisclosure')}</p>
 
             <SectionLabel style={{ marginTop: 14 }}>
-              Payment method{' '}
-              <span style={{ color: 'var(--muted-2)', fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>tap to select</span>
+              {t('checkout.paymentMethod')}{' '}
+              <span style={{ color: 'var(--muted-2)', fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>{t('checkout.tapToSelect')}</span>
             </SectionLabel>
 
             <PaymentMethodGrid
@@ -1305,13 +1290,15 @@ function CheckoutPageInner() {
               aria-busy={isCharging}
               style={{ width: '100%', height: 46, marginTop: 12, justifyContent: 'center', fontSize: 15 }}
             >
-              {isCharging ? 'Charging sale…' : isOnline ? `Charge ${formatMoney(preChargeEstimate)}` : `Queue ${formatMoney(preChargeEstimate)} offline`}
+              {isCharging
+                ? t('checkout.charging')
+                : isOnline
+                  ? t('checkout.charge', { amount: formatMoney(preChargeEstimate) })
+                  : t('checkout.queueOffline', { amount: formatMoney(preChargeEstimate) })}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>
-              {isOnline
-                ? 'Live connection · the server confirms the final total before the sale is recorded'
-                : 'Queued on this device · the server confirms the final total when the connection returns'}
+              {isOnline ? t('checkout.liveNote') : t('checkout.queuedNote')}
             </div>
           </Card>
         </div>

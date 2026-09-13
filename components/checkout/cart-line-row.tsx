@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { allowsFractionalQuantity, unitSuffix } from '@/lib/units'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 
 export interface CartLine {
   variantId: string
@@ -45,12 +46,13 @@ export function CartLineRow({
   disabled?: boolean
 }) {
   const { money, pack } = useAppRegion()
+  const t = useT()
   const [showDiscountInput, setShowDiscountInput] = useState(Number(line.discountAmount || '0') > 0)
   const discount = Number(line.discountAmount || '0')
   const taxLabel = !line.isTaxable
-    ? 'Tax exempt'
+    ? t('checkout.line.taxExempt')
     : line.taxRatePercent === null || line.taxRatePercent === undefined
-      ? 'Store fallback tax'
+      ? t('checkout.line.storeFallbackTax')
       : `${Number(line.taxRatePercent).toFixed(2)}% ${pack.taxLabel}`
   const exceedsStock = line.quantity > line.currentStock
 
@@ -78,8 +80,8 @@ export function CartLineRow({
               {' · '}
               <span className="badge b-red" style={{ fontSize: 9, padding: '1px 5px' }}>
                 {line.currentStock <= 0
-                  ? 'Out of stock — sale records negative stock'
-                  : `${line.currentStock} available — excess records negative stock`}
+                  ? t('checkout.line.outOfStock')
+                  : t('checkout.line.partialStock', { count: line.currentStock })}
               </span>
             </>
           ) : null}
@@ -100,7 +102,7 @@ export function CartLineRow({
               step={0.001}
               value={line.quantity}
               disabled={disabled}
-              aria-label={`Quantity for ${line.name} in ${unitSuffix(line.unitOfMeasure)}`}
+              aria-label={t('checkout.line.quantityFor', { name: line.name, unit: unitSuffix(line.unitOfMeasure) })}
               onChange={(e) => onQuantityChange(line.variantId, Number(e.target.value))}
               className="fld-input num"
               style={{ maxWidth: 84 }}
@@ -112,7 +114,7 @@ export function CartLineRow({
             <button
               type="button"
               className="qstep"
-              aria-label={`Decrease quantity for ${line.name}`}
+              aria-label={t('checkout.line.decrease', { name: line.name })}
               onClick={() => onQuantityChange(line.variantId, Math.max(1, line.quantity - 1))}
               disabled={disabled}
             >
@@ -124,7 +126,7 @@ export function CartLineRow({
             <button
               type="button"
               className="qstep"
-              aria-label={`Increase quantity for ${line.name}`}
+              aria-label={t('checkout.line.increase', { name: line.name })}
               onClick={() => onQuantityChange(line.variantId, line.quantity + 1)}
               disabled={disabled}
             >
@@ -150,7 +152,7 @@ export function CartLineRow({
               step={0.01}
               value={line.discountAmount}
               disabled={disabled}
-              aria-label={`Discount amount in ${pack.currency} for ${line.name}`}
+              aria-label={t('checkout.line.discountFor', { currency: pack.currency, name: line.name })}
               onChange={(e) => onDiscountChange(line.variantId, e.target.value)}
               className="fld-input num"
               style={{ maxWidth: 92 }}
@@ -158,7 +160,7 @@ export function CartLineRow({
           </div>
         ) : (
           <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowDiscountInput(true)} disabled={disabled}>
-            Add discount
+            {t('checkout.line.addDiscount')}
           </button>
         )}
       </td>
@@ -168,7 +170,7 @@ export function CartLineRow({
       <td>
         <button
           type="button"
-          aria-label={`Remove ${line.name} from cart`}
+          aria-label={t('checkout.line.removeLine', { name: line.name })}
           onClick={() => onRemove(line.variantId)}
           disabled={disabled}
           style={{ color: 'var(--muted-2)', background: 'none', border: 0, cursor: 'pointer', padding: 6, lineHeight: 1 }}

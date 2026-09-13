@@ -22,6 +22,7 @@ import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { getAuthenticatedAppContext } from '@/lib/api/authenticated-client'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 
 type XReport = {
   shiftId: string
@@ -56,7 +57,6 @@ type ShiftHistoryEntry = {
   staffName: string | null
   terminalName: string | null
 }
-const LOAD_ERROR = "We couldn't load this shift. Check your connection and try again."
 /**
  * A total the API has not sent yet (an older backend without UPI, say) must
  * read as a zero amount, never NaN. Takes the edition's formatter so the same
@@ -69,10 +69,19 @@ const safeMoney = (format: (value: string | number) => string, value: string) =>
 const stampAt = (value: string, locale: string) =>
   new Date(value).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })
 
+/** Money and timestamp helpers bound to the current edition and language. */
+function useShiftFormat() {
+  const { money: formatMoney, dateLocale } = useAppRegion()
+  return {
+    money: (value: string) => safeMoney(formatMoney, value),
+    stamp: (value: string) => stampAt(value, dateLocale),
+  }
+}
+
 export function ShiftsView() {
-  const { money: formatMoney, pack } = useAppRegion()
-  const money = (value: string) => safeMoney(formatMoney, value)
-  const stamp = (value: string) => stampAt(value, pack.locale)
+  const t = useT()
+  const { money, stamp } = useShiftFormat()
+  const loadError = t('shifts.loadError')
   /**
    * Which shift is "mine" is derived from the server, not cached in
    * localStorage. A paired counter is the primary key: cashiers can change
@@ -80,11 +89,12 @@ export function ShiftsView() {
    * staff-id fallback only supports older, unpaired API sessions.
    */
   const [staffId, setStaffId] = useState<string | null>(null)
-  const [cashier, setCashier] = useState('Current operator')
+  const [staffName, setStaffName] = useState<string | null>(null)
+  const cashier = staffName ?? t('shifts.currentOperator')
   const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
 
   const [shifts, setShifts] = useState<ShiftHistoryEntry[]>([])
-  const [terminals, setTerminals] = useState<Terminal[]>([])
+  const [, setTerminals] = useState<Terminal[]>([])
   const [currentTerminal, setCurrentTerminal] = useState<Terminal | null>(null)
   const [report, setReport] = useState<XReport | null>(null)
   const [closed, setClosed] = useState<ZReport | null>(null)
@@ -111,10 +121,11 @@ export function ShiftsView() {
       headers: await authHeaders(),
     })
     if (result.error || !result.data) {
-      setError(LOAD_ERROR)
+      setError(loadError)
       return
     }
     setReport(result.data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const load = useCallback(async () => {
@@ -129,7 +140,7 @@ export function ShiftsView() {
 
     if (shiftsResult.error || !shiftsResult.data || terminalsResult.error || !terminalsResult.data || deviceResult.error) {
       setLoading(false)
-      setError(LOAD_ERROR)
+      setError(loadError)
       return
     }
 
@@ -137,6 +148,7 @@ export function ShiftsView() {
     setTerminals(terminalsResult.data as Terminal[])
     setCurrentTerminal(deviceResult.data?.terminal ?? null)
     setLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -144,7 +156,7 @@ export function ShiftsView() {
       .then((context) => {
         setStaffId(context.staff.id)
         setRole(context.staff.role)
-        if (context.staff.name) setCashier(context.staff.name)
+        if (context.staff.name) setStaffName(context.staff.name)
       })
       .catch(() => {
         // The shell already surfaces a context failure; this screen still
@@ -163,17 +175,17 @@ export function ShiftsView() {
   async function openShift(event: FormEvent) {
     event.preventDefault()
     if (!currentTerminal) {
-      setOpenError('Pair this device to a counter before opening a shift.')
+      setOpenError(t('shifts.pairFirst'))
       return
     }
     const openingCash = startingCash.trim()
     if (currentTerminal.cashMode !== 'none') {
       if (!openingCash) {
-        setOpenError(`Enter the opening cash amount before opening the register. Enter ${money('0')} if the drawer is empty.`)
+        setOpenError(t('shifts.openingRequired', { zero: money('0') }))
         return
       }
       if (!Number.isFinite(Number(openingCash)) || Number(openingCash) < 0) {
-        setOpenError(`Enter a valid opening cash amount of ${money('0')} or more.`)
+        setOpenError(t('shifts.openingInvalid', { zero: money('0') }))
         return
       }
     }
@@ -191,7 +203,7 @@ export function ShiftsView() {
     if (result.error || !result.data) {
       // The backend names the counter and who holds it: show that, not a
       // generic failure, since the fix is "pick another counter".
-      setOpenError((result.error as { error?: string } | undefined)?.error ?? LOAD_ERROR)
+      setOpenError((result.error as { error?: string } | undefined)?.error ?? loadError)
       return
     }
 
@@ -205,9 +217,9 @@ export function ShiftsView() {
   // the cashier nothing to act on.
   function invalidCount() {
     const counted = countedCash.trim()
-    if (!counted) return `Enter the counted cash before closing. Enter ${money('0')} if the drawer is empty.`
+    if (!counted) return t('shifts.countRequired', { zero: money('0') })
     if (!Number.isFinite(Number(counted)) || Number(counted) < 0)
-      return `Enter a valid counted cash amount of ${money('0')} or more.`
+      return t('shifts.countInvalid', { zero: money('0') })
     return null
   }
 
@@ -243,7 +255,7 @@ export function ShiftsView() {
     if (result.error || !result.data) {
       // Keep the reason beside the close form: the cashier is at the bottom of
       // the page and would never see a banner at the top.
-      setCloseError((result.error as { error?: string } | undefined)?.error ?? LOAD_ERROR)
+      setCloseError((result.error as { error?: string } | undefined)?.error ?? loadError)
       setCloseOpen(false)
       return
     }
@@ -260,12 +272,12 @@ export function ShiftsView() {
   return (
     <>
       <PageHead
-        title="Register & Shifts"
-        sub={`${cashier} · cash and sales come from the active shift report`}
+        title={t('shifts.title')}
+        sub={t('shifts.sub', { cashier })}
         actions={
           activeShift ? (
             <button className="btn" disabled={busy} onClick={() => void loadXReport(activeShift.id)}>
-              <RefreshCw size={15} /> Refresh X report
+              <RefreshCw size={15} /> {t('shifts.refreshX')}
             </button>
           ) : null
         }
@@ -279,7 +291,7 @@ export function ShiftsView() {
 
       {loading && (
         <Card>
-          <LoadingState label="Loading register" rows={4} />
+          <LoadingState label={t('shifts.loading')} rows={4} />
         </Card>
       )}
 
@@ -321,12 +333,12 @@ export function ShiftsView() {
           {role && role !== 'cashier' && openShifts.length > 0 && (
             <Card>
               <CardHead
-                title="Open across the store"
-                sub="Every counter currently running a drawer"
-                right={<Badge tone="amber">{openShifts.length} open</Badge>}
+                title={t('shifts.openAcross')}
+                sub={t('shifts.openAcrossSub')}
+                right={<Badge tone="amber">{t('shifts.openCount', { count: openShifts.length })}</Badge>}
               />
               <DataTable
-                cols={['Counter', 'Cashier', 'Opened', 'Opening cash']}
+                cols={[t('shifts.cols.counter'), t('shifts.cols.cashier'), t('shifts.cols.opened'), t('shifts.cols.openingCash')]}
                 minWidth={620}
               >
                 {openShifts.map((shift) => (
@@ -336,7 +348,7 @@ export function ShiftsView() {
                       {shift.staffName ?? '-'}
                       {currentTerminal && shift.terminalId === currentTerminal.id && (
                         <span style={{ marginLeft: 8 }}>
-                          <Badge tone="blue">This counter</Badge>
+                          <Badge tone="blue">{t('shifts.thisCounter')}</Badge>
                         </span>
                       )}
                     </td>
@@ -354,23 +366,25 @@ export function ShiftsView() {
 
       {closeOpen && activeShift && (
         <Modal
-          title="Close shift and create Z report"
+          title={t('shifts.closeTitle')}
           onClose={() => setCloseOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setCloseOpen(false)}>
-                Keep shift open
+                {t('shifts.keepOpen')}
               </button>
               <button className="btn btn-pri" disabled={busy} onClick={() => void closeShift()}>
-                {busy ? 'Closing shift…' : 'Close shift and create Z report'}
+                {busy ? t('shifts.closing') : t('shifts.closeTitle')}
               </button>
             </>
           }
         >
           <p style={{ fontSize: 13.5, lineHeight: 1.5 }}>
-            Close {cashier}&apos;s shift on {activeShift.terminalName ?? 'this counter'} with a variance of{' '}
-            <b className="num">{money(String(variance))}</b>? A final Z report will be created and this
-            shift cannot accept more sales.
+            {t('shifts.closeConfirm', {
+              cashier,
+              counter: activeShift.terminalName ?? t('shifts.thisCounterLower'),
+              variance: money(String(variance)),
+            })}
           </p>
         </Modal>
       )}
@@ -397,18 +411,17 @@ function OpenRegister({
   error: string | null
   canPairCounter?: boolean
 }) {
-  const { money: formatMoney, pack } = useAppRegion()
-  const money = (value: string) => safeMoney(formatMoney, value)
-  const stamp = (value: string) => stampAt(value, pack.locale)
+  const t = useT()
+  const { money } = useShiftFormat()
   return (
     <Card>
       <CardHead
-        title={currentTerminal ? `Open ${currentTerminal.name}` : 'Connect this device'}
+        title={currentTerminal ? t('shifts.openCounter', { counter: currentTerminal.name }) : t('shifts.connectDevice')}
         sub={currentTerminal
           ? currentTerminal.cashMode === 'none'
-            ? `${cashier} can start immediately. This counter has no cash drawer, so opening cash is ${money('0')}.`
-            : `Count the drawer before the first sale. This is the opening cash for ${currentTerminal.name}.`
-          : 'An owner or manager must pair this browser to a counter before a shift can start.'}
+            ? t('shifts.noCashSub', { cashier, zero: money('0') })
+            : t('shifts.countSub', { counter: currentTerminal.name })
+          : t('shifts.pairSub')}
       />
       <CardPad>
         {error && (
@@ -420,11 +433,11 @@ function OpenRegister({
         {!currentTerminal ? (
           <EmptyState
             icon={<Monitor size={24} strokeWidth={1.8} />}
-            title="This device is not paired"
-            body="Choose this device's counter from Counter settings. The pairing can be replaced if the device fails."
+            title={t('shifts.notPairedTitle')}
+            body={t('shifts.notPairedBody')}
             action={canPairCounter ? (
               <Link className="btn btn-pri" href="/app/settings/terminals">
-                Pair a counter
+                {t('shifts.pairCounter')}
               </Link>
             ) : undefined}
           />
@@ -432,10 +445,10 @@ function OpenRegister({
           <form onSubmit={onSubmit} style={{ maxWidth: 460 }}>
             {currentTerminal.cashMode === 'none' ? (
               <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--soft)', color: 'var(--ink-2)', fontSize: 13 }}>
-                Opening cash: <b>{money('0')}</b>. This is a no-cash counter.
+                {t('shifts.noCashCounter', { zero: money('0') })}
               </div>
             ) : (
-              <Fld id="starting-cash" label="Opening cash count">
+              <Fld id="starting-cash" label={t('shifts.openingCount')}>
                 <input
                   id="starting-cash"
                   inputMode="decimal"
@@ -448,7 +461,7 @@ function OpenRegister({
             )}
 
             <button className="btn btn-pri" style={{ marginTop: 6 }} disabled={busy}>
-              {busy ? 'Opening register…' : 'Open register'}
+              {busy ? t('shifts.openingRegister') : t('shifts.openRegister')}
             </button>
           </form>
         )}
@@ -474,16 +487,15 @@ function ActiveShift({
   busy: boolean
   error: string | null
 }) {
-  const { money: formatMoney, pack } = useAppRegion()
-  const money = (value: string) => safeMoney(formatMoney, value)
-  const stamp = (value: string) => stampAt(value, pack.locale)
+  const t = useT()
+  const { money, stamp } = useShiftFormat()
   const metrics: KpiItem[] = report
     ? [
-        { label: 'Cash sales', value: money(report.cashSalesTotal), meta: 'Into this drawer' },
-        { label: 'Card sales', value: money(report.cardSalesTotal), meta: 'Not in the drawer' },
-        { label: 'UPI sales', value: money(report.upiSalesTotal), meta: 'Not in the drawer' },
-        { label: 'Refunds', value: money(report.refundsTotal), meta: 'Cash paid back out' },
-        { label: 'Sales completed', value: String(report.saleCount), meta: 'Bills on this shift' },
+        { label: t('shifts.kpi.cashSales'), value: money(report.cashSalesTotal), meta: t('shifts.kpi.intoDrawer') },
+        { label: t('shifts.kpi.cardSales'), value: money(report.cardSalesTotal), meta: t('shifts.kpi.notInDrawer') },
+        { label: t('shifts.kpi.upiSales'), value: money(report.upiSalesTotal), meta: t('shifts.kpi.notInDrawer') },
+        { label: t('shifts.kpi.refunds'), value: money(report.refundsTotal), meta: t('shifts.kpi.paidBack') },
+        { label: t('shifts.kpi.salesCompleted'), value: String(report.saleCount), meta: t('shifts.kpi.billsOnShift') },
       ]
     : []
 
@@ -491,15 +503,15 @@ function ActiveShift({
     <Split2>
       <Card>
         <CardHead
-          title="X report"
-          sub="Live snapshot only. It does not close this shift."
-          right={<Badge tone="blue">{shift.terminalName ?? 'Counter'}</Badge>}
+          title={t('shifts.xReport')}
+          sub={t('shifts.xReportSub')}
+          right={<Badge tone="blue">{shift.terminalName ?? t('shifts.counter')}</Badge>}
         />
         <CardPad>
           {report ? (
             <>
               <ReconciliationFigure
-                label="Expected cash in drawer"
+                label={t('shifts.expectedInDrawer')}
                 amount={money(report.expectedCash)}
                 variant="neutral"
               />
@@ -507,19 +519,19 @@ function ActiveShift({
                 <KpiRow items={metrics} cols={2} />
               </div>
               <p className="t-sub" style={{ fontSize: 12 }}>
-                Opened {stamp(shift.openedAt)} with {money(shift.startingCash)} in the drawer.
+                {t('shifts.openedWith', { date: stamp(shift.openedAt), amount: money(shift.startingCash) })}
               </p>
             </>
           ) : (
-            <LoadingState label="Loading the current X report" rows={3} />
+            <LoadingState label={t('shifts.loadingX')} rows={3} />
           )}
         </CardPad>
       </Card>
 
       <Card>
-        <CardHead title="Close shift" sub="Reconcile the physical drawer before creating the final Z report." />
+        <CardHead title={t('shifts.closeShift')} sub={t('shifts.closeShiftSub')} />
         <CardPad>
-          <Fld id="counted-cash" label="Counted cash">
+          <Fld id="counted-cash" label={t('shifts.countedCash')}>
             <input
               id="counted-cash"
               inputMode="decimal"
@@ -538,7 +550,7 @@ function ActiveShift({
 
           {report && countedCash !== '' && (
             <p className="t-sub" style={{ fontSize: 12.5 }}>
-              Variance against expected:{' '}
+              {t('shifts.varianceAgainst')}{' '}
               <b className="num">{money(String(Number(countedCash) - Number(report.expectedCash)))}</b>
             </p>
           )}
@@ -549,7 +561,7 @@ function ActiveShift({
             disabled={!report || busy}
             onClick={onRequestClose}
           >
-            Close shift and create Z report
+            {t('shifts.closeTitle')}
           </button>
         </CardPad>
       </Card>
@@ -558,16 +570,15 @@ function ActiveShift({
 }
 
 function ClosedSummary({ report }: { report: ZReport }) {
-  const { money: formatMoney, pack } = useAppRegion()
-  const money = (value: string) => safeMoney(formatMoney, value)
-  const stamp = (value: string) => stampAt(value, pack.locale)
+  const t = useT()
+  const { money, stamp } = useShiftFormat()
   const varianceValue = Number(report.variance)
   return (
     <Card>
-      <CardHead title="Shift closed. Z report saved." sub={`Closed ${stamp(report.closedAt)}`} />
+      <CardHead title={t('shifts.closedTitle')} sub={t('shifts.closedAt', { date: stamp(report.closedAt) })} />
       <CardPad>
         <ReconciliationFigure
-          label="Variance"
+          label={t('shifts.variance')}
           amount={money(report.variance)}
           variant={varianceValue === 0 ? 'match' : 'variance'}
         />
@@ -575,12 +586,12 @@ function ClosedSummary({ report }: { report: ZReport }) {
           <KpiRow
             cols={3}
             items={[
-              { label: 'Expected cash', value: money(report.expectedCash) },
-              { label: 'Counted cash', value: money(report.countedCash) },
-              { label: 'Cash sales', value: money(report.cashSalesTotal) },
-              { label: 'Card sales', value: money(report.cardSalesTotal) },
-              { label: 'UPI sales', value: money(report.upiSalesTotal) },
-              { label: 'Refunds', value: money(report.refundsTotal) },
+              { label: t('shifts.kpi.expectedCash'), value: money(report.expectedCash) },
+              { label: t('shifts.kpi.countedCash'), value: money(report.countedCash) },
+              { label: t('shifts.kpi.cashSales'), value: money(report.cashSalesTotal) },
+              { label: t('shifts.kpi.cardSales'), value: money(report.cardSalesTotal) },
+              { label: t('shifts.kpi.upiSales'), value: money(report.upiSalesTotal) },
+              { label: t('shifts.kpi.refunds'), value: money(report.refundsTotal) },
             ]}
           />
         </div>
@@ -590,33 +601,32 @@ function ClosedSummary({ report }: { report: ZReport }) {
 }
 
 function ShiftHistory({ shifts }: { shifts: ShiftHistoryEntry[] }) {
-  const { money: formatMoney, pack } = useAppRegion()
-  const money = (value: string) => safeMoney(formatMoney, value)
-  const stamp = (value: string) => stampAt(value, pack.locale)
+  const t = useT()
+  const { money, stamp } = useShiftFormat()
   return (
     <Card>
       <CardHead
-        title="Past shifts"
-        sub="Closed shifts and their Z report variance"
+        title={t('shifts.pastTitle')}
+        sub={t('shifts.pastSub')}
         right={shifts.length > 0 ? <Badge tone="grey">{shifts.length}</Badge> : undefined}
       />
 
       {shifts.length === 0 ? (
         <EmptyState
           icon={<History size={24} strokeWidth={1.8} />}
-          title="No closed shifts yet"
-          body="Once a shift is closed, its Z report and cash variance are listed here."
+          title={t('shifts.noPastTitle')}
+          body={t('shifts.noPastBody')}
         />
       ) : (
         <DataTable
           cols={[
-            'Counter',
-            'Cashier',
-            'Opened',
-            'Closed',
-            'Expected',
-            'Counted',
-            'Variance',
+            t('shifts.cols.counter'),
+            t('shifts.cols.cashier'),
+            t('shifts.cols.opened'),
+            t('shifts.cols.closed'),
+            t('shifts.cols.expected'),
+            t('shifts.cols.counted'),
+            t('shifts.cols.variance'),
           ]}
           minWidth={900}
         >

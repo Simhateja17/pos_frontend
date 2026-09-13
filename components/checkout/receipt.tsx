@@ -7,9 +7,13 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAppRegion } from '@/lib/app-region'
+import { enumLabel, useT } from '@/lib/i18n/i18n'
 
-const EMAIL_FAILURE_COPY =
-  "Couldn't send the bill email. The bill is saved. Try emailing it again from Bill history."
+/*
+ * The on-screen receipt panel follows the viewer's language. The PRINTED
+ * tax invoice below stays in English: it is a GST document handed to the
+ * customer and must read the same regardless of the cashier's UI language.
+ */
 
 export interface ReceiptLine {
   variantId: string
@@ -69,6 +73,7 @@ function formatStamp(iso: string, locale: string, timeZone?: string): string {
 
 export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessName: string }) {
   const { money: formatMoney, pack, appPath } = useAppRegion()
+  const t = useT()
   const contentRef = useRef<HTMLDivElement>(null)
   const printFn = useReactToPrint({ contentRef })
   const [paperWidth, setPaperWidth] = useState<'58' | '80'>('80')
@@ -95,25 +100,25 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
     setIsSending(false)
 
     if (error || !data) {
-      setEmailStatus(EMAIL_FAILURE_COPY)
+      setEmailStatus(t('checkout.receipt.emailFailure'))
       return
     }
 
-    setEmailStatus(`Bill sent to ${data.email}.`)
+    setEmailStatus(t('checkout.receipt.sentTo', { email: data.email }))
   }
 
   return (
-    <section aria-label="Completed bill" className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
+    <section aria-label={t('checkout.receipt.completedBill')} className="rounded-xl border bg-card p-4 shadow-sm" style={{ borderColor: '#E2E8F0' }}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#047857]">Bill confirmed</p>
-          <h2 className="font-heading text-xl font-semibold">Bill #{sale.id.slice(0, 8)}</h2>
-          <p className="text-sm text-muted-foreground">{formatMoney(Number(sale.totalAmount))} recorded by the server.</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#047857]">{t('checkout.receipt.confirmed')}</p>
+          <h2 className="font-heading text-xl font-semibold">{t('checkout.receipt.billNo', { id: sale.id.slice(0, 8) })}</h2>
+          <p className="text-sm text-muted-foreground">{t('checkout.receipt.recorded', { amount: formatMoney(Number(sale.totalAmount)) })}</p>
         </div>
-        <span className="rounded-full bg-[#E8F7F0] px-3 py-1 text-sm font-semibold text-[#047857]">Completed</span>
+        <span className="rounded-full bg-[#E8F7F0] px-3 py-1 text-sm font-semibold text-[#047857]">{t('checkout.receipt.completed')}</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex min-h-11 overflow-hidden rounded-md border" aria-label="Bill paper width" style={{ borderColor: '#CBD5E1' }}>
+        <div className="inline-flex min-h-11 overflow-hidden rounded-md border" aria-label={t('checkout.receipt.paperWidth')} style={{ borderColor: '#CBD5E1' }}>
           {(['58', '80'] as const).map((width) => (
             <button
               key={width}
@@ -128,19 +133,19 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           ))}
         </div>
         <Button type="button" onClick={() => printFn()} style={{ minHeight: 44 }}>
-          Print / Save PDF
+          {t('checkout.receipt.print')}
         </Button>
         <a
           href={appPath(`/app/documents?saleId=${encodeURIComponent(sale.id)}`)}
           className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm font-medium"
           style={{ borderColor: '#CBD5E1', color: '#0F766E' }}
         >
-          Open Tax Invoice
+          {t('checkout.receipt.openInvoice')}
         </a>
         <Input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter customer email"
+          placeholder={t('checkout.receipt.emailPlaceholder')}
           style={{ minHeight: 44, maxWidth: 240 }}
         />
         <Button
@@ -150,7 +155,7 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
           disabled={isSending}
           style={{ minHeight: 44 }}
         >
-          Email bill
+          {t('checkout.receipt.emailBill')}
         </Button>
       </div>
       {emailStatus && (
@@ -159,23 +164,23 @@ export function Receipt({ sale, businessName }: { sale: ReceiptSale; businessNam
         </p>
       )}
       <div className="mt-4 border-t pt-3 text-sm" style={{ borderColor: '#E2E8F0' }}>
-        <p className="font-semibold text-slate-700">Payment recorded</p>
+        <p className="font-semibold text-slate-700">{t('checkout.receipt.paymentRecorded')}</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {payments.map((payment, index) => (
             <span key={`${payment.method}-${index}`} className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
-              {PAYMENT_LABELS[payment.method]} {formatMoney(Number(payment.amount))}
+              {enumLabel(t, 'method', payment.method)} {formatMoney(Number(payment.amount))}
               {payment.referenceCode ? ` · ${payment.referenceCode}` : ''}
             </span>
           ))}
         </div>
         {Number(sale.changeDue) > 0 ? (
           <div role="status" className="mt-3 rounded-lg bg-amber-50 p-3 text-lg font-semibold text-amber-900">
-            Return {money(sale.changeDue, formatMoney)} change
+            {t('checkout.receipt.returnChange', { amount: money(sale.changeDue, formatMoney) })}
           </div>
         ) : null}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        WhatsApp bill delivery is unavailable for this store. Print or email the confirmed bill instead.
+        {t('checkout.receipt.noWhatsapp')}
       </p>
 
       {/* Off-screen, natural-scale, selected-width print container: same sr-only

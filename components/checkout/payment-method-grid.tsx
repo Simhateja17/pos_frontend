@@ -3,6 +3,7 @@
 import { Banknote, CreditCard, HandCoins, QrCode } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useAppRegion } from '@/lib/app-region'
+import { enumLabel, useT } from '@/lib/i18n/i18n'
 
 export type TenderMethod = 'cash' | 'card' | 'upi' | 'credit'
 
@@ -11,13 +12,6 @@ export interface TenderRow {
   amount: string
   cashReceived?: string
   referenceCode?: string
-}
-
-const METHOD_LABELS: Record<TenderMethod, string> = {
-  cash: 'Cash',
-  card: 'Card',
-  upi: 'UPI',
-  credit: 'Credit',
 }
 
 const METHOD_ICONS: Record<TenderMethod, ReactNode> = {
@@ -57,6 +51,8 @@ export function PaymentMethodGrid({
   disabled?: boolean
 }) {
   const { money } = useAppRegion()
+  const t = useT()
+  const label = (method: TenderMethod) => enumLabel(t, 'method', method)
   const availableMethodsForNewRow = ALL_METHODS.filter((m) => !rows.some((r) => r.method === m))
 
   return (
@@ -70,7 +66,7 @@ export function PaymentMethodGrid({
           disabled={disabled}
           onChange={(e) => onToggleSplit(e.target.checked)}
         />
-        Split payment across multiple methods
+        {t('checkout.pay.split')}
       </label>
 
       <div className="pay-grid">
@@ -86,7 +82,7 @@ export function PaymentMethodGrid({
               className={`btn ${isSelected ? 'btn-pri' : ''}`}
             >
               {METHOD_ICONS[method]}
-              {METHOD_LABELS[method]}
+              {label(method)}
             </button>
           )
         })}
@@ -105,11 +101,11 @@ export function PaymentMethodGrid({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span className="t-strong" style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
                   {METHOD_ICONS[row.method]}
-                  {METHOD_LABELS[row.method]}
+                  {label(row.method)}
                 </span>
                 <button
                   type="button"
-                  aria-label={`Remove ${METHOD_LABELS[row.method]} payment row`}
+                  aria-label={t('checkout.pay.removeRow', { method: label(row.method) })}
                   onClick={() => onRemoveRow(index)}
                   disabled={disabled}
                   style={{ color: 'var(--muted-2)', background: 'none', border: 0, cursor: 'pointer', padding: 4, lineHeight: 1 }}
@@ -128,16 +124,16 @@ export function PaymentMethodGrid({
                 step={0.01}
                 value={row.amount}
                 disabled={disabled}
-                aria-label={`${METHOD_LABELS[row.method]} amount`}
+                aria-label={t('checkout.pay.amountFor', { method: label(row.method) })}
                 onChange={(e) => onRowChange(index, { ...row, amount: e.target.value })}
                 placeholder={money(0)}
               />
             ) : (
               <div
-                aria-label={`${METHOD_LABELS[row.method]} amount`}
+                aria-label={t('checkout.pay.amountFor', { method: label(row.method) })}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 38, padding: '0 10px', border: '1px solid var(--border-soft)', borderRadius: 8, background: 'var(--surface)' }}
               >
-                <span className="t-sub">Amount applied</span>
+                <span className="t-sub">{t('checkout.pay.amountApplied')}</span>
                 <strong className="num">{formatAmount(row.amount, money)}</strong>
               </div>
             )}
@@ -151,11 +147,11 @@ export function PaymentMethodGrid({
                   disabled={disabled}
                   style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}
                 >
-                  Enter cash received for change
+                  {t('checkout.pay.enterCash')}
                 </button>
               ) : (
                 <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
-                  <span>Cash received from customer <em style={{ fontStyle: 'normal', fontWeight: 500, color: 'var(--muted-2)' }}>(optional)</em></span>
+                  <span>{t('checkout.pay.cashReceived')} <em style={{ fontStyle: 'normal', fontWeight: 500, color: 'var(--muted-2)' }}>{t('checkout.pay.optional')}</em></span>
                   <input
                     value={row.cashReceived}
                     disabled={disabled}
@@ -169,12 +165,12 @@ export function PaymentMethodGrid({
 
             {(row.method === 'card' || row.method === 'upi') && (
               <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
-                <span>{row.method === 'upi' ? 'UPI transaction/reference code' : 'Approval code'}</span>
+                <span>{row.method === 'upi' ? t('checkout.pay.upiRef') : t('checkout.pay.approvalCode')}</span>
                 <input
                   value={row.referenceCode ?? ''}
                   disabled={disabled}
                   onChange={(e) => onRowChange(index, { ...row, referenceCode: e.target.value })}
-                  placeholder={row.method === 'upi' ? 'UPI reference from the customer app' : 'Code from the card terminal'}
+                  placeholder={row.method === 'upi' ? t('checkout.pay.upiPlaceholder') : t('checkout.pay.cardPlaceholder')}
                   required
                 />
               </label>
@@ -184,7 +180,7 @@ export function PaymentMethodGrid({
 
         {splitEnabled && availableMethodsForNewRow.length > 0 && (
           <button className="btn btn-sm" type="button" onClick={onAddRow} disabled={disabled} style={{ justifyContent: 'center' }}>
-            Add another payment method
+            {t('checkout.pay.addAnother')}
           </button>
         )}
       </div>

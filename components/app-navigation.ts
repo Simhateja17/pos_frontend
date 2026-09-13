@@ -33,9 +33,13 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { MarketingRegion } from '@/lib/marketing/region'
+import type { MessageKey, Translate } from '@/lib/i18n/i18n'
+import type { Locale } from '@/lib/i18n/locale'
 
 export type AppNavItem = {
   label: string
+  /** Dictionary key for the label; absent on US-only extras (English-only edition). */
+  labelKey?: MessageKey
   href: string
   icon: LucideIcon
   /**
@@ -58,77 +62,99 @@ export type AppNavItem = {
 
 export type AppNavGroup = {
   label: string
+  labelKey: MessageKey
   items: AppNavItem[]
 }
 
 export const APP_NAVIGATION: AppNavGroup[] = [
   {
     label: 'Overview',
-    items: [{ label: 'Feature Map', href: '/app/feature-map', icon: Grid2X2 }],
+    labelKey: 'nav.groups.overview',
+    items: [{ label: 'Feature Map', labelKey: 'nav.items.featureMap', href: '/app/feature-map', icon: Grid2X2 }],
   },
   {
     label: 'Sales',
+    labelKey: 'nav.groups.sales',
     items: [
-      { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
-      { label: 'Billing', href: '/app/billing', icon: ShoppingBag, cashierAccessible: true },
-      { label: 'Sales / Bills', href: '/app/orders', icon: ClipboardList, cashierAccessible: true },
-      { label: 'Register', href: '/app/shifts', icon: WalletCards, cashierAccessible: true },
-      { label: 'Returns & Exchange', href: '/app/returns', icon: RotateCcw, cashierAccessible: true },
-      { label: 'Sales Channels', href: '/app/sales-channels', icon: Radio },
-      { label: 'Delivery Challan', href: '/app/delivery-challan', icon: Truck },
+      { label: 'Dashboard', labelKey: 'nav.items.dashboard', href: '/app/dashboard', icon: LayoutDashboard },
+      { label: 'Billing', labelKey: 'nav.items.billing', href: '/app/billing', icon: ShoppingBag, cashierAccessible: true },
+      { label: 'Sales / Bills', labelKey: 'nav.items.orders', href: '/app/orders', icon: ClipboardList, cashierAccessible: true },
+      { label: 'Register', labelKey: 'nav.items.shifts', href: '/app/shifts', icon: WalletCards, cashierAccessible: true },
+      { label: 'Returns & Exchange', labelKey: 'nav.items.returns', href: '/app/returns', icon: RotateCcw, cashierAccessible: true },
+      { label: 'Sales Channels', labelKey: 'nav.items.salesChannels', href: '/app/sales-channels', icon: Radio },
+      { label: 'Delivery Challan', labelKey: 'nav.items.deliveryChallan', href: '/app/delivery-challan', icon: Truck },
     ],
   },
   {
     label: 'Stock & Catalog',
+    labelKey: 'nav.groups.stock',
     items: [
-      { label: 'Inventory', href: '/app/inventory', icon: Boxes },
-      { label: 'Categories', href: '/app/inventory/categories', icon: FolderTree },
-      { label: 'Purchases', href: '/app/purchases', icon: Warehouse },
-      { label: 'Suppliers', href: '/app/suppliers', icon: Truck },
-      { label: 'Stores', href: '/app/stores', icon: Store, ownerOnly: true },
-      { label: 'Transfers', href: '/app/transfers', icon: RefreshCw },
+      { label: 'Inventory', labelKey: 'nav.items.inventory', href: '/app/inventory', icon: Boxes },
+      { label: 'Categories', labelKey: 'nav.items.categories', href: '/app/inventory/categories', icon: FolderTree },
+      { label: 'Purchases', labelKey: 'nav.items.purchases', href: '/app/purchases', icon: Warehouse },
+      { label: 'Suppliers', labelKey: 'nav.items.suppliers', href: '/app/suppliers', icon: Truck },
+      { label: 'Stores', labelKey: 'nav.items.stores', href: '/app/stores', icon: Store, ownerOnly: true },
+      { label: 'Transfers', labelKey: 'nav.items.transfers', href: '/app/transfers', icon: RefreshCw },
     ],
   },
   {
     label: 'Customers & Team',
+    labelKey: 'nav.groups.customersTeam',
     items: [
-      { label: 'Customers', href: '/app/customers', icon: Users, cashierAccessible: true },
-      { label: 'WhatsApp Connect', href: '/app/whatsapp-connect', icon: MessageCircle },
-      { label: 'Staff', href: '/app/settings/members', icon: UserCog },
+      { label: 'Customers', labelKey: 'nav.items.customers', href: '/app/customers', icon: Users, cashierAccessible: true },
+      { label: 'WhatsApp Connect', labelKey: 'nav.items.whatsapp', href: '/app/whatsapp-connect', icon: MessageCircle },
+      { label: 'Staff', labelKey: 'nav.items.staff', href: '/app/settings/members', icon: UserCog },
     ],
   },
   {
     label: 'Money',
+    labelKey: 'nav.groups.money',
     items: [
-      { label: 'Payments', href: '/app/payments', icon: BadgeIndianRupee },
-      { label: 'Expenses', href: '/app/expenses', icon: Wallet },
-      { label: 'Receivables', href: '/app/receivables', icon: ReceiptText, cashierAccessible: true },
-      { label: 'GST Documents', href: '/app/documents', icon: ReceiptText, cashierAccessible: true },
+      { label: 'Payments', labelKey: 'nav.items.payments', href: '/app/payments', icon: BadgeIndianRupee },
+      { label: 'Expenses', labelKey: 'nav.items.expenses', href: '/app/expenses', icon: Wallet },
+      { label: 'Receivables', labelKey: 'nav.items.receivables', href: '/app/receivables', icon: ReceiptText, cashierAccessible: true },
+      { label: 'GST Documents', labelKey: 'nav.items.documents', href: '/app/documents', icon: ReceiptText, cashierAccessible: true },
     ],
   },
   {
     label: 'Insights',
+    labelKey: 'nav.groups.insights',
     items: [
-      { label: 'Reports', href: '/app/reports', icon: ClipboardList },
-      { label: 'Demand Planning', href: '/app/demand-planning', icon: BarChart3 },
-      { label: 'AI Copilot', href: '/app/copilot', icon: Sparkles },
+      { label: 'Reports', labelKey: 'nav.items.reports', href: '/app/reports', icon: ClipboardList },
+      { label: 'Demand Planning', labelKey: 'nav.items.demandPlanning', href: '/app/demand-planning', icon: BarChart3 },
+      { label: 'AI Copilot', labelKey: 'nav.items.copilot', href: '/app/copilot', icon: Sparkles },
     ],
   },
   {
     label: 'System',
+    labelKey: 'nav.groups.system',
     items: [
-      { label: 'Guided Setup', href: '/app/setup', icon: Rocket },
-      { label: 'Import Data', href: '/app/import', icon: Upload, ownerOnly: true },
-      { label: 'Offline & Sync', href: '/app/offline-sync', icon: RefreshCw },
-      { label: 'Hardware & Devices', href: '/app/hardware', icon: Usb },
-      { label: 'Customer Display', href: '/app/customer-display', icon: Monitor },
-      { label: 'Email', href: '/app/email', icon: Mail },
-      { label: 'Notifications', href: '/app/notifications', icon: Bell },
-      { label: 'Plan & subscription', href: '/app/subscription', icon: CreditCard, ownerOnly: true },
-      { label: 'Settings', href: '/app/settings', icon: Settings },
+      { label: 'Guided Setup', labelKey: 'nav.items.setup', href: '/app/setup', icon: Rocket },
+      { label: 'Import Data', labelKey: 'nav.items.import', href: '/app/import', icon: Upload, ownerOnly: true },
+      { label: 'Offline & Sync', labelKey: 'nav.items.offlineSync', href: '/app/offline-sync', icon: RefreshCw },
+      { label: 'Hardware & Devices', labelKey: 'nav.items.hardware', href: '/app/hardware', icon: Usb },
+      { label: 'Customer Display', labelKey: 'nav.items.customerDisplay', href: '/app/customer-display', icon: Monitor },
+      { label: 'Email', labelKey: 'nav.items.email', href: '/app/email', icon: Mail },
+      { label: 'Notifications', labelKey: 'nav.items.notifications', href: '/app/notifications', icon: Bell },
+      { label: 'Plan & subscription', labelKey: 'nav.items.subscription', href: '/app/subscription', icon: CreditCard, ownerOnly: true },
+      { label: 'Settings', labelKey: 'nav.items.settings', href: '/app/settings', icon: Settings },
     ],
   },
 ]
+
+/**
+ * Nav labels in the active language. English keeps `label`, which also
+ * carries the US edition's overrides ("Tax Documents"); other languages exist
+ * only for the India edition and read the dictionary.
+ */
+export function localizeNavigation(groups: AppNavGroup[], locale: Locale, t: Translate): AppNavGroup[] {
+  if (locale === 'en') return groups
+  return groups.map((group) => ({
+    ...group,
+    label: t(group.labelKey),
+    items: group.items.map((item) => (item.labelKey ? { ...item, label: t(item.labelKey) } : item)),
+  }))
+}
 
 /**
  * How the US edition differs from the India tree above.

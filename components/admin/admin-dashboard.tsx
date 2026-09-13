@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './admin.module.css'
 import { AdminBlogView } from './admin-blog-view'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import {
   AdminApiError,
   activateAdmin,
@@ -147,7 +148,7 @@ export function AdminDashboard() {
   }
 
   if (loading || !context || !overview) {
-    return <main className={styles.loginShell}><section className={styles.loginCard}><div className={styles.loginBrand}><div className={styles.mark}>A</div><div><div className={styles.brandName}>Ambel Admin</div><div className={styles.brandMeta}>Regional control plane</div></div></div>{error ? <div className={styles.error}>{error}</div> : <div className={styles.notice}>Loading regional control-plane data…</div>}</section></main>
+    return <main className={styles.loginShell}><section className={styles.loginCard}><div className={styles.loginBrand}><AmbelMark size={34} /><div><div className={styles.brandName}>Ambel Admin</div><div className={styles.brandMeta}>Regional control plane</div></div></div>{error ? <div className={styles.error}>{error}</div> : <div className={styles.notice}>Loading regional control-plane data…</div>}</section></main>
   }
 
   const allowed = (id: View) => id !== 'settings' || Boolean(context)
@@ -155,7 +156,7 @@ export function AdminDashboard() {
   return (
     <div className={styles.shell}>
       <aside className={styles.rail}>
-        <div className={styles.brand}><div className={styles.mark}>A</div><div><div className={styles.brandName}>Ambel Admin</div><div className={styles.brandMeta}>{context.admin.region === 'IN' ? 'India' : 'International'} control plane</div></div></div>
+        <div className={styles.brand}><AmbelMark size={34} tone="inverse" /><div><div className={styles.brandName}>Ambel Admin</div><div className={styles.brandMeta}>{context.admin.region === 'IN' ? 'India' : 'International'} control plane</div></div></div>
         <nav className={styles.nav} aria-label="Admin navigation">
           {NAV.map((item) => <div key={item.id}>
             {item.group && <div className={styles.navGroup}>{item.group}</div>}

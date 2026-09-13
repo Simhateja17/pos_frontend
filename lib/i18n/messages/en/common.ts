@@ -1,0 +1,15 @@
+export const common = {
+  retry: 'Retry',
+  cancel: 'Cancel',
+  close: 'Close',
+  save: 'Save',
+  saving: 'Saving…',
+  open: 'Open',
+  review: 'Review',
+  next: 'Next',
+  back: 'Back',
+  loading: 'Loading…',
+  language: 'Language',
+  english: 'English',
+  telugu: 'తెలుగు',
+}

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { apiClient } from '@/lib/api/client'
 import { Fld, Modal } from '@/components/couture/ui'
+import { useT } from '@/lib/i18n/i18n'
 
 type ManagerStaff = { id: string; name: string; role: 'owner' | 'manager' | 'cashier'; isActive: boolean }
 
@@ -21,6 +22,7 @@ export function ManagerApprovalModal({
   onApproved: (operatorToken: string) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [staff, setStaff] = useState<ManagerStaff[]>([])
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null)
   const [pin, setPin] = useState('')
@@ -52,7 +54,7 @@ export function ManagerApprovalModal({
     if (apiError || !data) {
       // Verbatim backend copy (same 01-06 strings the terminal PIN page reads):
       // "Incorrect PIN. Try again." / "Too many attempts. Ask a manager to unlock this terminal."
-      setError((apiError as { error?: string } | undefined)?.error ?? 'Incorrect PIN. Try again.')
+      setError((apiError as { error?: string } | undefined)?.error ?? t('checkout.approval.incorrectPin'))
       setPin('')
       return
     }
@@ -63,12 +65,12 @@ export function ManagerApprovalModal({
 
   return (
     <Modal
-      title="Manager approval required"
+      title={t('checkout.approval.title')}
       onClose={onCancel}
       footer={
         <>
           <button className="btn" type="button" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             className="btn btn-pri"
@@ -76,23 +78,23 @@ export function ManagerApprovalModal({
             onClick={() => void submit()}
             disabled={!selectedStaffId || pin.length !== 4 || isSubmitting}
           >
-            {isSubmitting ? 'Approving…' : 'Approve'}
+            {isSubmitting ? t('checkout.approval.approving') : t('checkout.approval.approve')}
           </button>
         </>
       }
     >
       <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 14 }}>
-        This discount needs manager approval. Ask a manager or owner to enter their PIN to continue.
+        {t('checkout.approval.body')}
       </p>
-      <Fld id="approval-staff" label="Manager or owner">
+      <Fld id="approval-staff" label={t('checkout.approval.staff')}>
         <select id="approval-staff" value={selectedStaffId ?? ''} onChange={(e) => setSelectedStaffId(e.target.value || null)}>
-          <option value="">Select manager or owner…</option>
+          <option value="">{t('checkout.approval.selectStaff')}</option>
           {staff.map((m) => (
             <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </select>
       </Fld>
-      <Fld id="approval-pin" label="4-digit PIN">
+      <Fld id="approval-pin" label={t('checkout.approval.pin')}>
         <input
           id="approval-pin"
           type="password"
@@ -100,7 +102,7 @@ export function ManagerApprovalModal({
           maxLength={4}
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-          placeholder="4-digit PIN"
+          placeholder={t('checkout.approval.pin')}
         />
       </Fld>
       {error && (

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { AmbelMark } from '@/components/brand/ambel-mark'
 import styles from '@/components/india-migration.module.css'
 
 /**
@@ -59,7 +60,7 @@ export default function StoreTypePage() {
     <main className={styles.selectionPage}>
       <div className={styles.selectionCanvas}>
         <div className={styles.selectionBrand}>
-          <span className={styles.selectionLogo}>C</span>
+          <AmbelMark size={38} />
           <strong>Ambel POS</strong>
         </div>
         <header className={styles.selectionHeader}>

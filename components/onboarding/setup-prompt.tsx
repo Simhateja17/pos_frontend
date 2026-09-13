@@ -8,6 +8,7 @@ import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 
 type SetupState = components['schemas']['SetupState']
 
@@ -21,6 +22,7 @@ export function SetupPrompt() {
   // is the path vocabulary the backend was written against. Rebase them so a US
   // tenant's "Set up" buttons stay inside `/us/dashboard/*`.
   const { appPath } = useAppRegion()
+  const t = useT()
   const [state, setState] = useState<SetupState | null>(null)
 
   useEffect(() => {
@@ -40,9 +42,9 @@ export function SetupPrompt() {
   return (
     <Card>
       <CardHead
-        title="Finish setting up"
-        sub={`${state.completionPercentage}% complete · ${state.store.name}`}
-        right={<Link className="btn btn-sm btn-ghost" href={appPath('/app/setup')}>Open guided setup <ArrowRight size={14} /></Link>}
+        title={t('shell.setupPrompt.title')}
+        sub={t('shell.setupPrompt.progress', { percent: state.completionPercentage, store: state.store.name })}
+        right={<Link className="btn btn-sm btn-ghost" href={appPath('/app/setup')}>{t('shell.setupPrompt.openSetup')} <ArrowRight size={14} /></Link>}
       />
       <CardPad style={{ paddingTop: 4 }}>
         {pending.map((step) => (
@@ -51,10 +53,10 @@ export function SetupPrompt() {
             icon={<ListChecks size={17} strokeWidth={1.85} />}
             title={step.title}
             sub={step.reason ?? step.description}
-            action={step.actionHref ? <Link className="btn btn-sm btn-ghost" href={appPath(step.actionHref)}>Set up</Link> : undefined}
+            action={step.actionHref ? <Link className="btn btn-sm btn-ghost" href={appPath(step.actionHref)}>{t('shell.setupPrompt.setUp')}</Link> : undefined}
           />
         ))}
-        {state.steps.length > pending.length ? <p className="t-sub" style={{ margin: '8px 0 0' }}>Open guided setup to see every step and its dependencies.</p> : null}
+        {state.steps.length > pending.length ? <p className="t-sub" style={{ margin: '8px 0 0' }}>{t('shell.setupPrompt.seeAll')}</p> : null}
       </CardPad>
     </Card>
   )
