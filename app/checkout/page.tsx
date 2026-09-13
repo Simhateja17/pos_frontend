@@ -17,6 +17,7 @@ import {
 } from '@/components/checkout/payment-method-grid'
 import {
   checkoutDiscountState,
+  roundMoney,
   saleContentSignature,
   serializeMoneyIfPresent,
   serializeOptionalMoney,
@@ -325,7 +326,10 @@ function CheckoutPageInner() {
   const estimatedCgst = estimatedSplit.cgst
   const estimatedSgst = estimatedSplit.sgst
   const estimatedTaxRounding = estimatedSplit.roundingAdjustment
-  const preChargeEstimate = discountedSubtotal + taxEstimate
+  // Percentage discounts can produce fractional paise (for example,
+  // ₹204.99 less 10% = ₹184.491). Payments and the API carry two decimals,
+  // so use the same currency precision as the server-authoritative total.
+  const preChargeEstimate = roundMoney(discountedSubtotal + taxEstimate)
 
   const paymentSum = tenderRows.reduce((sum, r) => sum + Number(r.amount || '0'), 0)
 
@@ -658,8 +662,9 @@ function CheckoutPageInner() {
 
     // Step 7: client-side payment-sum pre-check, defense-in-depth mirror of PAY-02.
     const total = preChargeEstimate
-    const diff = paymentSum - total
-    if (Math.abs(diff) > 0.001) {
+    const diffInPaise = Math.round(paymentSum * 100) - Math.round(total * 100)
+    if (diffInPaise !== 0) {
+      const diff = diffInPaise / 100
       setChargeError(
         t('checkout.tenderMismatch', {
           total: formatMoney(total),

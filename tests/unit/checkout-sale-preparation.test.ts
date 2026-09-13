@@ -6,11 +6,24 @@ import * as salePreparation from '../../lib/checkout/sale-preparation.ts'
 
 const {
   checkoutDiscountState,
+  roundMoney,
   saleContentSignature,
   serializeMoneyIfPresent,
   serializeOptionalMoney,
   serializeOptionalPercent,
 } = salePreparation
+
+test('fractional-paise percentage discounts round to currency precision', () => {
+  const state = checkoutDiscountState(
+    [{ unitPrice: '204.99', quantity: 1, discountAmount: '' }],
+    'percent',
+    '10',
+  )
+
+  assert.equal(state.cartDiscount, 20.5)
+  assert.equal(state.discountedSubtotal, 184.49)
+  assert.equal(roundMoney(state.discountedSubtotal), 184.49)
+})
 
 test('sale payload money uses the API two-decimal contract', () => {
   assert.equal(serializeOptionalMoney('100'), '100.00')

@@ -6,6 +6,11 @@ type DiscountLine = {
 
 export type DiscountMode = 'none' | 'percent' | 'amount'
 
+/** Round a computed amount to the API's two-decimal currency precision. */
+export function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100
+}
+
 function finiteNumber(value: string | undefined): number | null {
   if (value === undefined || value.trim() === '') return null
   const parsed = Number(value)
@@ -60,7 +65,7 @@ export function checkoutDiscountState(lines: DiscountLine[], mode: DiscountMode,
       error ??= 'The whole-bill discount cannot exceed 100%.'
     } else {
       cartDiscount = mode === 'percent'
-        ? subtotalAfterLineDiscount * cartValue / 100
+        ? roundMoney(subtotalAfterLineDiscount * cartValue / 100)
         : cartValue
       if (cartDiscount > subtotalAfterLineDiscount) {
         error ??= 'The whole-bill discount cannot exceed the cart subtotal.'
