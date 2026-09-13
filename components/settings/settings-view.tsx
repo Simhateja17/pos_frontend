@@ -11,6 +11,8 @@ import type { BarcodeLabelFormat } from '@/components/barcode-label'
 import { ErrorState, LoadingState } from '@/components/couture/states'
 import { getActiveStoreId, setActiveStoreId } from '@/lib/store-context'
 import { getAuthenticatedStores, type Store } from '@/lib/api/authenticated-client'
+import { useT, type MessageKey } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 type Settings = {
   businessName: string
@@ -35,25 +37,12 @@ type Settings = {
  * Ordered for the picker: the two that work for every variant first, then the
  * two that need a manufacturer barcode.
  */
-const BARCODE_FORMAT_OPTIONS: { value: BarcodeLabelFormat; label: string; hint: string }[] = [
-  { value: 'code128', label: 'Code 128', hint: 'Encodes your own SKU. Works for every product.' },
-  { value: 'qr', label: 'QR', hint: 'Encodes your own SKU as a 2D code, for phone cameras.' },
-  { value: 'ean13', label: 'EAN-13', hint: 'Needs a 13-digit manufacturer barcode on the variant.' },
-  { value: 'upca', label: 'UPC-A', hint: 'Needs a 12-digit manufacturer barcode on the variant.' },
-]
-
-const BUSINESS_TYPE_LABELS: Record<NonNullable<Settings['businessType']>, string> = {
-  supermarket: 'Supermarket',
-  grocery: 'Grocery / Kirana',
-  bakery: 'Bakery',
-  general: 'General store',
-  apparel: 'Clothing & footwear',
-  electronics: 'Electronics',
-  other: 'Something else',
-}
+const BARCODE_FORMAT_OPTIONS: readonly BarcodeLabelFormat[] = ['code128', 'qr', 'ean13', 'upca']
 
 export function SettingsView() {
   const router = useRouter()
+  const t = useT()
+  const { appPath } = useAppRegion()
   const [settings, setSettings] = useState<Settings | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -90,7 +79,7 @@ export function SettingsView() {
         setStores(payload.stores.filter((store) => store.isActive))
         setStorePickerError(null)
       } catch (cause) {
-        setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+        setStorePickerError(cause instanceof Error ? cause.message : t('settings.errors.storesLoad'))
       }
       setLoading(false)
       setLoadError('choose_store')
@@ -102,7 +91,7 @@ export function SettingsView() {
     if (error || !data) {
       const serverError = error as { error?: unknown } | undefined
       const serverMessage = typeof serverError?.error === 'string' ? serverError.error : null
-      setLoadError(serverMessage ?? 'We couldn’t load your store settings. Check your connection and try again.')
+      setLoadError(serverMessage ?? t('settings.errors.settingsLoad'))
       return
     }
     const typed = data as Settings
@@ -111,6 +100,8 @@ export function SettingsView() {
     setTaxRate(typed.combinedTaxRatePercent)
     setDiscountThreshold(typed.discountThresholdPercent)
     setLabelFormat(typed.barcodeLabelFormat)
+    // t is intentionally omitted: changing locale must not refetch settings.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function canEdit(field: string): boolean {
@@ -161,8 +152,8 @@ export function SettingsView() {
     if (error) {
       setProfileError(
         (error as { error?: string }).error === 'Only the owner can change these settings'
-          ? 'Only the store owner can change these details.'
-          : 'That could not be saved. Try again.',
+          ? t('settings.errors.ownerOnly')
+          : t('settings.errors.save'),
       )
       return
     }
@@ -190,8 +181,8 @@ export function SettingsView() {
     if (error) {
       setTaxError(
         (error as { error?: string }).error === 'Only the owner can change these settings'
-          ? 'Only the store owner can change these details.'
-          : 'That could not be saved. Try again.',
+          ? t('settings.errors.ownerOnly')
+          : t('settings.errors.save'),
       )
       return
     }
@@ -220,8 +211,8 @@ export function SettingsView() {
     if (error) {
       setLabelError(
         (error as { error?: string }).error === 'Only the owner can change these settings'
-          ? 'Only the store owner can change these details.'
-          : 'That could not be saved. Try again.',
+          ? t('settings.errors.ownerOnly')
+          : t('settings.errors.save'),
       )
       return
     }
@@ -236,9 +227,9 @@ export function SettingsView() {
   if (loading) {
     return (
       <>
-        <PageHead title="Settings" sub="Store configuration" />
+        <PageHead title={t('settings.title')} sub={t('settings.subtitle')} />
         <Card>
-          <LoadingState label="Loading settings" />
+          <LoadingState label={t('settings.loading')} />
         </Card>
       </>
     )
@@ -247,19 +238,19 @@ export function SettingsView() {
   if (loadError === 'choose_store') {
     return (
       <>
-        <PageHead title="Settings" sub="Choose a store" />
+        <PageHead title={t('settings.title')} sub={t('settings.chooseStore')} />
         <Card>
-          <CardHead title="Which store do you want to configure?" sub="Address, tax and place-of-supply settings belong to one store." />
+          <CardHead title={t('settings.chooseStoreTitle')} sub={t('settings.chooseStoreSub')} />
           <CardPad>
             {storePickerError ? <ErrorState message={storePickerError} onRetry={() => void load()} /> : null}
-            {!storePickerError && stores.length === 0 ? <LoadingState label="Loading stores" /> : null}
+            {!storePickerError && stores.length === 0 ? <LoadingState label={t('settings.loadingStores')} /> : null}
             {stores.map((store) => (
               <ListRow
                 key={store.id}
                 icon={<StoreIcon size={17} strokeWidth={1.85} />}
                 title={store.name}
-                sub={[store.city, store.state].filter(Boolean).join(' · ') || 'Address not set'}
-                action={<button className="btn btn-sm btn-pri" onClick={() => chooseStore(store.id)}>Open settings</button>}
+                sub={[store.city, store.state].filter(Boolean).join(' · ') || t('settings.addressNotSet')}
+                action={<button className="btn btn-sm btn-pri" onClick={() => chooseStore(store.id)}>{t('settings.openSettings')}</button>}
               />
             ))}
           </CardPad>
@@ -271,10 +262,10 @@ export function SettingsView() {
   if (loadError || !settings || !form) {
     return (
       <>
-        <PageHead title="Settings" sub="Store configuration" />
+        <PageHead title={t('settings.title')} sub={t('settings.subtitle')} />
         <Card>
-          <ErrorState message={loadError ?? 'Settings are unavailable.'} onRetry={() => void load()} />
-          {getActiveStoreId() === 'all' ? <div style={{ padding: '0 24px 24px', textAlign: 'center' }}><Link className="btn btn-sm btn-pri" href="/app/stores">Open Stores</Link></div> : null}
+          <ErrorState message={loadError ?? t('settings.unavailable')} onRetry={() => void load()} />
+          {getActiveStoreId() === 'all' ? <div style={{ padding: '0 24px 24px', textAlign: 'center' }}><Link className="btn btn-sm btn-pri" href={appPath('/app/stores')}>{t('settings.openStores')}</Link></div> : null}
         </Card>
       </>
     )
@@ -282,42 +273,42 @@ export function SettingsView() {
 
   return (
     <>
-      <PageHead title="Settings" sub="Store configuration" />
+      <PageHead title={t('settings.title')} sub={t('settings.subtitle')} />
 
       <Card>
-        <CardHead title="Guided tour" sub="Replay the back-office tour for this staff member and store." right={<button className="btn btn-sm" onClick={() => void replayTour()} disabled={replayingTour}>{replayingTour ? 'Starting…' : 'Replay guided tour'}</button>} />
+        <CardHead title={t('settings.tour')} sub={t('settings.tourSub')} right={<button className="btn btn-sm" onClick={() => void replayTour()} disabled={replayingTour}>{replayingTour ? t('settings.starting') : t('settings.replayTour')}</button>} />
       </Card>
 
       <Card>
-        <CardHead title="Staff, Counters & Categories" sub="Managed on their own screens" />
+        <CardHead title={t('settings.manageTitle')} sub={t('settings.manageSub')} />
         <CardPad style={{ paddingTop: 4 }}>
           <ListRow
             icon={<UserCog size={17} strokeWidth={1.85} />}
-            title="Staff"
-            sub="Who has access, and what they can approve"
+            title={t('settings.staff')}
+            sub={t('settings.staffSub')}
             action={
-              <Link className="btn btn-sm btn-ghost" href="/app/settings/members">
-                Open
+              <Link className="btn btn-sm btn-ghost" href={appPath('/app/settings/members')}>
+                {t('settings.open')}
               </Link>
             }
           />
           <ListRow
             icon={<Monitor size={17} strokeWidth={1.85} />}
-            title="Counters"
-            sub="The tills cashiers open a shift against"
+            title={t('settings.counters')}
+            sub={t('settings.countersSub')}
             action={
-              <Link className="btn btn-sm btn-ghost" href="/app/settings/terminals">
-                Open
+              <Link className="btn btn-sm btn-ghost" href={appPath('/app/settings/terminals')}>
+                {t('settings.open')}
               </Link>
             }
           />
           <ListRow
             icon={<FolderTree size={17} strokeWidth={1.85} />}
-            title="Categories"
-            sub="How your products are grouped"
+            title={t('settings.categories')}
+            sub={t('settings.categoriesSub')}
             action={
-              <Link className="btn btn-sm btn-ghost" href="/app/inventory/categories">
-                Open
+              <Link className="btn btn-sm btn-ghost" href={appPath('/app/inventory/categories')}>
+                {t('settings.open')}
               </Link>
             }
           />
@@ -326,18 +317,18 @@ export function SettingsView() {
 
       <Card>
         <CardHead
-          title="Business profile"
+          title={t('settings.businessProfile')}
           sub={
             settings.businessType
-              ? `${BUSINESS_TYPE_LABELS[settings.businessType]} · used to suggest categories`
-              : 'Business type not set'
+              ? t('settings.businessTypeSuggestion', { type: t(`settings.businessTypes.${settings.businessType}` as MessageKey) })
+              : t('settings.businessTypeNotSet')
           }
           right={
             canEdit('businessType') ? (
               <Link className="btn btn-sm" href="/store-type">
-                {settings.businessType ? 'Change & add categories' : 'Set business type'}
+                {settings.businessType ? t('settings.changeCategories') : t('settings.setBusinessType')}
               </Link>
-            ) : <span className="t-sub" style={{ fontSize: 12 }}>Owner only</span>
+            ) : <span className="t-sub" style={{ fontSize: 12 }}>{t('settings.ownerOnly')}</span>
           }
         />
         <CardPad>
@@ -352,7 +343,7 @@ export function SettingsView() {
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              <Fld id="settings-business-name" label="Legal business name">
+              <Fld id="settings-business-name" label={t('settings.fields.legalName')}>
                 <input
                   id="settings-business-name"
                   required
@@ -361,7 +352,7 @@ export function SettingsView() {
                   onChange={(e) => setForm({ ...form, businessName: e.target.value })}
                 />
               </Fld>
-              <Fld id="settings-trade-name" label="Trade / brand name">
+              <Fld id="settings-trade-name" label={t('settings.fields.tradeName')}>
                 <input
                   id="settings-trade-name"
                   disabled={!canEdit('tradeName')}
@@ -371,11 +362,10 @@ export function SettingsView() {
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Must match your GST registration. Changing it here does not amend your registration. File Form GST
-              REG-14 on the GST portal first, then update it here to match.
+              {t('settings.profile.identityHelp')}
             </p>
 
-            <Fld id="settings-address1" label="Address line 1">
+            <Fld id="settings-address1" label={t('settings.fields.addressLine1')}>
               <input
                 id="settings-address1"
                 required
@@ -384,7 +374,7 @@ export function SettingsView() {
                 onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
               />
             </Fld>
-            <Fld id="settings-address2" label="Address line 2">
+            <Fld id="settings-address2" label={t('settings.fields.addressLine2')}>
               <input
                 id="settings-address2"
                 disabled={!canEdit('addressLine2')}
@@ -393,7 +383,7 @@ export function SettingsView() {
               />
             </Fld>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              <Fld id="settings-city" label="City">
+              <Fld id="settings-city" label={t('settings.fields.city')}>
                 <input
                   id="settings-city"
                   required
@@ -402,7 +392,7 @@ export function SettingsView() {
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
                 />
               </Fld>
-              <Fld id="settings-state" label="State">
+              <Fld id="settings-state" label={t('settings.fields.state')}>
                 <input
                   id="settings-state"
                   required
@@ -411,7 +401,7 @@ export function SettingsView() {
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
                 />
               </Fld>
-              <Fld id="settings-postal-code" label="PIN code">
+              <Fld id="settings-postal-code" label={t('settings.fields.pincode')}>
                 <input
                   id="settings-postal-code"
                   required
@@ -423,7 +413,7 @@ export function SettingsView() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              <Fld id="settings-gst-status" label="GST registration">
+              <Fld id="settings-gst-status" label={t('settings.fields.gstRegistration')}>
                 <select
                   id="settings-gst-status"
                   disabled={!canEdit('gstStatus')}
@@ -432,29 +422,29 @@ export function SettingsView() {
                     setForm({ ...form, gstStatus: (e.target.value || null) as Settings['gstStatus'] })
                   }
                 >
-                  <option value="">Not registered / not set</option>
-                  <option value="regular">Regular</option>
-                  <option value="composition">Composition</option>
-                  <option value="unregistered">Unregistered</option>
+                  <option value="">{t('settings.profile.gstNotSet')}</option>
+                  <option value="regular">{t('settings.profile.regular')}</option>
+                  <option value="composition">{t('settings.profile.composition')}</option>
+                  <option value="unregistered">{t('settings.profile.unregistered')}</option>
                 </select>
               </Fld>
-              <Fld id="settings-gstin" label="GSTIN">
+              <Fld id="settings-gstin" label={t('settings.fields.gstin')}>
                 <input
                   id="settings-gstin"
                   maxLength={15}
                   disabled={!canEdit('gstin')}
                   value={form.gstin ?? ''}
                   onChange={(e) => setForm({ ...form, gstin: e.target.value || null })}
-                  placeholder="Leave blank if not registered"
+                  placeholder={t('settings.profile.gstinPlaceholder')}
                 />
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Same rule as the name above: this must match what is on file with the GST portal.
+              {t('settings.profile.gstHelp')}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              <Fld id="settings-pan" label="PAN">
+              <Fld id="settings-pan" label={t('settings.fields.pan')}>
                 <input
                   id="settings-pan"
                   maxLength={10}
@@ -463,7 +453,7 @@ export function SettingsView() {
                   onChange={(e) => setForm({ ...form, pan: e.target.value || null })}
                 />
               </Fld>
-              <Fld id="settings-place-of-supply" label="Place of supply">
+              <Fld id="settings-place-of-supply" label={t('settings.fields.placeOfSupply')}>
                 <input
                   id="settings-place-of-supply"
                   disabled={!canEdit('placeOfSupply')}
@@ -474,14 +464,14 @@ export function SettingsView() {
             </div>
 
             <button type="submit" className="btn btn-pri" disabled={savingProfile} style={{ marginTop: 6 }}>
-              {savingProfile ? 'Saving…' : canEdit('businessName') ? 'Save business profile' : 'Save store details'}
+              {savingProfile ? t('common.saving') : canEdit('businessName') ? t('settings.profile.saveBusiness') : t('settings.profile.saveStore')}
             </button>
           </form>
         </CardPad>
       </Card>
 
       <Card>
-        <CardHead title="Tax & discounts" sub="Item tax rates are used at checkout; this rate is only the legacy fallback" />
+        <CardHead title={t('settings.tax.title')} sub={t('settings.tax.sub')} />
         <CardPad>
           <form onSubmit={saveTax}>
             {taxError && (
@@ -490,11 +480,11 @@ export function SettingsView() {
               </div>
             )}
             {taxSaved && !taxError && (
-              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>Saved.</div>
+              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>{t('settings.profile.saved')}</div>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              <Fld id="settings-tax-rate" label="Legacy fallback tax rate (%)">
+              <Fld id="settings-tax-rate" label={t('settings.fields.legacyTax')}>
                 <input
                   id="settings-tax-rate"
                   type="number"
@@ -507,7 +497,7 @@ export function SettingsView() {
                   onChange={(e) => setTaxRate(e.target.value)}
                 />
               </Fld>
-              <Fld id="settings-discount-threshold" label="Discount approval threshold (%)">
+              <Fld id="settings-discount-threshold" label={t('settings.fields.discountThreshold')}>
                 <input
                   id="settings-discount-threshold"
                   type="number"
@@ -522,18 +512,18 @@ export function SettingsView() {
               </Fld>
             </div>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              Discounts above this percentage need manager or owner approval at checkout.
+              {t('settings.tax.discountHelp')}
             </p>
 
             <button type="submit" className="btn btn-pri" disabled={savingTax || !canEdit('combinedTaxRatePercent')}>
-              {savingTax ? 'Saving…' : 'Save tax & discounts'}
+              {savingTax ? t('common.saving') : t('settings.tax.save')}
             </button>
           </form>
         </CardPad>
       </Card>
 
       <Card>
-        <CardHead title="Barcode labels" sub="The symbology used when you print product labels" />
+        <CardHead title={t('settings.barcode.title')} sub={t('settings.barcode.sub')} />
         <CardPad>
           <form onSubmit={saveLabelFormat}>
             {labelError && (
@@ -542,31 +532,31 @@ export function SettingsView() {
               </div>
             )}
             {labelSaved && !labelError && (
-              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>Saved.</div>
+              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>{t('settings.profile.saved')}</div>
             )}
 
-            <Fld id="settings-barcode-format" label="Label format">
+            <Fld id="settings-barcode-format" label={t('settings.fields.labelFormat')}>
               <select
                 id="settings-barcode-format"
                 value={labelFormat}
                 disabled={!canEdit('barcodeLabelFormat')}
                 onChange={(e) => setLabelFormat(e.target.value as BarcodeLabelFormat)}
               >
-                {BARCODE_FORMAT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {BARCODE_FORMAT_OPTIONS.map((format) => (
+                  <option key={format} value={format}>
+                    {t(`settings.barcode.${format}` as MessageKey)}
                   </option>
                 ))}
               </select>
             </Fld>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
-              {BARCODE_FORMAT_OPTIONS.find((o) => o.value === labelFormat)?.hint}
+              {t(`settings.barcode.${labelFormat}Hint` as MessageKey)}
               {(labelFormat === 'ean13' || labelFormat === 'upca') &&
-                ' Variants without one still print as Code 128 of the SKU, and the label screen says which.'}
+                ` ${t('settings.barcode.fallbackHint')}`}
             </p>
 
             <button type="submit" className="btn btn-pri" disabled={savingLabel || !canEdit('barcodeLabelFormat')}>
-              {savingLabel ? 'Saving…' : 'Save label format'}
+              {savingLabel ? t('common.saving') : t('settings.barcode.save')}
             </button>
           </form>
         </CardPad>

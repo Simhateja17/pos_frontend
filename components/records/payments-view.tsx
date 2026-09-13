@@ -8,19 +8,14 @@ import { EmptyState, ErrorState, LoadingState, UnavailableValue } from '@/compon
 import { downloadCsv } from '@/lib/csv'
 import { Pagination } from './orders-view'
 import { useAppRegion } from '@/lib/app-region'
+import { enumLabel, useT } from '@/lib/i18n/i18n'
 
-const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
-
-const FILTERS = [
-  { label: 'All', value: 'all' },
-  { label: 'Collected', value: 'completed' },
-  { label: 'Refunded', value: 'refunded' },
-] as const
-
-type Filter = (typeof FILTERS)[number]['value']
+const FILTER_VALUES = ['all', 'completed', 'refunded'] as const
+type Filter = (typeof FILTER_VALUES)[number]
 
 export function PaymentsView() {
-  const { money } = useAppRegion()
+  const { money, dateLocale } = useAppRegion()
+  const t = useT()
   const [filter, setFilter] = useState<Filter>('all')
   const [data, setData] = useState<PaymentRead | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
@@ -41,12 +36,12 @@ export function PaymentsView() {
         )
         setCursor(nextCursor)
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Payment records are unavailable right now.')
+        setError(cause instanceof Error ? cause.message : t('records.errors.paymentsLoad'))
       } finally {
         setLoading(false)
       }
     },
-    [filter],
+    [filter], // eslint-disable-line react-hooks/exhaustive-deps -- locale changes must not refetch payments
   )
 
   useEffect(() => {
@@ -54,24 +49,29 @@ export function PaymentsView() {
   }, [load])
 
   const summary = data?.summary
+  const dateTime = new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
+  const filterItems = FILTER_VALUES.map((value) => ({
+    value,
+    label: value === 'all' ? t('records.payments.all') : value === 'completed' ? t('records.payments.collected') : t('records.payments.refunded'),
+  }))
   const metrics: KpiItem[] = [
-    { label: 'Collected', value: summary ? money(Number(summary.collectedAmount)) : '-', meta: 'Server-calculated' },
-    { label: 'Refunded', value: summary ? money(Number(summary.refundedAmount)) : '-', meta: 'Server-calculated' },
-    { label: 'Net Collected', value: summary ? money(Number(summary.netAmount)) : '-', meta: 'Server-calculated' },
-    { label: 'Settlement', value: <UnavailableValue />, meta: 'No settlement endpoint is available' },
+    { label: t('records.payments.collected'), value: summary ? money(Number(summary.collectedAmount)) : '-', meta: t('records.payments.serverCalculated') },
+    { label: t('records.payments.refunded'), value: summary ? money(Number(summary.refundedAmount)) : '-', meta: t('records.payments.serverCalculated') },
+    { label: t('records.payments.net'), value: summary ? money(Number(summary.netAmount)) : '-', meta: t('records.payments.serverCalculated') },
+    { label: t('records.payments.title'), value: <UnavailableValue />, meta: t('records.payments.noSettlementEndpoint') },
   ]
 
   return (
     <>
       <PageHead
-        title="Payments & Settlement"
-        sub="Tender mix, settlements and reconciliation"
+        title={t('records.payments.title')}
+        sub={t('records.payments.subtitle')}
         actions={
           <button
             className="btn"
             type="button"
             disabled={!data || data.items.length === 0}
-            title={data?.items.length ? 'Download the payments shown below' : 'There is nothing to export yet'}
+            title={data?.items.length ? t('records.payments.downloadTitle') : t('records.payments.nothingExport')}
             onClick={() =>
               data &&
               downloadCsv(
@@ -88,7 +88,7 @@ export function PaymentsView() {
               )
             }
           >
-            <Download size={15} /> Export
+            <Download size={15} /> {t('records.payments.export')}
           </button>
         }
       />
@@ -97,27 +97,27 @@ export function PaymentsView() {
 
       <Card>
         <CardHead
-          title={<Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Payment status filter" />}
-          right={<span className="t-sub">Settlement and provider detail are not available</span>}
+          title={<Tabs items={filterItems} active={filter} onSelect={setFilter} ariaLabel={t('records.payments.filterLabel')} />}
+          right={<span className="t-sub">{t('records.payments.settlementUnavailable')}</span>}
         />
 
-        {loading && <LoadingState label="Loading payments" />}
+        {loading && <LoadingState label={t('records.payments.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load(cursor)} />}
         {!loading && !error && data?.items.length === 0 && (
-          <EmptyState title="No payments recorded yet" body="Collected and refunded tender appears here once sales are completed." />
+          <EmptyState title={t('records.payments.emptyTitle')} body={t('records.payments.emptyBody')} />
         )}
 
         {!loading && !error && data && data.items.length > 0 && (
-          <DataTable cols={['Payment', 'Bill', 'Method', 'Time', 'Status', 'Amount']} minWidth={820}>
+          <DataTable cols={[t('records.payments.payment'), t('records.payments.cols.bill'), t('records.payments.cols.method'), t('records.payments.cols.date'), t('records.payments.cols.type'), t('records.payments.cols.amount')]} minWidth={820}>
             {data.items.map((payment) => (
               <tr key={payment.id}>
                 <td className="t-mono t-strong">{payment.id.slice(0, 8).toUpperCase()}</td>
                 <td className="t-mono t-sub">{payment.saleId.slice(0, 8).toUpperCase()}</td>
-                <td style={{ textTransform: 'capitalize' }}>{payment.method}</td>
+                <td style={{ textTransform: 'capitalize' }}>{enumLabel(t, 'method', payment.method)}</td>
                 <td className="t-mono t-sub">{dateTime.format(new Date(payment.createdAt))}</td>
                 <td>
                   <span className={`badge ${payment.direction === 'refund' ? 'b-blue' : 'b-green'}`}>
-                    {payment.direction === 'refund' ? 'Refunded' : 'Collected'}
+                    {payment.direction === 'refund' ? t('records.payments.refunded') : t('records.payments.collected')}
                   </span>
                 </td>
                 <td className="num t-strong">

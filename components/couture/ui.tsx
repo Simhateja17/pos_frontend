@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Ambel design-system primitives.
  *
@@ -12,6 +14,7 @@
  */
 import Link from 'next/link'
 import { type CSSProperties, type ReactNode } from 'react'
+import { useT } from '@/lib/i18n/i18n'
 
 /* ---------- page head ---------- */
 
@@ -339,6 +342,7 @@ export function Modal({
   children: ReactNode
   footer?: ReactNode
 }) {
+  const t = useT()
   return (
     <div
       className="modal-overlay"
@@ -349,7 +353,7 @@ export function Modal({
       <div className="modal">
         <div className="modal-h">
           <h3>{title}</h3>
-          <span className="modal-x" onClick={onClose} role="button" tabIndex={0} aria-label="Close">
+          <span className="modal-x" onClick={onClose} role="button" tabIndex={0} aria-label={t('common.close')}>
             ✕
           </span>
         </div>

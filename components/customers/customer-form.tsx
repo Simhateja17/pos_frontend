@@ -2,19 +2,14 @@
 
 import { useState, type FormEvent } from 'react'
 import { Fld } from '@/components/couture/ui'
+import { useT, type MessageKey } from '@/lib/i18n/i18n'
 import type { Customer, CustomerWrite } from './api'
 
 const STATE_CODES = [
-  ['01', 'Jammu and Kashmir'], ['02', 'Himachal Pradesh'], ['03', 'Punjab'], ['04', 'Chandigarh'],
-  ['05', 'Uttarakhand'], ['06', 'Haryana'], ['07', 'Delhi'], ['08', 'Rajasthan'],
-  ['09', 'Uttar Pradesh'], ['10', 'Bihar'], ['11', 'Sikkim'], ['12', 'Arunachal Pradesh'],
-  ['13', 'Nagaland'], ['14', 'Manipur'], ['15', 'Mizoram'], ['16', 'Tripura'],
-  ['17', 'Meghalaya'], ['18', 'Assam'], ['19', 'West Bengal'], ['20', 'Jharkhand'],
-  ['21', 'Odisha'], ['22', 'Chhattisgarh'], ['23', 'Madhya Pradesh'], ['24', 'Gujarat'],
-  ['25', 'Daman and Diu'], ['26', 'Dadra and Nagar Haveli'], ['27', 'Maharashtra'], ['28', 'Andhra Pradesh'],
-  ['29', 'Karnataka'], ['30', 'Goa'], ['31', 'Lakshadweep'], ['32', 'Kerala'],
-  ['33', 'Tamil Nadu'], ['34', 'Puducherry'], ['35', 'Andaman and Nicobar Islands'], ['36', 'Telangana'],
-  ['37', 'Andhra Pradesh'], ['38', 'Ladakh'], ['97', 'Other territory'],
+  '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
+  '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24',
+  '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36',
+  '37', '38', '97',
 ] as const
 
 type FormState = {
@@ -77,6 +72,7 @@ export function CustomerForm({
   serverError: string | null
   canEditCreditLimit?: boolean
 }) {
+  const t = useT()
   const [form, setForm] = useState<FormState>(() => formFromCustomer(customer))
   const [validationError, setValidationError] = useState<string | null>(null)
 
@@ -91,29 +87,29 @@ export function CustomerForm({
     const phone = form.phone.trim()
     const email = form.email.trim()
     if (!phone && !email) {
-      setValidationError('Add a phone number or email so this profile can be found safely later.')
+      setValidationError(t('customers.errors.phoneOrEmail'))
       return
     }
     if (email && !/^\S+@\S+\.\S+$/.test(email)) {
-      setValidationError('Enter a valid email address.')
+      setValidationError(t('customers.errors.email'))
       return
     }
     if (form.gstin.trim() && !/^\d{2}[A-Za-z]{5}\d{4}[A-Za-z][1-9A-Za-z]Z[A-Za-z0-9]$/.test(form.gstin.trim())) {
-      setValidationError('GSTIN must be 15 characters in the Indian GST format.')
+      setValidationError(t('customers.errors.gstin'))
       return
     }
     if (form.stateCode && !/^(0[1-9]|[12]\d|3[0-8]|97)$/.test(form.stateCode)) {
-      setValidationError('Choose a valid two-digit Indian state code.')
+      setValidationError(t('customers.errors.stateCode'))
       return
     }
     if (form.postalCode && !/^[1-9]\d{5}$/.test(form.postalCode)) {
-      setValidationError('PIN code must be six digits.')
+      setValidationError(t('customers.errors.pincode'))
       return
     }
     const rawCreditLimit = form.creditLimit.trim()
     if (canEditCreditLimit && rawCreditLimit) {
       if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(rawCreditLimit) || !Number.isFinite(Number(rawCreditLimit)) || Number(rawCreditLimit) < 0) {
-        setValidationError('Credit limit must be a non-negative amount.')
+        setValidationError(t('customers.errors.creditLimit'))
         return
       }
     }
@@ -142,25 +138,25 @@ export function CustomerForm({
         </div>
       )}
 
-      <Fld id="customer-billing-name" label="Billing name">
-        <input id="customer-billing-name" value={form.billingName} onChange={(event) => setField('billingName', event.target.value)} placeholder="e.g. Asha Rao" />
+      <Fld id="customer-billing-name" label={t('customers.form.billingName')}>
+        <input id="customer-billing-name" value={form.billingName} onChange={(event) => setField('billingName', event.target.value)} placeholder={t('customers.form.billingNamePlaceholder')} />
       </Fld>
 
       <div style={{ display: 'flex', gap: 10 }}>
-        <Fld id="customer-phone" label="Phone">
-          <input id="customer-phone" inputMode="tel" value={form.phone} onChange={(event) => setField('phone', event.target.value)} placeholder="+91 98765 43210" />
+        <Fld id="customer-phone" label={t('customers.form.phone')}>
+          <input id="customer-phone" inputMode="tel" value={form.phone} onChange={(event) => setField('phone', event.target.value)} placeholder={t('customers.form.phonePlaceholder')} />
         </Fld>
-        <Fld id="customer-email" label="Email">
-          <input id="customer-email" type="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder="name@example.com" />
+        <Fld id="customer-email" label={t('customers.form.email')}>
+          <input id="customer-email" type="email" value={form.email} onChange={(event) => setField('email', event.target.value)} placeholder={t('customers.form.emailPlaceholder')} />
         </Fld>
       </div>
       <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-        Phone or email is required. Values are normalized before duplicate checking.
+        {t('customers.form.phoneEmailHelp')}
       </div>
 
       {canEditCreditLimit && (
         <>
-          <Fld id="customer-credit-limit" label="Credit limit (optional)">
+          <Fld id="customer-credit-limit" label={t('customers.form.creditLimit')}>
             <input
               id="customer-credit-limit"
               type="number"
@@ -169,50 +165,50 @@ export function CustomerForm({
               inputMode="decimal"
               value={form.creditLimit}
               onChange={(event) => setField('creditLimit', event.target.value)}
-              placeholder="Leave blank for no limit"
+              placeholder={t('customers.form.creditLimitPlaceholder')}
             />
           </Fld>
           <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-            Managers and owners can set or clear this limit. A cashier can still use credit below the limit.
+            {t('customers.form.creditLimitHelp')}
           </div>
         </>
       )}
 
-      <Fld id="customer-gstin" label="GSTIN (optional)">
-        <input id="customer-gstin" value={form.gstin} onChange={(event) => setField('gstin', event.target.value.toUpperCase())} placeholder="27ABCDE1234F1Z5" maxLength={15} />
+      <Fld id="customer-gstin" label={t('customers.form.gstin')}>
+        <input id="customer-gstin" value={form.gstin} onChange={(event) => setField('gstin', event.target.value.toUpperCase())} placeholder={t('customers.form.gstinPlaceholder')} maxLength={15} />
       </Fld>
 
       <div style={{ display: 'flex', gap: 10 }}>
-        <Fld id="customer-address-line1" label="Address line 1">
-          <input id="customer-address-line1" value={form.addressLine1} onChange={(event) => setField('addressLine1', event.target.value)} placeholder="Street and building" />
+        <Fld id="customer-address-line1" label={t('customers.form.addressLine1')}>
+          <input id="customer-address-line1" value={form.addressLine1} onChange={(event) => setField('addressLine1', event.target.value)} placeholder={t('customers.form.addressLine1Placeholder')} />
         </Fld>
-        <Fld id="customer-address-line2" label="Address line 2">
-          <input id="customer-address-line2" value={form.addressLine2} onChange={(event) => setField('addressLine2', event.target.value)} placeholder="Area or landmark" />
+        <Fld id="customer-address-line2" label={t('customers.form.addressLine2')}>
+          <input id="customer-address-line2" value={form.addressLine2} onChange={(event) => setField('addressLine2', event.target.value)} placeholder={t('customers.form.addressLine2Placeholder')} />
         </Fld>
       </div>
 
       <div style={{ display: 'flex', gap: 10 }}>
-        <Fld id="customer-city" label="City">
-          <input id="customer-city" value={form.city} onChange={(event) => setField('city', event.target.value)} placeholder="Mumbai" />
+        <Fld id="customer-city" label={t('customers.form.city')}>
+          <input id="customer-city" value={form.city} onChange={(event) => setField('city', event.target.value)} placeholder={t('customers.form.cityPlaceholder')} />
         </Fld>
-        <Fld id="customer-state-code" label="State code">
+        <Fld id="customer-state-code" label={t('customers.form.stateCode')}>
           <select id="customer-state-code" value={form.stateCode} onChange={(event) => setField('stateCode', event.target.value)}>
-            <option value="">Not provided</option>
-            {STATE_CODES.map(([code, name]) => <option key={code} value={code}>{code}: {name}</option>)}
+            <option value="">{t('customers.form.stateNotProvided')}</option>
+            {STATE_CODES.map((code) => <option key={code} value={code}>{code}: {t(`customers.states.${code}` as MessageKey)}</option>)}
           </select>
         </Fld>
-        <Fld id="customer-postal-code" label="PIN code">
-          <input id="customer-postal-code" inputMode="numeric" maxLength={6} value={form.postalCode} onChange={(event) => setField('postalCode', event.target.value.replace(/\D/g, ''))} placeholder="400001" />
+        <Fld id="customer-postal-code" label={t('customers.form.pincode')}>
+          <input id="customer-postal-code" inputMode="numeric" maxLength={6} value={form.postalCode} onChange={(event) => setField('postalCode', event.target.value.replace(/\D/g, ''))} placeholder={t('customers.form.pincodePlaceholder')} />
         </Fld>
       </div>
 
-      <Fld id="customer-notes" label="Notes (optional)">
-        <textarea id="customer-notes" rows={3} value={form.notes} onChange={(event) => setField('notes', event.target.value)} placeholder="Useful billing context for the team" />
+      <Fld id="customer-notes" label={t('customers.form.notes')}>
+        <textarea id="customer-notes" rows={3} value={form.notes} onChange={(event) => setField('notes', event.target.value)} placeholder={t('customers.form.notesPlaceholder')} />
       </Fld>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <button className="btn" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
-        <button className="btn btn-pri" type="submit" disabled={saving}>{saving ? 'Saving…' : customer ? 'Save changes' : 'Create customer'}</button>
+        <button className="btn" type="button" onClick={onCancel} disabled={saving}>{t('customers.form.cancel')}</button>
+        <button className="btn btn-pri" type="submit" disabled={saving}>{saving ? t('customers.form.saving') : customer ? t('customers.form.save') : t('customers.form.create')}</button>
       </div>
     </form>
   )

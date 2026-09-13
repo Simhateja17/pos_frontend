@@ -13,6 +13,12 @@ import { states } from './states'
 import { dashboard } from './dashboard'
 import { orders } from './orders'
 import { shifts } from './shifts'
+import { inventory } from './inventory'
+import { records } from './records'
+import { customers } from './customers'
+import { members } from './members'
+import { settings } from './settings'
+import { reports } from './reports'
 import { checkout } from './checkout'
 
 export const en = {
@@ -25,6 +31,12 @@ export const en = {
   dashboard,
   orders,
   shifts,
+  inventory,
+  records,
+  customers,
+  members,
+  settings,
+  reports,
 }
 
 type DeepStrings<T> = { [K in keyof T]: T[K] extends string ? string : DeepStrings<T[K]> }

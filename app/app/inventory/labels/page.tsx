@@ -10,6 +10,7 @@ import { Card, CardHead, CardPad, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { BarcodeLabel, type BarcodeLabelFormat } from '@/components/barcode-label'
 import { money } from '@/lib/region'
+import { useT, type MessageKey } from '@/lib/i18n/i18n'
 
 type Variant = {
   id: string
@@ -39,15 +40,6 @@ type VariantRow = {
   productName: string
 }
 
-const LOAD_ERROR = "Couldn't load your catalog. Check your connection and try again."
-
-const FORMAT_LABELS: Record<BarcodeLabelFormat, string> = {
-  code128: 'Code 128',
-  ean13: 'EAN-13',
-  upca: 'UPC-A',
-  qr: 'QR',
-}
-
 function variantDisplayName(row: VariantRow) {
   const attrs = [row.variant.size, row.variant.color, row.variant.material].filter(Boolean).join(' / ')
   return attrs ? `${row.productName} - ${attrs}` : row.productName
@@ -62,6 +54,7 @@ export default function LabelsPage() {
 }
 
 function LabelsPageContent() {
+  const t = useT()
   const searchParams = useSearchParams()
   const preselectVariantId = searchParams.get('variantId')
 
@@ -94,7 +87,7 @@ function LabelsPageContent() {
     setIsLoading(false)
 
     if (error || !data) {
-      setLoadError(LOAD_ERROR)
+      setLoadError(t('inventory.errors.catalogLoad'))
       return
     }
 
@@ -103,6 +96,8 @@ function LabelsPageContent() {
       product.variants.map((variant) => ({ variant, productName: product.name })),
     )
     setRows(flat)
+    // t is intentionally omitted: changing locale must not refetch variants.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadLabelFormat = useCallback(async () => {
@@ -139,26 +134,27 @@ function LabelsPageContent() {
   }
 
   const selectedRows = useMemo(() => rows.filter((row) => selectedIds.has(row.variant.id)), [rows, selectedIds])
+  const formatLabel = (format: BarcodeLabelFormat) => t(`inventory.labels.${format === 'qr' ? 'qr' : format}` as MessageKey)
 
   return (
     <>
       <PageHead
-        title="Print labels"
-        sub="Select variants to generate thermal barcode labels"
+        title={t('inventory.labels.title')}
+        sub={t('inventory.labels.subtitle')}
         actions={
           <button className="btn btn-pri" disabled={selectedRows.length === 0} onClick={() => handlePrint()}>
-            <Printer size={15} /> Print labels
+            <Printer size={15} /> {t('inventory.labels.print')}
           </button>
         }
       />
 
       <Card>
-        <CardHead title="Variants" sub={rows.length > 0 ? `${rows.length} variants` : undefined} />
+        <CardHead title={t('inventory.newProduct.variants')} sub={rows.length > 0 ? `${rows.length} ${rows.length === 1 ? t('inventory.labels.variantsOne') : t('inventory.labels.variantsMany')}` : undefined} />
 
-        {isLoading && <LoadingState label="Loading variants" />}
+        {isLoading && <LoadingState label={t('inventory.labels.loading')} />}
         {!isLoading && loadError && <ErrorState message={loadError} onRetry={() => void loadVariants()} />}
         {!isLoading && !loadError && rows.length === 0 && (
-          <EmptyState title="No variants yet" body="Add a product with at least one variant to print labels for it." />
+          <EmptyState title={t('inventory.labels.emptyTitle')} body={t('inventory.labels.emptyBody')} />
         )}
         {!isLoading && !loadError && rows.length > 0 && (
           <CardPad style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
@@ -192,19 +188,17 @@ function LabelsPageContent() {
 
       <Card>
         <CardHead
-          title="Label preview"
-          sub={labelFormat ? `Printing as ${FORMAT_LABELS[labelFormat]}` : undefined}
+          title={t('inventory.labels.preview')}
+          sub={labelFormat ? t('inventory.labels.printingAs', { format: formatLabel(labelFormat) }) : undefined}
         />
         <CardPad>
           {selectedRows.length === 0 ? (
-            <p className="t-sub">Select one or more variants to generate labels.</p>
+            <p className="t-sub">{t('inventory.labels.selectHint')}</p>
           ) : (
             <>
               {fellBack.size > 0 && labelFormat && (
                 <p className="t-sub" style={{ marginBottom: 12 }}>
-                  {fellBack.size} of these {fellBack.size === 1 ? 'variants has' : 'variants have'} no
-                  valid {FORMAT_LABELS[labelFormat]} barcode, so {fellBack.size === 1 ? 'it prints' : 'they print'}{' '}
-                  as Code 128 of the SKU instead. Add a manufacturer barcode to the variant to change that.
+                  {t(fellBack.size === 1 ? 'inventory.labels.fallbackOne' : 'inventory.labels.fallbackMany', { count: fellBack.size, format: formatLabel(labelFormat) })}
                 </p>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, max-content)', gap: '24px 48px', alignItems: 'start' }}>

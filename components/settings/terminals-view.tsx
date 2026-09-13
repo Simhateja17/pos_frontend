@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/couture/state
 import { useAppRegion } from '@/lib/app-region'
 import { getActiveStoreId, setActiveStoreId } from '@/lib/store-context'
 import { getAuthenticatedStores, type Store } from '@/lib/api/authenticated-client'
+import { useT } from '@/lib/i18n/i18n'
 
 type Terminal = {
   id: string
@@ -31,6 +32,7 @@ function safeReturnTo(value: string | null): string | null {
 
 export function TerminalsView() {
   const { money } = useAppRegion()
+  const t = useT()
   const router = useRouter()
   const [returnTo, setReturnTo] = useState<string | null>(null)
   const [terminals, setTerminals] = useState<Terminal[] | null>(null)
@@ -61,7 +63,7 @@ export function TerminalsView() {
         setStores(payload.stores.filter((store) => store.isActive))
         setStorePickerError(null)
       } catch (cause) {
-        setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+        setStorePickerError(cause instanceof Error ? cause.message : t('settings.errors.storesLoad'))
       }
       setLoading(false)
       return
@@ -79,14 +81,16 @@ export function TerminalsView() {
           setStores(payload.stores.filter((store) => store.isActive))
           setStorePickerError(null)
         } catch (cause) {
-          setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+          setStorePickerError(cause instanceof Error ? cause.message : t('settings.errors.storesLoad'))
         }
         return
       }
-      setError(serverError?.error ?? 'We couldn’t load your counters. Check your connection and try again.')
+      setError(serverError?.error ?? t('settings.terminals.counterUpdate'))
       return
     }
     setTerminals(data as Terminal[])
+    // t is intentionally omitted: changing locale must not refetch counters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function chooseStore(storeId: string) {
@@ -119,7 +123,7 @@ export function TerminalsView() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!name.trim()) {
-      setFormError('Enter a name for this counter.')
+      setFormError(t('settings.terminals.nameRequired'))
       return
     }
 
@@ -138,7 +142,7 @@ export function TerminalsView() {
     setSaving(false)
 
     if (requestError) {
-      setFormError((requestError as { error?: string }).error ?? 'That counter could not be saved.')
+      setFormError((requestError as { error?: string }).error ?? t('settings.terminals.counterSave'))
       return
     }
 
@@ -156,7 +160,7 @@ export function TerminalsView() {
     if (requestError) {
       // The backend refuses to turn off a counter mid-shift and says why:
       // surface its wording rather than a generic failure.
-      setError((requestError as { error?: string }).error ?? 'That counter could not be updated.')
+      setError((requestError as { error?: string }).error ?? t('settings.terminals.counterUpdate'))
       return
     }
     await load()
@@ -169,7 +173,7 @@ export function TerminalsView() {
       headers: await authHeaders(),
     })
     if (requestError) {
-      setError((requestError as { error?: string }).error ?? 'That counter could not be deleted.')
+      setError((requestError as { error?: string }).error ?? t('settings.terminals.counterDelete'))
       return
     }
     await load()
@@ -182,7 +186,7 @@ export function TerminalsView() {
       headers: await authHeaders(),
     })
     if (requestError) {
-      setError((requestError as { error?: string }).error ?? 'This device could not be paired.')
+      setError((requestError as { error?: string }).error ?? t('settings.terminals.pairError'))
       return
     }
     // The server interrupts any operator session attached to the old or
@@ -194,19 +198,19 @@ export function TerminalsView() {
   if (chooseStoreMode) {
     return (
       <>
-        <PageHead title="Counters" sub="Choose a store" />
+        <PageHead title={t('settings.terminals.title')} sub={t('settings.terminals.chooseStore')} />
         <Card>
-          <CardHead title="Which store do you want to manage counters for?" sub="A counter belongs to one store." />
+          <CardHead title={t('settings.terminals.chooseTitle')} sub={t('settings.terminals.chooseSub')} />
           <CardPad>
             {storePickerError ? <ErrorState message={storePickerError} onRetry={() => void load()} /> : null}
-            {!storePickerError && stores.length === 0 ? <LoadingState label="Loading stores" /> : null}
+            {!storePickerError && stores.length === 0 ? <LoadingState label={t('settings.loadingStores')} /> : null}
             {stores.map((store) => (
               <ListRow
                 key={store.id}
                 icon={<StoreIcon size={17} strokeWidth={1.85} />}
                 title={store.name}
-                sub={[store.city, store.state].filter(Boolean).join(' · ') || 'Address not set'}
-                action={<button className="btn btn-sm btn-pri" onClick={() => chooseStore(store.id)}>Open counters</button>}
+                sub={[store.city, store.state].filter(Boolean).join(' · ') || t('settings.addressNotSet')}
+                action={<button className="btn btn-sm btn-pri" onClick={() => chooseStore(store.id)}>{t('settings.terminals.open')}</button>}
               />
             ))}
           </CardPad>
@@ -218,76 +222,76 @@ export function TerminalsView() {
   return (
     <>
       <PageHead
-        title="Counters"
-        sub="A counter is created first, then assigned to the browser that will operate it."
+        title={t('settings.terminals.title')}
+        sub={t('settings.terminals.subtitle')}
         actions={
           <button className="btn btn-pri" onClick={openCreate}>
-            <Plus size={15} /> Add counter
+            <Plus size={15} /> {t('settings.terminals.add')}
           </button>
         }
       />
 
       <Card>
         <CardHead
-          title="Your counters"
-          sub={terminals ? `${terminals.filter((t) => t.isActive).length} active` : 'Loading…'}
+          title={t('settings.terminals.yourCounters')}
+          sub={terminals ? t('settings.terminals.active', { count: terminals.filter((t) => t.isActive).length }) : t('settings.terminals.loading')}
         />
 
-        {loading && <LoadingState label="Loading counters" />}
+        {loading && <LoadingState label={t('settings.terminals.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && terminals?.length === 0 && (
           <EmptyState
             icon={<Monitor size={24} strokeWidth={1.8} />}
-            title="No counters yet"
-            body="Add a counter for each device or till in your store. Pair the browser once; cashiers then only enter their PIN."
+            title={t('settings.terminals.emptyTitle')}
+            body={t('settings.terminals.emptyBody')}
             action={
               <button className="btn btn-pri" onClick={openCreate}>
-                <Plus size={15} /> Add counter
+                <Plus size={15} /> {t('settings.terminals.add')}
               </button>
             }
           />
         )}
 
         {!loading && !error && terminals && terminals.length > 0 && (
-          <DataTable cols={['Counter', 'Mode', 'Status', '']} minWidth={900}>
+          <DataTable cols={[t('settings.terminals.table.counter'), t('settings.terminals.table.mode'), t('settings.terminals.table.status'), t('settings.terminals.table.actions')]} minWidth={900}>
             {terminals.map((terminal) => (
               <tr key={terminal.id}>
                 <td className="t-strong">{terminal.name}</td>
-                <td>{terminal.cashMode === 'none' ? 'No cash drawer' : 'Cash drawer'}</td>
+                <td>{terminal.cashMode === 'none' ? t('settings.terminals.noCashDrawer') : t('settings.terminals.cashDrawer')}</td>
                 <td>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <Badge tone={terminal.isActive ? 'green' : 'grey'}>
-                      {terminal.isActive ? 'Active' : 'Turned off'}
+                      {terminal.isActive ? t('settings.terminals.activeStatus') : t('settings.terminals.turnedOff')}
                     </Badge>
-                    {terminal.hasOpenShift && <Badge tone="amber">Shift open</Badge>}
-                    {terminal.isCurrentDevice && <Badge tone="blue">This device</Badge>}
-                    {!terminal.isCurrentDevice && terminal.isPaired && <Badge tone="amber">Another device</Badge>}
-                    {!terminal.isCurrentDevice && !terminal.isPaired && <Badge tone="grey">No device assigned</Badge>}
-                    {terminal.activeCashierName && <Badge tone="amber">{terminal.activeCashierName} active</Badge>}
+                    {terminal.hasOpenShift && <Badge tone="amber">{t('settings.terminals.shiftOpen')}</Badge>}
+                    {terminal.isCurrentDevice && <Badge tone="blue">{t('settings.terminals.thisDevice')}</Badge>}
+                    {!terminal.isCurrentDevice && terminal.isPaired && <Badge tone="amber">{t('settings.terminals.anotherDevice')}</Badge>}
+                    {!terminal.isCurrentDevice && !terminal.isPaired && <Badge tone="grey">{t('settings.terminals.noDevice')}</Badge>}
+                    {terminal.activeCashierName && <Badge tone="amber">{t('settings.terminals.cashierActive', { name: terminal.activeCashierName })}</Badge>}
                   </div>
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                     <button className="btn btn-sm" onClick={() => void pair(terminal)}>
                       {terminal.isCurrentDevice
-                        ? 'Reassign this device'
+                        ? t('settings.terminals.reassign')
                         : terminal.isPaired
-                          ? 'Replace device'
-                          : 'Assign this device'}
+                          ? t('settings.terminals.replace')
+                          : t('settings.terminals.assign')}
                     </button>
                     <button className="btn btn-sm" onClick={() => openEdit(terminal)}>
-                      Rename
+                      {t('settings.terminals.rename')}
                     </button>
                     <button
                       className="btn btn-sm"
                       disabled={terminal.hasOpenShift}
-                      title={terminal.hasOpenShift ? 'Close the open shift on this counter first' : undefined}
+                      title={terminal.hasOpenShift ? t('settings.terminals.closeShiftFirst') : undefined}
                       onClick={() => void setActive(terminal, !terminal.isActive)}
                     >
-                      {terminal.isActive ? 'Turn off' : 'Turn on'}
+                      {terminal.isActive ? t('settings.terminals.turnOff') : t('settings.terminals.turnOn')}
                     </button>
                     <button className="btn btn-sm" onClick={() => void remove(terminal)}>
-                      Delete
+                      {t('settings.terminals.delete')}
                     </button>
                   </div>
                 </td>
@@ -299,15 +303,15 @@ export function TerminalsView() {
 
       {formOpen && (
         <Modal
-          title={editing ? `Rename ${editing.name}` : 'Add counter'}
+          title={editing ? t('settings.terminals.renameTitle', { name: editing.name }) : t('settings.terminals.createTitle')}
           onClose={() => setFormOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setFormOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="terminal-form" disabled={saving}>
-                {saving ? 'Saving…' : editing ? 'Save changes' : 'Add counter'}
+                {saving ? t('settings.terminals.saving') : editing ? t('settings.terminals.save') : t('settings.terminals.add')}
               </button>
             </>
           }
@@ -318,23 +322,23 @@ export function TerminalsView() {
                 {formError}
               </div>
             )}
-            <Fld id="terminal-name" label="Counter name">
+            <Fld id="terminal-name" label={t('settings.terminals.name')}>
               <input
                 id="terminal-name"
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Counter 1"
+                placeholder={t('settings.terminals.namePlaceholder')}
               />
             </Fld>
-            <Fld id="terminal-mode" label="Cash handling">
+            <Fld id="terminal-mode" label={t('settings.terminals.cashHandling')}>
               <select id="terminal-mode" value={cashMode} onChange={(e) => setCashMode(e.target.value as 'cash' | 'none')}>
-                <option value="cash">Cash counter, count opening cash</option>
-                <option value="none">No cash drawer, opening cash is {money(0)}</option>
+                <option value="cash">{t('settings.terminals.cashMode')}</option>
+                <option value="none">{t('settings.terminals.noCashMode', { amount: money(0) })}</option>
               </select>
             </Fld>
             <p className="t-sub" style={{ fontSize: 12 }}>
-              One device is one logical counter. Only one shift can be open on it at a time, even when cashiers change.
+              {t('settings.terminals.help')}
             </p>
           </form>
         </Modal>

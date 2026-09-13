@@ -6,6 +6,8 @@ import { Badge, type BadgeTone, Card, CardHead, CardPad, DataTable, Fld, Modal, 
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
+import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 
 type Role = 'owner' | 'manager' | 'cashier'
 type Member = {
@@ -27,12 +29,12 @@ type StaffSession = {
   loggedOutAt: string | null
   logoutReason: string | null
 }
-const LOAD_ERROR = "We couldn't load team members. Check your connection and try again."
-const roleLabel = (role: Role) => `${role[0].toUpperCase()}${role.slice(1)}`
 const ROLE_TONE: Record<Role, BadgeTone> = { owner: 'gold', manager: 'blue', cashier: 'grey' }
 
 export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' }: { firstPinSetup?: boolean; returnTo?: string }) {
   const router = useRouter()
+  const t = useT()
+  const { dateLocale } = useAppRegion()
   const [members, setMembers] = useState<Member[]>([])
   const [sessions, setSessions] = useState<StaffSession[]>([])
   const [loading, setLoading] = useState(true)
@@ -65,13 +67,15 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
       apiClient.GET('/terminal/pin/sessions', { headers }),
     ])
     setLoading(false)
-    if (membersResult.error || !membersResult.data) { setLoadError(LOAD_ERROR); return }
+    if (membersResult.error || !membersResult.data) { setLoadError(t('members.errors.load')); return }
     if (firstPinSetup && membersResult.data.some((member) => member.isActive && member.pinConfigured)) {
       router.replace(returnTo)
       return
     }
     setMembers(membersResult.data)
     if (!sessionsResult.error && sessionsResult.data) setSessions(sessionsResult.data)
+    // t is intentionally omitted: changing locale must not refetch members.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPinSetup, returnTo, router])
   useEffect(() => { void load() }, [load])
   async function invite(event: FormEvent<HTMLFormElement>) {
@@ -92,7 +96,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
         })
     setInviting(false)
     if (result.error) {
-      setInviteError((result.error as { error?: string }).error ?? 'We could not add this staff member. Check the details and try again.')
+      setInviteError((result.error as { error?: string }).error ?? t('members.errors.invite'))
       return
     }
     setInviteOpen(false); setInviteName(''); setInviteEmail(''); setTemporaryPin(''); setInviteRole('cashier'); setAccessMode('pin')
@@ -104,7 +108,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
     setChangingRole(true); setRoleError(null)
     const { error } = await apiClient.PATCH('/members/{memberId}/role', { params: { path: { memberId: roleTarget.id } }, body: { role: pendingRole }, headers: await authHeaders() })
     setChangingRole(false)
-    if (error) { setRoleError('We could not change this role. Your existing access remains unchanged.'); return }
+    if (error) { setRoleError(t('members.errors.role')); return }
     setRoleTarget(null); void load()
   }
   async function remove() {
@@ -112,7 +116,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
     setRemoving(true); setRemoveError(null)
     const { error } = await apiClient.DELETE('/members/{memberId}', { params: { path: { memberId: removeTarget.id } }, headers: await authHeaders() })
     setRemoving(false)
-    if (error) { setRemoveError('We could not remove this member. Their access remains unchanged.'); return }
+    if (error) { setRemoveError(t('members.errors.remove')); return }
     setRemoveTarget(null); void load()
   }
 
@@ -128,7 +132,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
     })
     setResetting(false)
     if (error) {
-      setResetError((error as { error?: string }).error ?? 'We could not reset this PIN.')
+      setResetError((error as { error?: string }).error ?? t('members.errors.reset'))
       return
     }
     setResetTarget(null); setResetPin('')
@@ -139,13 +143,13 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
   return (
     <>
       <PageHead
-        title={firstPinSetup ? 'Set up the first counter PIN' : 'Staff'}
+        title={firstPinSetup ? t('members.firstPinTitle') : t('members.title')}
         sub={firstPinSetup
-          ? 'Create one PIN-enabled staff profile, or set a PIN for an existing member. You will return to the register afterward.'
-          : 'Manage real staff access. Server role checks determine which changes are allowed.'}
+          ? t('members.firstPinSubtitle')
+          : t('members.subtitle')}
         actions={
           <button className="btn btn-pri" type="button" onClick={() => { setAccessMode('pin'); setInviteOpen(true) }}>
-            Add staff
+            {t('members.add')}
           </button>
         }
       />
@@ -160,7 +164,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
 
       {loading && !loadError && (
         <Card>
-          <LoadingState label="Loading team members" rows={4} />
+          <LoadingState label={t('members.members')} rows={4} />
         </Card>
       )}
 
@@ -168,11 +172,11 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
         <Card>
           <CardPad>
             <EmptyState
-              title="You are the only team member"
-              body="Add a cashier with a name and PIN. They do not need an email account to use this counter."
+              title={t('members.onlyMember')}
+              body={t('members.onlyMemberBody')}
               action={
                 <button className="btn btn-pri" type="button" onClick={() => { setAccessMode('pin'); setInviteOpen(true) }}>
-                  Add staff
+                  {t('members.add')}
                 </button>
               }
             />
@@ -182,32 +186,32 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
 
       {!loading && !loadError && members.length > 0 && (
         <Card>
-          <CardHead title="Members" sub="Active permissions and access actions are applied by the server." />
+          <CardHead title={t('members.members')} sub={t('members.membersSub')} />
           <CardPad style={{ paddingTop: 4 }}>
-            <DataTable cols={['Name', 'Role', 'Access', 'Status', 'Actions']}>
+            <DataTable cols={[t('members.table.name'), t('members.table.role'), t('members.table.access'), t('members.table.status'), t('members.table.actions')]}>
               {members.map((member) => (
                 <tr key={member.id}>
                   <td>
                     <strong>{member.name}</strong>
                   </td>
                   <td>
-                    <Badge tone={ROLE_TONE[member.role]}>{roleLabel(member.role)}</Badge>
+                    <Badge tone={ROLE_TONE[member.role]}>{t(`members.roles.${member.role}` as const)}</Badge>
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {member.accessMode === 'account' && <Badge tone="blue">Email account</Badge>}
+                      {member.accessMode === 'account' && <Badge tone="blue">{t('members.access.emailAccount')}</Badge>}
                       <Badge tone={member.pinConfigured ? 'green' : 'amber'}>
                         {member.pinConfigured
                           ? member.pinMustChange
-                            ? 'Temporary PIN'
-                            : 'Counter PIN ready'
-                          : 'No counter PIN'}
+                            ? t('members.access.temporaryPin')
+                            : t('members.access.counterPinReady')
+                          : t('members.access.noCounterPin')}
                       </Badge>
                     </div>
                   </td>
                   <td>
                     <Badge tone={member.isActive ? 'green' : 'grey'} dot={member.isActive ? 'g' : undefined}>
-                      {member.isActive ? 'Active' : 'Inactive'}
+                      {member.isActive ? t('members.status.active') : t('members.status.inactive')}
                     </Badge>
                   </td>
                   <td>
@@ -218,7 +222,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
                           type="button"
                           onClick={() => { setRoleTarget(member); setPendingRole(member.role); setRoleError(null) }}
                         >
-                          Change role
+                          {t('members.actions.changeRole')}
                         </button>
                       )}
                       {member.isActive && (
@@ -227,7 +231,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
                           type="button"
                           onClick={() => { setResetTarget(member); setResetPin(''); setResetError(null) }}
                         >
-                          {member.pinConfigured ? 'Reset PIN' : 'Set counter PIN'}
+                          {member.pinConfigured ? t('members.actions.resetPin') : t('members.actions.setPin')}
                         </button>
                       )}
                       {!firstPinSetup && (
@@ -236,7 +240,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
                           type="button"
                           onClick={() => { setRemoveTarget(member); setRemoveError(null) }}
                         >
-                          Remove
+                          {t('members.actions.remove')}
                         </button>
                       )}
                     </div>
@@ -250,21 +254,21 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
 
       {!firstPinSetup && !loading && !loadError && (
         <Card>
-          <CardHead title="Cashier sessions" sub="Every PIN login, handover, lock, and interruption is retained for the store." />
+          <CardHead title={t('members.sessions.title')} sub={t('members.sessions.sub')} />
           <CardPad style={{ paddingTop: 4 }}>
             {sessions.length === 0 ? (
-              <p className="t-sub" style={{ fontSize: 13 }}>No cashier sessions recorded yet.</p>
+              <p className="t-sub" style={{ fontSize: 13 }}>{t('members.sessions.empty')}</p>
             ) : (
-              <DataTable cols={['Staff', 'Counter', 'Logged in', 'Logged out', 'Status']} minWidth={780}>
+              <DataTable cols={[t('members.sessions.staff'), t('members.sessions.counter'), t('members.sessions.loggedIn'), t('members.sessions.loggedOut'), t('members.sessions.status')]} minWidth={780}>
                 {sessions.slice(0, 50).map((session) => (
                   <tr key={session.id}>
                     <td className="t-strong">{session.staffName ?? '-'}</td>
                     <td>{session.terminalName ?? '-'}</td>
-                    <td className="t-sub">{new Date(session.loggedInAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                    <td className="t-sub">{session.loggedOutAt ? new Date(session.loggedOutAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</td>
+                    <td className="t-sub">{new Date(session.loggedInAt).toLocaleString(dateLocale, { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                    <td className="t-sub">{session.loggedOutAt ? new Date(session.loggedOutAt).toLocaleString(dateLocale, { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</td>
                     <td>
                       <Badge tone={session.loggedOutAt ? 'grey' : 'green'}>
-                        {session.loggedOutAt ? session.logoutReason ?? 'Ended' : 'Active'}
+                        {session.loggedOutAt ? session.logoutReason ?? t('members.status.ended') : t('members.status.active')}
                       </Badge>
                     </td>
                   </tr>
@@ -277,15 +281,15 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
 
       {inviteOpen && (
         <Modal
-          title={accessMode === 'pin' ? 'Add counter staff' : 'Invite full account'}
+          title={accessMode === 'pin' ? t('members.invite.counterTitle') : t('members.invite.accountTitle')}
           onClose={() => setInviteOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setInviteOpen(false)}>
-                Cancel
+                {t('members.invite.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="invite-form" disabled={inviting}>
-                {inviting ? (accessMode === 'pin' ? 'Adding staff…' : 'Sending invitation…') : accessMode === 'pin' ? 'Add staff' : 'Invite account'}
+                {inviting ? (accessMode === 'pin' ? t('members.invite.adding') : t('members.invite.sending')) : accessMode === 'pin' ? t('members.add') : t('members.invite.inviteAccount')}
               </button>
             </>
           }
@@ -299,22 +303,22 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
             {!firstPinSetup && (
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <button className={`btn btn-sm ${accessMode === 'pin' ? 'btn-pri' : ''}`} type="button" onClick={() => setAccessMode('pin')}>
-                  Counter PIN
+                  {t('members.invite.counterPin')}
                 </button>
                 <button className={`btn btn-sm ${accessMode === 'email' ? 'btn-pri' : ''}`} type="button" onClick={() => setAccessMode('email')}>
-                  Email account
+                  {t('members.invite.emailAccount')}
                 </button>
               </div>
             )}
             <p className="t-sub" style={{ fontSize: 12.5, marginBottom: 14 }}>
               {accessMode === 'pin'
-                ? 'Use this for cashiers who work inside the store. The name appears on the counter lock screen.'
-                : 'Use this when the person needs to sign in from outside the store or manage the organisation remotely.'}
+                ? t('members.invite.pinHelp')
+                : t('members.invite.accountHelp')}
             </p>
-            <Fld id="invite-name" label="Name">
+            <Fld id="invite-name" label={t('members.invite.name')}>
               <input id="invite-name" required value={inviteName} onChange={(event) => setInviteName(event.target.value)} />
             </Fld>
-            {accessMode === 'email' && <Fld id="invite-email" label="Email">
+            {accessMode === 'email' && <Fld id="invite-email" label={t('members.invite.email')}>
               <input
                 id="invite-email"
                 required
@@ -323,7 +327,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
                 onChange={(event) => setInviteEmail(event.target.value)}
               />
             </Fld>}
-            {accessMode === 'pin' && <Fld id="temporary-pin" label="Temporary PIN">
+            {accessMode === 'pin' && <Fld id="temporary-pin" label={t('members.invite.temporaryPin')}>
               <input
                 id="temporary-pin"
                 required
@@ -332,17 +336,17 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
                 maxLength={4}
                 value={temporaryPin}
                 onChange={(event) => setTemporaryPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="4 digits"
+                placeholder={t('members.invite.pinPlaceholder')}
               />
             </Fld>}
-            <Fld id="invite-role" label="Role">
+            <Fld id="invite-role" label={t('members.invite.role')}>
               <select
                 id="invite-role"
                 value={inviteRole}
                 onChange={(event) => setInviteRole(event.target.value as 'manager' | 'cashier')}
               >
-                <option value="manager">Manager</option>
-                <option value="cashier">Cashier</option>
+                <option value="manager">{t('members.roles.manager')}</option>
+                <option value="cashier">{t('members.roles.cashier')}</option>
               </select>
             </Fld>
           </form>
@@ -352,27 +356,27 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
       {resetTarget && (
         <Modal
           title={resetTarget.pinConfigured
-            ? `Reset ${resetTarget.name}'s counter PIN`
-            : `Set up ${resetTarget.name}'s counter PIN`}
+            ? t('members.reset.resetTitle', { name: resetTarget.name })
+            : t('members.reset.setupTitle', { name: resetTarget.name })}
           onClose={() => setResetTarget(null)}
           footer={
             <>
-              <button className="btn" type="button" onClick={() => setResetTarget(null)}>Cancel</button>
+              <button className="btn" type="button" onClick={() => setResetTarget(null)}>{t('members.reset.cancel')}</button>
               <button className="btn btn-pri" type="button" disabled={resetting || resetPin.length !== 4} onClick={() => void resetStaffPin()}>
                 {resetting
-                  ? 'Saving…'
+                  ? t('members.reset.saving')
                   : resetTarget.pinConfigured
-                    ? 'Reset PIN'
-                    : 'Set counter PIN'}
+                    ? t('members.actions.resetPin')
+                    : t('members.actions.setPin')}
               </button>
             </>
           }
         >
           {resetError && <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>{resetError}</div>}
           <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-            Enter a temporary four-digit PIN. {resetTarget.name} will use it once on the counter, then choose a private personal PIN.
+            {t('members.reset.help', { name: resetTarget.name })}
           </p>
-          <Fld id="reset-pin" label="Temporary PIN">
+          <Fld id="reset-pin" label={t('members.invite.temporaryPin')}>
             <input id="reset-pin" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={resetPin} onChange={(event) => setResetPin(event.target.value.replace(/\D/g, '').slice(0, 4))} />
           </Fld>
         </Modal>
@@ -380,15 +384,15 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
 
       {roleTarget && (
         <Modal
-          title="Change role"
+          title={t('members.roleChange.title')}
           onClose={() => setRoleTarget(null)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setRoleTarget(null)}>
-                Keep current role
+                {t('members.roleChange.keep')}
               </button>
               <button className="btn btn-pri" type="button" disabled={changingRole} onClick={() => void changeRole()}>
-                {changingRole ? 'Changing role…' : 'Change role'}
+                {changingRole ? t('members.roleChange.changing') : t('members.roleChange.title')}
               </button>
             </>
           }
@@ -398,31 +402,30 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
               {roleError}
             </div>
           )}
-          <Fld id="pending-role" label="New role">
+          <Fld id="pending-role" label={t('members.roleChange.newRole')}>
             <select id="pending-role" value={pendingRole} onChange={(event) => setPendingRole(event.target.value as Role)}>
-              <option value="owner">Owner</option>
-              <option value="manager">Manager</option>
-              <option value="cashier">Cashier</option>
+              <option value="owner">{t('members.roles.owner')}</option>
+              <option value="manager">{t('members.roles.manager')}</option>
+              <option value="cashier">{t('members.roles.cashier')}</option>
             </select>
           </Fld>
           <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-            Change {roleTarget.name} from {roleLabel(roleTarget.role)} to {roleLabel(pendingRole)}? Their access will
-            change immediately after the server confirms it.
+            {t('members.roleChange.prompt', { name: roleTarget.name, from: t(`members.roles.${roleTarget.role}` as const), to: t(`members.roles.${pendingRole}` as const) })}
           </p>
         </Modal>
       )}
 
       {removeTarget && (
         <Modal
-          title="Remove access"
+          title={t('members.remove.title')}
           onClose={() => setRemoveTarget(null)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setRemoveTarget(null)}>
-                Keep member
+                {t('members.remove.keep')}
               </button>
               <button className="btn btn-pri" type="button" disabled={removing} onClick={() => void remove()}>
-                {removing ? 'Removing access…' : 'Remove access'}
+                {removing ? t('members.remove.removing') : t('members.remove.remove')}
               </button>
             </>
           }
@@ -433,8 +436,7 @@ export function MembersView({ firstPinSetup = false, returnTo = '/terminal/pin' 
             </div>
           )}
           <p style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-            Remove {removeTarget.name} from this store? They will lose access immediately. Reinstating access requires a
-            new invitation.
+            {t('members.remove.prompt', { name: removeTarget.name })}
           </p>
         </Modal>
       )}

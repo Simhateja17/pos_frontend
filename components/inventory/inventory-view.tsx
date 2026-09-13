@@ -10,6 +10,7 @@ import { Card, CardHead, DataTable, KpiRow, PageHead, SearchField, type KpiItem 
 import { EmptyState, ErrorState, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { LowStockBadge } from '@/components/low-stock-badge'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 import { priceLabel, unitSuffix } from '@/lib/units'
 import { inventoryStatus, inventoryVariantMatches } from '@/lib/operational-display'
 
@@ -52,9 +53,6 @@ type Product = {
 
 type StockFilter = 'all' | 'low' | 'out'
 
-const LOAD_ERROR = "We couldn't load your current stock. Check your connection and try again."
-const CATALOG_LOAD_ERROR = "Couldn't load your catalog. Check your connection and try again."
-
 function variantAttributes(variant: Variant) {
   return [variant.size, variant.color, variant.material].filter(Boolean).join(' / ')
 }
@@ -84,6 +82,7 @@ function inventoryCostSummary(products: Product[]) {
 
 export function InventoryView() {
   const { appPath, money } = useAppRegion()
+  const t = useT()
   const [role, setRole] = useState<'owner' | 'manager' | 'cashier' | null>(null)
   const [lowStock, setLowStock] = useState<LowStockVariant[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,10 +101,12 @@ export function InventoryView() {
     const { data, error: requestError } = await apiClient.GET('/stock-movements/low-stock', { headers: await authHeaders() })
     setLoading(false)
     if (requestError || !data) {
-      setError(LOAD_ERROR)
+      setError(t('inventory.errors.stockLoad'))
       return
     }
     setLowStock(data)
+    // t is intentionally omitted: changing locale must not refetch stock.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadCatalog = useCallback(async () => {
@@ -114,10 +115,12 @@ export function InventoryView() {
     const { data, error: requestError } = await apiClient.GET('/products', { headers: await authHeaders() })
     setCatalogLoading(false)
     if (requestError || !data) {
-      setCatalogError(CATALOG_LOAD_ERROR)
+      setCatalogError(t('inventory.errors.catalogLoad'))
       return
     }
     setProducts(data as Product[])
+    // t is intentionally omitted: changing locale must not refetch the catalog.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -131,8 +134,8 @@ export function InventoryView() {
   const critical = lowStock.filter((item) => item.quantity === 0).length
   const inventory = inventoryCostSummary(products)
   const uncostedMeta = inventory.uncostedVariants > 0
-    ? `${inventory.uncostedVariants} variant${inventory.uncostedVariants === 1 ? '' : 's'} missing cost basis`
-    : 'At moving-average cost'
+    ? `${inventory.uncostedVariants} ${inventory.uncostedVariants === 1 ? t('inventory.kpi.uncostedOne') : t('inventory.kpi.uncostedMany')}`
+    : t('inventory.kpi.movingAverage')
 
   const toggleStockFilter = (next: Exclude<StockFilter, 'all'>) => {
     setStockFilter((current) => (current === next ? 'all' : next))
@@ -141,26 +144,28 @@ export function InventoryView() {
 
   const metrics: KpiItem[] = [
     {
-      label: 'Low Stock',
+      label: t('inventory.kpi.lowStock'),
       value: loading ? '-' : String(lowStock.length),
-      meta: 'At or below reorder threshold',
+      meta: t('inventory.kpi.atThreshold'),
       onClick: loading || lowStock.length === 0 ? undefined : () => toggleStockFilter('low'),
       active: stockFilter === 'low',
     },
     {
-      label: 'Out of Stock',
+      label: t('inventory.kpi.outOfStock'),
       value: loading ? '-' : String(critical),
-      meta: critical > 0 ? 'Needs immediate reorder' : 'None currently',
+      meta: critical > 0 ? t('inventory.kpi.needsReorder') : t('inventory.kpi.noneCurrently'),
       onClick: loading || critical === 0 ? undefined : () => toggleStockFilter('out'),
       active: stockFilter === 'out',
     },
     {
-      label: 'Total SKUs',
+      label: t('inventory.kpi.totalSkus'),
       value: catalogLoading ? '-' : String(products.reduce((sum, p) => sum + p.variants.length, 0)),
-      meta: catalogLoading ? '' : `${products.length} product${products.length === 1 ? '' : 's'}`,
+      meta: catalogLoading
+        ? ''
+        : `${products.length} ${products.length === 1 ? t('inventory.kpi.productOne') : t('inventory.kpi.products')}`,
     },
     {
-      label: 'Inventory Value',
+      label: t('inventory.kpi.inventoryValue'),
       value:
         catalogLoading
           ? '-'
@@ -171,7 +176,7 @@ export function InventoryView() {
         catalogLoading
           ? ''
           : inventory.costedVariants === 0
-            ? 'Cost basis is not persisted'
+            ? t('inventory.kpi.costBasisNotPersisted')
             : uncostedMeta,
     },
   ]
@@ -195,23 +200,23 @@ export function InventoryView() {
   return (
     <>
       <PageHead
-        title="Inventory"
-        sub="Products, stock levels and stock exceptions"
+        title={t('inventory.title')}
+        sub={t('inventory.subtitle')}
         actions={
           <>
             <Link className="btn" href={appPath('/app/demand-planning')}>
-              <BarChart3 size={15} /> Demand planning
+              <BarChart3 size={15} /> {t('inventory.actions.demandPlanning')}
             </Link>
             <Link className="btn" href={appPath('/app/inventory/labels')}>
-              <Barcode size={15} /> Print labels
+              <Barcode size={15} /> {t('inventory.actions.printLabels')}
             </Link>
             {role === 'owner' && (
               <Link className="btn" href={appPath('/app/import')}>
-                <Upload size={15} /> Import file
+              <Upload size={15} /> {t('inventory.actions.importFile')}
               </Link>
             )}
             <Link className="btn btn-pri" href={appPath('/app/inventory/catalog/new')}>
-              <Plus size={15} /> Add product
+              <Plus size={15} /> {t('inventory.actions.addProduct')}
             </Link>
           </>
         }
@@ -221,42 +226,42 @@ export function InventoryView() {
 
       <Card>
         <CardHead
-          title="Catalog"
-          sub={products.length > 0 ? `${products.length} products` : undefined}
+          title={t('inventory.catalog.title')}
+          sub={products.length > 0 ? `${products.length} ${products.length === 1 ? t('inventory.catalog.productsOne') : t('inventory.catalog.productsMany')}` : undefined}
           right={
             products.length > 0 ? (
               <SearchField
                 value={search}
                 onChange={setSearch}
-                placeholder="Scan barcode or search name / SKU / variant"
-                ariaLabel="Search catalog"
+                placeholder={t('inventory.catalog.searchPlaceholder')}
+                ariaLabel={t('inventory.catalog.searchLabel')}
                 width={280}
               />
             ) : undefined
           }
         />
 
-        {catalogLoading && <LoadingState label="Loading catalog" />}
+        {catalogLoading && <LoadingState label={t('inventory.catalog.loading')} />}
         {!catalogLoading && catalogError && <ErrorState message={catalogError} onRetry={() => void loadCatalog()} />}
         {!catalogLoading && !catalogError && products.length === 0 && (
           <EmptyState
             icon={<Package size={24} strokeWidth={1.8} />}
-            title="No products yet"
-            body="Add your first product, or import a supplier price list to load many at once."
+            title={t('inventory.catalog.emptyTitle')}
+            body={t('inventory.catalog.emptyBody')}
             action={
               <Link className="btn btn-pri" href={appPath('/app/inventory/catalog/new')}>
-                <Plus size={15} /> Add product
+                <Plus size={15} /> {t('inventory.actions.addProduct')}
               </Link>
             }
           />
         )}
         {!catalogLoading && !catalogError && products.length > 0 && visible.length === 0 && (
-          <EmptyState title="Nothing matches that" body="No product, SKU, barcode, size, colour or material matches your search." />
+          <EmptyState title={t('inventory.catalog.noMatchTitle')} body={t('inventory.catalog.noMatchBody')} />
         )}
 
         {!catalogLoading && !catalogError && visible.length > 0 && (
           <DataTable
-            cols={['Product / Variant', 'SKU', 'Barcode', 'Price', 'Stock']}
+            cols={[`${t('inventory.catalog.cols.product')} / ${t('inventory.catalog.cols.variant')}`, t('inventory.catalog.cols.sku'), t('inventory.catalog.cols.barcode'), t('inventory.catalog.cols.price'), t('inventory.catalog.cols.stock')]}
             minWidth={860}
           >
             {visible.map((product) => {
@@ -342,48 +347,48 @@ export function InventoryView() {
           <CardHead
             title={
               stockFilter === 'out'
-                ? 'Out-of-stock products'
+                ? t('inventory.exceptions.outTitle')
                 : stockFilter === 'low'
-                  ? 'Low-stock products'
-                  : 'Low-stock exceptions'
+                  ? t('inventory.exceptions.lowTitle')
+                  : t('inventory.exceptions.allTitle')
             }
             sub={
               stockFilter === 'out'
-                ? 'Variants with nothing left on hand'
+                ? t('inventory.exceptions.outSubtitle')
                 : stockFilter === 'low'
-                  ? 'Every variant at or below its reorder threshold'
-                  : 'Server-calculated variants at or below their reorder threshold'
+                  ? t('inventory.exceptions.lowSubtitle')
+                  : t('inventory.exceptions.allSubtitle')
             }
             right={
               stockFilter === 'all' ? undefined : (
                 <button type="button" className="btn" onClick={() => setStockFilter('all')}>
-                  Show all
+                  {t('inventory.exceptions.showAll')}
                 </button>
               )
             }
           />
 
-          {loading && <LoadingState label="Loading inventory" />}
+          {loading && <LoadingState label={t('inventory.exceptions.loading')} />}
           {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
           {!loading && !error && lowStock.length === 0 && (
             <EmptyState
               icon={<Boxes size={24} strokeWidth={1.8} />}
-              title="All stock levels are healthy"
-              body="No variant is at or below its reorder threshold right now."
+              title={t('inventory.exceptions.healthyTitle')}
+              body={t('inventory.exceptions.healthyBody')}
             />
           )}
 
           {!loading && !error && lowStock.length > 0 && exceptions.length === 0 && (
             <EmptyState
               icon={<Boxes size={24} strokeWidth={1.8} />}
-              title="Nothing is out of stock"
-              body="Every variant below its reorder threshold still has stock on hand."
+              title={t('inventory.exceptions.noOutTitle')}
+              body={t('inventory.exceptions.noOutBody')}
             />
           )}
 
           {!loading && !error && exceptions.length > 0 && (
             <DataTable
-              cols={['SKU', 'Product', 'Variant', 'Available', 'Reorder at', 'Status']}
+              cols={[t('inventory.exceptions.cols.sku'), t('inventory.exceptions.cols.product'), t('inventory.exceptions.cols.variant'), t('inventory.exceptions.cols.available'), t('inventory.exceptions.cols.reorderAt'), t('inventory.exceptions.cols.status')]}
               minWidth={760}
             >
               {exceptions.map((item) => {

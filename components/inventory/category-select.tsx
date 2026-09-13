@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Plus } from 'lucide-react'
+import { useT } from '@/lib/i18n/i18n'
 
 export type CategoryOption = { id: string; name: string }
 
@@ -26,6 +27,7 @@ export function CategorySelect({
   onChange: (next: { categoryId?: string; categoryName?: string }) => void
   id?: string
 }) {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -75,7 +77,8 @@ export function CategorySelect({
         aria-autocomplete="list"
         autoComplete="off"
         value={display}
-        placeholder="Search or create a category"
+        aria-label={t('inventory.categorySelect.searchLabel')}
+        placeholder={t('inventory.categorySelect.searchPlaceholder')}
         onFocus={() => {
           setQuery('')
           setOpen(true)
@@ -114,7 +117,7 @@ export function CategorySelect({
         >
           {matches.length === 0 && !canCreate && (
             <div className="t-sub" style={{ padding: '10px 12px' }}>
-              No categories yet. Type a name to create one.
+              {categories.length === 0 ? t('inventory.categorySelect.noCategories') : t('inventory.categorySelect.noMatches')}
             </div>
           )}
 
@@ -168,7 +171,7 @@ export function CategorySelect({
                 fontWeight: 600,
               }}
             >
-              <Plus size={14} /> Create “{query.trim()}”
+              <Plus size={14} /> {t('inventory.categorySelect.create', { query: query.trim() })}
             </button>
           )}
         </div>

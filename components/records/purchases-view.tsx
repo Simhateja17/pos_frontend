@@ -16,11 +16,9 @@ import {
 import { Badge, type BadgeTone, Card, CardHead, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { useAppRegion } from '@/lib/app-region'
-import { purchaseStatusFilters } from '@/lib/operational-display'
+import { enumLabel, useT } from '@/lib/i18n/i18n'
 
 type StatusFilter = 'all' | 'draft' | 'sent' | 'partial' | 'received' | 'cancelled'
-
-const FILTERS: readonly { label: string; value: StatusFilter }[] = purchaseStatusFilters
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   draft: 'grey',
@@ -35,6 +33,7 @@ type DraftLine = { variantId: string; quantityOrdered: string; unitCost: string 
 
 export function PurchasesView() {
   const { money, pack } = useAppRegion()
+  const t = useT()
   const [orders, setOrders] = useState<PurchaseOrder[] | null>(null)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -67,10 +66,12 @@ export function PurchasesView() {
       setOrders(poList)
       setSuppliers(supplierList)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Purchase orders are unavailable right now.')
+      setError(cause instanceof Error ? cause.message : t('records.errors.purchasesLoad'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch purchase orders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -98,7 +99,7 @@ export function PurchasesView() {
       try {
         setProducts(await getAuthenticatedProducts())
       } catch {
-        setCreateError('Your catalog could not be loaded, so items cannot be added to this order.')
+        setCreateError(t('records.errors.catalogLoad'))
       }
     }
   }
@@ -112,7 +113,7 @@ export function PurchasesView() {
     setCreateError(null)
 
     if (!supplierId) {
-      setCreateError('Choose a supplier for this order.')
+      setCreateError(t('records.errors.purchaseSupplier'))
       return
     }
     const lines = draftLines
@@ -123,11 +124,11 @@ export function PurchasesView() {
         unitCost: Number(l.unitCost || 0),
       }))
     if (lines.length === 0) {
-      setCreateError('Add at least one item with a quantity.')
+      setCreateError(t('records.errors.purchaseItem'))
       return
     }
     if (new Set(lines.map((l) => l.variantId)).size !== lines.length) {
-      setCreateError('Each item can appear only once on an order.')
+      setCreateError(t('records.errors.purchaseDuplicate'))
       return
     }
 
@@ -141,7 +142,7 @@ export function PurchasesView() {
       setCreateOpen(false)
       await load()
     } catch (cause) {
-      setCreateError(cause instanceof Error ? cause.message : 'That purchase order could not be created.')
+      setCreateError(cause instanceof Error ? cause.message : t('records.errors.purchaseCreate'))
     } finally {
       setSaving(false)
     }
@@ -152,7 +153,7 @@ export function PurchasesView() {
       await updateAuthenticatedPurchaseOrder(po.id, { status: 'sent' })
       await load()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That purchase order could not be sent.')
+      setError(cause instanceof Error ? cause.message : t('records.errors.purchaseSend'))
     }
   }
 
@@ -184,7 +185,7 @@ export function PurchasesView() {
       .filter((l) => l.quantityReceived > 0)
 
     if (lines.length === 0) {
-      setReceiptError('Enter the quantity that actually arrived for at least one item.')
+      setReceiptError(t('records.errors.purchaseReceiveQuantity'))
       return
     }
 
@@ -199,14 +200,14 @@ export function PurchasesView() {
       setReceiving(null)
       if (result.overReceived.length > 0) {
         setReceiptNotice(
-          `Recorded. ${result.overReceived
+          t('records.purchases.recordedOver', { details: result.overReceived
             .map((o) => `${o.sku} received ${o.quantityReceived} against ${o.quantityOrdered} ordered`)
-            .join('; ')}. Stock reflects what actually arrived.`,
+            .join('; ') }),
         )
       }
       await load()
     } catch (cause) {
-      setReceiptError(cause instanceof Error ? cause.message : 'That goods receipt could not be recorded.')
+      setReceiptError(cause instanceof Error ? cause.message : t('records.errors.purchaseReceive'))
     } finally {
       setSaving(false)
     }
@@ -222,15 +223,23 @@ export function PurchasesView() {
     )
   const openOrders = (orders ?? []).filter((po) => ['sent', 'partial'].includes(po.status))
   const openValue = openOrders.reduce((sum, po) => sum + Number(po.totalCost), 0)
+  const filterItems: readonly { label: string; value: StatusFilter }[] = [
+    { label: t('records.purchases.all'), value: 'all' },
+    { label: t('records.purchases.draft'), value: 'draft' },
+    { label: t('records.purchases.sent'), value: 'sent' },
+    { label: t('records.purchases.partial'), value: 'partial' },
+    { label: t('records.purchases.received'), value: 'received' },
+    { label: t('records.purchases.cancelled'), value: 'cancelled' },
+  ]
 
   return (
     <>
       <PageHead
-        title="Purchases"
-        sub="Purchase orders and goods receipt for the selected store"
+        title={t('records.purchases.title')}
+        sub={t('records.purchases.subtitle')}
         actions={
           <button className="btn btn-pri" onClick={() => void openCreate()}>
-            <Plus size={15} /> Create PO
+            <Plus size={15} /> {t('records.purchases.create')}
           </button>
         }
       />
@@ -239,19 +248,19 @@ export function PurchasesView() {
         cols={3}
         items={[
           {
-            label: 'Open orders',
+            label: t('records.purchases.openOrders'),
             value: orders ? String(openOrders.length) : '-',
-            meta: orders ? 'sent or partially received' : 'Loading…',
+            meta: orders ? t('records.purchases.openMeta') : t('records.purchases.loading'),
           },
           {
-            label: 'Value on order',
+            label: t('records.purchases.valueOnOrder'),
             value: orders ? money(openValue) : '-',
-            meta: 'at ordered unit cost',
+            meta: t('records.purchases.orderedCost'),
           },
           {
-            label: 'Awaiting receipt',
+            label: t('records.purchases.awaitingReceipt'),
             value: orders ? String(openOrders.filter((po) => po.status === 'partial').length) : '-',
-            meta: 'partially delivered',
+            meta: t('records.purchases.partialMeta'),
           },
         ]}
       />
@@ -266,41 +275,41 @@ export function PurchasesView() {
 
       <Card>
         <CardHead
-          title="Purchase orders"
-          sub={orders ? `${visible.length} shown` : 'Loading…'}
+          title={t('records.purchases.ordersTitle')}
+          sub={orders ? t('records.suppliers.shown', { count: visible.length }) : t('records.purchases.loading')}
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {orders && orders.length > 0 ? (
                 <SearchField
                   value={search}
                   onChange={setSearch}
-                  placeholder="Search by PO number or supplier…"
-                  ariaLabel="Search purchase orders"
+                  placeholder={t('records.purchases.searchPlaceholder')}
+                  ariaLabel={t('records.purchases.searchLabel')}
                   width={240}
                 />
               ) : null}
-              <Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter purchase orders" />
+              <Tabs items={filterItems} active={filter} onSelect={setFilter} ariaLabel={t('records.purchases.filterLabel')} />
             </div>
           }
         />
 
-        {loading && <LoadingState label="Loading purchase orders" />}
+        {loading && <LoadingState label={t('records.purchases.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && visible.length === 0 && (
           <EmptyState
             icon={<Warehouse size={24} strokeWidth={1.8} />}
             title={
               term
-                ? 'No orders match this search'
+                ? t('records.purchases.noMatchSearch')
                 : filter === 'all'
-                  ? 'No purchase orders yet'
-                  : 'No orders match this filter'
+                  ? t('records.purchases.noOrders')
+                  : t('records.purchases.noMatchFilter')
             }
-            body="Raise a purchase order against a supplier. Receiving against it is what puts stock on your shelves and records what it cost."
+            body={t('records.purchases.emptyBody')}
             action={
               filter === 'all' && !term ? (
                 <button className="btn btn-pri" onClick={() => void openCreate()}>
-                  <Plus size={15} /> Create PO
+                  <Plus size={15} /> {t('records.purchases.create')}
                 </button>
               ) : undefined
             }
@@ -309,7 +318,7 @@ export function PurchasesView() {
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['PO #', 'Supplier', 'Expected', 'Items', 'Received', 'Value', 'Status', '']}
+            cols={[t('records.purchases.cols.number'), t('records.purchases.cols.supplier'), t('records.purchases.cols.expected'), t('records.purchases.cols.items'), t('records.purchases.cols.received'), t('records.purchases.cols.value'), t('records.purchases.cols.status'), t('records.purchases.cols.actions')]}
             minWidth={940}
           >
             {visible.map((po) => {
@@ -326,18 +335,18 @@ export function PurchasesView() {
                   </td>
                   <td className="num t-strong">{money(po.totalCost)}</td>
                   <td>
-                    <Badge tone={STATUS_TONE[po.status] ?? 'grey'}>{po.status}</Badge>
+                    <Badge tone={STATUS_TONE[po.status] ?? 'grey'}>{enumLabel(t, 'status', po.status)}</Badge>
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                       {po.status === 'draft' && (
                         <button className="btn btn-sm" onClick={() => void send(po)}>
-                          Mark sent
+                          {t('records.purchases.markSent')}
                         </button>
                       )}
                       {['sent', 'partial'].includes(po.status) && (
                         <button className="btn btn-sm btn-pri" onClick={() => openReceive(po)}>
-                          Receive
+                          {t('records.purchases.receive')}
                         </button>
                       )}
                     </div>
@@ -351,15 +360,15 @@ export function PurchasesView() {
 
       {createOpen && (
         <Modal
-          title="Create purchase order"
+          title={t('records.purchases.createTitle')}
           onClose={() => setCreateOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setCreateOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="po-form" disabled={saving}>
-                {saving ? 'Creating…' : 'Create PO'}
+                {saving ? t('records.purchases.creating') : t('records.purchases.create')}
               </button>
             </>
           }
@@ -373,24 +382,24 @@ export function PurchasesView() {
 
             {suppliers.length === 0 ? (
               <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
-                You have no suppliers yet. Add a supplier first. A purchase order has to be raised against one.
+                {t('records.purchases.suppliersEmpty')}
               </div>
             ) : (
               <>
-                <Fld id="po-supplier" label="Supplier">
+                <Fld id="po-supplier" label={t('records.purchases.supplier')}>
                   <select id="po-supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
-                    <option value="">Choose a supplier…</option>
+                    <option value="">{t('records.purchases.chooseSupplier')}</option>
                     {suppliers
                       .filter((s) => s.isActive)
                       .map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name} ({s.leadTimeDays}-day lead time)
+                          {s.name} ({t('records.purchases.leadTime', { count: s.leadTimeDays })})
                         </option>
                       ))}
                   </select>
                 </Fld>
 
-                <Fld id="po-expected" label="Expected date">
+                <Fld id="po-expected" label={t('records.purchases.expectedDate')}>
                   <input
                     id="po-expected"
                     type="date"
@@ -399,19 +408,19 @@ export function PurchasesView() {
                   />
                 </Fld>
 
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', margin: '4px 0 8px' }}>Items</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', margin: '4px 0 8px' }}>{t('records.purchases.items')}</div>
                 {draftLines.map((line, index) => (
                   <div
                     key={index}
                     style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 11, marginBottom: 9 }}
                   >
-                    <Fld id={`po-variant-${index}`} label="Item">
+                    <Fld id={`po-variant-${index}`} label={t('records.purchases.item')}>
                       <select
                         id={`po-variant-${index}`}
                         value={line.variantId}
                         onChange={(e) => setLine(index, 'variantId', e.target.value)}
                       >
-                        <option value="">Choose an item…</option>
+                        <option value="">{t('records.purchases.chooseItem')}</option>
                         {variantOptions.map((v) => (
                           <option key={v.id} value={v.id}>
                             {v.label}
@@ -420,7 +429,7 @@ export function PurchasesView() {
                       </select>
                     </Fld>
                     <div style={{ display: 'flex', gap: 10 }}>
-                      <Fld id={`po-qty-${index}`} label="Quantity">
+                      <Fld id={`po-qty-${index}`} label={t('records.purchases.quantity')}>
                         <input
                           id={`po-qty-${index}`}
                           type="number"
@@ -429,7 +438,7 @@ export function PurchasesView() {
                           onChange={(e) => setLine(index, 'quantityOrdered', e.target.value)}
                         />
                       </Fld>
-                      <Fld id={`po-cost-${index}`} label={`Unit cost (${pack.currencySymbol})`}>
+                      <Fld id={`po-cost-${index}`} label={t('records.purchases.unitCost', { currency: pack.currencySymbol })}>
                         <input
                           id={`po-cost-${index}`}
                           type="number"
@@ -447,7 +456,7 @@ export function PurchasesView() {
                   type="button"
                   onClick={() => setDraftLines((rows) => [...rows, { variantId: '', quantityOrdered: '', unitCost: '' }])}
                 >
-                  <Plus size={14} /> Add item
+                  <Plus size={14} /> {t('records.purchases.addItem')}
                 </button>
               </>
             )}
@@ -457,15 +466,15 @@ export function PurchasesView() {
 
       {receiving && (
         <Modal
-          title={`Receive against ${receiving.poNumber}`}
+          title={t('records.purchases.receiveAgainst', { number: receiving.poNumber })}
           onClose={() => setReceiving(null)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setReceiving(null)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="receive-form" disabled={saving}>
-                {saving ? 'Recording…' : 'Record receipt'}
+                {saving ? t('records.purchases.recording') : t('records.purchases.recordReceipt')}
               </button>
             </>
           }
@@ -477,8 +486,7 @@ export function PurchasesView() {
               </div>
             )}
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 13, lineHeight: 1.5 }}>
-              Enter what actually arrived. A part delivery is fine. The rest stays outstanding on this order. The unit
-              cost you enter here is what updates each item&apos;s average cost.
+              {t('records.purchases.receiveHelp')}
             </div>
 
             {receiving.lines.map((line) => (
@@ -488,10 +496,10 @@ export function PurchasesView() {
               >
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 3 }}>{line.productName}</div>
                 <div className="t-mono" style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 9 }}>
-                  {line.sku} · {line.quantityReceived} of {line.quantityOrdered} received so far
+                  {line.sku} · {t('records.purchases.receivedSoFar', { received: line.quantityReceived, ordered: line.quantityOrdered })}
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <Fld id={`rcv-qty-${line.id}`} label="Quantity arriving">
+                  <Fld id={`rcv-qty-${line.id}`} label={t('records.purchases.quantityArriving')}>
                     <input
                       id={`rcv-qty-${line.id}`}
                       type="number"
@@ -500,7 +508,7 @@ export function PurchasesView() {
                       onChange={(e) => setReceiptQty((q) => ({ ...q, [line.id]: e.target.value }))}
                     />
                   </Fld>
-                  <Fld id={`rcv-cost-${line.id}`} label={`Unit cost (${pack.currencySymbol})`}>
+                  <Fld id={`rcv-cost-${line.id}`} label={t('records.purchases.unitCost', { currency: pack.currencySymbol })}>
                     <input
                       id={`rcv-cost-${line.id}`}
                       type="number"

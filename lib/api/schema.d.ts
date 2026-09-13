@@ -646,14 +646,27 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description No membership or register access */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Tenant not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -698,14 +711,45 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Unauthenticated */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description An active subscription is required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Manager or owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Register or store access is unavailable */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1190,7 +1234,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description No account found for login */
                 404: {
@@ -1198,9 +1244,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            error: string;
-                        };
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
                     };
                 };
                 /** @description Supabase OTP send cooldown is active */
@@ -1209,9 +1253,16 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            error: string;
-                        };
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description OTP provider unavailable */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
                     };
                 };
             };
@@ -1261,14 +1312,146 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Recovery email provider unavailable */
                 502: {
                     headers: {
                         [name: string]: unknown;
                     };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Rotate a bearer access/refresh pair for mobile. Refresh tokens are single-use; a rejected or reused token ends the session. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RefreshRequest"];
+                };
+            };
+            responses: {
+                /** @description Rotated session pair */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefreshResponse"];
+                    };
+                };
+                /** @description Missing refresh token */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Refresh token rejected */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description No tenant membership */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Provider temporarily unavailable */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Revoke the bearer session. Mobile sends Authorization; cookie compatibility is retained for the web surface. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session revoked */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
                     content?: never;
+                };
+                /** @description Session already ended */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Revocation could not be confirmed */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1317,21 +1500,27 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Invalid or expired recovery link */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Owner role required */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1373,19 +1562,50 @@ export interface paths {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
                 };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Invalid or expired code */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description No store membership */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description An account already exists with this email */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Account session provider unavailable */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1427,12 +1647,32 @@ export interface paths {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
                 };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Invalid or expired code */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description No store membership */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1468,12 +1708,23 @@ export interface paths {
                         "application/json": components["schemas"]["Member"][];
                     };
                 };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Insufficient permissions */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1501,19 +1752,41 @@ export interface paths {
                         "application/json": components["schemas"]["Member"];
                     };
                 };
-                /** @description Invalid staff details */
+                /** @description Invalid staff details or store scope */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Insufficient permissions */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Staff profile could not be created */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1555,12 +1828,50 @@ export interface paths {
                         "application/json": components["schemas"]["Member"];
                     };
                 };
+                /** @description Invalid invite or store scope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Insufficient permissions */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Member already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Invite could not be sent */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1608,19 +1919,50 @@ export interface paths {
                         "application/json": components["schemas"]["Member"];
                     };
                 };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Insufficient permissions */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Member not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Cannot remove the last owner */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1657,19 +1999,41 @@ export interface paths {
                         "application/json": components["schemas"]["Member"];
                     };
                 };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Insufficient permissions */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Member not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Cannot remove the last owner */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1712,19 +2076,41 @@ export interface paths {
                         "application/json": components["schemas"]["Member"];
                     };
                 };
+                /** @description Invalid PIN or store scope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Insufficient permissions */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description Member not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -1804,6 +2190,82 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Paginated tenant-scoped catalog records with server-side search. Checkout compatibility continues to use GET /products. */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated products */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductRecords"];
+                    };
+                };
+                /** @description Invalid product query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description An active subscription is required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Store or register access is not available */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2100,6 +2562,42 @@ export interface paths {
                         "application/json": components["schemas"]["LowStockVariant"][];
                     };
                 };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description An active subscription is required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Manager or owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Register or store access is unavailable */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
             };
         };
         put?: never;
@@ -2149,14 +2647,27 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description No staff record found for this account */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -2194,6 +2705,15 @@ export interface paths {
                         "application/json": {
                             ok: boolean;
                         };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
                     };
                 };
             };
@@ -2236,19 +2756,50 @@ export interface paths {
                         "application/json": components["schemas"]["PinSwitchResponse"];
                     };
                 };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Incorrect PIN, locked out, or unauthenticated */
                 401: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Staff member is not allowed for this store */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description The browser must be paired before a register or approval session can start */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description PIN rate limit reached */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -2297,7 +2848,18 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -2335,6 +2897,15 @@ export interface paths {
                         "application/json": {
                             ok: boolean;
                         };
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
                     };
                 };
             };
@@ -2382,6 +2953,67 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sales/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Read-only online total for whole-quantity carts without discounts. No reservation; POST /sales revalidates all state. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaleQuoteRequest"];
+                };
+            };
+            responses: {
+                /** @description Server total */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SaleQuote"];
+                    };
+                };
+                /** @description Invalid cart or store scope */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Store or item not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inactive item or insufficient stock */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -2492,6 +3124,7 @@ export interface paths {
                 query?: {
                     search?: string;
                     status?: string;
+                    range?: "today" | "7d" | "month";
                     from?: string;
                     to?: string;
                     cursor?: string;
@@ -2510,6 +3143,51 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["SaleList"];
+                    };
+                };
+                /** @description Invalid sale query or incompatible range/from/to filters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description An active subscription is required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Register or paired-terminal access is unavailable */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
                     };
                 };
             };
@@ -2983,7 +3661,36 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description An active subscription is required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -3730,6 +4437,33 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["StoreList"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Store access denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Register is locked */
+                423: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
                     };
                 };
             };
@@ -6502,10 +7236,49 @@ export interface components {
                 /** @enum {string} */
                 taxTreatment: "cgst_sgst" | "igst";
             } | null;
+            /** @default [] */
+            stores: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                city: string | null;
+                state: string | null;
+                country: string;
+                isActive: boolean;
+                isOwnStore: boolean;
+            }[];
+            /** @enum {string|null} */
+            region: "IN" | "US" | null;
+            /** @default [] */
+            permissions: string[];
+            /** @default [] */
+            capabilities: string[];
             onboarding: {
                 step: number;
                 completed: boolean;
             };
+            operator?: {
+                /** @enum {string} */
+                state: "absent" | "valid" | "invalid" | "locked";
+                staff: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    role: "owner" | "manager" | "cashier";
+                    /** Format: uuid */
+                    storeId: string | null;
+                    mustChangePin: boolean;
+                } | null;
+                registerLocked: boolean;
+                mustChangePin: boolean;
+            };
+        };
+        ApiErrorEnvelope: {
+            code: string;
+            message: string;
+            retryAfterSeconds?: number;
+            /** Format: uuid */
+            requestId?: string;
         };
         Dashboard: {
             /** @enum {string} */
@@ -6846,6 +7619,33 @@ export interface components {
         OwnerPinRecoveryRequest: {
             /** Format: email */
             email: string;
+            /**
+             * @default web
+             * @enum {string}
+             */
+            platform: "web" | "mobile";
+            /** @enum {string} */
+            region?: "IN" | "US";
+        };
+        RefreshResponse: {
+            user?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: email */
+                email: string;
+                /** @enum {string} */
+                role: "owner" | "manager" | "cashier";
+                /** Format: uuid */
+                tenantId: string;
+            };
+            session: {
+                accessToken: string;
+                refreshToken: string;
+            };
+            operatorToken?: string;
+        };
+        RefreshRequest: {
+            refreshToken: string;
         };
         SetPinRequest: {
             pin: string;
@@ -6973,7 +7773,13 @@ export interface components {
             createdAt: string;
         };
         /** @enum {string} */
-        UnitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "box" | "pack" | "set" | "pair";
+        UnitOfMeasure: "piece" | "kg" | "gram" | "litre" | "ml" | "metre" | "lb" | "oz" | "gallon" | "quart" | "pint" | "floz" | "yard" | "foot" | "inch" | "box" | "pack" | "set" | "pair";
+        ProductRecords: {
+            items: components["schemas"]["Product"][];
+            total: number;
+            /** Format: date-time */
+            nextCursor: string | null;
+        };
         MasterItemList: components["schemas"]["MasterItem"][];
         MasterItem: {
             /** Format: uuid */
@@ -7119,6 +7925,28 @@ export interface components {
             loggedOutAt: string | null;
             logoutReason: string | null;
             lastSeenAt: string;
+        };
+        SaleQuote: {
+            /** Format: uuid */
+            storeId: string;
+            currency: string;
+            subtotal: string;
+            taxAmount: string;
+            totalAmount: string;
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                productName: string;
+                quantity: number;
+                unitPrice: string;
+            }[];
+        };
+        SaleQuoteRequest: {
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                quantity: number;
+            }[];
         };
         Sale: {
             /** Format: uuid */

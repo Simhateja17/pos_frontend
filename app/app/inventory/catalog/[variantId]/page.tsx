@@ -7,6 +7,8 @@ import { authHeaders } from '@/lib/api/auth-headers'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { UNITS, allowsFractionalQuantity, unitSuffix } from '@/lib/units'
+import { useAppRegion } from '@/lib/app-region'
+import { enumLabel, useT, type MessageKey } from '@/lib/i18n/i18n'
 import {
   type Supplier,
   type SupplierProduct,
@@ -66,38 +68,17 @@ type StockMovement = {
 type ReasonCode = 'damage' | 'shrinkage_theft' | 'count_correction' | 'other'
 type DetailTab = 'variants' | 'history' | 'suppliers'
 
-const DETAIL_TABS: readonly { label: string; value: DetailTab }[] = [
-  { label: 'Variants', value: 'variants' },
-  { label: 'Stock history', value: 'history' },
-  { label: 'Suppliers', value: 'suppliers' },
-]
-
-const SUPPLIER_LINK_EMPTY_STATE =
-  'No suppliers linked to this product yet. Add one so its lead time feeds the reorder suggestion for this item.'
-
-const IDENTITY_LOCK_NOTICE =
-  "Size, color, and material can't be changed once stock has moved for this variant. Price and reorder threshold can still be edited anytime."
-const CASHIER_ADJUST_ERROR = 'Only managers and owners can adjust stock.'
-const GENERIC_MOVEMENT_ERROR = 'Something went wrong recording this stock movement. Try again.'
-const HISTORY_EMPTY_STATE = 'No stock movements yet. Receive stock to get started.'
-const LOAD_ERROR = "Couldn't load this variant. Check your connection and try again."
-
-const REASON_LABELS: Record<ReasonCode, string> = {
-  damage: 'Damage',
-  shrinkage_theft: 'Shrinkage / theft',
-  count_correction: 'Count correction',
-  other: 'Other',
-}
-
 function variantAttributes(variant: Variant) {
   return [variant.size, variant.color, variant.material].filter(Boolean).join(' / ') || '-'
 }
 
-function movementTypeLabel(type: StockMovement['movementType']) {
-  return type.charAt(0).toUpperCase() + type.slice(1)
+function movementTypeLabel(t: ReturnType<typeof useT>, type: StockMovement['movementType']) {
+  return t(`inventory.detail.${type}` as MessageKey)
 }
 
 export default function VariantDetailPage() {
+  const t = useT()
+  const { dateLocale } = useAppRegion()
   const params = useParams<{ variantId: string }>()
   const variantId = params.variantId
 
@@ -169,7 +150,7 @@ export default function VariantDetailPage() {
 
     if (error || !data) {
       setIsLoading(false)
-      setLoadError(LOAD_ERROR)
+      setLoadError(t('inventory.detail.genericLoadError'))
       return
     }
 
@@ -179,7 +160,7 @@ export default function VariantDetailPage() {
     setIsLoading(false)
 
     if (!foundProduct || !foundVariant) {
-      setLoadError(LOAD_ERROR)
+      setLoadError(t('inventory.detail.productNotFound'))
       return
     }
 
@@ -198,6 +179,8 @@ export default function VariantDetailPage() {
     setEditReorderThreshold(String(foundVariant.reorderThreshold))
     setEditBarcode(foundVariant.barcode ?? '')
     setEditUnit(foundVariant.unitOfMeasure)
+    // t is intentionally omitted: changing locale must not refetch this variant.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantId])
 
   const loadHistory = useCallback(async () => {
@@ -210,11 +193,13 @@ export default function VariantDetailPage() {
     })
 
     if (error || !data) {
-      setHistoryError(LOAD_ERROR)
+      setHistoryError(t('inventory.detail.genericLoadError'))
       return
     }
 
     setHistory(data)
+    // t is intentionally omitted: changing locale must not refetch history.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantId])
 
   const loadSupplierLinks = useCallback(async () => {
@@ -227,8 +212,10 @@ export default function VariantDetailPage() {
       setSupplierProducts(links)
       setSuppliers(allSuppliers)
     } catch (cause) {
-      setSupplierLinkError(cause instanceof Error ? cause.message : 'Suppliers for this product are unavailable right now.')
+      setSupplierLinkError(cause instanceof Error ? cause.message : t('inventory.detail.supplierError'))
     }
+    // t is intentionally omitted: changing locale must not refetch supplier links.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantId])
 
   useEffect(() => {
@@ -267,11 +254,11 @@ export default function VariantDetailPage() {
 
     const leadTimeDays = Number(linkLeadTimeDays)
     if (!editingLink && !linkSupplierId) {
-      setLinkFormError('Choose a supplier.')
+      setLinkFormError(t('inventory.detail.supplierChoose'))
       return
     }
     if (!Number.isInteger(leadTimeDays) || leadTimeDays < 1) {
-      setLinkFormError('Lead time must be a whole number of days, at least 1.')
+      setLinkFormError(t('inventory.detail.leadTimeError'))
       return
     }
 
@@ -293,7 +280,7 @@ export default function VariantDetailPage() {
       setLinkFormOpen(false)
       await loadSupplierLinks()
     } catch (cause) {
-      setLinkFormError(cause instanceof Error ? cause.message : 'That supplier could not be saved.')
+      setLinkFormError(cause instanceof Error ? cause.message : t('inventory.detail.supplierError'))
     } finally {
       setIsSavingLink(false)
     }
@@ -304,7 +291,7 @@ export default function VariantDetailPage() {
       await deleteAuthenticatedSupplierProduct(variantId, link.id)
       await loadSupplierLinks()
     } catch (cause) {
-      setSupplierLinkError(cause instanceof Error ? cause.message : 'That supplier link could not be removed.')
+      setSupplierLinkError(cause instanceof Error ? cause.message : t('inventory.detail.supplierError'))
     }
   }
 
@@ -320,7 +307,7 @@ export default function VariantDetailPage() {
       taxRatePercent !== null &&
       (!Number.isFinite(taxRatePercent) || taxRatePercent < 0 || taxRatePercent > 100)
     ) {
-      setEditError('Item tax rate must be between 0 and 100%.')
+      setEditError(t('inventory.newProduct.validationTax', { variant: '' }))
       setIsSavingEdit(false)
       return
     }
@@ -350,7 +337,7 @@ export default function VariantDetailPage() {
     setIsSavingEdit(false)
 
     if (error) {
-      setEditError(GENERIC_MOVEMENT_ERROR)
+      setEditError(t('inventory.detail.genericSaveError'))
       return
     }
 
@@ -363,7 +350,7 @@ export default function VariantDetailPage() {
     const { error } = await apiClient.PATCH('/products/{productId}', {
       params: { path: { productId: product.id } }, body: { isActive: !product.isActive }, headers,
     })
-    if (error) { setEditError('Product status could not be changed. Try again.'); return }
+    if (error) { setEditError(t('inventory.detail.productStatusError')); return }
     await loadVariant()
   }
 
@@ -387,12 +374,12 @@ export default function VariantDetailPage() {
     setIsReceiving(false)
 
     if (error) {
-      setReceiveError(GENERIC_MOVEMENT_ERROR)
+      setReceiveError(t('inventory.detail.movementError'))
       return
     }
 
     setReceiveOpen(false)
-    setSuccessMessage(`Stock received: ${receiveQty} units added to ${variantAttributes(variant)}`)
+    setSuccessMessage(t('inventory.detail.successReceive', { quantity: receiveQty, variant: variantAttributes(variant) }))
     setReceiveQty('')
     await Promise.all([loadVariant(), loadHistory()])
   }
@@ -407,7 +394,7 @@ export default function VariantDetailPage() {
     // zero" refine client-side so a 0 entry gets a field-specific message
     // instead of the generic error (0 passes HTML5 required validation).
     if (Number(adjustQty) === 0) {
-      setAdjustError('Quantity cannot be zero')
+      setAdjustError(t('inventory.detail.quantityZero'))
       return
     }
 
@@ -429,12 +416,12 @@ export default function VariantDetailPage() {
 
     if (error) {
       const apiMessage = (error as { error?: string } | undefined)?.error
-      setAdjustError(response?.status === 403 ? CASHIER_ADJUST_ERROR : apiMessage ?? GENERIC_MOVEMENT_ERROR)
+      setAdjustError(response?.status === 403 ? t('inventory.detail.cashierAdjust') : apiMessage ?? t('inventory.detail.movementError'))
       return
     }
 
     setAdjustOpen(false)
-    setSuccessMessage(`Adjustment recorded: ${variantAttributes(variant)} updated`)
+    setSuccessMessage(t('inventory.detail.successAdjustment', { variant: variantAttributes(variant) }))
     setAdjustQty('')
     setAdjustReason('damage')
     setAdjustNote('')
@@ -451,7 +438,7 @@ export default function VariantDetailPage() {
     // zero" refine client-side so a 0 entry gets a field-specific message
     // instead of the generic error (0 passes HTML5 required validation).
     if (Number(transferQty) === 0) {
-      setTransferError('Quantity cannot be zero')
+      setTransferError(t('inventory.detail.quantityZero'))
       return
     }
 
@@ -470,12 +457,12 @@ export default function VariantDetailPage() {
     setIsTransferring(false)
 
     if (error) {
-      setTransferError(GENERIC_MOVEMENT_ERROR)
+      setTransferError(t('inventory.detail.movementError'))
       return
     }
 
     setTransferOpen(false)
-    setSuccessMessage(`Transfer recorded: ${variantAttributes(variant)} updated`)
+    setSuccessMessage(t('inventory.detail.successTransfer', { variant: variantAttributes(variant) }))
     setTransferQty('')
     await Promise.all([loadVariant(), loadHistory()])
   }
@@ -485,9 +472,9 @@ export default function VariantDetailPage() {
   if (isLoading) {
     return (
       <>
-        <PageHead title="Variant" />
+        <PageHead title={t('inventory.detail.variantsTab')} />
         <Card>
-          <LoadingState label="Loading variant" />
+          <LoadingState label={t('inventory.detail.loadingVariant')} />
         </Card>
       </>
     )
@@ -496,9 +483,9 @@ export default function VariantDetailPage() {
   if (loadError || !product || !variant) {
     return (
       <>
-        <PageHead title="Variant" />
+        <PageHead title={t('inventory.detail.variantsTab')} />
         <Card>
-          <ErrorState message={loadError ?? LOAD_ERROR} onRetry={() => void loadVariant()} />
+          <ErrorState message={loadError ?? t('inventory.detail.genericLoadError')} onRetry={() => void loadVariant()} />
         </Card>
       </>
     )
@@ -511,16 +498,16 @@ export default function VariantDetailPage() {
         sub={`${variantAttributes(variant)} · SKU ${variant.sku}`}
         actions={
           <>
-            <Badge tone={product.isActive ? 'green' : 'grey'}>{product.isActive ? 'Active' : 'Inactive'}</Badge>
-            <button className="btn" onClick={() => void toggleProductStatus()}>{product.isActive ? 'Mark inactive' : 'Reactivate'}</button>
+            <Badge tone={product.isActive ? 'green' : 'grey'}>{product.isActive ? t('inventory.detail.active') : t('inventory.detail.inactive')}</Badge>
+            <button className="btn" onClick={() => void toggleProductStatus()}>{product.isActive ? t('inventory.detail.markInactive') : t('inventory.detail.reactivate')}</button>
             <button className="btn btn-pri" disabled={!variant.trackInventory} onClick={() => setReceiveOpen(true)}>
-              Receive stock
+              {t('inventory.detail.receiveStock')}
             </button>
             <button className="btn" disabled={!variant.trackInventory} onClick={() => setAdjustOpen(true)}>
-              Adjust stock
+              {t('inventory.detail.adjustStock')}
             </button>
             <button className="btn" disabled={!variant.trackInventory} onClick={() => setTransferOpen(true)}>
-              Transfer stock
+              {t('inventory.detail.transferStock')}
             </button>
           </>
         }
@@ -546,14 +533,18 @@ export default function VariantDetailPage() {
             {variant.currentStock}
           </span>
           <span className="t-sub" style={{ marginLeft: 8 }}>
-            {unitSuffix(variant.unitOfMeasure) || 'units'} in stock
+            {unitSuffix(variant.unitOfMeasure) || t('inventory.units.piece')} {t('inventory.detail.inStock')}
           </span>
         </CardPad>
       </Card>
 
       <Card>
         <CardPad style={{ paddingBottom: 0 }}>
-          <Tabs items={DETAIL_TABS} active={tab} onSelect={setTab} ariaLabel="Variant detail sections" />
+          <Tabs items={[
+            { label: t('inventory.detail.variantsTab'), value: 'variants' as const },
+            { label: t('inventory.detail.stockHistoryTab'), value: 'history' as const },
+            { label: t('inventory.detail.suppliersTab'), value: 'suppliers' as const },
+          ]} active={tab} onSelect={setTab} ariaLabel={t('inventory.detail.variantDetails')} />
         </CardPad>
 
         {tab === 'variants' && (
@@ -566,39 +557,39 @@ export default function VariantDetailPage() {
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                <Fld id="detail-size" label="Size">
+                <Fld id="detail-size" label={t('inventory.newProduct.sizePack')}>
                   <input id="detail-size" value={variant.size ?? ''} disabled />
                 </Fld>
-                <Fld id="detail-color" label="Color">
+                <Fld id="detail-color" label={t('inventory.newProduct.color')}>
                   <input id="detail-color" value={variant.color ?? ''} disabled />
                 </Fld>
-                <Fld id="detail-material" label="Material">
+                <Fld id="detail-material" label={t('inventory.newProduct.material')}>
                   <input id="detail-material" value={variant.material ?? ''} disabled />
                 </Fld>
               </div>
 
               {variant.identityLocked && (
                 <p className="t-sub" style={{ fontSize: 11.5, marginTop: 8 }}>
-                  {IDENTITY_LOCK_NOTICE}
+                  {t('inventory.detail.identityLocked')}
                 </p>
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
-                <Fld id="edit-barcode" label="Barcode">
+                <Fld id="edit-barcode" label={t('inventory.detail.barcode')}>
                   <input
                     id="edit-barcode"
                     inputMode="numeric"
                     maxLength={14}
                     value={editBarcode}
                     onChange={(e) => setEditBarcode(e.target.value)}
-                    placeholder="Scan or type, or leave blank if none"
+                    placeholder={t('inventory.newProduct.barcodePlaceholder')}
                   />
                 </Fld>
-                <Fld id="edit-unit" label="Sold by">
+                <Fld id="edit-unit" label={t('inventory.detail.soldBy')}>
                   <select id="edit-unit" value={editUnit} onChange={(e) => setEditUnit(e.target.value)}>
                     {UNITS.map((unit) => (
                       <option key={unit.value} value={unit.value}>
-                        {unit.label}
+                        {t(`inventory.units.${unit.value}` as MessageKey)}
                       </option>
                     ))}
                   </select>
@@ -606,10 +597,10 @@ export default function VariantDetailPage() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 8 }}>
-                <Fld id="edit-mrp" label="MRP">
+                <Fld id="edit-mrp" label={t('inventory.detail.mrp')}>
                   <input id="edit-mrp" type="number" min="0" step="0.01" required value={editMrp} onChange={(e) => setEditMrp(e.target.value)} />
                 </Fld>
-                <Fld id="edit-price" label={unitSuffix(editUnit) ? `Price per ${unitSuffix(editUnit)}` : 'Price'}>
+                <Fld id="edit-price" label={unitSuffix(editUnit) ? t('inventory.newProduct.pricePer', { unit: unitSuffix(editUnit) }) : t('inventory.catalog.cols.price')}>
                   <input
                     id="edit-price"
                     type="number"
@@ -619,7 +610,7 @@ export default function VariantDetailPage() {
                     onChange={(e) => setEditPrice(e.target.value)}
                   />
                 </Fld>
-                <Fld id="edit-tax-rate" label="Item tax rate (%)">
+                <Fld id="edit-tax-rate" label={t('inventory.newProduct.gstRate')}>
                   <input
                     id="edit-tax-rate"
                     type="number"
@@ -628,10 +619,10 @@ export default function VariantDetailPage() {
                     step="0.01"
                     value={editTaxRatePercent}
                     onChange={(e) => setEditTaxRatePercent(e.target.value)}
-                    placeholder="Set item rate"
+                    placeholder={t('inventory.newProduct.gstRatePlaceholder')}
                   />
                 </Fld>
-                <Fld id="edit-reorder-threshold" label="Reorder threshold">
+                <Fld id="edit-reorder-threshold" label={t('inventory.detail.reorderAt')}>
                   <input
                     id="edit-reorder-threshold"
                     type="number"
@@ -645,20 +636,20 @@ export default function VariantDetailPage() {
               </div>
 
               <details style={{ marginTop: 12 }}>
-                <summary className="t-strong" style={{ cursor: 'pointer' }}>Optional purchasing and stock details</summary>
+                <summary className="t-strong" style={{ cursor: 'pointer' }}>{t('inventory.newProduct.moreVariantDetails')}</summary>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8, marginTop: 10 }}>
-                  <Fld id="edit-cost-price" label="Cost price"><input id="edit-cost-price" type="number" min="0" step="0.01" value={editCostPrice} onChange={(e) => setEditCostPrice(e.target.value)} placeholder="Optional" /></Fld>
-                  <Fld id="edit-expiry-date" label="Expiry date"><input id="edit-expiry-date" type="date" value={editExpiryDate} onChange={(e) => setEditExpiryDate(e.target.value)} /></Fld>
-                  <Fld id="edit-purchase-unit" label="Purchase unit"><input id="edit-purchase-unit" value={editPurchaseUnit} onChange={(e) => setEditPurchaseUnit(e.target.value)} placeholder="Carton, case, bag…" /></Fld>
-                  <Fld id="edit-purchase-pack-size" label="Units per purchase pack"><input id="edit-purchase-pack-size" type="number" min="0.001" step="0.001" value={editPurchasePackSize} onChange={(e) => setEditPurchasePackSize(e.target.value)} placeholder="Optional" /></Fld>
-                  <Fld id="edit-hsn-sac" label="HSN/SAC"><input id="edit-hsn-sac" inputMode="numeric" value={editHsnSac} onChange={(e) => setEditHsnSac(e.target.value)} placeholder="Optional" /></Fld>
+                  <Fld id="edit-cost-price" label={t('inventory.detail.costPrice')}><input id="edit-cost-price" type="number" min="0" step="0.01" value={editCostPrice} onChange={(e) => setEditCostPrice(e.target.value)} placeholder={t('inventory.newProduct.optional')} /></Fld>
+                  <Fld id="edit-expiry-date" label={t('inventory.detail.expiryDate')}><input id="edit-expiry-date" type="date" value={editExpiryDate} onChange={(e) => setEditExpiryDate(e.target.value)} /></Fld>
+                  <Fld id="edit-purchase-unit" label={t('inventory.detail.purchaseUnit')}><input id="edit-purchase-unit" value={editPurchaseUnit} onChange={(e) => setEditPurchaseUnit(e.target.value)} placeholder={t('inventory.newProduct.purchaseUnit')} /></Fld>
+                  <Fld id="edit-purchase-pack-size" label={t('inventory.detail.purchasePackSize')}><input id="edit-purchase-pack-size" type="number" min="0.001" step="0.001" value={editPurchasePackSize} onChange={(e) => setEditPurchasePackSize(e.target.value)} placeholder={t('inventory.newProduct.optional')} /></Fld>
+                  <Fld id="edit-hsn-sac" label={t('inventory.detail.hsnSac')}><input id="edit-hsn-sac" inputMode="numeric" value={editHsnSac} onChange={(e) => setEditHsnSac(e.target.value)} placeholder={t('inventory.newProduct.optional')} /></Fld>
                 </div>
-                <label style={{ display: 'flex', gap: 8, marginTop: 10 }}><input type="checkbox" checked={editTrackInventory} onChange={(e) => setEditTrackInventory(e.target.checked)} /> Track inventory</label>
-                <label style={{ display: 'flex', gap: 8, marginTop: 8, opacity: editTrackInventory ? 1 : 0.55 }}><input type="checkbox" checked={editAllowNegativeStock} disabled={!editTrackInventory} onChange={(e) => setEditAllowNegativeStock(e.target.checked)} /> Allow selling when stock reaches zero</label>
+                <label style={{ display: 'flex', gap: 8, marginTop: 10 }}><input type="checkbox" checked={editTrackInventory} onChange={(e) => setEditTrackInventory(e.target.checked)} /> {t('inventory.detail.trackInventory')}</label>
+                <label style={{ display: 'flex', gap: 8, marginTop: 8, opacity: editTrackInventory ? 1 : 0.55 }}><input type="checkbox" checked={editAllowNegativeStock} disabled={!editTrackInventory} onChange={(e) => setEditAllowNegativeStock(e.target.checked)} /> {t('inventory.detail.allowNegative')}</label>
               </details>
 
               <button type="submit" className="btn btn-pri" disabled={isSavingEdit} style={{ marginTop: 10 }}>
-                {isSavingEdit ? 'Saving…' : 'Save changes'}
+                {isSavingEdit ? t('inventory.detail.saving') : t('inventory.detail.save')}
               </button>
             </form>
           </CardPad>
@@ -667,11 +658,15 @@ export default function VariantDetailPage() {
         {tab === 'suppliers' && (
           <CardPad>
             <CardHead
-              title="Suppliers"
-              sub={supplierProducts ? `${supplierProducts.length} linked` : 'Loading…'}
+              title={t('inventory.detail.suppliersTab')}
+              sub={supplierProducts
+                ? supplierProducts.length === 1
+                  ? t('inventory.detail.linkedOne')
+                  : t('inventory.detail.linkedMany', { count: supplierProducts.length })
+                : t('inventory.detail.loadingVariant')}
               right={
                 <button className="btn btn-sm btn-pri" onClick={openLinkCreate}>
-                  Add supplier
+                  {t('inventory.detail.addSupplier')}
                 </button>
               }
             />
@@ -679,32 +674,32 @@ export default function VariantDetailPage() {
             {!supplierLinkError && supplierProducts && supplierProducts.length === 0 && (
               <EmptyState
                 icon={<Badge tone="grey">-</Badge>}
-                title="No suppliers linked"
-                body={SUPPLIER_LINK_EMPTY_STATE}
+                title={t('inventory.detail.noSuppliers')}
+                body={t('inventory.detail.noSuppliersBody')}
                 action={
                   <button className="btn btn-pri" onClick={openLinkCreate}>
-                    Add supplier
+                    {t('inventory.detail.addSupplier')}
                   </button>
                 }
               />
             )}
             {!supplierLinkError && supplierProducts && supplierProducts.length > 0 && (
-              <DataTable cols={['Supplier', 'Lead time', 'Cost', 'Supplier SKU', 'Min order', '', '']} minWidth={780}>
+              <DataTable cols={[t('inventory.detail.supplier'), t('inventory.detail.leadTime'), t('inventory.detail.costPrice'), t('inventory.detail.supplierSku'), t('inventory.detail.minOrder'), t('inventory.detail.primary'), t('inventory.detail.actions')]} minWidth={780}>
                 {supplierProducts.map((link) => (
                   <tr key={link.id}>
                     <td className="t-strong">{link.supplierName}</td>
-                    <td className="num">{link.leadTimeDays} days</td>
+                    <td className="num">{link.leadTimeDays === 1 ? t('inventory.detail.daysOne') : t('inventory.detail.daysMany', { count: link.leadTimeDays })}</td>
                     <td className="num t-sub">{link.unitCost ? `₹${link.unitCost}` : '-'}</td>
                     <td className="t-sub">{link.supplierSku ?? '-'}</td>
                     <td className="num t-sub">{link.minOrderQty ?? '-'}</td>
-                    <td>{link.isPrimary && <Badge tone="green">Primary</Badge>}</td>
+                    <td>{link.isPrimary && <Badge tone="green">{t('inventory.detail.primary')}</Badge>}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                         <button className="btn btn-sm" onClick={() => openLinkEdit(link)}>
-                          Edit
+                          {t('inventory.detail.edit')}
                         </button>
                         <button className="btn btn-sm" onClick={() => void handleUnlink(link)}>
-                          Remove
+                          {t('inventory.detail.unlink')}
                         </button>
                       </div>
                     </td>
@@ -718,7 +713,7 @@ export default function VariantDetailPage() {
         {tab === 'history' && (
           <CardPad>
             {historyError && <ErrorState message={historyError} onRetry={() => void loadHistory()} />}
-            {!historyError && history.length === 0 && <p className="t-sub">{HISTORY_EMPTY_STATE}</p>}
+            {!historyError && history.length === 0 && <p className="t-sub">{t('inventory.detail.noHistoryBody')}</p>}
             {!historyError && history.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {history.map((movement) => (
@@ -734,13 +729,13 @@ export default function VariantDetailPage() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Badge tone="grey">{movementTypeLabel(movement.movementType)}</Badge>
+                      <Badge tone="grey">{movementTypeLabel(t, movement.movementType)}</Badge>
                       <span style={{ fontWeight: 700 }}>
                         {movement.quantityDelta > 0 ? `+${movement.quantityDelta}` : movement.quantityDelta}
                       </span>
-                      {movement.reasonCode && <span className="t-sub">{REASON_LABELS[movement.reasonCode]}</span>}
+                      {movement.reasonCode && <span className="t-sub">{t(`inventory.detail.reasons.${movement.reasonCode === 'shrinkage_theft' ? 'shrinkageTheft' : movement.reasonCode === 'count_correction' ? 'countCorrection' : movement.reasonCode}` as MessageKey)}</span>}
                     </div>
-                    <span className="t-sub">{new Date(movement.createdAt).toLocaleString()}</span>
+                    <span className="t-sub">{new Date(movement.createdAt).toLocaleString(dateLocale)}</span>
                   </div>
                 ))}
               </div>
@@ -751,11 +746,11 @@ export default function VariantDetailPage() {
 
       {receiveOpen && (
         <Modal
-          title="Receive stock"
+          title={t('inventory.detail.receiveTitle')}
           onClose={() => setReceiveOpen(false)}
           footer={
             <button type="submit" form="receive-form" className="btn btn-pri" disabled={isReceiving}>
-              {isReceiving ? 'Saving…' : 'Receive stock'}
+              {isReceiving ? t('inventory.detail.receiving') : t('inventory.detail.receiveStock')}
             </button>
           }
         >
@@ -765,7 +760,7 @@ export default function VariantDetailPage() {
                 {receiveError}
               </div>
             )}
-            <Fld id="receive-qty" label="Quantity">
+            <Fld id="receive-qty" label={t('inventory.detail.quantity')}>
               <input
                 id="receive-qty"
                 type="number"
@@ -784,11 +779,11 @@ export default function VariantDetailPage() {
 
       {adjustOpen && (
         <Modal
-          title="Adjust stock"
+          title={t('inventory.detail.adjustTitle')}
           onClose={() => setAdjustOpen(false)}
           footer={
             <button type="submit" form="adjust-form" className="btn btn-pri" disabled={isAdjusting}>
-              {isAdjusting ? 'Saving…' : 'Adjust stock'}
+              {isAdjusting ? t('inventory.detail.adjusting') : t('inventory.detail.adjustStock')}
             </button>
           }
         >
@@ -798,7 +793,7 @@ export default function VariantDetailPage() {
                 {adjustError}
               </div>
             )}
-            <Fld id="adjust-qty" label="Quantity">
+            <Fld id="adjust-qty" label={t('inventory.detail.quantity')}>
               <input
                 id="adjust-qty"
                 type="number"
@@ -810,24 +805,24 @@ export default function VariantDetailPage() {
                 onChange={(e) => setAdjustQty(e.target.value)}
               />
             </Fld>
-            <Fld id="adjust-reason" label="Reason">
+            <Fld id="adjust-reason" label={t('inventory.detail.reason')}>
               <select
                 id="adjust-reason"
                 value={adjustReason}
                 onChange={(e) => setAdjustReason(e.target.value as ReasonCode)}
               >
-                <option value="damage">Damage</option>
-                <option value="shrinkage_theft">Shrinkage / theft</option>
-                <option value="count_correction">Count correction</option>
-                <option value="other">Other</option>
+                <option value="damage">{t('inventory.detail.reasons.damage')}</option>
+                <option value="shrinkage_theft">{t('inventory.detail.reasons.shrinkageTheft')}</option>
+                <option value="count_correction">{t('inventory.detail.reasons.countCorrection')}</option>
+                <option value="other">{t('inventory.detail.reasons.other')}</option>
               </select>
             </Fld>
             {adjustReason === 'other' && (
-              <Fld id="adjust-note" label="Notes">
+              <Fld id="adjust-note" label={t('inventory.detail.movementNote')}>
                 <input
                   id="adjust-note"
                   required
-                  placeholder="Describe the reason for this adjustment"
+                  placeholder={t('inventory.detail.movementNotePlaceholder')}
                   value={adjustNote}
                   onChange={(e) => setAdjustNote(e.target.value)}
                 />
@@ -839,15 +834,15 @@ export default function VariantDetailPage() {
 
       {linkFormOpen && (
         <Modal
-          title={editingLink ? `Edit ${editingLink.supplierName}` : 'Add supplier'}
+          title={editingLink ? t('inventory.detail.editSupplierTitle', { name: editingLink.supplierName }) : t('inventory.detail.addSupplier')}
           onClose={() => setLinkFormOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setLinkFormOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="supplier-link-form" disabled={isSavingLink}>
-                {isSavingLink ? 'Saving…' : editingLink ? 'Save changes' : 'Add supplier'}
+                {isSavingLink ? t('inventory.detail.saving') : editingLink ? t('inventory.detail.save') : t('inventory.detail.addSupplier')}
               </button>
             </>
           }
@@ -860,10 +855,10 @@ export default function VariantDetailPage() {
             )}
 
             {!editingLink && (
-              <Fld id="link-supplier" label="Supplier">
+              <Fld id="link-supplier" label={t('inventory.detail.supplier')}>
                 <select id="link-supplier" value={linkSupplierId} onChange={(e) => setLinkSupplierId(e.target.value)} required>
                   <option value="" disabled>
-                    Choose a supplier
+                    {t('inventory.detail.supplierChoose')}
                   </option>
                   {(suppliers ?? []).map((supplier) => (
                     <option key={supplier.id} value={supplier.id}>
@@ -874,7 +869,7 @@ export default function VariantDetailPage() {
               </Fld>
             )}
 
-            <Fld id="link-lead" label="Lead time (days)">
+            <Fld id="link-lead" label={`${t('inventory.detail.leadTime')} (${t('inventory.detail.daysLabel')})`}>
               <input
                 id="link-lead"
                 type="number"
@@ -885,12 +880,11 @@ export default function VariantDetailPage() {
               />
             </Fld>
             <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-              How many days this supplier takes to deliver this specific product. The primary supplier's lead time
-              feeds this product's reorder suggestion.
+              {t('inventory.detail.leadTimeHelp')}
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <Fld id="link-cost" label="Unit cost (₹)">
+              <Fld id="link-cost" label={`${t('inventory.detail.costPrice')} (₹)`}>
                 <input
                   id="link-cost"
                   type="number"
@@ -900,12 +894,12 @@ export default function VariantDetailPage() {
                   onChange={(e) => setLinkUnitCost(e.target.value)}
                 />
               </Fld>
-              <Fld id="link-sku" label="Supplier's SKU">
+              <Fld id="link-sku" label={t('inventory.detail.supplierSku')}>
                 <input id="link-sku" value={linkSupplierSku} onChange={(e) => setLinkSupplierSku(e.target.value)} />
               </Fld>
             </div>
 
-            <Fld id="link-moq" label="Minimum order quantity">
+            <Fld id="link-moq" label={t('inventory.detail.minimumOrder')}>
               <input
                 id="link-moq"
                 type="number"
@@ -918,7 +912,7 @@ export default function VariantDetailPage() {
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8 }}>
               <input type="checkbox" checked={linkIsPrimary} onChange={(e) => setLinkIsPrimary(e.target.checked)} />
-              Primary supplier for this product
+              {t('inventory.detail.primarySupplierForProduct')}
             </label>
           </form>
         </Modal>
@@ -926,11 +920,11 @@ export default function VariantDetailPage() {
 
       {transferOpen && (
         <Modal
-          title="Transfer stock"
+          title={t('inventory.detail.transferTitle')}
           onClose={() => setTransferOpen(false)}
           footer={
             <button type="submit" form="transfer-form" className="btn btn-pri" disabled={isTransferring}>
-              {isTransferring ? 'Saving…' : 'Transfer stock'}
+              {isTransferring ? t('inventory.detail.transferring') : t('inventory.detail.transferStock')}
             </button>
           }
         >
@@ -940,7 +934,7 @@ export default function VariantDetailPage() {
                 {transferError}
               </div>
             )}
-            <Fld id="transfer-qty" label="Quantity">
+            <Fld id="transfer-qty" label={t('inventory.detail.quantity')}>
               <input
                 id="transfer-qty"
                 type="number"

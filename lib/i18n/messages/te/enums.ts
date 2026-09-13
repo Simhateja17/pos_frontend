@@ -12,6 +12,7 @@ export const enums = {
     ordered: 'ఆర్డర్ చేశారు',
     received: 'అందింది',
     partially_received: 'కొంత అందింది',
+    partial: 'కొంత అందింది',
     open: 'తెరిచి ఉంది',
     closed: 'మూసివేశారు',
     active: 'యాక్టివ్',

@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { Card, CardHead, DataTable, Fld, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useT } from '@/lib/i18n/i18n'
 
 type Category = {
   id: string
@@ -16,6 +17,7 @@ type Category = {
 }
 
 export function CategoriesView() {
+  const t = useT()
   const [categories, setCategories] = useState<Category[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -33,10 +35,12 @@ export function CategoriesView() {
     const { data, error: requestError } = await apiClient.GET('/categories', { headers: await authHeaders() })
     setLoading(false)
     if (requestError || !data) {
-      setError('We couldn’t load your categories. Check your connection and try again.')
+      setError(t('inventory.errors.categoryLoad'))
       return
     }
     setCategories(data as Category[])
+    // t is intentionally omitted: changing locale must not refetch categories.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -60,7 +64,7 @@ export function CategoriesView() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!name.trim()) {
-      setFormError('Enter a category name.')
+      setFormError(t('inventory.errors.categoryName'))
       return
     }
 
@@ -79,7 +83,7 @@ export function CategoriesView() {
     setSaving(false)
 
     if (requestError) {
-      setFormError((requestError as { error?: string }).error ?? 'That category could not be saved.')
+      setFormError((requestError as { error?: string }).error ?? t('inventory.errors.categorySave'))
       return
     }
 
@@ -93,7 +97,7 @@ export function CategoriesView() {
       headers: await authHeaders(),
     })
     if (requestError) {
-      setError('That category could not be deleted.')
+      setError(t('inventory.errors.categoryDelete'))
       return
     }
     await load()
@@ -109,42 +113,44 @@ export function CategoriesView() {
   return (
     <>
       <PageHead
-        title="Categories"
-        sub="How your products are grouped in reports and on the till"
+        title={t('inventory.categories.title')}
+        sub={t('inventory.categories.subtitle')}
         actions={
           <button className="btn btn-pri" onClick={openCreate}>
-            <Plus size={15} /> Add category
+            <Plus size={15} /> {t('inventory.categories.addCategory')}
           </button>
         }
       />
 
       <Card>
         <CardHead
-          title="Your categories"
-          sub={categories ? (term ? `${visible.length} shown` : `${categories.length} in use`) : 'Loading…'}
+          title={t('inventory.categories.title')}
+          sub={categories
+            ? `${term ? visible.length : categories.length} ${(term ? visible.length : categories.length) === 1 ? t('inventory.categories.categoryOne') : t('inventory.categories.categoryMany')}`
+            : t('inventory.categories.loading')}
           right={
             categories && categories.length > 0 ? (
               <SearchField
                 value={search}
                 onChange={setSearch}
-                placeholder="Search categories…"
-                ariaLabel="Search categories"
+                placeholder={t('inventory.categories.searchPlaceholder')}
+                ariaLabel={t('inventory.categories.searchLabel')}
                 width={240}
               />
             ) : undefined
           }
         />
 
-        {loading && <LoadingState label="Loading categories" />}
+        {loading && <LoadingState label={t('inventory.categories.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && categories?.length === 0 && (
           <EmptyState
             icon={<FolderTree size={24} strokeWidth={1.8} />}
-            title="No categories yet"
-            body="Categories group your products in reports. You can also create one while adding a product."
+            title={t('inventory.categories.emptyTitle')}
+            body={t('inventory.categories.emptyBody')}
             action={
               <button className="btn btn-pri" onClick={openCreate}>
-                <Plus size={15} /> Add category
+                <Plus size={15} /> {t('inventory.categories.addCategory')}
               </button>
             }
           />
@@ -152,14 +158,14 @@ export function CategoriesView() {
 
         {!loading && !error && categories && categories.length > 0 && visible.length === 0 && (
           <EmptyState
-            title="No categories match this search"
-            body="Check the spelling, or clear the search to see every category."
+            title={t('inventory.categories.noMatchTitle')}
+            body={t('inventory.categories.noMatchBody')}
           />
         )}
 
         {!loading && !error && visible.length > 0 && (
           <DataTable
-            cols={['Category', 'Products', '']}
+            cols={[t('inventory.categories.cols.category'), t('inventory.categories.cols.products'), t('inventory.categories.cols.actions')]}
             minWidth={560}
           >
             {visible.map((category) => (
@@ -169,10 +175,10 @@ export function CategoriesView() {
                 <td>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                     <button className="btn btn-sm" onClick={() => openEdit(category)}>
-                      Rename
+                      {t('inventory.categories.rename')}
                     </button>
                     <button className="btn btn-sm" onClick={() => void remove(category)}>
-                      Delete
+                      {t('inventory.categories.delete')}
                     </button>
                   </div>
                 </td>
@@ -184,15 +190,15 @@ export function CategoriesView() {
 
       {formOpen && (
         <Modal
-          title={editing ? `Rename ${editing.name}` : 'Add category'}
+          title={editing ? t('inventory.categories.editTitle', { name: editing.name }) : t('inventory.categories.newTitle')}
           onClose={() => setFormOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setFormOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="category-form" disabled={saving}>
-                {saving ? 'Saving…' : editing ? 'Save changes' : 'Add category'}
+                {saving ? t('inventory.categories.saving') : editing ? t('inventory.categories.saveChanges') : t('inventory.categories.addCategory')}
               </button>
             </>
           }
@@ -203,18 +209,18 @@ export function CategoriesView() {
                 {formError}
               </div>
             )}
-            <Fld id="category-name" label="Category name">
+            <Fld id="category-name" label={t('inventory.categories.categoryName')}>
               <input
                 id="category-name"
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Dairy"
+                placeholder={t('inventory.categories.categoryNamePlaceholder')}
               />
             </Fld>
             {editing && editing.productCount > 0 && (
               <p className="t-sub" style={{ fontSize: 12 }}>
-                Renaming updates all {editing.productCount} products in this category at once.
+                {t('inventory.categories.renameProducts', { count: editing.productCount })}
               </p>
             )}
           </form>

@@ -396,6 +396,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
               hasError={!!contextError}
               allowOrganizationSignOut={!isCashier}
               className={styles.user}
+              signInPath={pack.signInPath}
             />
           </div>
         </header>

@@ -247,7 +247,7 @@ export function InternationalSignupForm() {
           </form>
           <div className={styles.separator}>or</div>
           <p className={styles.footerText}>
-            Already have an account? <Link className={styles.link} href="/login">Sign in</Link>
+            Already have an account? <Link className={styles.link} href="/us/auth">Sign in</Link>
           </p>
         </>
       ) : step === 'otp' ? (

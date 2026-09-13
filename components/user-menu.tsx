@@ -23,12 +23,15 @@ export function UserMenu({
   hasError,
   allowOrganizationSignOut = true,
   className,
+  signInPath = '/login',
 }: {
   context: AppContext | null
   isContextLoading: boolean
   hasError: boolean
   allowOrganizationSignOut?: boolean
   className?: string
+  /** Where to send the user after sign-out. Defaults to the India login page for callers that predate the International edition. */
+  signInPath?: string
 }) {
   const router = useRouter()
   const t = useT()
@@ -55,7 +58,7 @@ export function UserMenu({
     if (typeof window !== 'undefined') window.sessionStorage.removeItem('operatorToken')
     setActiveStoreId(null)
     await supabase.auth.signOut({ scope: 'local' })
-    router.push('/login')
+    router.push(signInPath)
   }
 
   async function lockRegister() {

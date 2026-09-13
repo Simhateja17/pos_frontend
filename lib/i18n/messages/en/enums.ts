@@ -13,6 +13,7 @@ export const enums = {
     ordered: 'Ordered',
     received: 'Received',
     partially_received: 'Partially received',
+    partial: 'Partially received',
     open: 'Open',
     closed: 'Closed',
     active: 'Active',

@@ -58,9 +58,17 @@ function terminalHeaders() {
 export default function PinPadPage() {
   const router = useRouter()
   const [returnTo, setReturnTo] = useState<string | null>(null)
+  // This screen is shared by both editions — there is no AppRegionProvider
+  // here to read from. `returnTo` already encodes which edition sent the
+  // visitor here (`/us/...` vs `/app/...`); the India hostname is the
+  // fallback for the rare direct hit with no `returnTo` at all.
+  const [region, setRegion] = useState<'IN' | 'INTL'>('IN')
   useEffect(() => {
-    setReturnTo(safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')))
+    const nextReturnTo = safeReturnTo(new URLSearchParams(window.location.search).get('returnTo'))
+    setReturnTo(nextReturnTo)
+    setRegion(nextReturnTo?.startsWith('/us') || window.location.hostname !== 'in.ambelpos.com' ? 'INTL' : 'IN')
   }, [])
+  const signInPath = region === 'INTL' ? '/us/auth' : '/login'
   const [staff, setStaff] = useState<Staff[]>([])
   const [terminals, setTerminals] = useState<Terminal[]>([])
   const [currentTerminal, setCurrentTerminal] = useState<Terminal | null>(null)
@@ -95,7 +103,7 @@ export default function PinPadPage() {
     sessionStorage.removeItem('operatorToken')
     sessionStorage.removeItem('registerLocked')
     await supabase.auth.signOut({ scope: 'local' })
-    router.replace('/login')
+    router.replace(signInPath)
   }
 
   const loadStaff = useCallback(async () => {
@@ -118,13 +126,13 @@ export default function PinPadPage() {
     if ([staffResult, deviceResult, terminalsResult].some((result) => result.response.status === 401)) {
       sessionStorage.removeItem('operatorToken')
       await supabase.auth.signOut({ scope: 'local' })
-      router.replace('/login')
+      router.replace(signInPath)
       return
     }
 
     if ([staffResult, deviceResult, terminalsResult].some((result) => result.response.status === 402)) {
       const offerId = await getAuthenticatedPrivateOfferId()
-      router.replace(checkoutPathWithOffer('IN', offerId))
+      router.replace(checkoutPathWithOffer(region, offerId))
       return
     }
 
@@ -136,7 +144,7 @@ export default function PinPadPage() {
     setStaff(staffResult.data.filter((member) => member.isActive))
     setCurrentTerminal(deviceResult.data?.terminal ?? null)
     setTerminals(terminalsResult.data.filter((terminal) => terminal.isActive))
-  }, [router])
+  }, [router, signInPath, region])
 
   useEffect(() => {
     sessionStorage.setItem('registerLocked', 'true')

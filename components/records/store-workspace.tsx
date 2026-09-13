@@ -7,8 +7,12 @@ import { Card, CardHead, PageHead } from '@/components/couture/ui'
 import { ErrorState, LoadingState } from '@/components/couture/states'
 import { getAuthenticatedStores, type Store } from '@/lib/api/authenticated-client'
 import { setActiveStoreId } from '@/lib/store-context'
+import { useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 export function StoreWorkspace({ storeId }: { storeId: string }) {
+  const t = useT()
+  const { appPath } = useAppRegion()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -19,31 +23,33 @@ export function StoreWorkspace({ storeId }: { storeId: string }) {
     try {
       const payload = await getAuthenticatedStores()
       const selected = payload.stores.find((item) => item.id === storeId)
-      if (!selected) throw new Error('This store is not available to your account.')
+      if (!selected) throw new Error(t('records.errors.workspaceUnavailable'))
       setActiveStoreId(selected.id)
       setStore(selected)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'This store could not be opened.')
+      setError(cause instanceof Error ? cause.message : t('records.errors.storeUpdate'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch the store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  if (loading) return <LoadingState label="Opening store" />
-  if (error || !store) return <ErrorState message={error ?? 'Store unavailable'} onRetry={() => void load()} />
+  if (loading) return <LoadingState label={t('records.workspace.openWorkspace')} />
+  if (error || !store) return <ErrorState message={error ?? t('records.stores.unavailable')} onRetry={() => void load()} />
 
   const destination = [store.addressLine1, store.city, store.state].filter(Boolean).join(', ')
   const destinations = [
-    { href: '/app/dashboard', label: 'Dashboard', detail: 'Sales and performance for this shop', icon: LayoutDashboard },
-    { href: '/app/orders', label: 'Sales history', detail: 'Completed bills from this shop', icon: ReceiptText },
-    { href: '/app/documents', label: 'Tax documents', detail: 'Tax Invoices and credit notes issued here', icon: FileText },
-    { href: '/app/inventory', label: 'Inventory history', detail: 'Stock records held at this shop', icon: Boxes },
+    { href: appPath('/app/dashboard'), label: t('nav.items.dashboard'), detail: t('records.workspace.dashboardDetail'), icon: LayoutDashboard },
+    { href: appPath('/app/orders'), label: t('records.workspace.salesHistory'), detail: t('records.workspace.salesDetail'), icon: ReceiptText },
+    { href: appPath('/app/documents'), label: t('records.workspace.taxDocuments'), detail: t('records.workspace.documentsDetail'), icon: FileText },
+    { href: appPath('/app/inventory'), label: t('records.workspace.inventoryHistory'), detail: t('records.workspace.inventoryDetail'), icon: Boxes },
     ...(store.isActive
-      ? [{ href: '/app/billing', label: 'Checkout', detail: 'Ring sales with this shop price and tax', icon: ShoppingBag }]
+      ? [{ href: appPath('/app/billing'), label: t('records.workspace.checkout'), detail: t('records.workspace.checkoutDetail'), icon: ShoppingBag }]
       : []),
   ]
 
@@ -51,15 +57,15 @@ export function StoreWorkspace({ storeId }: { storeId: string }) {
     <>
       <PageHead
         title={store.name}
-        sub={destination || 'No address on file'}
-        actions={<Link href="/app/stores" className="btn"><ArrowLeft size={15} /> All stores</Link>}
+        sub={destination || t('records.workspace.noAddress')}
+        actions={<Link href={appPath('/app/stores')} className="btn"><ArrowLeft size={15} /> {t('records.workspace.allStores')}</Link>}
       />
       <Card>
         <CardHead
-          title={store.isActive ? 'Operate this shop' : 'Read closed-store history'}
+          title={store.isActive ? t('records.workspace.operate') : t('records.workspace.closedHistory')}
           sub={store.isActive
-            ? 'The active store now applies to every operational request in this tab.'
-            : 'Historical records stay readable. New sales and other writes remain blocked until the store is reactivated.'}
+            ? t('records.workspace.activeScope')
+            : t('records.workspace.closedScope')}
         />
         <div style={{ display: 'grid', gap: 12, padding: 18, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {destinations.map(({ href, label, detail, icon: Icon }) => (

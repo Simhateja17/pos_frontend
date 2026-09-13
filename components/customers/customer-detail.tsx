@@ -20,8 +20,7 @@ import {
 } from './api'
 import { CustomerForm } from './customer-form'
 import { useAppRegion } from '@/lib/app-region'
-
-const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
+import { enumLabel, useT } from '@/lib/i18n/i18n'
 
 function displayAddress(customer: Customer): string {
   return [customer.addressLine1, customer.addressLine2, customer.city, customer.stateCode, customer.postalCode]
@@ -29,8 +28,8 @@ function displayAddress(customer: Customer): string {
     .join(', ')
 }
 
-function titleFor(customer: Customer): string {
-  return customer.billingName ?? customer.name ?? 'Unnamed customer'
+function titleFor(t: ReturnType<typeof useT>, customer: Customer): string {
+  return customer.billingName ?? customer.name ?? t('records.customers.unnamed')
 }
 
 /**
@@ -54,7 +53,8 @@ function matchesPurchase(purchase: CustomerPurchaseList['items'][number], query:
 }
 
 export function CustomerDetailView({ customerId }: { customerId: string }) {
-  const { money, region, appPath } = useAppRegion()
+  const { money, region, appPath, dateLocale } = useAppRegion()
+  const t = useT()
   const showIndiaCredit = region === 'IN'
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [credit, setCredit] = useState<CustomerCredit | null>(null)
@@ -83,10 +83,12 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     try {
       setCustomer(await getCustomer(customerId))
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'This customer profile is unavailable right now.')
+      setError(cause instanceof Error ? cause.message : t('customers.errors.profileLoad'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch the profile.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId])
 
   const loadPurchases = useCallback(
@@ -97,12 +99,12 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
         setPurchases(await getCustomerPurchases(customerId, nextCursor))
         setCursor(nextCursor)
       } catch (cause) {
-        setHistoryError(cause instanceof Error ? cause.message : 'Purchase history is unavailable right now.')
+        setHistoryError(cause instanceof Error ? cause.message : t('customers.errors.historyLoad'))
       } finally {
         setHistoryLoading(false)
       }
     },
-    [customerId],
+    [customerId], // eslint-disable-line react-hooks/exhaustive-deps -- locale changes must not refetch history
   )
 
   const loadCredit = useCallback(async () => {
@@ -111,10 +113,12 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     try {
       setCredit(await getCustomerCredit(customerId))
     } catch (cause) {
-      setCreditError(cause instanceof Error ? cause.message : 'Customer credit details are unavailable right now.')
+      setCreditError(cause instanceof Error ? cause.message : t('customers.errors.creditLoad'))
     } finally {
       setCreditLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch credit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId])
 
   useEffect(() => {
@@ -137,7 +141,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       setCustomer(await updateCustomer(customerId, body))
       setEditOpen(false)
     } catch (cause) {
-      setFormError(cause instanceof Error ? cause.message : 'That customer could not be saved.')
+      setFormError(cause instanceof Error ? cause.message : t('customers.errors.save'))
     } finally {
       setSaving(false)
     }
@@ -148,11 +152,11 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
     setRepaymentError(null)
     const amount = Number(repaymentAmount)
     if (!Number.isFinite(amount) || amount <= 0) {
-      setRepaymentError('Enter a repayment amount greater than zero.')
+      setRepaymentError(t('customers.errors.repaymentAmount'))
       return
     }
     if (credit && amount > Number(credit.balance)) {
-      setRepaymentError(`Enter ${money(Number(credit.balance))} or less.`)
+      setRepaymentError(t('customers.errors.repaymentLimit', { amount: money(Number(credit.balance)) }))
       return
     }
 
@@ -167,53 +171,54 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       setRepaymentNote('')
       await loadCredit()
     } catch (cause) {
-      setRepaymentError(cause instanceof Error ? cause.message : 'That repayment could not be recorded.')
+      setRepaymentError(cause instanceof Error ? cause.message : t('customers.errors.repaymentSave'))
     } finally {
       setRepaymentSaving(false)
     }
   }
 
-  if (loading) return <LoadingState label="Loading customer profile" />
-  if (error || !customer) return <ErrorState message={error ?? 'Customer profile unavailable'} onRetry={() => void loadCustomer()} />
+  if (loading) return <LoadingState label={t('customers.detail.loading')} />
+  if (error || !customer) return <ErrorState message={error ?? t('customers.detail.unavailable')} onRetry={() => void loadCustomer()} />
 
   const address = displayAddress(customer)
   const visiblePurchases = (purchases?.items ?? []).filter((purchase) => matchesPurchase(purchase, historySearch))
+  const dateTime = new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
 
   return (
     <>
       <PageHead
-        title={titleFor(customer)}
-        sub={showIndiaCredit ? 'Customer profile, khata balance and persisted purchase history' : 'Customer profile and persisted purchase history'}
+        title={titleFor(t, customer)}
+        sub={showIndiaCredit ? t('customers.detail.persistedSub') : t('customers.detail.persistedSubInternational')}
         actions={
           <>
-            <Link className="btn" href={appPath('/app/customers')}><ArrowLeft size={15} /> Customers</Link>
-              <button className="btn btn-pri" onClick={() => { setFormError(null); setEditOpen(true) }}><Edit3 size={15} /> Edit profile</button>
+            <Link className="btn" href={appPath('/app/customers')}><ArrowLeft size={15} /> {t('customers.detail.customers')}</Link>
+              <button className="btn btn-pri" onClick={() => { setFormError(null); setEditOpen(true) }}><Edit3 size={15} /> {t('customers.detail.editProfile')}</button>
           </>
         }
       />
 
       <div className="split-2">
         <Card>
-          <CardHead title="Identity" sub="Used to find and safely deduplicate this customer" />
+          <CardHead title={t('customers.detail.identity')} sub={t('customers.detail.identitySub')} />
           <div style={{ display: 'grid', gap: 13, padding: 18 }}>
-            <Info label="Billing name" value={titleFor(customer)} />
-            <Info label="Phone" value={customer.phone ?? 'Not provided'} mono />
-            <Info label="Email" value={customer.email ?? 'Not provided'} />
-            <Info label="Profile updated" value={dateTime.format(new Date(customer.updatedAt))} />
-            {customer.notes ? <Info label="Notes" value={customer.notes} /> : null}
+            <Info label={t('customers.detail.billingName')} value={titleFor(t, customer)} />
+            <Info label={t('customers.detail.phone')} value={customer.phone ?? t('customers.detail.notProvided')} mono />
+            <Info label={t('customers.detail.email')} value={customer.email ?? t('customers.detail.notProvided')} />
+            <Info label={t('customers.detail.profileUpdated')} value={new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(customer.updatedAt))} />
+            {customer.notes ? <Info label={t('customers.detail.notes')} value={customer.notes} /> : null}
           </div>
         </Card>
 
         <Card>
-          <CardHead title="Billing information" sub="Optional GST identity and address for future documents" />
+          <CardHead title={t('customers.detail.billing')} sub={t('customers.detail.billingSub')} />
           <div style={{ display: 'grid', gap: 13, padding: 18 }}>
-            <Info label="GSTIN" value={customer.gstin ?? 'Not provided'} mono />
-            <Info label="Address" value={address || 'No billing address on file'} />
-            <Info label="Country" value={customer.country} />
+            <Info label={t('customers.detail.gstin')} value={customer.gstin ?? t('customers.detail.notProvided')} mono />
+            <Info label={t('customers.detail.address')} value={address || t('customers.detail.noBillingAddress')} />
+            <Info label={t('customers.detail.country')} value={customer.country} />
             <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
               {showIndiaCredit
-                ? 'GSTIN and address are stored as customer billing identity. Khata is tracked separately below and is shared across this business’s stores.'
-                : 'Customer identity and address are stored here as billing information for future documents.'}
+                ? t('customers.detail.indiaBillingHelp')
+                : t('customers.detail.internationalBillingHelp')}
             </div>
           </div>
         </Card>
@@ -222,48 +227,48 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       {showIndiaCredit && (
         <Card>
           <CardHead
-            title="Khata balance"
-            sub="Outstanding credit across all stores"
+            title={t('customers.detail.khata')}
+            sub={t('customers.detail.khataSub')}
             right={credit && Number(credit.balance) > 0 ? (
               <button
                 className="btn btn-pri"
                 type="button"
                 onClick={() => { setRepaymentError(null); setRepaymentOpen(true) }}
               >
-                <HandCoins size={15} /> Collect payment
+                <HandCoins size={15} /> {t('customers.detail.collectPayment')}
               </button>
             ) : null}
           />
-          {creditLoading && <LoadingState label="Loading khata balance" rows={2} />}
+          {creditLoading && <LoadingState label={t('customers.detail.loadingKhata')} rows={2} />}
           {!creditLoading && creditError && <ErrorState message={creditError} onRetry={() => void loadCredit()} />}
           {!creditLoading && !creditError && credit && (
             <>
               <div style={{ display: 'flex', alignItems: 'end', gap: 28, flexWrap: 'wrap', padding: '18px 18px 14px' }}>
                 <div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Outstanding</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{t('customers.detail.outstanding')}</div>
                   <div className="num" style={{ marginTop: 4, fontSize: 28, fontWeight: 700, color: Number(credit.balance) > 0 ? 'var(--danger)' : 'var(--success)' }}>
                     {money(Number(credit.balance))}
                   </div>
                 </div>
-                <Info label="Credit limit" value={credit.creditLimit ? money(Number(credit.creditLimit)) : 'No limit set'} mono />
+                <Info label={t('customers.detail.creditLimit')} value={credit.creditLimit ? money(Number(credit.creditLimit)) : t('customers.detail.noLimit')} mono />
                 <div style={{ fontSize: 12, color: 'var(--muted)', maxWidth: 390, lineHeight: 1.5 }}>
-                  Credit sales add to this balance. Repayments reduce it. The balance is derived from the ledger, not typed in by the team.
+                  {t('customers.detail.khataHelp')}
                 </div>
               </div>
               {credit.transactions.length === 0 ? (
-                <EmptyState title="No khata entries" body="Credit sales and repayments for this customer will appear here." />
+                <EmptyState title={t('customers.detail.noKhata')} body={t('customers.detail.noKhataBody')} />
               ) : (
-                <DataTable cols={['Entry', 'Date', 'Store', 'Amount', 'Note']} minWidth={760}>
+                <DataTable cols={[t('customers.detail.entry'), t('customers.detail.date'), t('customers.detail.store'), t('customers.detail.amount'), t('customers.detail.note')]} minWidth={760}>
                   {credit.transactions.map((transaction) => (
                     <tr key={transaction.id}>
                       <td>
-                        <div className="t-strong">{transaction.type === 'credit_sale' ? 'Credit sale' : 'Repayment'}</div>
-                        {transaction.saleId ? <Link className="t-sub t-mono" href={appPath(`/app/orders/${encodeURIComponent(transaction.saleId)}`)}>Open bill</Link> : null}
+                        <div className="t-strong">{transaction.type === 'credit_sale' ? t('customers.detail.creditSale') : t('customers.detail.repayment')}</div>
+                        {transaction.saleId ? <Link className="t-sub t-mono" href={appPath(`/app/orders/${encodeURIComponent(transaction.saleId)}`)}>{t('customers.detail.openBill')}</Link> : null}
                       </td>
                       <td className="t-sub">{dateTime.format(new Date(transaction.createdAt))}</td>
-                      <td className="t-sub">{transaction.storeName ?? 'Store unavailable'}</td>
+                      <td className="t-sub">{transaction.storeName ?? t('customers.detail.storeUnavailable')}</td>
                       <td className={`t-mono t-strong ${transaction.type === 'repayment' ? 'text-success' : 'text-danger'}`}>
-                        {transaction.type === 'repayment' ? '−' : '+'}{money(Number(transaction.amount))}
+                        {transaction.type === 'repayment' ? t('customers.detail.minus') : t('customers.detail.plus')}{money(Number(transaction.amount))}
                       </td>
                       <td className="t-sub">{transaction.note ?? '—'}</td>
                     </tr>
@@ -277,46 +282,46 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
 
       <Card>
         <CardHead
-          title="Purchase history"
-          sub={purchases ? `${purchases.total} persisted sale${purchases.total === 1 ? '' : 's'}` : 'Loading…'}
+          title={t('customers.detail.purchaseHistory')}
+          sub={purchases ? `${purchases.total} ${purchases.total === 1 ? t('customers.detail.purchaseHistoryCountOne') : t('customers.detail.purchaseHistoryCountMany')}` : t('customers.detail.loadingHistory')}
           right={
             <SearchField
               value={historySearch}
               onChange={setHistorySearch}
-              placeholder="Search bill, store or payment…"
-              ariaLabel="Search purchase history"
+              placeholder={t('customers.detail.searchPlaceholder')}
+              ariaLabel={t('customers.detail.searchLabel')}
               width={240}
             />
           }
         />
-        {historyLoading && <LoadingState label="Loading purchase history" />}
+        {historyLoading && <LoadingState label={t('customers.detail.loadingHistory')} />}
         {!historyLoading && historyError && <ErrorState message={historyError} onRetry={() => void loadPurchases(cursor)} />}
         {!historyLoading && !historyError && purchases?.items.length === 0 && (
-          <EmptyState title="No purchases found" body="Completed sales linked to this customer will appear here. Walk-in sales remain anonymous." />
+          <EmptyState title={t('customers.detail.noPurchases')} body={t('customers.detail.noPurchasesBody')} />
         )}
         {!historyLoading && !historyError && purchases && purchases.items.length > 0 && visiblePurchases.length === 0 && (
           <EmptyState
-            title="No purchases match this search"
-            body="Only the purchases on this page are searched. Clear the search or move to the next page to look further back."
+            title={t('customers.detail.noPurchaseMatch')}
+            body={t('customers.detail.noPurchaseMatchBody')}
           />
         )}
         {!historyLoading && !historyError && purchases && visiblePurchases.length > 0 && (
-          <DataTable cols={['Bill / document', 'Date', 'Store', 'Total', 'Payment', 'Status', 'Actions']} minWidth={980}>
+          <DataTable cols={[t('customers.detail.document'), t('customers.detail.date'), t('customers.detail.store'), t('customers.detail.total'), t('customers.detail.payment'), t('customers.detail.status'), t('customers.detail.actions')]} minWidth={980}>
             {visiblePurchases.map((purchase) => (
               <tr key={purchase.id}>
                 <td>
-                  <div className="t-strong">{purchase.documentNumber ?? `Sale ${purchase.id.slice(0, 8).toUpperCase()}`}</div>
+                  <div className="t-strong">{purchase.documentNumber ?? t('customers.detail.billFallback', { number: purchase.id.slice(0, 8).toUpperCase() })}</div>
                   <div className="t-mono t-sub" style={{ fontSize: 11 }}>{purchase.id}</div>
                 </td>
                 <td className="t-sub">{dateTime.format(new Date(purchase.date))}</td>
-                <td className="t-sub">{purchase.store?.name ?? 'Store unavailable'}</td>
+                <td className="t-sub">{purchase.store?.name ?? t('customers.detail.storeUnavailable')}</td>
                 <td className="t-mono t-strong">{money(Number(purchase.total))}</td>
-                <td className="t-sub">{purchase.paymentMethods.length ? purchase.paymentMethods.join(' + ') : 'Not recorded'}</td>
-                <td><Badge tone={purchase.status === 'completed' ? 'green' : 'grey'}>{purchase.status}</Badge></td>
+                <td className="t-sub">{purchase.paymentMethods.length ? purchase.paymentMethods.map((method) => enumLabel(t, 'method', method)).join(' + ') : t('customers.detail.notRecorded')}</td>
+                <td><Badge tone={purchase.status === 'completed' ? 'green' : 'grey'}>{enumLabel(t, 'status', purchase.status)}</Badge></td>
                 <td>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <Link className="btn btn-sm" href={appPath(`/app/orders/${encodeURIComponent(purchase.id)}`)}><ExternalLink size={13} /> Open bill</Link>
-                    <Link className="btn btn-sm" href={appPath(`/app/returns?saleId=${encodeURIComponent(purchase.id)}`)}>Bill / return</Link>
+                    <Link className="btn btn-sm" href={appPath(`/app/orders/${encodeURIComponent(purchase.id)}`)}><ExternalLink size={13} /> {t('customers.detail.openBill')}</Link>
+                    <Link className="btn btn-sm" href={appPath(`/app/returns?saleId=${encodeURIComponent(purchase.id)}`)}>{t('customers.detail.billReturn')}</Link>
                   </div>
                 </td>
               </tr>
@@ -336,7 +341,7 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       </Card>
 
       {editOpen && (
-        <Modal title={`Edit ${titleFor(customer)}`} onClose={() => !saving && setEditOpen(false)}>
+        <Modal title={t('customers.detail.editTitle', { name: titleFor(t, customer) })} onClose={() => !saving && setEditOpen(false)}>
           <CustomerForm
             customer={customer}
             onSave={save}
@@ -349,13 +354,13 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
       )}
 
       {repaymentOpen && credit && (
-        <Modal title={`Collect from ${titleFor(customer)}`} onClose={() => !repaymentSaving && setRepaymentOpen(false)}>
+        <Modal title={t('customers.detail.collectTitle', { name: titleFor(t, customer) })} onClose={() => !repaymentSaving && setRepaymentOpen(false)}>
           <form onSubmit={collectRepayment}>
             <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
-              Outstanding balance: <strong className="num">{money(Number(credit.balance))}</strong>. This records a repayment entry at the active store.
+              {t('customers.detail.outstandingBalance', { amount: money(Number(credit.balance)) })}
             </p>
             {repaymentError && <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>{repaymentError}</div>}
-            <Fld id="customer-repayment-amount" label="Amount received">
+            <Fld id="customer-repayment-amount" label={t('customers.detail.amountReceived')}>
               <input
                 id="customer-repayment-amount"
                 type="number"
@@ -365,16 +370,16 @@ export function CustomerDetailView({ customerId }: { customerId: string }) {
                 inputMode="decimal"
                 value={repaymentAmount}
                 onChange={(event) => setRepaymentAmount(event.target.value)}
-                placeholder={money(0)}
+                placeholder={t('customers.detail.amountPlaceholder')}
                 autoFocus
               />
             </Fld>
-            <Fld id="customer-repayment-note" label="Note (optional)">
-              <textarea id="customer-repayment-note" rows={3} value={repaymentNote} onChange={(event) => setRepaymentNote(event.target.value)} placeholder="e.g. Cash received at the counter" />
+            <Fld id="customer-repayment-note" label={t('customers.detail.repaymentNote')}>
+              <textarea id="customer-repayment-note" rows={3} value={repaymentNote} onChange={(event) => setRepaymentNote(event.target.value)} placeholder={t('customers.detail.repaymentNotePlaceholder')} />
             </Fld>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-              <button className="btn" type="button" onClick={() => setRepaymentOpen(false)} disabled={repaymentSaving}>Cancel</button>
-              <button className="btn btn-pri" type="submit" disabled={repaymentSaving}>{repaymentSaving ? 'Recording…' : 'Record repayment'}</button>
+              <button className="btn" type="button" onClick={() => setRepaymentOpen(false)} disabled={repaymentSaving}>{t('common.cancel')}</button>
+              <button className="btn btn-pri" type="submit" disabled={repaymentSaving}>{repaymentSaving ? t('customers.detail.recording') : t('customers.detail.recordRepayment')}</button>
             </div>
           </form>
         </Modal>

@@ -15,8 +15,12 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { useT, enumLabel } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 export function TransfersView() {
+  const t = useT()
+  const { dateLocale } = useAppRegion()
   const [transfers, setTransfers] = useState<StockTransfer[]>([])
   const [search, setSearch] = useState('')
   const [destinations, setDestinations] = useState<TransferDestination[]>([])
@@ -47,10 +51,12 @@ export function TransfersView() {
       setProducts(nextProducts)
       setActiveStoreId(context.store?.id ?? null)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Transfers are unavailable right now.')
+      setError(cause instanceof Error ? cause.message : t('inventory.errors.transferLoad'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch transfers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => { void load() }, [load])
@@ -64,7 +70,7 @@ export function TransfersView() {
     event.preventDefault()
     const parsedQuantity = Number(quantity)
     if (!destination || !variantId || !Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
-      setError('Choose a destination, a variant, and a positive quantity.')
+      setError(`${t('inventory.errors.transferStore')} ${t('inventory.errors.transferQuantity')}`)
       return
     }
     setSaving(true)
@@ -78,7 +84,7 @@ export function TransfersView() {
       setCreateOpen(false)
       await load()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That transfer could not be sent.')
+      setError(cause instanceof Error ? cause.message : t('inventory.errors.transferCreate'))
     } finally {
       setSaving(false)
     }
@@ -96,7 +102,7 @@ export function TransfersView() {
       quantityReceived: Number(received[line.id]),
     }))
     if (lines.some((line) => !Number.isFinite(line.quantityReceived) || line.quantityReceived < 0)) {
-      setError('Enter a zero or positive received quantity for every line.')
+      setError(t('inventory.errors.transferQuantity'))
       return
     }
     setSaving(true)
@@ -105,7 +111,7 @@ export function TransfersView() {
       setReceiving(null)
       await load()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That receipt could not be confirmed.')
+      setError(cause instanceof Error ? cause.message : t('inventory.errors.transferReceive'))
     } finally {
       setSaving(false)
     }
@@ -123,30 +129,30 @@ export function TransfersView() {
   return (
     <>
       <PageHead
-        title="Stock transfers"
-        sub="Send from one shop, then confirm exactly what arrived"
-        actions={<button className="btn btn-pri" onClick={() => setCreateOpen(true)}><Plus size={15} /> Send stock</button>}
+        title={t('inventory.transfers.title')}
+        sub={t('inventory.transfers.subtitle')}
+        actions={<button className="btn btn-pri" onClick={() => setCreateOpen(true)}><Plus size={15} /> {t('inventory.transfers.sendStock')}</button>}
       />
       <Card>
         <CardHead
-          title="Transfer history"
-          sub={term ? `${visible.length} shown` : `${transfers.length} transfer${transfers.length === 1 ? '' : 's'}`}
-          right={transfers.length > 0 ? <SearchField value={search} onChange={setSearch} placeholder="Search by shop, SKU or status…" ariaLabel="Search transfers" width={250} /> : undefined}
+          title={t('inventory.transfers.title')}
+          sub={term ? `${visible.length} ${t('inventory.transfers.transferMany')}` : `${transfers.length} ${transfers.length === 1 ? t('inventory.transfers.transferOne') : t('inventory.transfers.transferMany')}`}
+          right={transfers.length > 0 ? <SearchField value={search} onChange={setSearch} placeholder={t('inventory.transfers.searchPlaceholder')} ariaLabel={t('inventory.transfers.searchLabel')} width={250} /> : undefined}
         />
-        {loading && <LoadingState label="Loading transfers" />}
+        {loading && <LoadingState label={t('inventory.transfers.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
-        {!loading && !error && transfers.length === 0 && <EmptyState title="No transfers yet" body="Send stock to another active shop when it physically leaves this one." />}
-        {!loading && !error && transfers.length > 0 && visible.length === 0 && <EmptyState title="No transfers match this search" body="Check the spelling, or clear the search to see every transfer." />}
+        {!loading && !error && transfers.length === 0 && <EmptyState title={t('inventory.transfers.emptyTitle')} body={t('inventory.transfers.emptyBody')} />}
+        {!loading && !error && transfers.length > 0 && visible.length === 0 && <EmptyState title={t('inventory.transfers.noMatchTitle')} body={t('inventory.transfers.noMatchBody')} />}
         {!loading && visible.length > 0 && (
-          <DataTable cols={['Route', 'Sent', 'Status', 'Quantities', '']} minWidth={760}>
+          <DataTable cols={[`${t('inventory.transfers.cols.from')} / ${t('inventory.transfers.cols.to')}`, t('inventory.transfers.cols.sent'), t('inventory.transfers.cols.status'), t('inventory.transfers.cols.quantities'), t('inventory.transfers.cols.actions')]} minWidth={760}>
             {visible.map((transfer) => (
               <tr key={transfer.id}>
                 <td className="t-strong">{transfer.fromStoreName} <ArrowRight size={13} style={{ verticalAlign: 'middle' }} /> {transfer.toStoreName}</td>
-                <td>{new Date(transfer.sentAt).toLocaleString()}</td>
-                <td><Badge tone={transfer.status === 'received' ? 'green' : 'amber'}>{transfer.status}</Badge></td>
+                <td>{new Date(transfer.sentAt).toLocaleString(dateLocale)}</td>
+                <td><Badge tone={transfer.status === 'received' ? 'green' : 'amber'}>{enumLabel(t, 'status', transfer.status)}</Badge></td>
                 <td>{transfer.lines.map((line) => `${line.sku}: ${line.quantitySent}${line.quantityReceived === null ? '' : ` → ${line.quantityReceived}`}`).join(', ')}</td>
                 <td>
-                  {transfer.status === 'sent' && transfer.toStoreId === activeStoreId ? <button className="btn btn-sm" onClick={() => openReceive(transfer)}>Receive</button> : null}
+                  {transfer.status === 'sent' && transfer.toStoreId === activeStoreId ? <button className="btn btn-sm" onClick={() => openReceive(transfer)}>{t('inventory.transfers.receive')}</button> : null}
                 </td>
               </tr>
             ))}
@@ -155,19 +161,19 @@ export function TransfersView() {
       </Card>
 
       {createOpen && (
-        <Modal title="Send stock" onClose={() => setCreateOpen(false)} footer={<><button className="btn" onClick={() => setCreateOpen(false)}>Cancel</button><button className="btn btn-pri" onClick={send} disabled={saving}>{saving ? 'Sending…' : 'Send stock'}</button></>}>
+        <Modal title={t('inventory.transfers.sendTitle')} onClose={() => setCreateOpen(false)} footer={<><button className="btn" onClick={() => setCreateOpen(false)}>{t('common.cancel')}</button><button className="btn btn-pri" onClick={send} disabled={saving}>{saving ? t('inventory.transfers.sending') : t('inventory.transfers.confirmSend')}</button></>}>
           <form onSubmit={send}>
-            <Fld id="transfer-store" label="Destination shop"><select id="transfer-store" value={destination} onChange={(event) => setDestination(event.target.value)}><option value="">Choose a shop</option>{destinations.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></Fld>
-            <Fld id="transfer-variant" label="Variant"><select id="transfer-variant" value={variantId} onChange={(event) => setVariantId(event.target.value)}><option value="">Choose a variant</option>{variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.productName} · {variant.sku} · {variant.currentStock} available</option>)}</select></Fld>
-            <Fld id="transfer-quantity" label="Quantity sent"><input id="transfer-quantity" type="number" min="0.001" step="0.001" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></Fld>
+            <Fld id="transfer-store" label={t('inventory.transfers.destination')}><select id="transfer-store" value={destination} onChange={(event) => setDestination(event.target.value)}><option value="">{t('inventory.transfers.chooseStore')}</option>{destinations.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}</select></Fld>
+            <Fld id="transfer-variant" label={t('inventory.transfers.itemsOne')}><select id="transfer-variant" value={variantId} onChange={(event) => setVariantId(event.target.value)}><option value="">{t('inventory.transfers.skuPlaceholder')}</option>{variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.productName} · {variant.sku} · {variant.currentStock} {t('inventory.transfers.itemsMany')}</option>)}</select></Fld>
+            <Fld id="transfer-quantity" label={t('inventory.transfers.quantity')}><input id="transfer-quantity" type="number" min="0.001" step="0.001" value={quantity} onChange={(event) => setQuantity(event.target.value)} placeholder={t('inventory.transfers.quantityPlaceholder')} /></Fld>
           </form>
         </Modal>
       )}
 
       {receiving && (
-        <Modal title={`Receive from ${receiving.fromStoreName}`} onClose={() => setReceiving(null)} footer={<><button className="btn" onClick={() => setReceiving(null)}>Cancel</button><button className="btn btn-pri" onClick={() => void confirmReceive()} disabled={saving}>{saving ? 'Saving…' : 'Confirm receipt'}</button></>}>
-          {receiving.lines.map((line) => <Fld key={line.id} id={`received-${line.id}`} label={`${line.sku} (sent ${line.quantitySent})`}><input id={`received-${line.id}`} type="number" min="0" step="0.001" value={received[line.id] ?? ''} onChange={(event) => setReceived({ ...received, [line.id]: event.target.value })} /></Fld>)}
-          <p style={{ fontSize: 12, color: 'var(--muted)' }}>Enter the quantity physically counted. Any difference remains dated on this transfer.</p>
+        <Modal title={t('inventory.transfers.receiveTitle', { store: receiving.fromStoreName })} onClose={() => setReceiving(null)} footer={<><button className="btn" onClick={() => setReceiving(null)}>{t('common.cancel')}</button><button className="btn btn-pri" onClick={() => void confirmReceive()} disabled={saving}>{saving ? t('inventory.transfers.saving') : t('inventory.transfers.confirmReceipt')}</button></>}>
+          {receiving.lines.map((line) => <Fld key={line.id} id={`received-${line.id}`} label={`${line.sku} (${t('inventory.transfers.cols.sent')} ${line.quantitySent})`}><input id={`received-${line.id}`} type="number" min="0" step="0.001" value={received[line.id] ?? ''} onChange={(event) => setReceived({ ...received, [line.id]: event.target.value })} placeholder={t('inventory.transfers.receivedQuantityPlaceholder')} /></Fld>)}
+          <p style={{ fontSize: 12, color: 'var(--muted)' }}>{t('inventory.transfers.receiveBody')}</p>
         </Modal>
       )}
     </>

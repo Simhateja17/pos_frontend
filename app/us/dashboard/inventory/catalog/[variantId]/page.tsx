@@ -13,7 +13,7 @@ import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
-import { UNITS, allowsFractionalQuantity, unitSuffix } from '@/lib/units'
+import { INTL_UNITS, allowsFractionalQuantity, unitSuffix } from '@/lib/units'
 import { useAppRegion } from '@/lib/app-region'
 import {
   type Supplier,
@@ -347,7 +347,7 @@ export default function VariantDetailPage() {
         reorderThreshold: Number(editReorderThreshold),
         // Null clears a mis-typed code; undefined would leave it untouched.
         barcode: editBarcode.trim() || null,
-        unitOfMeasure: editUnit as (typeof UNITS)[number]['value'],
+        unitOfMeasure: editUnit as (typeof INTL_UNITS)[number]['value'],
         ...(taxRatePercent === null ? {} : { taxRatePercent }),
       },
       headers,
@@ -602,7 +602,7 @@ export default function VariantDetailPage() {
                 </Fld>
                 <Fld id="edit-unit" label="Sold by">
                   <select id="edit-unit" value={editUnit} onChange={(e) => setEditUnit(e.target.value)}>
-                    {UNITS.map((unit) => (
+                    {INTL_UNITS.map((unit) => (
                       <option key={unit.value} value={unit.value}>
                         {unit.label}
                       </option>
