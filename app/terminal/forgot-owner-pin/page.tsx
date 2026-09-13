@@ -22,7 +22,7 @@ export default function ForgotOwnerPinPage() {
     setIsSubmitting(true)
 
     const { error: requestError } = await apiClient.POST('/auth/owner-pin-recovery/request', {
-      body: { email: email.trim() },
+      body: { email: email.trim(), platform: 'web' },
     })
 
     setIsSubmitting(false)

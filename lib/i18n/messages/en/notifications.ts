@@ -1,0 +1,17 @@
+export const notifications = {
+  title: 'Notifications',
+  subtitle: 'Things that happened while you were away',
+  loading: 'Loading notifications',
+  emptyTitle: 'Nothing yet',
+  emptyBody: 'Purchase orders, low-stock alerts and setup reminders will show up here as they happen.',
+  alertsOne: 'alert',
+  alertsMany: 'alerts',
+  justNow: 'just now',
+  minutesAgo: '{count}m ago',
+  hoursAgo: '{count}h ago',
+  daysAgo: '{count}d ago',
+  digestTitle: '{store} · {date}',
+  digestSub: '{count} · {titles}',
+  rowSub: '{body} · {time}',
+  unavailable: 'We couldn’t load your notifications right now.',
+}

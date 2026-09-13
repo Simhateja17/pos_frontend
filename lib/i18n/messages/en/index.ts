@@ -19,6 +19,9 @@ import { customers } from './customers'
 import { members } from './members'
 import { settings } from './settings'
 import { reports } from './reports'
+import { receivables } from './receivables'
+import { notifications } from './notifications'
+import { demand } from './demand'
 import { checkout } from './checkout'
 
 export const en = {
@@ -37,6 +40,9 @@ export const en = {
   members,
   settings,
   reports,
+  receivables,
+  notifications,
+  demand,
 }
 
 type DeepStrings<T> = { [K in keyof T]: T[K] extends string ? string : DeepStrings<T[K]> }

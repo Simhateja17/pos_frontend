@@ -1,0 +1,17 @@
+export const notifications = {
+  title: 'నోటిఫికేషన్లు',
+  subtitle: 'మీరు లేని సమయంలో జరిగిన విషయాలు',
+  loading: 'నోటిఫికేషన్లు లోడ్ చేస్తున్నాం',
+  emptyTitle: 'ఇంకా ఏమీ లేదు',
+  emptyBody: 'కొనుగోలు ఆర్డర్లు, తక్కువ స్టాక్ అలర్ట్‌లు మరియు సెటప్ రిమైండర్లు జరిగినప్పుడు ఇక్కడ కనిపిస్తాయి.',
+  alertsOne: 'అలర్ట్',
+  alertsMany: 'అలర్ట్‌లు',
+  justNow: 'ఇప్పుడే',
+  minutesAgo: '{count} నిమిషాల క్రితం',
+  hoursAgo: '{count} గంటల క్రితం',
+  daysAgo: '{count} రోజుల క్రితం',
+  digestTitle: '{store} · {date}',
+  digestSub: '{count} · {titles}',
+  rowSub: '{body} · {time}',
+  unavailable: 'మీ నోటిఫికేషన్లను ప్రస్తుతం లోడ్ చేయలేకపోయాం.',
+}

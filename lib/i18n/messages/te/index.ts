@@ -21,6 +21,9 @@ import { customers } from './customers'
 import { members } from './members'
 import { settings } from './settings'
 import { reports } from './reports'
+import { receivables } from './receivables'
+import { notifications } from './notifications'
+import { demand } from './demand'
 import { checkout } from './checkout'
 
 export const te: Messages = {
@@ -39,4 +42,7 @@ export const te: Messages = {
   members,
   settings,
   reports,
+  receivables,
+  notifications,
+  demand,
 }

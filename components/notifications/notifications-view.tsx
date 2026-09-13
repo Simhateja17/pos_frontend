@@ -11,6 +11,8 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Card, ListRow, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { type Translate, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 type NotificationType = NotificationList['notifications'][number]['type']
 
@@ -29,17 +31,19 @@ const TONE_BY_TYPE: Record<NotificationType, 'blue' | 'green' | 'amber'> = {
 }
 
 /** "just now" / "12m ago" / "3h ago" / "2d ago": enough resolution for a notification tray. */
-function relativeTime(iso: string): string {
+function relativeTime(iso: string, t: Translate): string {
   const diffMs = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diffMs / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 1) return t('notifications.justNow')
+  if (minutes < 60) return t('notifications.minutesAgo', { count: minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
+  if (hours < 24) return t('notifications.hoursAgo', { count: hours })
+  return t('notifications.daysAgo', { count: Math.floor(hours / 24) })
 }
 
 export function NotificationsView() {
+  const t = useT()
+  const { appPath } = useAppRegion()
   const [list, setList] = useState<NotificationList | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +64,7 @@ export function NotificationsView() {
       setError(
         cause instanceof AuthenticatedRequestError
           ? cause.message
-          : 'We couldn’t load your notifications right now.',
+          : t('notifications.unavailable'),
       )
     } finally {
       setLoading(false)
@@ -69,20 +73,22 @@ export function NotificationsView() {
 
   useEffect(() => {
     void load()
+    // t is intentionally omitted: changing locale must not refetch notifications.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <>
-      <PageHead title="Notifications" sub="Things that happened while you were away" />
+      <PageHead title={t('notifications.title')} sub={t('notifications.subtitle')} />
 
       <Card>
-        {loading && <LoadingState label="Loading notifications" />}
+        {loading && <LoadingState label={t('notifications.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && list && list.notifications.length === 0 && list.dailyDigest.length === 0 && (
           <EmptyState
             icon={<Bell size={24} strokeWidth={1.8} />}
-            title="Nothing yet"
-            body="Purchase orders, low-stock alerts and setup reminders will show up here as they happen."
+            title={t('notifications.emptyTitle')}
+            body={t('notifications.emptyBody')}
           />
         )}
         {!loading && !error && list && (list.notifications.length > 0 || list.dailyDigest.length > 0) && (
@@ -92,8 +98,8 @@ export function NotificationsView() {
                 key={`${digest.date}:${digest.storeId}`}
                 icon={<Boxes size={17} strokeWidth={1.85} />}
                 tone="amber"
-                title={`${digest.storeName} · ${digest.date}`}
-                sub={`${digest.totalCount} alert${digest.totalCount === 1 ? '' : 's'} · ${digest.sampleTitles.join(', ')}`}
+                title={t('notifications.digestTitle', { store: digest.storeName, date: digest.date })}
+                sub={t('notifications.digestSub', { count: `${digest.totalCount} ${digest.totalCount === 1 ? t('notifications.alertsOne') : t('notifications.alertsMany')}`, titles: digest.sampleTitles.join(', ') })}
               />
             ))}
             {list.notifications.map((n) => {
@@ -104,11 +110,11 @@ export function NotificationsView() {
                   icon={<Icon size={17} strokeWidth={1.85} />}
                   tone={TONE_BY_TYPE[n.type]}
                   title={n.title}
-                  sub={`${n.body} · ${relativeTime(n.createdAt)}`}
+                  sub={t('notifications.rowSub', { body: n.body, time: relativeTime(n.createdAt, t) })}
                 />
               )
               return n.link ? (
-                <Link key={n.id} href={n.link} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Link key={n.id} href={appPath(n.link)} style={{ textDecoration: 'none', color: 'inherit' }}>
                   {row}
                 </Link>
               ) : (

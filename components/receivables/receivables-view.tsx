@@ -6,17 +6,17 @@ import { HandCoins } from 'lucide-react'
 import { Badge, Card, CardHead, DataTable, Fld, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 import { recordCustomerRepayment } from '@/components/customers/api'
 import { getReceivables, type Receivable, type ReceivablesList, type ReceivablesSort } from './api'
 
-const dateTime = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
-
-function titleFor(customer: Receivable): string {
-  return customer.billingName ?? customer.name ?? 'Unnamed customer'
+function titleFor(customer: Receivable, unnamed: string): string {
+  return customer.billingName ?? customer.name ?? unnamed
 }
 
 export function ReceivablesView() {
-  const { money } = useAppRegion()
+  const { money, dateLocale, pack, appPath } = useAppRegion()
+  const t = useT()
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<ReceivablesSort>('balance_desc')
   const [data, setData] = useState<ReceivablesList | null>(null)
@@ -34,10 +34,12 @@ export function ReceivablesView() {
     try {
       setData(await getReceivables(search || undefined, sort))
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Receivables are unavailable right now.')
+      setError(cause instanceof Error ? cause.message : t('receivables.error'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch receivables.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, sort])
 
   useEffect(() => {
@@ -57,11 +59,11 @@ export function ReceivablesView() {
     if (!selected) return
     const parsedAmount = Number(amount)
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setFormError('Enter a repayment amount greater than zero.')
+      setFormError(t('receivables.enterAmount'))
       return
     }
     if (parsedAmount > Number(selected.balance)) {
-      setFormError(`Enter ${money(Number(selected.balance))} or less.`)
+      setFormError(t('receivables.enterLess', { amount: money(Number(selected.balance)) }))
       return
     }
 
@@ -72,59 +74,62 @@ export function ReceivablesView() {
       setSelected(null)
       await load()
     } catch (cause) {
-      setFormError(cause instanceof Error ? cause.message : 'That repayment could not be recorded.')
+      setFormError(cause instanceof Error ? cause.message : t('receivables.error'))
     } finally {
       setSaving(false)
     }
   }
 
+  const dateTime = new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: pack.timeZone })
+  const countLabel = data ? `${data.total} ${data.total === 1 ? t('receivables.customerOne') : t('receivables.customerMany')}` : t('common.loading')
+
   return (
     <>
       <PageHead
-        title="Receivables"
-        sub="Track khata balances across the business and collect repayments"
+        title={t('receivables.title')}
+        sub={t('receivables.subtitle')}
       />
 
       <Card>
         <CardHead
-          title="Outstanding customer balances"
-          sub={data ? `${data.total} customer${data.total === 1 ? '' : 's'} · ${money(Number(data.outstandingTotal))} outstanding` : 'Loading…'}
+          title={t('receivables.balanceTitle')}
+          sub={data ? t('receivables.balanceSub', { count: countLabel, amount: money(Number(data.outstandingTotal)) }) : t('common.loading')}
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              <SearchField value={search} onChange={setSearch} placeholder="Search name, phone or email…" ariaLabel="Search receivables" width={240} />
-              <select aria-label="Sort receivables" value={sort} onChange={(event) => setSort(event.target.value as ReceivablesSort)} style={{ height: 38, minWidth: 150 }}>
-                <option value="balance_desc">Highest balance</option>
-                <option value="balance_asc">Lowest balance</option>
-                <option value="name_asc">Customer name</option>
-                <option value="recent">Recent activity</option>
+              <SearchField value={search} onChange={setSearch} placeholder={t('receivables.searchPlaceholder')} ariaLabel={t('receivables.searchLabel')} width={240} />
+              <select aria-label={t('receivables.sortLabel')} value={sort} onChange={(event) => setSort(event.target.value as ReceivablesSort)} style={{ height: 38, minWidth: 150 }}>
+                <option value="balance_desc">{t('receivables.sort.highest')}</option>
+                <option value="balance_asc">{t('receivables.sort.lowest')}</option>
+                <option value="name_asc">{t('receivables.sort.name')}</option>
+                <option value="recent">{t('receivables.sort.recent')}</option>
               </select>
             </div>
           }
         />
 
-        {loading && <LoadingState label="Loading receivables" />}
+        {loading && <LoadingState label={t('receivables.loading')} />}
         {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
         {!loading && !error && data?.items.length === 0 && (
           <EmptyState
             icon={<HandCoins size={24} strokeWidth={1.8} />}
-            title={search ? 'No balances match this search' : 'No outstanding balances'}
-            body={search ? 'Try a different customer name, phone number or email.' : 'Credit sales will appear here when a customer has an amount due.'}
+            title={search ? t('receivables.emptySearchTitle') : t('receivables.emptyTitle')}
+            body={search ? t('receivables.emptySearchBody') : t('receivables.emptyBody')}
           />
         )}
         {!loading && !error && data && data.items.length > 0 && (
-          <DataTable cols={['Customer', 'Contact', 'Outstanding', 'Limit', 'Last activity', 'Action']} minWidth={900}>
+          <DataTable cols={[t('receivables.cols.customer'), t('receivables.cols.contact'), t('receivables.cols.outstanding'), t('receivables.cols.limit'), t('receivables.cols.activity'), t('receivables.cols.action')]} minWidth={900}>
             {data.items.map((customer) => (
               <tr key={customer.customerId}>
                 <td>
-                  <div className="t-strong">{titleFor(customer)}</div>
-                  <Link className="t-sub" href={`/app/customers/${customer.customerId}`}>View profile</Link>
+                  <div className="t-strong">{titleFor(customer, t('receivables.unnamed'))}</div>
+                  <Link className="t-sub" href={appPath(`/app/customers/${customer.customerId}`)}>{t('receivables.viewProfile')}</Link>
                 </td>
-                <td className="t-sub">{customer.phone ?? customer.email ?? 'No contact on file'}</td>
+                <td className="t-sub">{customer.phone ?? customer.email ?? t('receivables.noContact')}</td>
                 <td className="t-mono t-strong" style={{ color: 'var(--danger)' }}>{money(Number(customer.balance))}</td>
-                <td>{customer.creditLimit ? <Badge tone="blue">{money(Number(customer.creditLimit))}</Badge> : <span className="t-sub">No limit</span>}</td>
-                <td className="t-sub">{customer.recentActivityAt ? dateTime.format(new Date(customer.recentActivityAt)) : 'Not available'}</td>
+                <td>{customer.creditLimit ? <Badge tone="blue">{money(Number(customer.creditLimit))}</Badge> : <span className="t-sub">{t('receivables.noLimit')}</span>}</td>
+                <td className="t-sub">{customer.recentActivityAt ? dateTime.format(new Date(customer.recentActivityAt)) : t('receivables.notAvailable')}</td>
                 <td>
-                  <button className="btn btn-sm btn-pri" type="button" onClick={() => openCollection(customer)}><HandCoins size={13} /> Collect</button>
+                  <button className="btn btn-sm btn-pri" type="button" onClick={() => openCollection(customer)}><HandCoins size={13} /> {t('receivables.collect')}</button>
                 </td>
               </tr>
             ))}
@@ -133,21 +138,21 @@ export function ReceivablesView() {
       </Card>
 
       {selected && (
-        <Modal title={`Collect from ${titleFor(selected)}`} onClose={() => !saving && setSelected(null)}>
+        <Modal title={t('receivables.collectTitle', { name: titleFor(selected, t('receivables.unnamed')) })} onClose={() => !saving && setSelected(null)}>
           <form onSubmit={collect}>
             <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
-              Outstanding balance: <strong className="num">{money(Number(selected.balance))}</strong>. This creates a repayment entry at the active store.
+              {t('receivables.outstandingIntro')} <strong className="num">{money(Number(selected.balance))}</strong>. {t('receivables.repaymentNote')}
             </p>
             {formError && <div role="alert" style={{ marginBottom: 13, fontSize: 13, color: 'var(--danger)' }}>{formError}</div>}
-            <Fld id="receivable-repayment-amount" label="Amount received">
-              <input id="receivable-repayment-amount" type="number" min={0.01} max={Number(selected.balance)} step="0.01" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={money(0)} autoFocus />
+            <Fld id="receivable-repayment-amount" label={t('receivables.amount')}>
+              <input id="receivable-repayment-amount" type="number" min={0.01} max={Number(selected.balance)} step="0.01" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={t('receivables.amountPlaceholder')} autoFocus />
             </Fld>
-            <Fld id="receivable-repayment-note" label="Note (optional)">
-              <textarea id="receivable-repayment-note" rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder="e.g. Cash received at the counter" />
+            <Fld id="receivable-repayment-note" label={t('receivables.note')}>
+              <textarea id="receivable-repayment-note" rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t('receivables.notePlaceholder')} />
             </Fld>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-              <button className="btn" type="button" onClick={() => setSelected(null)} disabled={saving}>Cancel</button>
-              <button className="btn btn-pri" type="submit" disabled={saving}>{saving ? 'Recording…' : 'Record repayment'}</button>
+              <button className="btn" type="button" onClick={() => setSelected(null)} disabled={saving}>{t('receivables.cancel')}</button>
+              <button className="btn btn-pri" type="submit" disabled={saving}>{saving ? t('receivables.recording') : t('receivables.record')}</button>
             </div>
           </form>
         </Modal>
