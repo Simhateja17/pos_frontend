@@ -186,7 +186,7 @@ export function StoresView() {
           {
             label: t('records.stores.activeStores'),
             value: stores ? String(activeCount) : 'N/A',
-            meta: allowance ? `${allowance.used} / ${allowance.limit} ${t('records.stores.totalStores')}` : stores ? t('records.stores.totalOnFile', { count: stores.length }) : t('records.stores.loading'),
+            meta: allowance ? t('records.stores.allowanceSummary', { used: allowance.used, limit: allowance.limit }) : stores ? t('records.stores.totalOnFile', { count: stores.length }) : t('records.stores.loading'),
           },
           {
             // Per-store takings need the dashboard's store scope, which this
@@ -301,7 +301,7 @@ export function StoresView() {
             ) : (
               <>
                 <button className="btn" type="button" onClick={() => setFormOpen(false)} disabled={saving}>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button className="btn btn-pri" type="submit" form="store-form" disabled={saving}>
                 {saving ? t('records.stores.saving') : editing ? t('records.stores.save') : t('records.stores.add')}

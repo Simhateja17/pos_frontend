@@ -12,15 +12,8 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, KpiRow, Modal, PageHead, SearchField, type KpiItem } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
-
-const dateTime = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: 'Asia/Kolkata',
-})
+import { enumLabel, MessageKey, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 const STATUS_TONE = {
   delivered: 'green',
@@ -40,6 +33,11 @@ function matches(values: Array<string | null | undefined>, query: string): boole
 }
 
 export function EmailView() {
+  const t = useT()
+  const { dateLocale, pack } = useAppRegion()
+  const dateTime = new Intl.DateTimeFormat(dateLocale, {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: pack.timeZone,
+  })
   const [log, setLog] = useState<EmailLog | null>(null)
   const [suppressions, setSuppressions] = useState<EmailSuppressionList | null>(null)
   const [loading, setLoading] = useState(true)
@@ -64,10 +62,12 @@ export function EmailView() {
       setLog(nextLog)
       setSuppressions(nextSuppressions)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Email records are unavailable right now.')
+      setError(cause instanceof Error ? cause.message : t('email.error'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch email records.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export function EmailView() {
       setEmail('')
       await load()
     } catch (cause) {
-      setFormError(cause instanceof Error ? cause.message : 'That address could not be suppressed.')
+      setFormError(cause instanceof Error ? cause.message : t('email.suppressError'))
     } finally {
       setSaving(false)
     }
@@ -99,21 +99,21 @@ export function EmailView() {
 
   const metrics: KpiItem[] = log
     ? [
-        { label: 'Sent', value: String(log.counts.sent + log.counts.delivered), meta: 'Handed to the email provider' },
-        { label: 'Failed', value: String(log.counts.failed), meta: log.counts.failed > 0 ? 'These customers did not get an email' : 'None failed' },
-        { label: 'Bounced', value: String(log.counts.bounced), meta: 'Address rejected or reported as spam' },
-        { label: 'Suppressed', value: String(log.counts.suppressed), meta: 'Not sent, address is on the do-not-email list' },
+        { label: t('email.metrics.sent'), value: String(log.counts.sent + log.counts.delivered), meta: t('email.metrics.sentMeta') },
+        { label: t('email.metrics.failed'), value: String(log.counts.failed), meta: log.counts.failed > 0 ? t('email.metrics.failedMeta') : t('email.metrics.noneFailed') },
+        { label: t('email.metrics.bounced'), value: String(log.counts.bounced), meta: t('email.metrics.bouncedMeta') },
+        { label: t('email.metrics.suppressed'), value: String(log.counts.suppressed), meta: t('email.metrics.suppressedMeta') },
       ]
     : []
 
   return (
     <>
       <PageHead
-        title="Email"
-        sub="Bills sent to customers, and who we no longer email"
+        title={t('email.title')}
+        sub={t('email.subtitle')}
         actions={
           <button className="btn" type="button" onClick={() => setFormOpen(true)}>
-            <MailX size={15} /> Stop emailing an address
+            <MailX size={15} /> {t('email.stopAddress')}
           </button>
         }
       />
@@ -121,7 +121,7 @@ export function EmailView() {
       {loading ? (
         <Card>
           <CardPad>
-            <LoadingState label="Loading email records" rows={5} />
+            <LoadingState label={t('email.loading')} rows={5} />
           </CardPad>
         </Card>
       ) : error ? (
@@ -138,8 +138,7 @@ export function EmailView() {
             <Card>
               <CardPad>
                 <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-                  No email provider is connected on this server, so nothing can actually be delivered yet. Attempts are
-                  still recorded below so you can see what would have been sent.
+                  {t('email.providerNotice')}
                 </p>
               </CardPad>
             </Card>
@@ -147,14 +146,14 @@ export function EmailView() {
 
           <Card>
             <CardHead
-              title="Send log"
-              sub="Every attempt, including the ones that never left"
+              title={t('email.sendLog')}
+              sub={t('email.sendLogSub')}
               right={
                 <SearchField
                   value={logSearch}
                   onChange={setLogSearch}
-                  placeholder="Search customer email or subject…"
-                  ariaLabel="Search send log"
+                  placeholder={t('email.searchLogPlaceholder')}
+                  ariaLabel={t('email.searchLogLabel')}
                   width={260}
                 />
               }
@@ -162,26 +161,26 @@ export function EmailView() {
             {log && log.entries.length === 0 ? (
               <CardPad>
                 <EmptyState
-                  title="No emails yet"
-                  body="Bills appear here as soon as a sale is completed with a customer email address."
+                  title={t('email.noEmails')}
+                  body={t('email.noEmailsBody')}
                 />
               </CardPad>
             ) : logEntries.length === 0 ? (
               <CardPad>
-                <EmptyState title="No emails match this search" body="Try part of the customer address, the subject, or a status such as failed." />
+                <EmptyState title={t('email.noMatch')} body={t('email.noMatchBody')} />
               </CardPad>
             ) : (
-              <DataTable cols={['When', 'To', 'Kind', 'Subject', 'Status', 'Detail']} minWidth={880}>
+              <DataTable cols={[t('email.cols.when'), t('email.cols.to'), t('email.cols.kind'), t('email.cols.subject'), t('email.cols.status'), t('email.cols.detail')]} minWidth={880}>
                 {logEntries.map((entry) => (
                   <tr key={entry.id}>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
                     <td>{entry.recipient}</td>
-                    <td>{entry.kind === 'receipt' ? 'Bill' : entry.kind === 'invoice' ? 'Tax Invoice' : 'Offer'}</td>
+                    <td>{t(`email.kinds.${entry.kind}` as MessageKey)}</td>
                     <td className="t-sub">{entry.subject}</td>
                     <td>
-                      <Badge tone={STATUS_TONE[entry.status] ?? 'grey'}>{entry.status}</Badge>
+                      <Badge tone={STATUS_TONE[entry.status] ?? 'grey'}>{enumLabel(t, 'status', entry.status)}</Badge>
                     </td>
-                    <td className="t-sub">{entry.errorMessage ?? '-'}</td>
+                    <td className="t-sub">{entry.errorMessage ?? t('email.missing')}</td>
                   </tr>
                 ))}
               </DataTable>
@@ -190,14 +189,14 @@ export function EmailView() {
 
           <Card>
             <CardHead
-              title="Do not email"
-              sub="Unsubscribes stop offers only. Bounces and spam complaints stop everything, including bills."
+              title={t('email.doNotEmail')}
+              sub={t('email.doNotEmailSub')}
               right={
                 <SearchField
                   value={suppressionSearch}
                   onChange={setSuppressionSearch}
-                  placeholder="Search address or reason…"
-                  ariaLabel="Search do not email list"
+                  placeholder={t('email.searchSuppressionPlaceholder')}
+                  ariaLabel={t('email.searchSuppressionLabel')}
                   width={240}
                 />
               }
@@ -205,23 +204,23 @@ export function EmailView() {
             {suppressions && suppressions.suppressions.length === 0 ? (
               <CardPad>
                 <EmptyState
-                  title="Nobody is suppressed"
-                  body="Addresses that unsubscribe, bounce or report spam appear here automatically."
+                  title={t('email.nobodySuppressed')}
+                  body={t('email.nobodySuppressedBody')}
                 />
               </CardPad>
             ) : suppressedEntries.length === 0 ? (
               <CardPad>
-                <EmptyState title="No addresses match this search" body="Try part of the email address, or a reason such as bounced." />
+                <EmptyState title={t('email.noAddressMatch')} body={t('email.noAddressMatchBody')} />
               </CardPad>
             ) : (
-              <DataTable cols={['Address', 'Reason', 'Detail', 'Since', '']}>
+              <DataTable cols={[t('email.suppressionCols.address'), t('email.suppressionCols.reason'), t('email.suppressionCols.detail'), t('email.suppressionCols.since'), '']}>
                 {suppressedEntries.map((entry) => (
                   <tr key={entry.id}>
                     <td>{entry.email}</td>
                     <td>
-                      <Badge tone={entry.reason === 'unsubscribed' ? 'grey' : 'red'}>{entry.reason}</Badge>
+                      <Badge tone={entry.reason === 'unsubscribed' ? 'grey' : 'red'}>{t(`email.reasons.${entry.reason}` as MessageKey)}</Badge>
                     </td>
-                    <td className="t-sub">{entry.detail ?? '-'}</td>
+                      <td className="t-sub">{entry.detail ?? t('email.missing')}</td>
                     <td className="t-mono t-sub">{dateTime.format(new Date(entry.createdAt))}</td>
                     <td>
                       <button
@@ -232,7 +231,7 @@ export function EmailView() {
                           await load()
                         }}
                       >
-                        <Undo2 size={14} /> Allow again
+                        <Undo2 size={14} /> {t('email.allowAgain')}
                       </button>
                     </td>
                   </tr>
@@ -244,29 +243,28 @@ export function EmailView() {
       )}
 
       {formOpen && (
-        <Modal title="Stop emailing an address" onClose={() => setFormOpen(false)}>
+        <Modal title={t('email.modalTitle')} onClose={() => setFormOpen(false)}>
           <form onSubmit={addSuppression}>
-            <Fld id="suppress-email" label="Email address">
+            <Fld id="suppress-email" label={t('email.address')}>
               <input
                 id="suppress-email"
                 type="email"
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="customer@example.com"
+                placeholder={t('email.addressPlaceholder')}
               />
             </Fld>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
-              This records an unsubscribe, which stops offers. Bills for purchases they make are still sent, because
-              those are not marketing.
+              {t('email.modalNote')}
             </p>
             {formError && <p style={{ fontSize: 12.5, color: 'var(--red, #b42318)', marginTop: 8 }}>{formError}</p>}
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button className="btn btn-grad" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : 'Stop emailing'}
+                {saving ? t('email.saving') : t('email.stopAddress')}
               </button>
               <button className="btn btn-ghost" type="button" onClick={() => setFormOpen(false)}>
-                Cancel
+                {t('email.cancel')}
               </button>
             </div>
           </form>

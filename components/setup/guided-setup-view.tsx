@@ -10,14 +10,16 @@ import { Badge, Card, CardHead, CardPad, ListRow, PageHead } from '@/components/
 import { ErrorState, LoadingState } from '@/components/couture/states'
 import { getActiveStoreId, setActiveStoreId } from '@/lib/store-context'
 import { getAuthenticatedStores, type Store } from '@/lib/api/authenticated-client'
+import { MessageKey, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 type SetupState = components['schemas']['SetupState']
 type SetupStep = components['schemas']['SetupStep']
 
-const GROUPS: { title: string; ids: SetupStep['id'][] }[] = [
-  { title: 'Confirm your store', ids: ['store_profile'] },
-  { title: 'Prepare your team', ids: ['owner_pin', 'team'] },
-  { title: 'Prepare checkout', ids: ['products', 'counter', 'device_pairing', 'scanner'] },
+const GROUPS: { key: 'store' | 'team' | 'checkout'; ids: SetupStep['id'][] }[] = [
+  { key: 'store', ids: ['store_profile'] },
+  { key: 'team', ids: ['owner_pin', 'team'] },
+  { key: 'checkout', ids: ['products', 'counter', 'device_pairing', 'scanner'] },
 ]
 
 function stepTone(status: SetupStep['status']): 'green' | 'amber' | 'grey' | 'red' {
@@ -28,6 +30,8 @@ function stepTone(status: SetupStep['status']): 'green' | 'amber' | 'grey' | 're
 }
 
 export function GuidedSetupView() {
+  const t = useT()
+  const { appPath } = useAppRegion()
   const [state, setState] = useState<SetupState | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +52,7 @@ export function GuidedSetupView() {
         setStores(payload.stores.filter((store) => store.isActive))
         setStorePickerError(null)
       } catch (cause) {
-        setStorePickerError(cause instanceof Error ? cause.message : 'We couldn’t load your stores.')
+        setStorePickerError(cause instanceof Error ? cause.message : t('settings.errors.storesLoad'))
       }
       setLoading(false)
       setError('choose_store')
@@ -56,17 +60,19 @@ export function GuidedSetupView() {
     }
     const headers = await authHeaders()
     if (!headers) {
-      setError('Your session has expired. Sign in again to continue.')
+      setError(t('setup.sessionExpired'))
       setLoading(false)
       return
     }
     const result = await apiClient.GET('/setup', { headers })
     setLoading(false)
     if (result.error || !result.data) {
-      setError((result.error as { error?: string } | undefined)?.error ?? 'Guided setup is unavailable right now.')
+      setError((result.error as { error?: string } | undefined)?.error ?? t('setup.unavailable'))
       return
     }
     setState(result.data)
+    // t is intentionally omitted: changing locale must not refetch setup state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -81,7 +87,7 @@ export function GuidedSetupView() {
     })
     setSavingDecision(null)
     if (result.error || !result.data) {
-      setError((result.error as { error?: string } | undefined)?.error ?? 'That setup choice could not be saved.')
+      setError((result.error as { error?: string } | undefined)?.error ?? t('setup.choiceSave'))
       return
     }
     setState(result.data)
@@ -90,7 +96,7 @@ export function GuidedSetupView() {
   async function testScanner() {
     const value = scannerInput.trim()
     if (!value) {
-      setScannerError('Scan or type a product SKU/barcode first.')
+      setScannerError(t('setup.scannerInputRequired'))
       return
     }
     setScannerError(null)
@@ -100,7 +106,7 @@ export function GuidedSetupView() {
       headers: await authHeaders(),
     })
     if (result.error || !result.data) {
-      setScannerError((result.error as { error?: string } | undefined)?.error ?? 'The scanner test could not run.')
+      setScannerError((result.error as { error?: string } | undefined)?.error ?? t('setup.scannerTestError'))
       return
     }
     setScannerMessage(result.data.message)
@@ -110,26 +116,26 @@ export function GuidedSetupView() {
   }
 
   if (loading) {
-    return <><PageHead title="Guided setup" sub="Getting your store ready" /><Card><LoadingState label="Loading setup" rows={7} /></Card></>
+    return <><PageHead title={t('setup.title')} sub={t('setup.gettingReady')} /><Card><LoadingState label={t('setup.loading')} rows={7} /></Card></>
   }
 
   if (error || !state) {
     if (error === 'choose_store') {
       return (
         <>
-          <PageHead title="Guided setup" sub="Choose a store" />
+          <PageHead title={t('setup.title')} sub={t('setup.chooseStore')} />
           <Card>
-            <CardHead title="Which store do you want to prepare?" sub="Setup readiness is calculated independently for each store." />
+            <CardHead title={t('setup.chooseTitle')} sub={t('setup.chooseSub')} />
             <CardPad>
               {storePickerError ? <ErrorState message={storePickerError} onRetry={() => void load()} /> : null}
-              {!storePickerError && stores.length === 0 ? <LoadingState label="Loading stores" /> : null}
+              {!storePickerError && stores.length === 0 ? <LoadingState label={t('settings.loadingStores')} /> : null}
               {stores.map((store) => (
                 <ListRow
                   key={store.id}
                   icon={<StoreIcon size={17} strokeWidth={1.85} />}
                   title={store.name}
-                  sub={[store.city, store.state].filter(Boolean).join(' · ') || 'Address not set'}
-                  action={<button className="btn btn-sm btn-pri" onClick={() => { setActiveStoreId(store.id); void load() }}>Open setup</button>}
+                  sub={[store.city, store.state].filter(Boolean).join(' · ') || t('setup.addressNotSet')}
+                  action={<button className="btn btn-sm btn-pri" onClick={() => { setActiveStoreId(store.id); void load() }}>{t('setup.open')}</button>}
                 />
               ))}
             </CardPad>
@@ -137,7 +143,7 @@ export function GuidedSetupView() {
         </>
       )
     }
-    return <><PageHead title="Guided setup" sub="Store readiness" /><Card><ErrorState message={error ?? 'Setup is unavailable.'} onRetry={() => void load()} /></Card></>
+    return <><PageHead title={t('setup.title')} sub={t('setup.readiness')} /><Card><ErrorState message={error ?? t('setup.unavailable')} onRetry={() => void load()} /></Card></>
   }
 
   const byId = new Map(state.steps.map((step) => [step.id, step]))
@@ -145,19 +151,19 @@ export function GuidedSetupView() {
   return (
     <>
       <PageHead
-        title="Guided setup"
-        sub={`${state.store.name} · ${state.completionPercentage}% complete`}
-        actions={<Link className="btn btn-sm" href="/app/dashboard">Back to dashboard</Link>}
+        title={t('setup.title')}
+        sub={t('setup.complete', { name: state.store.name, percent: state.completionPercentage })}
+        actions={<Link className="btn btn-sm" href={appPath('/app/dashboard')}>{t('setup.backDashboard')}</Link>}
       />
 
       <Card>
         <CardHead
-          title={state.complete ? 'Your store is ready' : 'Let’s get this store ready'}
-          sub={state.complete ? 'Readiness comes from your store records, not browser checkboxes.' : 'Complete the real operational steps below. You can return here at any time.'}
+          title={state.complete ? t('setup.storeReady') : t('setup.readyPrompt')}
+          sub={state.complete ? t('setup.readySub') : t('setup.incompleteSub')}
           right={
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              <Badge tone={state.storeReady ? 'green' : 'amber'} dot={state.storeReady ? 'g' : undefined}>{state.storeReady ? 'Billing ready' : 'Billing needs setup'}</Badge>
-              {state.storeReady ? <Link className="btn btn-sm btn-pri" href="/app/shifts">Start selling</Link> : null}
+              <Badge tone={state.storeReady ? 'green' : 'amber'} dot={state.storeReady ? 'g' : undefined}>{state.storeReady ? t('setup.billingReady') : t('setup.billingNeedsSetup')}</Badge>
+              {state.storeReady ? <Link className="btn btn-sm btn-pri" href={appPath('/app/shifts')}>{t('setup.startSelling')}</Link> : null}
             </div>
           }
         />
@@ -165,36 +171,36 @@ export function GuidedSetupView() {
           <div style={{ height: 8, borderRadius: 999, background: '#EEF2F6', overflow: 'hidden' }}>
             <div style={{ width: `${state.completionPercentage}%`, height: '100%', background: 'linear-gradient(90deg,#0058BA,#6C9FFF)', transition: 'width .25s ease' }} />
           </div>
-          {state.billingBlockers.length > 0 ? <p className="t-sub" style={{ margin: '10px 0 0' }}>Billing blockers: {state.billingBlockers.join(' · ')}</p> : null}
+          {state.billingBlockers.length > 0 ? <p className="t-sub" style={{ margin: '10px 0 0' }}>{t('setup.billingBlockers', { items: state.steps.filter((step) => step.billingBlocking && !step.complete).map((step) => t(`setup.steps.${step.id}.title` as MessageKey)).join(' · ') })}</p> : null}
         </CardPad>
       </Card>
 
       {GROUPS.map((group) => (
-        <Card key={group.title}>
-          <CardHead title={group.title} />
+        <Card key={group.key}>
+          <CardHead title={t(`setup.groups.${group.key}` as MessageKey)} />
           <CardPad style={{ paddingTop: 4 }}>
             {group.ids.map((id) => {
               const current = byId.get(id)
               if (!current) return null
-              return <SetupStepRow key={id} step={current} />
+              return <SetupStepRow key={id} step={current} t={t} appPath={appPath} />
             })}
-            {group.title === 'Prepare your team' ? (
+            {group.key === 'team' ? (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '10px 0 4px' }}>
                 <button
                   className="btn btn-sm"
                   disabled={savingDecision !== null}
                   onClick={() => void resolve('team_mode', 'solo_owner')}
                 >
-                  I operate this store alone
+                  {t('setup.teamSolo')}
                 </button>
                 <button
                   className="btn btn-sm"
                   disabled={savingDecision !== null}
                   onClick={() => void resolve('team_mode', 'staffed')}
                 >
-                  We have staff
+                  {t('setup.teamStaffed')}
                 </button>
-                {state.decisions.teamMode ? <span className="t-sub" style={{ alignSelf: 'center', fontSize: 12 }}>Saved: {state.decisions.teamMode.replace('_', ' ')}</span> : null}
+                {state.decisions.teamMode ? <span className="t-sub" style={{ alignSelf: 'center', fontSize: 12 }}>{t('setup.savedChoice', { choice: state.decisions.teamMode === 'solo_owner' ? t('setup.teamSolo') : t('setup.teamStaffed') })}</span> : null}
               </div>
             ) : null}
           </CardPad>
@@ -203,38 +209,38 @@ export function GuidedSetupView() {
 
       <div id="scanner">
       <Card>
-        <CardHead title="Barcode scanner" sub="Scanners behave like keyboard-wedge hardware: focus the field, scan, and press Enter. No WebUSB or Bluetooth pairing is required." />
+        <CardHead title={t('setup.scannerTitle')} sub={t('setup.scannerSub')} />
         <CardPad>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input
               ref={scannerRef}
-              aria-label="Scanner test input"
+              aria-label={t('setup.scannerInputLabel')}
               value={scannerInput}
               onChange={(event) => setScannerInput(event.target.value)}
               onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void testScanner() } }}
-              placeholder="Scan a known product SKU or barcode"
+              placeholder={t('setup.scannerPlaceholder')}
               style={{ flex: '1 1 260px', minHeight: 40 }}
             />
-            <button className="btn btn-pri" onClick={() => void testScanner()}><ScanBarcode size={15} /> Test scan</button>
+            <button className="btn btn-pri" onClick={() => void testScanner()}><ScanBarcode size={15} /> {t('setup.testScan')}</button>
           </div>
           {scannerMessage ? <p role="status" style={{ color: 'var(--brand-1)', fontSize: 13, margin: '10px 0 0' }}>{scannerMessage}</p> : null}
           {scannerError ? <p role="alert" style={{ color: 'var(--danger)', fontSize: 13, margin: '10px 0 0' }}>{scannerError}</p> : null}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
-            <button className="btn btn-sm" disabled={savingDecision !== null} onClick={() => void resolve('scanner_choice', 'no_scanner')}>We don’t use a scanner</button>
-            <button className="btn btn-sm" disabled={savingDecision !== null} onClick={() => void resolve('scanner_choice', 'configure_later')}>Configure later</button>
+            <button className="btn btn-sm" disabled={savingDecision !== null} onClick={() => void resolve('scanner_choice', 'no_scanner')}>{t('setup.noScanner')}</button>
+            <button className="btn btn-sm" disabled={savingDecision !== null} onClick={() => void resolve('scanner_choice', 'configure_later')}>{t('setup.configureLater')}</button>
           </div>
-          {state.decisions.scannerChoice ? <p className="t-sub" style={{ margin: '10px 0 0' }}>Saved choice: {state.decisions.scannerChoice.replaceAll('_', ' ')}</p> : null}
+          {state.decisions.scannerChoice ? <p className="t-sub" style={{ margin: '10px 0 0' }}>{t('setup.savedChoiceLabel', { choice: state.decisions.scannerChoice === 'no_scanner' ? t('setup.noScanner') : state.decisions.scannerChoice === 'configure_later' ? t('setup.configureLater') : t('setup.status.complete') })}</p> : null}
         </CardPad>
       </Card>
       </div>
 
       <Card>
-        <CardHead title="Tour progress" sub="The tour is saved per staff member and per store, so switching shops never loses your place." />
+        <CardHead title={t('setup.tourTitle')} sub={t('setup.tourSub')} />
         <CardPad>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {state.tour.status === 'completed' ? <ShieldCheck size={18} color="var(--brand-1)" /> : <UsersRound size={18} color="var(--muted)" />}
-            <span style={{ fontSize: 13 }}>Status: <strong>{state.tour.status.replace('_', ' ')}</strong></span>
-            <Link className="btn btn-sm btn-ghost" href="/app/dashboard#guided-tour">Replay guided tour</Link>
+            <span style={{ fontSize: 13 }}>{t('setup.statusLabel')} <strong>{t(`setup.tourStatus.${state.tour.status}` as MessageKey)}</strong></span>
+            <Link className="btn btn-sm btn-ghost" href={appPath('/app/dashboard#guided-tour')}>{t('setup.replayTour')}</Link>
           </div>
         </CardPad>
       </Card>
@@ -242,13 +248,18 @@ export function GuidedSetupView() {
   )
 }
 
-function SetupStepRow({ step }: { step: SetupStep }) {
+function SetupStepRow({ step, t, appPath }: { step: SetupStep; t: ReturnType<typeof useT>; appPath: (path: string) => string }) {
+  const status = t(`setup.status.${step.status}` as MessageKey)
+  const description = t(`setup.steps.${step.id}.description` as MessageKey)
+  const reason = step.status === 'blocked' && step.id === 'device_pairing'
+    ? t('setup.steps.device_pairing.blockedReason')
+    : t(`setup.steps.${step.id}.reason` as MessageKey)
   return (
     <ListRow
       icon={step.complete ? <Check size={17} strokeWidth={2.2} /> : <CircleAlert size={17} />}
-      title={step.title}
-      sub={step.reason ?? step.description}
-      action={step.complete ? <Badge tone="green" dot="g">Done</Badge> : step.actionHref ? <Link className="btn btn-sm btn-ghost" href={step.actionHref}>Open</Link> : <Badge tone={stepTone(step.status)}>{step.status}</Badge>}
+      title={t(`setup.steps.${step.id}.title` as MessageKey)}
+      sub={step.complete ? description : reason}
+      action={step.complete ? <Badge tone="green" dot="g">{status}</Badge> : step.actionHref ? <Link className="btn btn-sm btn-ghost" href={appPath(step.actionHref)}>{t('setup.open')}</Link> : <Badge tone={stepTone(step.status)}>{status}</Badge>}
     />
   )
 }

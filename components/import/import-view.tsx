@@ -15,11 +15,10 @@ import {
 } from '@/lib/api/authenticated-client'
 import { Badge, Card, CardHead, CardPad, DataTable, PageHead, Seg } from '@/components/couture/ui'
 import { EmptyState, ErrorState, InlineLoader, LoadingState } from '@/components/couture/states'
+import { enumLabel, MessageKey, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
-const KINDS: readonly { label: string; value: ImportKind }[] = [
-  { label: 'Product catalog', value: 'catalog' },
-  { label: 'Sales history', value: 'sales' },
-]
+const KINDS = ['catalog', 'sales'] as const
 
 const IMPORT_FILE_ACCEPT = [
   '.csv',
@@ -33,10 +32,10 @@ const IMPORT_FILE_ACCEPT = [
 
 const CONFIDENCE_TONE = { high: 'green', medium: 'amber', low: 'grey' } as const
 
-function fileToBase64(file: File): Promise<string> {
+function fileToBase64(file: File, errorMessage: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onerror = () => reject(new Error('That file could not be read from your computer.'))
+    reader.onerror = () => reject(new Error(errorMessage))
     reader.onload = () => {
       const result = String(reader.result)
       resolve(result.slice(result.indexOf(',') + 1))
@@ -46,6 +45,8 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function ImportView() {
+  const t = useT()
+  const { dateLocale, pack } = useAppRegion()
   const [kind, setKind] = useState<ImportKind>('catalog')
   const [history, setHistory] = useState<ImportBatch[] | null>(null)
   const [historyError, setHistoryError] = useState<string | null>(null)
@@ -66,8 +67,10 @@ export function ImportView() {
       const data = await getAuthenticatedImportBatches()
       setHistory(data.batches)
     } catch (cause) {
-      setHistoryError(cause instanceof Error ? cause.message : 'Your import history is unavailable right now.')
+      setHistoryError(cause instanceof Error ? cause.message : t('importData.historyError'))
     }
+    // t is intentionally omitted: changing locale must not refetch import history.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -90,7 +93,7 @@ export function ImportView() {
       const staged = await uploadAuthenticatedImport({
         kind,
         fileName: file.name,
-        contentBase64: await fileToBase64(file),
+        contentBase64: await fileToBase64(file, t('importData.fileReadComputer')),
       })
       setBatch(staged)
       setMappings(
@@ -98,7 +101,7 @@ export function ImportView() {
           column: column.name,
           target: null,
           confidence: 'low' as const,
-          reason: 'Not mapped yet.',
+          reason: t('importData.notMapped'),
         })),
       )
 
@@ -109,12 +112,12 @@ export function ImportView() {
         setMappings(proposed.mappings)
       } catch (cause) {
         setSuggestion(null)
-        setError(cause instanceof Error ? cause.message : 'A suggested mapping is unavailable. Map the columns yourself.')
+        setError(cause instanceof Error ? cause.message : t('importData.suggestedMappingError'))
       } finally {
         setSuggesting(false)
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That file could not be read.')
+      setError(cause instanceof Error ? cause.message : t('importData.fileRead'))
     } finally {
       setUploading(false)
     }
@@ -124,10 +127,10 @@ export function ImportView() {
     setMappings((current) =>
       current.map((mapping) =>
         mapping.column === column
-          ? { ...mapping, target: target === '' ? null : target, reason: 'Set by you.', confidence: 'high' }
+          ? { ...mapping, target: target === '' ? null : target, reason: t('importData.setByYou'), confidence: 'high' }
           : // A target can only be used once, so choosing it here clears it elsewhere.
             target !== '' && mapping.target === target
-            ? { ...mapping, target: null, reason: 'Cleared. That field is now mapped to another column.', confidence: 'low' }
+            ? { ...mapping, target: null, reason: t('importData.cleared'), confidence: 'low' }
             : mapping,
       ),
     )
@@ -145,7 +148,7 @@ export function ImportView() {
       )
       await loadHistory()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That import could not be applied. Nothing was changed.')
+      setError(cause instanceof Error ? cause.message : t('importData.applyError'))
     } finally {
       setCommitting(false)
     }
@@ -155,50 +158,59 @@ export function ImportView() {
   const mappedTargets = new Set(mappings.map((mapping) => mapping.target).filter(Boolean))
   const missingRequired = targets.filter((field) => field.required && !mappedTargets.has(field.field))
   const unmapped = mappings.filter((mapping) => mapping.target === null)
+  const kindItems = KINDS.map((value) => ({ value, label: t(`importData.kinds.${value}` as MessageKey) }))
+  const resultMetrics = [
+    ['products', result?.result.productsCreated],
+    ['variants', result?.result.variantsCreated],
+    ['variantsUpdated', result?.result.variantsUpdated],
+    ['sales', result?.result.salesCreated],
+    ['lines', result?.result.saleLinesCreated],
+    ['opening', result?.result.openingStockMovements],
+    ['skipped', result?.result.rowsSkipped],
+  ] as const
+  const fieldLabel = (field: { field: string; label: string }) => {
+    const key = `importData.fields.${field.field}` as MessageKey
+    const localized = t(key)
+    return localized === key ? field.label : localized
+  }
+  const delimiterLabel = batch?.delimiter === '\t' ? t('importData.tab') : batch?.delimiter ?? ''
 
   return (
     <>
       <PageHead
-        title="Import data"
-        sub="Bring your catalog and sales history across from your previous system"
+        title={t('importData.title')}
+        sub={t('importData.subtitle')}
       />
 
       {result ? (
         <Card>
           <CardHead
-            title="Import applied"
-            sub={`${result.batch.fileName} · ${result.result.rowsRead} rows read`}
-            right={<Badge tone="green" dot="g">Committed</Badge>}
+            title={t('importData.resultTitle')}
+            sub={t('importData.resultSub', { file: result.batch.fileName, count: result.result.rowsRead })}
+            right={<Badge tone="green" dot="g">{t('importData.committed')}</Badge>}
           />
           <CardPad>
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-              {[
-                ['Products created', result.result.productsCreated],
-                ['Variants created', result.result.variantsCreated],
-                ['Variants updated', result.result.variantsUpdated],
-                ['Sales created', result.result.salesCreated],
-                ['Sale lines created', result.result.saleLinesCreated],
-                ['Opening stock receipts', result.result.openingStockMovements],
-                ['Rows skipped', result.result.rowsSkipped],
-              ]
+              {resultMetrics
                 .filter(([, value]) => Number(value) > 0)
-                .map(([label, value]) => (
-                  <div key={String(label)}>
-                    <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{label}</div>
+                .map(([labelKey, value]) => (
+                  <div key={labelKey}>
+                    <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{t(`importData.resultMetrics.${labelKey}` as MessageKey)}</div>
                     <strong style={{ fontSize: 20 }}>{String(value)}</strong>
                   </div>
                 ))}
             </div>
             {result.result.dateRange && (
               <p style={{ marginTop: 14, fontSize: 12.5, color: 'var(--muted)' }}>
-                History covers {new Date(result.result.dateRange.from).toLocaleDateString('en-IN')} to{' '}
-                {new Date(result.result.dateRange.to).toLocaleDateString('en-IN')}. Reorder suggestions will use it from
-                now on.
+                {t('importData.historyRange', {
+                  from: new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeZone: pack.timeZone }).format(new Date(result.result.dateRange.from)),
+                  to: new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeZone: pack.timeZone }).format(new Date(result.result.dateRange.to)),
+                })}
               </p>
             )}
             {result.result.issues.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <DataTable cols={['Row', 'Why it was skipped']}>
+                <DataTable cols={[t('importData.issueCols.row'), t('importData.issueCols.reason')]}>
                   {result.result.issues.map((issue) => (
                     <tr key={issue.row}>
                       <td>{issue.row}</td>
@@ -209,7 +221,7 @@ export function ImportView() {
               </div>
             )}
             <button className="btn" style={{ marginTop: 16 }} onClick={reset} type="button">
-              Import another file
+              {t('importData.another')}
             </button>
           </CardPad>
         </Card>
@@ -217,26 +229,25 @@ export function ImportView() {
         <>
           <Card>
             <CardHead
-              title="Review the column mapping"
-              sub={`${batch.fileName} · ${batch.rowCount} rows · ${batch.columns.length} columns`}
+              title={t('importData.reviewTitle')}
+              sub={t('importData.reviewSub', { file: batch.fileName, rows: batch.rowCount, columns: batch.columns.length })}
               right={
                 suggestion ? (
                   <Badge tone={suggestion.source === 'claude' ? 'blue' : 'grey'}>
-                    {suggestion.source === 'claude' ? 'Suggested by Claude' : 'Suggested by header matching'}
+                    {suggestion.source === 'claude' ? t('importData.suggestedClaude') : t('importData.suggestedHeader')}
                   </Badge>
                 ) : undefined
               }
             />
             <CardPad style={{ paddingTop: 4 }}>
-              {suggesting && <InlineLoader label="Reading your columns" />}
+              {suggesting && <InlineLoader label={t('importData.readingColumns')} />}
               {suggestion?.note && (
                 <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 12 }}>{suggestion.note}</p>
               )}
               <p style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 12 }}>
-                Nothing is saved until you confirm. Columns you leave unmapped are still kept with the imported rows, so
-                you can find them later.
+                {t('importData.noSaveYet')}
               </p>
-              <DataTable cols={['Column in your file', 'Sample values', 'Import as', 'Confidence']}>
+              <DataTable cols={[t('importData.mapCols.column'), t('importData.mapCols.samples'), t('importData.mapCols.target'), t('importData.mapCols.confidence')]}>
                 {mappings.map((mapping) => {
                   const column = batch.columns.find((entry) => entry.name === mapping.column)
                   return (
@@ -246,24 +257,24 @@ export function ImportView() {
                         <div style={{ fontSize: 11, color: 'var(--muted)' }}>{mapping.reason}</div>
                       </td>
                       <td style={{ fontSize: 11.5, color: 'var(--muted)' }}>
-                        {column?.samples.length ? column.samples.join(' · ') : 'All blank'}
+                        {column?.samples.length ? column.samples.join(' · ') : t('importData.allBlank')}
                       </td>
                       <td>
                         <select
                           value={mapping.target ?? ''}
                           onChange={(event) => setTarget(mapping.column, event.target.value)}
                         >
-                          <option value="">Keep, but don’t import</option>
+                          <option value="">{t('importData.keepUnmapped')}</option>
                           {targets.map((field) => (
                             <option key={field.field} value={field.field}>
-                              {field.label}
+                              {fieldLabel(field)}
                               {field.required ? ' *' : ''}
                             </option>
                           ))}
                         </select>
                       </td>
                       <td>
-                        <Badge tone={CONFIDENCE_TONE[mapping.confidence]}>{mapping.confidence}</Badge>
+                        <Badge tone={CONFIDENCE_TONE[mapping.confidence]}>{t(`importData.confidence.${mapping.confidence}` as MessageKey)}</Badge>
                       </td>
                     </tr>
                   )
@@ -273,28 +284,30 @@ export function ImportView() {
           </Card>
 
           <Card>
-            <CardHead title="What will happen" sub="Read this before you commit" />
+            <CardHead title={t('importData.whatTitle')} sub={t('importData.whatSub')} />
             <CardPad>
               <ul style={{ fontSize: 13, lineHeight: 1.7, paddingLeft: 18 }}>
                 <li>
-                  {batch.rowCount} rows will be read. {batch.blankRowsSkipped > 0 && `${batch.blankRowsSkipped} blank rows were already dropped. `}
-                  {batch.raggedRows > 0 && `${batch.raggedRows} rows have fewer columns than the header and will be padded. `}
-                  The file was read as {batch.encoding} with “{batch.delimiter === '\t' ? 'tab' : batch.delimiter}” separating columns.
+                  {t('importData.rowsRead', { count: batch.rowCount })}{' '}
+                  {batch.blankRowsSkipped > 0 ? t('importData.blankRows', { count: batch.blankRowsSkipped }) : null}{' '}
+                  {batch.raggedRows > 0 ? t('importData.raggedRows', { count: batch.raggedRows }) : null}{' '}
+                  {t('importData.fileEncoding', { encoding: batch.encoding, delimiter: delimiterLabel })}
                 </li>
                 <li>
                   {unmapped.length === 0
-                    ? 'Every column is mapped to a field.'
-                    : `${unmapped.length} column${unmapped.length === 1 ? '' : 's'} will not become a field, but ${unmapped.length === 1 ? 'it is' : 'they are'} stored with each row and stay retrievable.`}
+                    ? t('importData.everyMapped')
+                    : unmapped.length === 1
+                    ? t('importData.unmappedOne')
+                    : t('importData.unmappedMany', { count: unmapped.length })}
                 </li>
                 {batch.kind === 'sales' && (
                   <li>
-                    Imported sales are marked as history, not as takings rung up here, and they do not change your
-                    current stock levels.
+                    {t('importData.salesHistoryNote')}
                   </li>
                 )}
                 {missingRequired.length > 0 && (
                   <li style={{ color: 'var(--red, #b42318)' }}>
-                    Still needed: {missingRequired.map((field) => field.label).join(', ')}.
+                    {t('importData.stillNeeded', { fields: missingRequired.map(fieldLabel).join(', ') })}
                   </li>
                 )}
               </ul>
@@ -306,10 +319,10 @@ export function ImportView() {
                   disabled={committing || missingRequired.length > 0}
                   onClick={() => void commit()}
                 >
-                  <CheckCircle2 size={15} /> {committing ? 'Importing…' : 'Confirm and import'}
+                  <CheckCircle2 size={15} /> {committing ? t('importData.importing') : t('importData.confirm')}
                 </button>
                 <button className="btn btn-ghost" type="button" onClick={reset} disabled={committing}>
-                  Cancel
+                  {t('importData.cancel')}
                 </button>
               </div>
             </CardPad>
@@ -318,9 +331,9 @@ export function ImportView() {
       ) : (
         <Card>
           <CardHead
-            title="Upload a CSV or Excel export"
-            sub="Export from your old system, then choose the file here"
-            right={<Seg items={KINDS} active={kind} onSelect={setKind} ariaLabel="What kind of file" />}
+            title={t('importData.uploadTitle')}
+            sub={t('importData.uploadSub')}
+            right={<Seg items={kindItems} active={kind} onSelect={setKind} ariaLabel={t('importData.fileLabel')} />}
           />
           <CardPad>
             <label
@@ -328,7 +341,7 @@ export function ImportView() {
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
             >
               <FileUp size={15} />
-              {uploading ? 'Reading file…' : `Choose ${kind === 'catalog' ? 'catalog' : 'sales history'} file`}
+              {uploading ? t('importData.readingFile') : t('importData.chooseFile', { kind: t(`importData.kinds.${kind}` as MessageKey) })}
               <input
                 type="file"
                 accept={IMPORT_FILE_ACCEPT}
@@ -339,12 +352,11 @@ export function ImportView() {
             </label>
             <p style={{ marginTop: 14, fontSize: 12.5, color: 'var(--muted)', maxWidth: 620 }}>
               <Sparkles size={13} style={{ display: 'inline', marginRight: 4, verticalAlign: -2 }} />
-              We read the file on the server and propose which column is which. You review and correct every mapping
-              before anything is saved.
-              {kind === 'sales' && ' Import your catalog first: sales lines are matched to products by SKU.'}
+              {t('importData.readPlan')}{' '}
+              {kind === 'sales' ? t('importData.catalogFirst') : null}
             </p>
             <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
-              Supported files: CSV, XLSX, and XLS. Excel workbooks use the first worksheet with data.
+              {t('importData.supported')}
             </p>
             {error && <p style={{ marginTop: 12, fontSize: 12.5, color: 'var(--red, #b42318)' }}>{error}</p>}
           </CardPad>
@@ -352,32 +364,32 @@ export function ImportView() {
       )}
 
       <Card>
-        <CardHead title="Previous imports" sub="Every file this store has brought across" />
+        <CardHead title={t('importData.previous')} sub={t('importData.previousSub')} />
         {historyError ? (
           <CardPad>
             <ErrorState message={historyError} onRetry={() => void loadHistory()} />
           </CardPad>
         ) : history === null ? (
           <CardPad>
-            <LoadingState label="Loading import history" rows={3} />
+            <LoadingState label={t('importData.loadingHistory')} rows={3} />
           </CardPad>
         ) : history.length === 0 ? (
           <CardPad>
-            <EmptyState title="Nothing imported yet" body="Files you import appear here with what they brought in." />
+            <EmptyState title={t('importData.nothingYet')} body={t('importData.nothingBody')} />
           </CardPad>
         ) : (
-          <DataTable cols={['File', 'Type', 'Rows', 'Status', 'When']}>
+          <DataTable cols={[t('importData.historyCols.file'), t('importData.historyCols.type'), t('importData.historyCols.rows'), t('importData.historyCols.status'), t('importData.historyCols.when')]}>
             {history.map((entry) => (
               <tr key={entry.id}>
                 <td>{entry.fileName}</td>
-                <td>{entry.kind === 'catalog' ? 'Catalog' : 'Sales history'}</td>
+                <td>{t(`importData.kinds.${entry.kind}` as MessageKey)}</td>
                 <td>{entry.rowCount}</td>
                 <td>
                   <Badge tone={entry.status === 'committed' ? 'green' : entry.status === 'failed' ? 'red' : 'grey'}>
-                    {entry.status}
+                    {enumLabel(t, 'status', entry.status)}
                   </Badge>
                 </td>
-                <td>{new Date(entry.createdAt).toLocaleString('en-IN')}</td>
+                <td>{new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: pack.timeZone }).format(new Date(entry.createdAt))}</td>
               </tr>
             ))}
           </DataTable>

@@ -78,7 +78,7 @@ function movementTypeLabel(t: ReturnType<typeof useT>, type: StockMovement['move
 
 export default function VariantDetailPage() {
   const t = useT()
-  const { dateLocale } = useAppRegion()
+  const { dateLocale, pack } = useAppRegion()
   const params = useParams<{ variantId: string }>()
   const variantId = params.variantId
 
@@ -869,7 +869,7 @@ export default function VariantDetailPage() {
               </Fld>
             )}
 
-            <Fld id="link-lead" label={`${t('inventory.detail.leadTime')} (${t('inventory.detail.daysLabel')})`}>
+            <Fld id="link-lead" label={t('inventory.detail.leadTimeWithUnit', { unit: t('inventory.detail.daysLabel') })}>
               <input
                 id="link-lead"
                 type="number"
@@ -884,7 +884,7 @@ export default function VariantDetailPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <Fld id="link-cost" label={`${t('inventory.detail.costPrice')} (₹)`}>
+              <Fld id="link-cost" label={t('inventory.detail.costWithCurrency', { currency: pack.currencySymbol })}>
                 <input
                   id="link-cost"
                   type="number"

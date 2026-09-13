@@ -6,6 +6,7 @@ export const shell = {
   loadingStore: 'Loading store…',
   storeUnavailable: 'Store unavailable',
   allStores: 'All stores',
+  businessAllStores: '{business} · All stores',
   contextUnavailable: 'Store context is unavailable right now. Please retry.',
   signInAgain: 'Sign in again',
   retryContext: 'Retry context',

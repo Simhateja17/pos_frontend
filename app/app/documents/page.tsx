@@ -14,41 +14,39 @@ import {
 import { Card, CardHead, CardPad, DataTable, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { TaxDocumentView } from '@/components/documents/tax-document-view'
+import { MessageKey, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 type DocumentFilter = 'all' | 'tax_invoice' | 'credit_note'
 
-const FILTERS = [
-  { label: 'All documents', value: 'all' as const },
-  { label: 'Tax invoices', value: 'tax_invoice' as const },
-  { label: 'Credit notes', value: 'credit_note' as const },
-]
-
-function money(value: string): string {
+function money(value: string, formatMoney: (value: string | number) => string): string {
   const amount = Number(value)
-  return Number.isFinite(amount) ? amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : `₹${value}`
+  return Number.isFinite(amount) ? formatMoney(amount) : value
 }
 
-function documentLabel(document: TaxDocumentSummary): string {
-  return document.documentType === 'credit_note' ? 'Credit note' : 'Tax invoice'
+function documentLabel(document: TaxDocumentSummary, labels: { credit: string; invoice: string }): string {
+  return document.documentType === 'credit_note' ? labels.credit : labels.invoice
 }
 
-function buyerName(document: TaxDocumentSummary): string {
-  return document.buyer?.legalName ?? document.buyer?.tradeName ?? 'Walk-in customer'
+function buyerName(document: TaxDocumentSummary, walkIn: string): string {
+  return document.buyer?.legalName ?? document.buyer?.tradeName ?? walkIn
 }
 
 /**
  * The list endpoint filters only by exact document number or customer id, so the
  * free-text search runs over the documents already loaded on this page.
  */
-function matchesDocument(document: TaxDocumentSummary, query: string): boolean {
+function matchesDocument(document: TaxDocumentSummary, query: string, labels: { credit: string; invoice: string; walkIn: string }): boolean {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
-  return [documentLabel(document), buyerName(document), document.documentNumber, document.financialYear, document.grandTotal]
+  return [documentLabel(document, labels), buyerName(document, labels.walkIn), document.documentNumber, document.financialYear, document.grandTotal]
     .filter((value): value is string => Boolean(value))
     .some((value) => value.toLowerCase().includes(needle))
 }
 
 function DocumentsPageInner() {
+  const t = useT()
+  const { money: formatMoney, dateLocale, appPath } = useAppRegion()
   const searchParams = useSearchParams()
   const saleId = searchParams.get('saleId')
   const [filter, setFilter] = useState<DocumentFilter>('all')
@@ -75,27 +73,31 @@ function DocumentsPageInner() {
         setSelected(null)
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'GST documents could not be loaded.')
+        setError(cause instanceof Error ? cause.message : t('documents.loadError'))
     } finally {
       setIsLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch documents.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, saleId])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  const visibleDocuments = documents.filter((document) => matchesDocument(document, search))
+  const filterItems = (['all', 'tax_invoice', 'credit_note'] as const).map((value) => ({ value, label: t(`documents.filters.${value}` as MessageKey) }))
+  const labels = { credit: t('documents.creditNote'), invoice: t('documents.taxInvoice'), walkIn: t('documents.walkIn') }
+  const visibleDocuments = documents.filter((document) => matchesDocument(document, search, labels))
 
   if (saleId) {
     return (
       <>
         <PageHead
-          title="Tax Invoice"
-          sub="This document is created from the completed sale and remains unchanged if catalogue or customer data changes later."
-          actions={<Link className="btn btn-sm" href="/app/documents">Back to documents</Link>}
+          title={t('documents.invoiceTitle')}
+          sub={t('documents.invoiceSub')}
+          actions={<Link className="btn btn-sm" href={appPath('/app/documents')}>{t('documents.back')}</Link>}
         />
-        {isLoading ? <LoadingState label="Loading Tax Invoice" rows={7} /> : null}
+        {isLoading ? <LoadingState label={t('documents.loadingInvoice')} rows={7} /> : null}
         {error ? <ErrorState message={error} onRetry={() => void load()} /> : null}
         {selected ? <TaxDocumentView document={selected} /> : null}
       </>
@@ -105,59 +107,59 @@ function DocumentsPageInner() {
   return (
     <>
       <PageHead
-        title="GST Documents"
-        sub="Immutable tax invoices and return-linked credit notes for the stores you can access."
+        title={t('documents.title')}
+        sub={t('documents.subtitle')}
       />
       <Card>
         <CardHead
-          title="Document register"
-          sub="Numbers, tax values, and payment modes come from the stored document snapshot."
+          title={t('documents.listTitle')}
+          sub={t('documents.listSub')}
           right={
             <SearchField
               value={search}
               onChange={setSearch}
-              placeholder="Search customer or document no…"
-              ariaLabel="Search GST documents"
+              placeholder={t('documents.searchPlaceholder')}
+              ariaLabel={t('documents.searchLabel')}
               width={260}
             />
           }
         />
         <CardPad>
-          <Tabs items={FILTERS} active={filter} onSelect={setFilter} ariaLabel="Filter GST documents" disabled={isLoading} />
+          <Tabs items={filterItems} active={filter} onSelect={setFilter} ariaLabel={t('documents.filterLabel')} disabled={isLoading} />
         </CardPad>
-        {isLoading ? <LoadingState label="Loading GST documents" /> : null}
+        {isLoading ? <LoadingState label={t('documents.loading')} /> : null}
         {error ? <ErrorState message={error} onRetry={() => void load()} /> : null}
         {!isLoading && !error && documents.length === 0 ? (
           <EmptyState
             icon={<ReceiptText size={24} strokeWidth={1.8} />}
-            title="No GST documents yet"
-            body="Complete a sale to create its Tax Invoice. A credit note appears here after a return is processed."
-            action={<Link className="btn btn-pri" href="/app/billing">Open billing</Link>}
+            title={t('documents.noDocuments')}
+            body={t('documents.noDocumentsBody')}
+            action={<Link className="btn btn-pri" href={appPath('/app/billing')}>{t('documents.openBilling')}</Link>}
           />
         ) : null}
         {!isLoading && !error && documents.length > 0 && visibleDocuments.length === 0 ? (
           <EmptyState
             icon={<ReceiptText size={24} strokeWidth={1.8} />}
-            title="No documents match this search"
-            body="Only the documents loaded here are searched. Clear the search or switch tabs to look further back."
+            title={t('documents.noMatch')}
+            body={t('documents.noMatchBody')}
           />
         ) : null}
         {!isLoading && !error && visibleDocuments.length > 0 ? (
           <CardPad style={{ paddingTop: 0 }}>
-            <DataTable cols={['Document', 'Number', 'Date', 'Financial year', 'Customer', 'Total']} minWidth={780}>
+            <DataTable cols={[t('documents.cols.document'), t('documents.cols.number'), t('documents.cols.date'), t('documents.cols.year'), t('documents.cols.customer'), t('documents.cols.total')]} minWidth={780}>
               {visibleDocuments.map((document) => (
                 <tr key={document.id}>
                   <td>
                     <Link href={`/app/documents/${document.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 700 }}>
                       <FileText size={15} strokeWidth={1.8} />
-                      {documentLabel(document)}
+                      {documentLabel(document, labels)}
                     </Link>
                   </td>
                   <td style={{ fontFamily: 'var(--mono)' }}>{document.documentNumber}</td>
-                  <td>{new Date(document.documentDate).toLocaleDateString('en-IN')}</td>
+                  <td>{new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium' }).format(new Date(document.documentDate))}</td>
                   <td>{document.financialYear}</td>
-                  <td>{buyerName(document)}</td>
-                  <td style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal)}</td>
+                  <td>{buyerName(document, labels.walkIn)}</td>
+                  <td style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{money(document.grandTotal, formatMoney)}</td>
                 </tr>
               ))}
             </DataTable>
@@ -169,8 +171,9 @@ function DocumentsPageInner() {
 }
 
 export default function DocumentsPage() {
+  const t = useT()
   return (
-    <Suspense fallback={<LoadingState label="Loading GST documents" rows={7} />}>
+    <Suspense fallback={<LoadingState label={t('documents.loading')} rows={7} />}>
       <DocumentsPageInner />
     </Suspense>
   )

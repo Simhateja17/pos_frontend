@@ -15,9 +15,8 @@ import {
   type SyncHistoryEntry,
 } from '@/lib/offline/queue'
 import { drainQueue } from '@/lib/offline/sync'
-
-const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
-const when = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
+import { MessageKey, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 /** A sale whose server total differed from what the customer was quoted offline. */
 function isDivergent(entry: SyncHistoryEntry) {
@@ -29,6 +28,9 @@ function isDivergent(entry: SyncHistoryEntry) {
 }
 
 export default function OfflineSyncPage() {
+  const t = useT()
+  const { money, dateLocale, pack, appPath } = useAppRegion()
+  const when = new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: pack.timeZone })
   const { isOnline, checkedAt } = useConnectivity()
   const [queue, setQueue] = useState<QueuedSale[]>([])
   const [history, setHistory] = useState<SyncHistoryEntry[]>([])
@@ -59,8 +61,12 @@ export default function OfflineSyncPage() {
     await refresh()
     setNote(
       outcome.stoppedBecauseOffline
-        ? 'Still offline. Nothing was sent. The queue is intact.'
-        : `Synced ${outcome.synced}. ${outcome.dead > 0 ? `${outcome.dead} need attention. ` : ''}${outcome.failed > 0 ? `${outcome.failed} will retry.` : ''}`,
+        ? t('offline.stillOffline')
+        : t('offline.syncSummary', {
+            synced: outcome.synced,
+            attention: outcome.dead > 0 ? t(outcome.dead === 1 ? 'offline.attentionOne' : 'offline.attentionMany', { count: outcome.dead }) : '',
+            retry: outcome.failed > 0 ? t(outcome.failed === 1 ? 'offline.retryOne' : 'offline.retryMany', { count: outcome.failed }) : '',
+          }),
     )
   }
 
@@ -70,22 +76,22 @@ export default function OfflineSyncPage() {
   const lastSync = history[0]?.at
 
   const metrics: KpiItem[] = [
-    { label: 'Queued', value: String(pending.length), meta: pending.length ? 'Waiting to sync' : 'Nothing waiting' },
-    { label: 'Connection', value: isOnline ? 'Online' : 'Offline', meta: checkedAt ? `Checked ${when.format(checkedAt)}` : 'Checking…' },
-    { label: 'Needs attention', value: String(dead.length), meta: dead.length ? 'Rejected by the server' : 'None' },
-    { label: 'Total mismatches', value: String(divergent.length), meta: divergent.length ? 'Server total differed from the offline quote' : 'None recorded' },
+    { label: t('offline.queued'), value: String(pending.length), meta: pending.length ? t('offline.waitingToSync') : t('offline.nothingWaiting') },
+    { label: t('offline.connection'), value: isOnline ? t('offline.online') : t('offline.offline'), meta: checkedAt ? t('offline.checked', { date: when.format(checkedAt) }) : t('offline.checking') },
+    { label: t('offline.needsAttention'), value: String(dead.length), meta: dead.length ? t('offline.rejectedByServer') : t('offline.none') },
+    { label: t('offline.totalMismatches'), value: String(divergent.length), meta: divergent.length ? t('offline.serverDiffered') : t('offline.noneRecorded') },
   ]
 
   if (!supported) {
     return (
       <>
-        <PageHead title="Offline & Sync" sub="Queued sales and reconciliation" />
+        <PageHead title={t('offline.title')} sub={t('offline.subtitle')} />
         <Card>
           <CardPad>
             <EmptyState
               icon={<CloudOff size={24} strokeWidth={1.8} />}
-              title="Offline storage is unavailable on this device"
-              body="This browser blocks local storage (often private-browsing mode), so sales cannot be queued here. Billing requires a live connection on this device."
+              title={t('offline.storageUnavailable')}
+              body={t('offline.storageBody')}
             />
           </CardPad>
         </Card>
@@ -96,11 +102,11 @@ export default function OfflineSyncPage() {
   return (
     <>
       <PageHead
-        title="Offline & Sync"
-        sub={lastSync ? `Last sync ${when.format(new Date(lastSync))}` : 'No sync recorded yet'}
+        title={t('offline.title')}
+        sub={lastSync ? t('offline.lastSync', { date: when.format(new Date(lastSync)) }) : t('offline.noSync')}
         actions={
           <button className="btn btn-pri" onClick={() => void syncNow()} disabled={isSyncing || pending.length === 0}>
-            <RefreshCw size={15} /> {isSyncing ? 'Syncing…' : 'Sync now'}
+            <RefreshCw size={15} /> {isSyncing ? t('offline.syncing') : t('offline.syncNow')}
           </button>
         }
       />
@@ -114,21 +120,21 @@ export default function OfflineSyncPage() {
       )}
 
       <Card>
-        <CardHead title="Queued sales" sub="Recorded on this device, not yet confirmed by the server" />
+        <CardHead title={t('offline.queuedSales')} sub={t('offline.queuedSalesSub')} />
         {pending.length === 0 ? (
-          <EmptyState title="Nothing queued" body="Sales taken while offline appear here until the server confirms them." />
+          <EmptyState title={t('offline.nothingQueued')} body={t('offline.nothingQueuedBody')} />
         ) : (
-          <DataTable cols={['Bill', 'Taken', 'Attempts', 'Last issue', 'Quoted', 'Status']} minWidth={780}>
+          <DataTable cols={[t('offline.table.bill'), t('offline.table.taken'), t('offline.table.attempts'), t('offline.table.lastIssue'), t('offline.table.quoted'), t('offline.table.status')]} minWidth={780}>
             {pending.map((e) => (
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
                 <td className="num">{e.attempts}</td>
                 <td className="t-sub">{e.lastError ?? '-'}</td>
-                <td className="num t-strong">{inr.format(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{money(Number(e.estimatedTotal))}</td>
                 <td>
                   <span className={`badge ${e.status === 'sending' ? 'b-blue' : 'b-amber'}`}>
-                    {e.status === 'sending' ? 'Sending' : 'Pending'}
+                    {t(`offline.status.${e.status}` as MessageKey)}
                   </span>
                 </td>
               </tr>
@@ -140,17 +146,17 @@ export default function OfflineSyncPage() {
       {dead.length > 0 && (
         <Card style={{ borderColor: '#F6D4D4' }}>
           <CardHead
-            title="Needs a decision"
-            sub="The server rejected these. They are kept, never discarded automatically."
+            title={t('offline.needsDecision')}
+            sub={t('offline.needsDecisionSub')}
             right={<span className="badge b-red">{dead.length}</span>}
           />
-          <DataTable cols={['Bill', 'Taken', 'Reason', 'Quoted', '']} minWidth={780}>
+          <DataTable cols={[t('offline.table.bill'), t('offline.table.taken'), t('offline.table.reason'), t('offline.table.quoted'), '']} minWidth={780}>
             {dead.map((e) => (
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.createdAt))}</td>
-                <td className="t-sub">{e.lastError ?? 'Rejected'}</td>
-                <td className="num t-strong">{inr.format(Number(e.estimatedTotal))}</td>
+                <td className="t-sub">{e.lastError ?? t('offline.rejected')}</td>
+                <td className="num t-strong">{money(Number(e.estimatedTotal))}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button
                     className="btn btn-sm"
@@ -159,21 +165,19 @@ export default function OfflineSyncPage() {
                       await refresh()
                     }}
                   >
-                    Retry
+                    {t('offline.retry')}
                   </button>{' '}
                   <button
                     className="btn btn-sm"
                     style={{ color: 'var(--danger)' }}
                     onClick={async () => {
-                      const reason = window.prompt(
-                        `Discard bill ${e.clientSaleId.slice(0, 8).toUpperCase()} (${inr.format(Number(e.estimatedTotal))})?\n\nThis sale will never reach the server. Give a reason. It is recorded.`,
-                      )
+                      const reason = window.prompt(t('offline.discardPrompt', { bill: e.clientSaleId.slice(0, 8).toUpperCase(), amount: money(Number(e.estimatedTotal)) }))
                       if (!reason?.trim()) return
                       await discardDead(e.clientSaleId, reason.trim())
                       await refresh()
                     }}
                   >
-                    Discard
+                    {t('offline.discard')}
                   </button>
                 </td>
               </tr>
@@ -185,21 +189,21 @@ export default function OfflineSyncPage() {
       {divergent.length > 0 && (
         <Card>
           <CardHead
-            title="Total mismatches"
-            sub="The server's confirmed total differed from the amount quoted offline"
+            title={t('offline.mismatchTitle')}
+            sub={t('offline.mismatchSub')}
             right={<span className="badge b-amber">{divergent.length}</span>}
           />
-          <DataTable cols={['Bill', 'Synced', 'Quoted', 'Confirmed', 'Sale']}>
+          <DataTable cols={[t('offline.table.bill'), t('offline.table.synced'), t('offline.table.quoted'), t('offline.table.confirmed'), t('offline.table.sale')]}>
             {divergent.map((e) => (
               <tr key={e.clientSaleId}>
                 <td className="t-mono t-strong">{e.clientSaleId.slice(0, 8).toUpperCase()}</td>
                 <td className="t-sub t-mono">{when.format(new Date(e.at))}</td>
-                <td className="num">{inr.format(Number(e.estimatedTotal))}</td>
-                <td className="num t-strong">{inr.format(Number(e.confirmedTotal))}</td>
+                <td className="num">{money(Number(e.estimatedTotal))}</td>
+                <td className="num t-strong">{money(Number(e.confirmedTotal))}</td>
                 <td>
                   {e.saleId ? (
-                    <Link className="btn btn-sm" href={`/app/orders/${encodeURIComponent(e.saleId)}`}>
-                      View
+                    <Link className="btn btn-sm" href={appPath(`/app/orders/${encodeURIComponent(e.saleId)}`)}>
+                      {t('offline.view')}
                     </Link>
                   ) : (
                     '-'

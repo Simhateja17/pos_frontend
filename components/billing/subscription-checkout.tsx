@@ -8,6 +8,7 @@ import type { components } from '@/lib/api/schema'
 import { billingCycleForCatalog, billingCyclesForCatalog } from '@/lib/billing/private-offer-path'
 import styles from './subscription-checkout.module.css'
 import { CurrencyMark } from '@/components/marketing/currency-mark'
+import { type MessageKey, useT } from '@/lib/i18n/i18n'
 
 type Region = 'IN' | 'INTL'
 type Catalog = components['schemas']['BillingPlanCatalog'] & {
@@ -42,9 +43,9 @@ declare global {
   interface Window { Razorpay?: RazorpayConstructor }
 }
 
-async function authHeaders(): Promise<Record<string, string>> {
+async function authHeaders(expiredMessage: string): Promise<Record<string, string>> {
   const headers = await sharedAuthHeaders()
-  if (!headers) throw new Error('Your session has expired. Sign in again to continue.')
+  if (!headers) throw new Error(expiredMessage)
   return headers
 }
 
@@ -54,13 +55,13 @@ function money(minor: number, currency: string, region: Region): string {
   }).format(minor / 100)
 }
 
-async function loadCheckoutScript(): Promise<void> {
+async function loadCheckoutScript(scriptError: string, unavailable: string): Promise<void> {
   if (window.Razorpay) return
   await new Promise<void>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay-checkout]')
     if (existing) {
       existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('Razorpay Checkout could not be loaded.')), { once: true })
+      existing.addEventListener('error', () => reject(new Error(scriptError)), { once: true })
       return
     }
     const script = document.createElement('script')
@@ -68,10 +69,10 @@ async function loadCheckoutScript(): Promise<void> {
     script.async = true
     script.dataset.razorpayCheckout = 'true'
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Razorpay Checkout could not be loaded.'))
+    script.onerror = () => reject(new Error(scriptError))
     document.body.appendChild(script)
   })
-  if (!window.Razorpay) throw new Error('Razorpay Checkout is unavailable in this browser.')
+  if (!window.Razorpay) throw new Error(unavailable)
 }
 
 function providerError(error: unknown, fallback: string): string {
@@ -83,6 +84,7 @@ function providerError(error: unknown, fallback: string): string {
 }
 
 export function SubscriptionCheckout({ region, successPath, title, subtitle, initialPlanKey, privateOfferId }: Props) {
+  const t = useT()
   const router = useRouter()
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [cycle, setCycle] = useState<Cycle>('annual')
@@ -107,23 +109,25 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     let active = true
     ;(async () => {
       try {
-        const headers = await authHeaders()
+        const headers = await authHeaders(t('billing.sessionExpired'))
         const response = await fetch(`${process.env.NODE_ENV === 'production' ? '/_backend' : process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/billing/plans?region=${region}${privateOfferId ? `&offer=${encodeURIComponent(privateOfferId)}` : ''}`, { headers })
         const data = response.ok ? await response.json() as Catalog : null
-        const requestError = response.ok ? null : await response.json().catch(() => ({ error: 'We could not load this offer.' }))
-        if (requestError || !data) throw new Error(providerError(requestError, 'We could not load the plans right now.'))
+        const requestError = response.ok ? null : await response.json().catch(() => ({ error: t('billing.loadOffer') }))
+        if (requestError || !data) throw new Error(providerError(requestError, t('billing.loadPlans')))
         if (!active) return
         setCatalog(data)
         setResolvedPrivateOfferId(data.privateOfferId ?? privateOfferId ?? null)
         setCycle((current) => billingCycleForCatalog(current, data))
         if (!data.plans.some((plan) => plan.key === selectedKey)) setSelectedKey(data.plans[0]?.key ?? '')
       } catch (cause) {
-        if (active) setError(cause instanceof Error ? cause.message : 'We could not load the plans right now.')
+        if (active) setError(cause instanceof Error ? cause.message : t('billing.loadPlans'))
       } finally {
         if (active) setLoading(false)
       }
     })()
     return () => { active = false }
+    // t is intentionally omitted: changing locale must not refetch the plan catalogue.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region, privateOfferId])
 
   useEffect(() => {
@@ -141,7 +145,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     let active = true
     ;(async () => {
       try {
-        const headers = await authHeaders()
+        const headers = await authHeaders(t('billing.sessionExpired'))
         const { data } = await apiClient.GET('/billing/status', { headers })
         if (active && data) setBillingStatus(data)
       } catch {
@@ -152,6 +156,8 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       }
     })()
     return () => { active = false }
+    // t is intentionally omitted: changing locale must not refetch billing status.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region])
 
   const selected = useMemo<Plan | undefined>(() => catalog?.plans.find((plan) => plan.key === selectedKey), [catalog, selectedKey])
@@ -208,7 +214,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
     setMessage(null)
     setPaying(true)
     try {
-      const headers = await authHeaders()
+      const headers = await authHeaders(t('billing.sessionExpired'))
       const status = billingStatus ?? await refreshBillingStatus(headers)
       if (status?.accessAllowed && status.entitlementSource === 'trial') {
         router.push(region === 'IN' ? '/app' : '/us/dashboard')
@@ -233,7 +239,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         // 409 must not prevent the actual Razorpay subscription request.
         const onboarding = await apiClient.GET('/onboarding', { headers })
         if (onboarding.error || !onboarding.data) {
-          throw new Error(providerError(onboarding.error, 'We could not load your onboarding status.'))
+          throw new Error(providerError(onboarding.error, t('billing.loadOnboarding')))
         }
         if (!onboarding.data.completed) {
           const selection = await apiClient.PUT('/onboarding/steps/{step}', {
@@ -251,7 +257,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
             const alreadyComplete = selection.response.status === 409
               && providerError(selection.error, '') === 'Onboarding is already complete'
             if (!alreadyComplete) {
-              throw new Error(providerError(selection.error, 'We could not save your plan selection.'))
+              throw new Error(providerError(selection.error, t('billing.savePlan')))
             }
           }
         }
@@ -261,12 +267,12 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         body: { planKey: selected.key, billingCycle: cycle, idempotencyKey: currentAttemptKey, ...(resolvedPrivateOfferId ? { privateOfferId: resolvedPrivateOfferId } : {}) } as never,
       })
       if (createError || !data) {
-        throw new Error(providerError(createError, response.status === 403 ? 'Only the account owner can start a subscription.' : 'We could not start this subscription.'))
+        throw new Error(providerError(createError, response.status === 403 ? t('billing.ownerOnly') : t('billing.startSubscription')))
       }
 
-      await loadCheckoutScript()
+      await loadCheckoutScript(t('billing.checkoutScript'), t('billing.checkoutUnavailable'))
       const Checkout = window.Razorpay
-      if (!Checkout) throw new Error('Razorpay Checkout is unavailable in this browser.')
+      if (!Checkout) throw new Error(t('billing.checkoutUnavailable'))
       const options: Record<string, unknown> = {
         key: data.razorpayKeyId,
         subscription_id: data.razorpaySubscriptionId,
@@ -276,13 +282,13 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
         modal: {
           ondismiss: () => {
             setPaying(false)
-            setMessage('Checkout was closed. You can reopen this payment or select another plan.')
+            setMessage(t('billing.checkoutClosed'))
           },
         },
         handler: async (checkout: CheckoutResponse) => {
           try {
             if (!checkout.razorpay_payment_id || !checkout.razorpay_subscription_id || !checkout.razorpay_signature) {
-              throw new Error('Razorpay returned an incomplete payment response.')
+              throw new Error(t('billing.incompletePayment'))
             }
             const verify = await apiClient.POST('/billing/subscription/verify', {
               headers,
@@ -293,15 +299,15 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                 razorpaySignature: checkout.razorpay_signature,
               },
             })
-            if (verify.error || !verify.data) throw new Error(providerError(verify.error, 'We could not verify the payment yet.'))
+            if (verify.error || !verify.data) throw new Error(providerError(verify.error, t('billing.verifyPayment')))
             if (verify.data.entitlement === 'active' || await waitForActive(headers)) {
               window.sessionStorage.removeItem(attemptStorageKey)
               router.push(successPath)
               return
             }
-            setMessage('Payment received. We are waiting for Razorpay to confirm the subscription. This page is safe to refresh.')
+            setMessage(t('billing.paymentReceived'))
           } catch (cause) {
-            setError(cause instanceof Error ? cause.message : 'We could not verify the payment yet. Please retry.')
+            setError(cause instanceof Error ? cause.message : t('billing.verifyPaymentRetry'))
           } finally {
             setPaying(false)
           }
@@ -309,24 +315,24 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       }
       new Checkout(options).open()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'We could not open secure checkout.')
+      setError(cause instanceof Error ? cause.message : t('billing.openCheckout'))
       setPaying(false)
     }
   }
 
   return (
     <main className={styles.page}>
-      <button type="button" className={styles.back} onClick={() => router.back()}>← Back</button>
+      <button type="button" className={styles.back} onClick={() => router.back()}>{t('billing.back')}</button>
 
       {/* Same hero treatment as the India /pricing page. */}
       <header className={`content-hero ${styles.hero}`}>
         <div className="section-tag">
           <CurrencyMark region={region} />
-          Secure checkout
+          {t('billing.secureCheckout')}
         </div>
-        <h1>{title ?? <>Choose your <em>subscription plan.</em></>}</h1>
-        <p>{subtitle ?? (region === 'IN' ? 'Choose a paid plan to activate your store. Prices include applicable GST.' : 'Choose a paid USD plan to activate your store. Taxes are shown separately where configured.')}</p>
-        <div className={styles.mode} role="group" aria-label="Billing cycle">
+        <h1>{title ?? <>{t('billing.chooseYour')} <em>{t('billing.subscriptionPlan')}</em></>}</h1>
+        <p>{subtitle ?? (region === 'IN' ? t('billing.paidPlanIndia') : t('billing.paidPlanInternational'))}</p>
+        <div className={styles.mode} role="group" aria-label={t('billing.billingCycleLabel')}>
           {visibleCycles.map((visibleCycle) => (
             <button
               key={visibleCycle}
@@ -335,7 +341,7 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
               onClick={() => selectCycle(visibleCycle)}
               aria-pressed={cycle === visibleCycle}
             >
-              {visibleCycle === 'monthly' ? 'Monthly' : 'Annual'}
+              {visibleCycle === 'monthly' ? t('billing.monthly') : t('billing.annual')}
             </button>
           ))}
         </div>
@@ -344,8 +350,8 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
       <div className={styles.canvas}>
         {error && <p className={`${styles.message} ${styles.error}`} role="alert">{error}</p>}
         {message && <p className={`${styles.message} ${styles.success}`} role="status">{message}</p>}
-        {activeTrial && <p className={`${styles.message} ${styles.success}`} role="status">Your free trial is active. No payment is due now. Continue to Ambel POS and review the recurring plan before the trial ends.</p>}
-        {loading ? <p className={styles.message}>Loading plans…</p> : (
+        {activeTrial && <p className={`${styles.message} ${styles.success}`} role="status">{t('billing.activeTrialMessage')}</p>}
+        {loading ? <p className={styles.message}>{t('billing.loadingPlans')}</p> : (
           <>
             <div className={`pricing-grid ${styles.grid}`}>
               {catalog?.plans.map((plan) => {
@@ -363,52 +369,52 @@ export function SubscriptionCheckout({ region, successPath, title, subtitle, ini
                     ].filter(Boolean).join(' ')}
                   >
                     <button type="button" className={styles.cardButton} onClick={() => selectPlan(plan.key)} aria-pressed={isSelected}>
-                      {plan.popular && <span className="price-popular">Most popular</span>}
+                      {plan.popular && <span className="price-popular">{t('billing.mostPopular')}</span>}
                       {/* Order mirrors the marketing pricing grid: plan label, price,
                           billing note, then the one-line pitch above the features. */}
                       <div className="price-plan" style={plan.popular ? { color: 'rgba(255,255,255,.75)' } : undefined}>{plan.name}</div>
                       <div className="price-h">
                         <span className="price-now">
                           {money(planAmount, plan.currency, region)}
-                          <span className="price-per" style={plan.popular ? { color: 'rgba(255,255,255,.7)' } : undefined}>/mo equivalent</span>
+                          <span className="price-per" style={plan.popular ? { color: 'rgba(255,255,255,.7)' } : undefined}>{t('billing.perMonthEquivalent')}</span>
                         </span>
                       </div>
                       <div className="price-sub" style={{ marginBottom: 6, ...(plan.popular ? { color: 'rgba(255,255,255,.65)' } : {}) }}>
-                        {cycle === 'annual' ? `Billed ${money(planQuote.totalAmountMinor, plan.currency, region)} annually · no annual discount` : 'Billed every month'}
+                        {cycle === 'annual' ? t('billing.billedAnnually', { amount: money(planQuote.totalAmountMinor, plan.currency, region) }) : t('billing.billedMonthly')}
                       </div>
                       <div className="price-sub" style={plan.popular ? { color: 'rgba(255,255,255,.65)' } : undefined}>{plan.description}</div>
                       <ul className="price-features" style={plan.popular ? { color: 'rgba(255,255,255,.9)' } : undefined}>
                         {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
                       </ul>
                       {plan.addons.length > 0 && (
-                        <ul className="price-features" aria-label="Available add-ons" style={plan.popular ? { color: 'rgba(255,255,255,.9)' } : undefined}>
-                          {plan.addons.map((addon) => <li key={addon.key}>{addon.label}: {money(addon.unitAmountMinor, plan.currency, region)} / month</li>)}
+                        <ul className="price-features" aria-label={t('billing.availableAddons')} style={plan.popular ? { color: 'rgba(255,255,255,.9)' } : undefined}>
+                          {plan.addons.map((addon) => <li key={addon.key}>{addon.label}: {money(addon.unitAmountMinor, plan.currency, region)} {t('billing.perMonth')}</li>)}
                         </ul>
                       )}
                     </button>
                     {isSelected && (
-                      <div className={styles.quote} aria-label="Payment summary">
-                        <div className={styles.quoteRow}><span>{region === 'IN' ? 'Plan amount before GST' : 'Plan amount'}</span><strong>{money(planQuote.baseAmountMinor, plan.currency, region)}</strong></div>
+                      <div className={styles.quote} aria-label={t('billing.paymentSummary')}>
+                        <div className={styles.quoteRow}><span>{region === 'IN' ? t('billing.planAmountBeforeGst') : t('billing.planAmountPlain')}</span><strong>{money(planQuote.baseAmountMinor, plan.currency, region)}</strong></div>
                         <div className={styles.quoteRow}><span>{planQuote.taxLabel}</span><strong>{money(planQuote.taxAmountMinor, plan.currency, region)}</strong></div>
-                        <div className={`${styles.quoteRow} ${styles.quoteTotal}`}><span>Total payable</span><strong>{money(planQuote.totalAmountMinor, plan.currency, region)}</strong></div>
-                        {!plan.providerConfigured[cycle] && <p className={styles.providerNote}>This test plan is waiting for its Razorpay Plan ID. No payment can be opened until the backend configuration is supplied.</p>}
+                        <div className={`${styles.quoteRow} ${styles.quoteTotal}`}><span>{t('billing.totalPayable')}</span><strong>{money(planQuote.totalAmountMinor, plan.currency, region)}</strong></div>
+                        {!plan.providerConfigured[cycle] && <p className={styles.providerNote}>{t('billing.providerNote')}</p>}
                       </div>
                     )}
                   </article>
                 )
               })}
             </div>
-            <div className={styles.enterprise}>Need a tailored rollout? <a href="mailto:support@ambelpos.com">Contact sales</a>.</div>
+            <div className={styles.enterprise}>{t('billing.tailoredRollout')} <a href="mailto:support@ambelpos.com">{t('billing.contactSales')}</a>.</div>
             <button type="button" className={styles.action} onClick={openCheckout} disabled={!selected || paying || billingStatusLoading || (!available && !activeSelectedSubscription && !activeTrial)}>
               {paying
-                  ? activeSelectedSubscription ? 'Continuing...' : 'Opening secure checkout...'
+                  ? activeSelectedSubscription ? t('billing.continuing') : t('billing.openingCheckout')
                   : activeTrial
-                    ? 'Continue to Ambel POS →'
+                    ? t('billing.continueLabel')
                     : activeSelectedSubscription
-                    ? 'Continue setup ->'
-                    : `Pay ${quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : ''} and activate ->`}
+                    ? t('billing.continueSetup')
+                    : t('billing.payActivate', { amount: quote ? money(quote.totalAmountMinor, selected?.currency ?? 'USD', region) : '' })}
             </button>
-            <p className={styles.legal}>Your subscription is created only once per payment attempt. Razorpay handles the hosted payment, recurring charge receipts and invoices; Ambel POS unlocks access only after server verification.</p>
+            <p className={styles.legal}>{t('billing.legal')}</p>
           </>
         )}
       </div>

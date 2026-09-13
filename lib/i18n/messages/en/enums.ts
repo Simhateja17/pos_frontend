@@ -22,6 +22,13 @@ export const enums = {
     sent: 'Sent',
     failed: 'Failed',
     in_transit: 'In transit',
+    delivered: 'Delivered',
+    queued: 'Queued',
+    bounced: 'Bounced',
+    complained: 'Complained',
+    suppressed: 'Suppressed',
+    committed: 'Committed',
+    staged: 'Staged',
   },
   method: {
     cash: 'Cash',

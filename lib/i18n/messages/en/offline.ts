@@ -1,0 +1,15 @@
+export const offline = {
+  title: 'Offline & Sync', subtitle: 'Queued sales and reconciliation', lastSync: 'Last sync {date}', noSync: 'No sync recorded yet',
+  syncNow: 'Sync now', syncing: 'Syncing…', queued: 'Queued', waitingToSync: 'Waiting to sync', nothingWaiting: 'Nothing waiting',
+  connection: 'Connection', online: 'Online', offline: 'Offline', checked: 'Checked {date}', checking: 'Checking…',
+  needsAttention: 'Needs attention', rejectedByServer: 'Rejected by the server', none: 'None',
+  totalMismatches: 'Total mismatches', serverDiffered: 'Server total differed from the offline quote', noneRecorded: 'None recorded',
+  storageUnavailable: 'Offline storage is unavailable on this device', storageBody: 'This browser blocks local storage (often private-browsing mode), so sales cannot be queued here. Billing requires a live connection on this device.',
+  stillOffline: 'Still offline. Nothing was sent. The queue is intact.', synced: 'Synced {count}.', attentionOne: '1 needs attention.', attentionMany: '{count} need attention.', retryOne: '1 will retry.', retryMany: '{count} will retry.', syncSummary: 'Synced {synced}. {attention} {retry}',
+  queuedSales: 'Queued sales', queuedSalesSub: 'Recorded on this device, not yet confirmed by the server', nothingQueued: 'Nothing queued', nothingQueuedBody: 'Sales taken while offline appear here until the server confirms them.',
+  table: { bill: 'Bill', taken: 'Taken', attempts: 'Attempts', lastIssue: 'Last issue', quoted: 'Quoted', status: 'Status', reason: 'Reason', synced: 'Synced', confirmed: 'Confirmed', sale: 'Sale' },
+  status: { sending: 'Sending', pending: 'Pending' },
+  needsDecision: 'Needs a decision', needsDecisionSub: 'The server rejected these. They are kept, never discarded automatically.', rejected: 'Rejected', retry: 'Retry', discard: 'Discard',
+  discardPrompt: 'Discard bill {bill} ({amount})?\n\nThis sale will never reach the server. Give a reason. It is recorded.',
+  mismatchTitle: 'Total mismatches', mismatchSub: "The server's confirmed total differed from the amount quoted offline", view: 'View',
+}

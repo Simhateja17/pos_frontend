@@ -13,8 +13,12 @@ import {
 import { Card, CardHead, CardPad, PageHead } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { TaxDocumentView } from '@/components/documents/tax-document-view'
+import { useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 export default function TaxDocumentDetailPage() {
+  const t = useT()
+  const { dateLocale, appPath, money } = useAppRegion()
   const params = useParams<{ documentId: string }>()
   const documentId = params.documentId
   const [document, setDocument] = useState<TaxDocument | null>(null)
@@ -34,10 +38,12 @@ export default function TaxDocumentDetailPage() {
         setCreditNotes([])
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'GST document could not be loaded.')
+      setError(cause instanceof Error ? cause.message : t('documents.loadError'))
     } finally {
       setIsLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch this document.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentId])
 
   useEffect(() => {
@@ -47,33 +53,33 @@ export default function TaxDocumentDetailPage() {
   return (
     <>
       <PageHead
-        title={document?.documentType === 'credit_note' ? 'Credit note' : 'Tax Invoice'}
-        sub="Immutable document snapshot"
-        actions={<Link className="btn btn-sm" href="/app/documents">Back to documents</Link>}
+        title={document?.documentType === 'credit_note' ? t('documents.creditNote') : t('documents.invoiceTitle')}
+        sub={t('documents.detailSub')}
+        actions={<Link className="btn btn-sm" href={appPath('/app/documents')}>{t('documents.back')}</Link>}
       />
-      {isLoading ? <LoadingState label="Loading GST document" rows={8} /> : null}
+      {isLoading ? <LoadingState label={t('documents.detailLoading')} rows={8} /> : null}
       {error ? <ErrorState message={error} onRetry={() => void load()} /> : null}
       {document ? <TaxDocumentView document={document} /> : null}
 
       {document?.documentType === 'tax_invoice' ? (
         <Card style={{ marginTop: 18 }}>
-          <CardHead title="Linked credit notes" sub="Returns reference this Tax Invoice without rewriting it." />
+          <CardHead title={t('documents.linkedTitle')} sub={t('documents.linkedSub')} />
           <CardPad>
             {creditNotes.length === 0 ? (
-              <EmptyState title="No credit notes linked" body="A partial return will create a credit note here after the refund commits." />
+              <EmptyState title={t('documents.noLinked')} body={t('documents.noLinkedBody')} />
             ) : (
               <div style={{ display: 'grid', gap: 8 }}>
                 {creditNotes.map((creditNote) => (
                   <Link
                     key={creditNote.id}
-                    href={`/app/documents/${creditNote.id}`}
+                    href={appPath(`/app/documents/${creditNote.id}`)}
                     className="lrow"
                     style={{ color: 'inherit', textDecoration: 'none' }}
                   >
                     <span className="lico b-green"><FileText size={16} /></span>
                     <span style={{ flex: 1 }}>
                       <span className="lt">{creditNote.documentNumber}</span>
-                      <span className="ls">{new Date(creditNote.documentDate).toLocaleDateString('en-IN')} · ₹{creditNote.grandTotal}</span>
+                      <span className="ls">{new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium' }).format(new Date(creditNote.documentDate))} · {money(creditNote.grandTotal)}</span>
                     </span>
                   </Link>
                 ))}

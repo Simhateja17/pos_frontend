@@ -261,7 +261,7 @@ export function InventoryView() {
 
         {!catalogLoading && !catalogError && visible.length > 0 && (
           <DataTable
-            cols={[`${t('inventory.catalog.cols.product')} / ${t('inventory.catalog.cols.variant')}`, t('inventory.catalog.cols.sku'), t('inventory.catalog.cols.barcode'), t('inventory.catalog.cols.price'), t('inventory.catalog.cols.stock')]}
+            cols={[t('inventory.catalog.cols.productVariant'), t('inventory.catalog.cols.sku'), t('inventory.catalog.cols.barcode'), t('inventory.catalog.cols.price'), t('inventory.catalog.cols.stock')]}
             minWidth={860}
           >
             {visible.map((product) => {

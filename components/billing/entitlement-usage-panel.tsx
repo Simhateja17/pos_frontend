@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { authHeaders } from '@/lib/api/auth-headers'
 import type { components } from '@/lib/api/schema'
+import { useT } from '@/lib/i18n/i18n'
 import styles from './entitlement-usage-panel.module.css'
 
 type BillingStatus = components['schemas']['BillingStatus']
@@ -30,8 +31,8 @@ type EntitlementStatus = BillingStatus & {
   }
 }
 
-function limitText(value: EntitlementValue | undefined): string {
-  return value === 'unlimited' ? 'Unlimited' : typeof value === 'number' ? String(value) : 'Unavailable'
+function limitText(value: EntitlementValue | undefined, unavailable: string, unlimited: string): string {
+  return value === 'unlimited' ? unlimited : typeof value === 'number' ? String(value) : unavailable
 }
 
 export function EntitlementUsagePanel({
@@ -41,6 +42,7 @@ export function EntitlementUsagePanel({
   region: Region
   status?: EntitlementStatus | null
 }) {
+  const t = useT()
   const [status, setStatus] = useState<EntitlementStatus | null>(providedStatus ?? null)
   const [loading, setLoading] = useState(providedStatus === undefined)
 
@@ -69,35 +71,35 @@ export function EntitlementUsagePanel({
     }
   }, [region, providedStatus])
 
-  if (loading) return <section className={styles.panel} aria-label="Plan usage"><p>Loading current usage…</p></section>
+  if (loading) return <section className={styles.panel} aria-label={t('billing.usage.planUsage')}><p>{t('billing.loadingDetails')}</p></section>
   if (!status?.usage || !status.entitlements) return null
 
   const metrics = [
-    ['Locations', status.usage.locations, status.entitlements.maxLocations],
-    ['Active users', status.usage.activeUsers, status.entitlements.maxActiveUsers],
-    ['Active registers', status.usage.activeRegisters, status.entitlements.maxActiveRegisters],
-    ['POS transactions', status.usage.monthlyPosTransactions, status.entitlements.monthlyPosTransactions],
+    [t('billing.locations'), status.usage.locations, status.entitlements.maxLocations],
+    [t('billing.users'), status.usage.activeUsers, status.entitlements.maxActiveUsers],
+    [t('billing.registers'), status.usage.activeRegisters, status.entitlements.maxActiveRegisters],
+    [t('billing.usage.posTransactions'), status.usage.monthlyPosTransactions, status.entitlements.monthlyPosTransactions],
   ] as const
 
   return (
-    <section className={styles.panel} aria-label="Plan usage">
+    <section className={styles.panel} aria-label={t('billing.usage.planUsage')}>
       <div className={styles.heading}>
         <div>
-          <p className={styles.kicker}>Current entitlement</p>
-          <h2>{status.planKey ? `${status.planKey} plan usage` : 'Plan usage'}</h2>
+          <p className={styles.kicker}>{t('billing.usage.currentEntitlement')}</p>
+          <h2>{status.planKey ? t('billing.usage.planUsageNamed', { plan: status.planKey }) : t('billing.usage.planUsage')}</h2>
         </div>
         <span className={status.accessAllowed ? styles.active : styles.blocked}>
-          {status.accessAllowed ? 'Access active' : 'Payment or trial required'}
+          {status.accessAllowed ? t('billing.accessActive') : t('billing.paymentRequired')}
         </span>
       </div>
       <p className={styles.note}>
-        Implemented resources only · POS transactions for {status.usage.businessMonth.slice(0, 7)} · {region === 'IN' ? 'India catalogue' : 'International catalogue'}
+        {t('billing.usage.resourcesOnly')} · {t('billing.usage.transactionsFor', { month: status.usage.businessMonth.slice(0, 7) })} · {region === 'IN' ? t('billing.usage.indiaCatalog') : t('billing.usage.internationalCatalog')}
       </p>
       <div className={styles.grid}>
         {metrics.map(([label, used, limit]) => (
           <div className={styles.metric} key={label}>
             <span>{label}</span>
-            <strong>{used} <small>/ {limitText(limit)}</small></strong>
+            <strong>{used} <small>/ {limitText(limit, t('billing.usage.unavailable'), t('billing.usage.unlimited'))}</small></strong>
           </div>
         ))}
       </div>

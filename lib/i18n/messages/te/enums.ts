@@ -21,6 +21,13 @@ export const enums = {
     sent: 'పంపారు',
     failed: 'విఫలమైంది',
     in_transit: 'దారిలో ఉంది',
+    delivered: 'చేరింది',
+    queued: 'క్యూలో ఉంది',
+    bounced: 'తిరిగి వచ్చింది',
+    complained: 'ఫిర్యాదు చేశారు',
+    suppressed: 'ఆపబడింది',
+    committed: 'ఖరారు అయింది',
+    staged: 'సిద్ధంగా ఉంచింది',
   },
   method: {
     cash: 'నగదు',

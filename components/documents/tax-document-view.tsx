@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import type { TaxDocument } from '@/lib/api/authenticated-client'
 import { useAppRegion } from '@/lib/app-region'
+import { useT } from '@/lib/i18n/i18n'
 import styles from './tax-document-view.module.css'
 
 type DocumentMode = 'a4' | 'thermal80' | 'thermal58'
@@ -76,24 +77,25 @@ function TotalRow({ label, value, grand = false, formatMoney }: { label: string;
 
 export function TaxDocumentView({ document, initialMode = 'a4' }: { document: TaxDocument; initialMode?: DocumentMode }) {
   const { money: formatMoney, pack } = useAppRegion()
+  const t = useT()
   const money = (value: string) => formatDocumentMoney(value, formatMoney)
   const [mode, setMode] = useState<DocumentMode>(initialMode)
   const isCreditNote = document.documentType === 'credit_note'
 
   return (
     <div className={styles.printRoot}>
-      <div className={styles.controls} aria-label="Document actions">
+      <div className={styles.controls} aria-label={t('documents.controls.actions')}>
         <button className="btn btn-sm" type="button" onClick={() => setMode('a4')} aria-pressed={mode === 'a4'}>
-          A4 view
+          {t('documents.controls.a4')}
         </button>
         <button className="btn btn-sm" type="button" onClick={() => setMode('thermal80')} aria-pressed={mode === 'thermal80'}>
-          80mm view
+          {t('documents.controls.thermal80')}
         </button>
         <button className="btn btn-sm" type="button" onClick={() => setMode('thermal58')} aria-pressed={mode === 'thermal58'}>
-          58mm view
+          {t('documents.controls.thermal58')}
         </button>
         <button className="btn btn-pri btn-sm" type="button" onClick={() => window.print()}>
-          Print / Save PDF
+          {t('documents.controls.print')}
         </button>
       </div>
 

@@ -339,7 +339,7 @@ export function SettingsView() {
               </div>
             )}
             {profileSaved && !profileError && (
-              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>Saved.</div>
+              <div style={{ marginBottom: 13, fontSize: 13, color: 'var(--brand-1)' }}>{t('settings.profile.saved')}</div>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
@@ -551,8 +551,7 @@ export function SettingsView() {
             </Fld>
             <p className="t-sub" style={{ fontSize: 11.5, marginTop: -2, marginBottom: 10 }}>
               {t(`settings.barcode.${labelFormat}Hint` as MessageKey)}
-              {(labelFormat === 'ean13' || labelFormat === 'upca') &&
-                ` ${t('settings.barcode.fallbackHint')}`}
+              {(labelFormat === 'ean13' || labelFormat === 'upca') && <> {t('settings.barcode.fallbackHint')}</>}
             </p>
 
             <button type="submit" className="btn btn-pri" disabled={savingLabel || !canEdit('barcodeLabelFormat')}>

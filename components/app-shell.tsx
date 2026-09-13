@@ -281,7 +281,7 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
   const storeFull = context
     ? context.store
       ? [context.store.name, context.store.locality].filter(Boolean).join(' · ')
-      : `${context.tenant.businessName} · ${t('shell.allStores')}`
+      : t('shell.businessAllStores', { business: context.tenant.businessName })
     : isContextLoading
       ? t('shell.loadingStore')
       : t('shell.storeUnavailable')

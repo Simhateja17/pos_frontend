@@ -70,7 +70,7 @@ export function TransfersView() {
     event.preventDefault()
     const parsedQuantity = Number(quantity)
     if (!destination || !variantId || !Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
-      setError(`${t('inventory.errors.transferStore')} ${t('inventory.errors.transferQuantity')}`)
+      setError(t('inventory.errors.transferInvalid'))
       return
     }
     setSaving(true)
@@ -136,7 +136,7 @@ export function TransfersView() {
       <Card>
         <CardHead
           title={t('inventory.transfers.title')}
-          sub={term ? `${visible.length} ${t('inventory.transfers.transferMany')}` : `${transfers.length} ${transfers.length === 1 ? t('inventory.transfers.transferOne') : t('inventory.transfers.transferMany')}`}
+          sub={term ? t('inventory.transfers.transferCountMany', { count: visible.length }) : transfers.length === 1 ? t('inventory.transfers.transferCountOne') : t('inventory.transfers.transferCountMany', { count: transfers.length })}
           right={transfers.length > 0 ? <SearchField value={search} onChange={setSearch} placeholder={t('inventory.transfers.searchPlaceholder')} ariaLabel={t('inventory.transfers.searchLabel')} width={250} /> : undefined}
         />
         {loading && <LoadingState label={t('inventory.transfers.loading')} />}
@@ -144,7 +144,7 @@ export function TransfersView() {
         {!loading && !error && transfers.length === 0 && <EmptyState title={t('inventory.transfers.emptyTitle')} body={t('inventory.transfers.emptyBody')} />}
         {!loading && !error && transfers.length > 0 && visible.length === 0 && <EmptyState title={t('inventory.transfers.noMatchTitle')} body={t('inventory.transfers.noMatchBody')} />}
         {!loading && visible.length > 0 && (
-          <DataTable cols={[`${t('inventory.transfers.cols.from')} / ${t('inventory.transfers.cols.to')}`, t('inventory.transfers.cols.sent'), t('inventory.transfers.cols.status'), t('inventory.transfers.cols.quantities'), t('inventory.transfers.cols.actions')]} minWidth={760}>
+          <DataTable cols={[t('inventory.transfers.cols.fromTo'), t('inventory.transfers.cols.sent'), t('inventory.transfers.cols.status'), t('inventory.transfers.cols.quantities'), t('inventory.transfers.cols.actions')]} minWidth={760}>
             {visible.map((transfer) => (
               <tr key={transfer.id}>
                 <td className="t-strong">{transfer.fromStoreName} <ArrowRight size={13} style={{ verticalAlign: 'middle' }} /> {transfer.toStoreName}</td>
@@ -172,7 +172,7 @@ export function TransfersView() {
 
       {receiving && (
         <Modal title={t('inventory.transfers.receiveTitle', { store: receiving.fromStoreName })} onClose={() => setReceiving(null)} footer={<><button className="btn" onClick={() => setReceiving(null)}>{t('common.cancel')}</button><button className="btn btn-pri" onClick={() => void confirmReceive()} disabled={saving}>{saving ? t('inventory.transfers.saving') : t('inventory.transfers.confirmReceipt')}</button></>}>
-          {receiving.lines.map((line) => <Fld key={line.id} id={`received-${line.id}`} label={`${line.sku} (${t('inventory.transfers.cols.sent')} ${line.quantitySent})`}><input id={`received-${line.id}`} type="number" min="0" step="0.001" value={received[line.id] ?? ''} onChange={(event) => setReceived({ ...received, [line.id]: event.target.value })} placeholder={t('inventory.transfers.receivedQuantityPlaceholder')} /></Fld>)}
+          {receiving.lines.map((line) => <Fld key={line.id} id={`received-${line.id}`} label={t('inventory.transfers.receivedFor', { sku: line.sku, sent: t('inventory.transfers.cols.sent'), quantity: line.quantitySent })}><input id={`received-${line.id}`} type="number" min="0" step="0.001" value={received[line.id] ?? ''} onChange={(event) => setReceived({ ...received, [line.id]: event.target.value })} placeholder={t('inventory.transfers.receivedQuantityPlaceholder')} /></Fld>)}
           <p style={{ fontSize: 12, color: 'var(--muted)' }}>{t('inventory.transfers.receiveBody')}</p>
         </Modal>
       )}

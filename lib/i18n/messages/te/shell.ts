@@ -6,6 +6,7 @@ export const shell = {
   loadingStore: 'స్టోర్ లోడ్ అవుతోంది…',
   storeUnavailable: 'స్టోర్ అందుబాటులో లేదు',
   allStores: 'అన్ని స్టోర్లు',
+  businessAllStores: '{business} · అన్ని స్టోర్లు',
   contextUnavailable: 'ప్రస్తుతం స్టోర్ వివరాలు అందుబాటులో లేవు. దయచేసి మళ్లీ ప్రయత్నించండి.',
   signInAgain: 'మళ్లీ సైన్ ఇన్ చేయండి',
   retryContext: 'మళ్లీ ప్రయత్నించండి',

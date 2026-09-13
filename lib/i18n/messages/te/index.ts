@@ -24,6 +24,14 @@ import { reports } from './reports'
 import { receivables } from './receivables'
 import { notifications } from './notifications'
 import { demand } from './demand'
+import { setup } from './setup'
+import { documents } from './documents'
+import { returns } from './returns'
+import { hardware } from './hardware'
+import { email } from './email'
+import { importData } from './import'
+import { billing } from './billing'
+import { offline } from './offline'
 import { checkout } from './checkout'
 
 export const te: Messages = {
@@ -45,4 +53,12 @@ export const te: Messages = {
   receivables,
   notifications,
   demand,
+  setup,
+  documents,
+  returns,
+  hardware,
+  email,
+  importData,
+  billing,
+  offline,
 }

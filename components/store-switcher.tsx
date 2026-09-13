@@ -14,7 +14,7 @@ export function StoreSwitcher({ context }: { context: AppContext }) {
   const label = context.store?.name ?? t('shell.allStores')
   const fullLabel = context.store
     ? [context.store.name, context.store.locality].filter(Boolean).join(' · ')
-    : `${context.tenant.businessName} · ${t('shell.allStores')}`
+    : t('shell.businessAllStores', { business: context.tenant.businessName })
   const [open, setOpen] = useState(false)
   const [stores, setStores] = useState<Store[] | null>(null)
   const [error, setError] = useState<string | null>(null)

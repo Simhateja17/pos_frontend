@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useParams } from 'next/navigation'
 import { Badge, Card, CardHead, CardPad, DataTable, Fld, Modal, PageHead, Tabs } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
+import { MessageKey, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 import {
   type Supplier,
   type SupplierProductWithVariant,
@@ -18,18 +20,15 @@ import {
 
 type DetailTab = 'details' | 'products'
 
-const DETAIL_TABS: readonly { label: string; value: DetailTab }[] = [
-  { label: 'Details', value: 'details' },
-  { label: 'Products supplied', value: 'products' },
-]
-
-const LOAD_ERROR = "Couldn't load this supplier. Check your connection and try again."
+const DETAIL_TAB_IDS = ['details', 'products'] as const
 
 function variantLabel(row: { size: string | null; color: string | null; material: string | null }) {
   return [row.size, row.color, row.material].filter(Boolean).join(' / ') || '-'
 }
 
 export default function SupplierDetailPage() {
+  const t = useT()
+  const { money, pack } = useAppRegion()
   const params = useParams<{ supplierId: string }>()
   const supplierId = params.supplierId
 
@@ -78,10 +77,12 @@ export default function SupplierDetailPage() {
         paymentTerms: data.paymentTerms ?? '',
       })
     } catch (cause) {
-      setLoadError(cause instanceof Error ? cause.message : LOAD_ERROR)
+      setLoadError(cause instanceof Error ? cause.message : t('records.errors.supplierDetailLoad'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch supplier data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supplierId])
 
   const loadLinkedProducts = useCallback(async () => {
@@ -89,8 +90,10 @@ export default function SupplierDetailPage() {
     try {
       setLinkedProducts(await getAuthenticatedSupplierProductsForSupplier(supplierId))
     } catch (cause) {
-      setLinkedError(cause instanceof Error ? cause.message : 'Products for this supplier are unavailable right now.')
+      setLinkedError(cause instanceof Error ? cause.message : t('records.errors.supplierProductsLoad'))
     }
+    // t is intentionally omitted: changing locale must not refetch linked products.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supplierId])
 
   useEffect(() => {
@@ -104,11 +107,11 @@ export default function SupplierDetailPage() {
 
     const leadTimeDays = Number(form.leadTimeDays)
     if (!form.name.trim()) {
-      setDetailsError('Supplier name is required.')
+      setDetailsError(t('records.errors.supplierNameRequired'))
       return
     }
     if (!Number.isInteger(leadTimeDays) || leadTimeDays < 1) {
-      setDetailsError('Lead time must be a whole number of days, at least 1.')
+      setDetailsError(t('records.errors.supplierLeadTimeInvalid'))
       return
     }
 
@@ -124,7 +127,7 @@ export default function SupplierDetailPage() {
       })
       await load()
     } catch (cause) {
-      setDetailsError(cause instanceof Error ? cause.message : 'That supplier could not be saved.')
+      setDetailsError(cause instanceof Error ? cause.message : t('records.errors.supplierSave'))
     } finally {
       setSavingDetails(false)
     }
@@ -135,7 +138,7 @@ export default function SupplierDetailPage() {
       await deleteAuthenticatedSupplierProduct(row.variantId, row.id)
       await loadLinkedProducts()
     } catch (cause) {
-      setLinkedError(cause instanceof Error ? cause.message : 'That product could not be removed.')
+      setLinkedError(cause instanceof Error ? cause.message : t('records.errors.supplierProductRemove'))
     }
   }
 
@@ -152,7 +155,7 @@ export default function SupplierDetailPage() {
       try {
         setAllProducts(await getAuthenticatedProducts())
       } catch (cause) {
-        setPickerError(cause instanceof Error ? cause.message : 'Your catalog is unavailable right now.')
+        setPickerError(cause instanceof Error ? cause.message : t('records.errors.catalogUnavailable'))
       }
     }
   }
@@ -187,6 +190,11 @@ export default function SupplierDetailPage() {
     return rows
   }, [allProducts, categoryFilter, alreadyLinkedVariantIds])
 
+  const detailTabs = DETAIL_TAB_IDS.map((value) => ({
+    value,
+    label: value === 'details' ? t('records.supplierDetail.details') : t('records.supplierDetail.productsSupplied'),
+  }))
+
   function toggleVariant(variantId: string) {
     setSelectedVariantIds((prev) => {
       const next = new Set(prev)
@@ -206,11 +214,11 @@ export default function SupplierDetailPage() {
 
     const leadTimeDays = Number(batchLeadTimeDays)
     if (selectedVariantIds.size === 0) {
-      setBatchError('Choose at least one product.')
+      setBatchError(t('records.errors.chooseProduct'))
       return
     }
     if (!Number.isInteger(leadTimeDays) || leadTimeDays < 1) {
-      setBatchError('Lead time must be a whole number of days, at least 1.')
+      setBatchError(t('records.errors.supplierLeadTimeInvalid'))
       return
     }
 
@@ -228,7 +236,7 @@ export default function SupplierDetailPage() {
       setPickerOpen(false)
       await loadLinkedProducts()
     } catch (cause) {
-      setBatchError(cause instanceof Error ? cause.message : 'Some products could not be linked. Try again.')
+      setBatchError(cause instanceof Error ? cause.message : t('records.errors.supplierLink'))
     } finally {
       setSavingBatch(false)
     }
@@ -237,9 +245,9 @@ export default function SupplierDetailPage() {
   if (loading) {
     return (
       <>
-        <PageHead title="Supplier" />
+        <PageHead title={t('records.supplierDetail.title')} />
         <Card>
-          <LoadingState label="Loading supplier" />
+          <LoadingState label={t('records.supplierDetail.loading')} />
         </Card>
       </>
     )
@@ -248,9 +256,9 @@ export default function SupplierDetailPage() {
   if (loadError || !supplier) {
     return (
       <>
-        <PageHead title="Supplier" />
+        <PageHead title={t('records.supplierDetail.title')} />
         <Card>
-          <ErrorState message={loadError ?? LOAD_ERROR} onRetry={() => void load()} />
+          <ErrorState message={loadError ?? t('records.errors.supplierDetailLoad')} onRetry={() => void load()} />
         </Card>
       </>
     )
@@ -260,13 +268,13 @@ export default function SupplierDetailPage() {
     <>
       <PageHead
         title={supplier.name}
-        sub={supplier.isActive ? 'Active supplier' : 'Inactive supplier'}
-        actions={<Badge tone={supplier.isActive ? 'green' : 'grey'}>{supplier.isActive ? 'Active' : 'Inactive'}</Badge>}
+        sub={supplier.isActive ? t('records.supplierDetail.activeSupplier') : t('records.supplierDetail.inactiveSupplier')}
+        actions={<Badge tone={supplier.isActive ? 'green' : 'grey'}>{supplier.isActive ? t('records.supplierDetail.active') : t('records.supplierDetail.inactive')}</Badge>}
       />
 
       <Card>
         <CardPad style={{ paddingBottom: 0 }}>
-          <Tabs items={DETAIL_TABS} active={tab} onSelect={setTab} ariaLabel="Supplier detail sections" />
+          <Tabs items={detailTabs} active={tab} onSelect={setTab} ariaLabel={t('records.supplierDetail.sections')} />
         </CardPad>
 
         {tab === 'details' && (
@@ -278,11 +286,11 @@ export default function SupplierDetailPage() {
                 </div>
               )}
 
-              <Fld id="detail-name" label="Supplier name">
+              <Fld id="detail-name" label={t('records.supplierDetail.supplierName')}>
                 <input id="detail-name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
               </Fld>
 
-              <Fld id="detail-lead" label="Default lead time (days)">
+              <Fld id="detail-lead" label={t('records.supplierDetail.defaultLeadTime')}>
                 <input
                   id="detail-lead"
                   type="number"
@@ -293,19 +301,18 @@ export default function SupplierDetailPage() {
                 />
               </Fld>
               <div style={{ marginTop: -7, marginBottom: 13, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-                Used only for products bought from this supplier that don't have their own lead time set on the
-                Products supplied tab.
+                {t('records.supplierDetail.leadTimeHelp')}
               </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <Fld id="detail-contact" label="Contact name">
+                <Fld id="detail-contact" label={t('records.supplierDetail.contactName')}>
                   <input
                     id="detail-contact"
                     value={form.contactName}
                     onChange={(e) => setForm((p) => ({ ...p, contactName: e.target.value }))}
                   />
                 </Fld>
-                <Fld id="detail-phone" label="Phone">
+                <Fld id="detail-phone" label={t('records.supplierDetail.phone')}>
                   <input
                     id="detail-phone"
                     value={form.phone}
@@ -315,7 +322,7 @@ export default function SupplierDetailPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <Fld id="detail-email" label="Email">
+                <Fld id="detail-email" label={t('records.supplierDetail.email')}>
                   <input
                     id="detail-email"
                     type="email"
@@ -323,18 +330,18 @@ export default function SupplierDetailPage() {
                     onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                   />
                 </Fld>
-                <Fld id="detail-terms" label="Payment terms">
+                <Fld id="detail-terms" label={t('records.supplierDetail.paymentTerms')}>
                   <input
                     id="detail-terms"
                     value={form.paymentTerms}
                     onChange={(e) => setForm((p) => ({ ...p, paymentTerms: e.target.value }))}
-                    placeholder="e.g. Net 30"
+                    placeholder={t('records.supplierDetail.paymentTermsPlaceholder')}
                   />
                 </Fld>
               </div>
 
               <button type="submit" className="btn btn-pri" disabled={savingDetails} style={{ marginTop: 10 }}>
-                {savingDetails ? 'Saving…' : 'Save changes'}
+                {savingDetails ? t('records.supplierDetail.saving') : t('records.supplierDetail.save')}
               </button>
             </form>
           </CardPad>
@@ -343,11 +350,11 @@ export default function SupplierDetailPage() {
         {tab === 'products' && (
           <CardPad>
             <CardHead
-              title="Products supplied"
-              sub={linkedProducts ? `${linkedProducts.length} linked` : 'Loading…'}
+              title={t('records.supplierDetail.productsSupplied')}
+              sub={linkedProducts ? t('records.supplierDetail.linkedCount', { count: linkedProducts.length }) : t('records.supplierDetail.loadingEllipsis')}
               right={
-                <button className="btn btn-sm btn-pri" onClick={() => void openPicker()}>
-                  Add products
+                <button className="btn btn-sm btn-pri" onClick={() => void openPicker()} type="button">
+                  {t('records.supplierDetail.addProducts')}
                 </button>
               }
             />
@@ -355,31 +362,31 @@ export default function SupplierDetailPage() {
             {!linkedError && linkedProducts && linkedProducts.length === 0 && (
               <EmptyState
                 icon={<Badge tone="grey">-</Badge>}
-                title="No products linked"
-                body="Add the products you buy from this supplier, filtered by category or picked one at a time."
+                title={t('records.supplierDetail.noProducts')}
+                body={t('records.supplierDetail.noProductsBody')}
                 action={
-                  <button className="btn btn-pri" onClick={() => void openPicker()}>
-                    Add products
+                  <button className="btn btn-pri" onClick={() => void openPicker()} type="button">
+                    {t('records.supplierDetail.addProducts')}
                   </button>
                 }
               />
             )}
             {!linkedError && linkedProducts && linkedProducts.length > 0 && (
-              <DataTable cols={['Product', 'Lead time', 'Cost', 'Supplier SKU', 'Min order', '', '']} minWidth={820}>
+              <DataTable cols={[t('records.supplierDetail.product'), t('records.supplierDetail.leadTime'), t('records.supplierDetail.cost'), t('records.supplierDetail.supplierSku'), t('records.supplierDetail.minOrder'), '', '']} minWidth={820}>
                 {linkedProducts.map((row) => (
                   <tr key={row.id}>
                     <td className="t-strong">
                       {row.productName}
                       <div className="t-sub">{variantLabel(row)}</div>
                     </td>
-                    <td className="num">{row.leadTimeDays} days</td>
-                    <td className="num t-sub">{row.unitCost ? `₹${row.unitCost}` : '-'}</td>
+                    <td className="num">{row.leadTimeDays === 1 ? t('records.suppliers.daysOne') : t('records.suppliers.days', { count: row.leadTimeDays })}</td>
+                    <td className="num t-sub">{row.unitCost ? money(row.unitCost) : '-'}</td>
                     <td className="t-sub">{row.supplierSku ?? '-'}</td>
                     <td className="num t-sub">{row.minOrderQty ?? '-'}</td>
-                    <td>{row.isPrimary && <Badge tone="green">Primary</Badge>}</td>
+                    <td>{row.isPrimary && <Badge tone="green">{t('records.supplierDetail.primary')}</Badge>}</td>
                     <td>
-                      <button className="btn btn-sm" onClick={() => void handleUnlink(row)}>
-                        Remove
+                      <button className="btn btn-sm" onClick={() => void handleUnlink(row)} type="button">
+                        {t('records.supplierDetail.remove')}
                       </button>
                     </td>
                   </tr>
@@ -392,21 +399,21 @@ export default function SupplierDetailPage() {
 
       {pickerOpen && (
         <Modal
-          title="Add products"
+          title={t('records.supplierDetail.addProductsTitle')}
           onClose={() => setPickerOpen(false)}
           footer={
             <>
               <button className="btn" type="button" onClick={() => setPickerOpen(false)}>
-                Cancel
+                {t('records.supplierDetail.cancel')}
               </button>
               <button className="btn btn-pri" type="submit" form="picker-form" disabled={savingBatch}>
-                {savingBatch ? 'Adding…' : `Add ${selectedVariantIds.size || ''} product${selectedVariantIds.size === 1 ? '' : 's'}`}
+                {savingBatch ? t('records.supplierDetail.adding') : t(selectedVariantIds.size === 1 ? 'records.supplierDetail.addOne' : 'records.supplierDetail.addMany', { count: selectedVariantIds.size })}
               </button>
             </>
           }
         >
           {pickerError && <ErrorState message={pickerError} onRetry={() => void openPicker()} />}
-          {!pickerError && !allProducts && <LoadingState label="Loading catalog" />}
+          {!pickerError && !allProducts && <LoadingState label={t('records.supplierDetail.loadingCatalog')} />}
           {!pickerError && allProducts && (
             <form id="picker-form" onSubmit={handleBatchSubmit}>
               {batchError && (
@@ -416,9 +423,9 @@ export default function SupplierDetailPage() {
               )}
 
               <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 10 }}>
-                <Fld id="picker-category" label="Category">
+                <Fld id="picker-category" label={t('records.supplierDetail.category')}>
                   <select id="picker-category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                    <option value="all">All categories</option>
+                    <option value="all">{t('records.supplierDetail.allCategories')}</option>
                     {categories.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -427,7 +434,7 @@ export default function SupplierDetailPage() {
                   </select>
                 </Fld>
                 <button type="button" className="btn btn-sm" onClick={selectAllVisible}>
-                  Select all shown ({pickerRows.length})
+                  {t('records.supplierDetail.selectAll', { count: pickerRows.length })}
                 </button>
               </div>
 
@@ -442,7 +449,7 @@ export default function SupplierDetailPage() {
               >
                 {pickerRows.length === 0 && (
                   <p className="t-sub" style={{ padding: 12 }}>
-                    Every product in this category is already linked to this supplier.
+                    {t('records.supplierDetail.allLinked')}
                   </p>
                 )}
                 {pickerRows.map((row) => (
@@ -469,7 +476,7 @@ export default function SupplierDetailPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <Fld id="batch-lead" label="Lead time (days)">
+                <Fld id="batch-lead" label={t('records.supplierDetail.leadTimeDays')}>
                   <input
                     id="batch-lead"
                     type="number"
@@ -479,7 +486,7 @@ export default function SupplierDetailPage() {
                     onChange={(e) => setBatchLeadTimeDays(e.target.value)}
                   />
                 </Fld>
-                <Fld id="batch-cost" label="Unit cost (₹)">
+                <Fld id="batch-cost" label={t('records.supplierDetail.unitCost', { currency: pack.currencySymbol })}>
                   <input
                     id="batch-cost"
                     type="number"
@@ -489,7 +496,7 @@ export default function SupplierDetailPage() {
                     onChange={(e) => setBatchUnitCost(e.target.value)}
                   />
                 </Fld>
-                <Fld id="batch-moq" label="Min order qty">
+                <Fld id="batch-moq" label={t('records.supplierDetail.minOrderQty')}>
                   <input
                     id="batch-moq"
                     type="number"
@@ -501,8 +508,7 @@ export default function SupplierDetailPage() {
                 </Fld>
               </div>
               <p className="t-sub" style={{ fontSize: 11.5, marginTop: 4 }}>
-                Applied the same to every product selected above. Edit an individual product's lead time later from
-                its own detail page if one of them differs.
+                {t('records.supplierDetail.batchHelp')}
               </p>
             </form>
           )}

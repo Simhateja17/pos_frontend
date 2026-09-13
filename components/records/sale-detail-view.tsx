@@ -126,7 +126,7 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
           {sale.lines.length === 0 ? (
             <EmptyState title={t('records.saleDetail.noLineItems')} body={t('records.saleDetail.noLineItemsBody')} />
           ) : (
-            <DataTable cols={[`${t('records.saleDetail.cols.product')} / ${t('records.saleDetail.cols.sku')}`, t('records.saleDetail.cols.quantity'), t('records.saleDetail.cols.price'), t('records.saleDetail.discount'), t('records.saleDetail.tax'), t('records.saleDetail.cols.total')]} minWidth={720}>
+            <DataTable cols={[t('records.saleDetail.cols.productSku'), t('records.saleDetail.cols.quantity'), t('records.saleDetail.cols.price'), t('records.saleDetail.discount'), t('records.saleDetail.tax'), t('records.saleDetail.cols.total')]} minWidth={720}>
               {sale.lines.map((line) => {
                 const display = lineDisplay(t, line)
                 return (

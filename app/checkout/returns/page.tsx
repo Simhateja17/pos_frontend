@@ -9,6 +9,7 @@ import { getAuthenticatedTaxInvoiceForSale, type TaxDocument } from '@/lib/api/a
 import { Card, CardHead, CardPad, Checkbox, DataTable, Modal, PageHead, SearchField, Tabs } from '@/components/couture/ui'
 import { EmptyState } from '@/components/couture/states'
 import { useAppRegion } from '@/lib/app-region'
+import { MessageKey, enumLabel, useT } from '@/lib/i18n/i18n'
 
 type Sale = {
   id: string
@@ -51,14 +52,8 @@ type ReturnResponse = {
   idempotent: boolean
 }
 
-const LOOKUP_TABS = [
-  { label: 'By receipt number', value: 'receipt' as const },
-  { label: 'By customer', value: 'customer' as const },
-]
-
-const LOAD_ERROR = "Couldn't load this page. Check your connection and try again."
-const NO_MATCH =
-  'No matching bill found. Check the bill number or try searching by customer instead.'
+const LOOKUP_TABS = ['receipt', 'customer'] as const
+const REASON_VALUES = ['changedMind', 'wrongItem', 'damaged', 'incorrect', 'other'] as const
 
 async function responseError(response: Response | undefined, fallback: string) {
   if (!response) return fallback
@@ -75,7 +70,8 @@ function money(value: number | string) {
 }
 
 function ReturnsPageInner() {
-  const { money: formatMoney, appPath } = useAppRegion()
+  const { money: formatMoney, appPath, dateLocale, pack } = useAppRegion()
+  const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const requestedShiftId = searchParams.get('shiftId')
@@ -98,7 +94,7 @@ function ReturnsPageInner() {
   const [successAmount, setSuccessAmount] = useState<string | null>(null)
   const [creditNote, setCreditNote] = useState<{ id: string; number: string } | null>(null)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
-  const [reason, setReason] = useState('')
+  const [reason, setReason] = useState<(typeof REASON_VALUES)[number] | ''>('')
   const [customReason, setCustomReason] = useState('')
   const [returnReferenceId, setReturnReferenceId] = useState<string>(() => crypto.randomUUID())
   const skipNextCustomerSuggestionFetch = useRef(false)
@@ -198,7 +194,10 @@ function ReturnsPageInner() {
   const originalPayments =
     sale?.payments.filter((payment) => payment.direction === 'payment') ?? []
   const originalMethods = [...new Set(originalPayments.map((payment) => payment.method))]
-  const effectiveReason = reason === 'Other return reason' ? customReason.trim() : reason
+  const effectiveReason = reason === 'other' ? customReason.trim() : reason ? t(`returns.reasonValues.${reason}` as MessageKey) : ''
+  const displayReason = reason === 'other' ? customReason.trim() : reason ? t(`returns.reasons.${reason}` as MessageKey) : ''
+  const lookupTabs = LOOKUP_TABS.map((value) => ({ value, label: t(`returns.lookupTabs.${value}` as MessageKey) }))
+  const dateTime = new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: pack.timeZone })
 
   function selectSale(selected: Sale) {
     setSale(selected)
@@ -217,8 +216,8 @@ function ReturnsPageInner() {
     setIsLoading(true)
     setLookupMessage(
       query.customerSearch
-        ? `Looking up sales history for ${customerName ?? query.customerSearch}…`
-        : `Looking up bill ${query.receiptNumber ?? ''}…`,
+        ? t('returns.lookingUpCustomer', { name: customerName ?? query.customerSearch })
+        : t('returns.lookingUpBill', { number: query.receiptNumber ?? '' }),
     )
     setError(null)
     setHasSearched(true)
@@ -229,14 +228,14 @@ function ReturnsPageInner() {
       const headers = await authHeaders()
       const result = await apiClient.GET('/sales', { params: { query }, headers })
       if (result.error) {
-        setError(await responseError(result.response, LOAD_ERROR))
+        setError(await responseError(result.response, t('returns.loadError')))
         return
       }
       const found = result.data as Sale[]
       setMatches(found)
       if (found.length === 1) selectSale(found[0])
     } catch {
-      setError(LOAD_ERROR)
+      setError(t('returns.loadError'))
     } finally {
       setIsLoading(false)
       setLookupMessage(null)
@@ -305,12 +304,12 @@ function ReturnsPageInner() {
     })
     setIsSubmitting(false)
     if (result.error) {
-      setError(await responseError(result.response, 'Could not process this refund.'))
+      setError(await responseError(result.response, t('returns.processError')))
       return
     }
     const response = (await result.response?.clone().json()) as ReturnResponse | undefined
     if (!response?.refundTotal) {
-      setError('The refund was accepted, but its confirmed amount could not be read. Check the sale before retrying.')
+      setError(t('returns.acceptedNoAmount'))
       return
     }
     setSuccessAmount(response.refundTotal)
@@ -327,8 +326,8 @@ function ReturnsPageInner() {
   return (
     <>
       <PageHead
-        title="Returns & Exchange"
-        sub="Locate the bill, choose only the items being returned, and refund the original tender."
+        title={t('returns.title')}
+        sub={t('returns.subtitle')}
       />
 
       {!shiftId && (
@@ -347,9 +346,9 @@ function ReturnsPageInner() {
             fontSize: 13,
           }}
         >
-          <span>An open shift is required before a return can be processed.</span>
-          <button className="btn btn-sm" type="button" onClick={() => router.push('/app/shifts')}>
-            Open a shift
+          <span>{t('returns.openShiftRequired')}</span>
+          <button className="btn btn-sm" type="button" onClick={() => router.push(appPath('/app/shifts'))}>
+            {t('returns.openShift')}
           </button>
         </div>
       )}
@@ -370,9 +369,9 @@ function ReturnsPageInner() {
       )}
 
       <Card>
-        <CardHead title="Bill lookup" sub="Search by bill number or by the customer attached to the sale." />
+        <CardHead title={t('returns.lookupTitle')} sub={t('returns.lookupSub')} />
         <CardPad>
-          <Tabs items={LOOKUP_TABS} active={lookupTab} onSelect={setLookupTab} ariaLabel="Search sales by" />
+          <Tabs items={lookupTabs} active={lookupTab} onSelect={setLookupTab} ariaLabel={t('returns.searchSalesBy')} />
 
           {lookupTab === 'receipt' ? (
             <form
@@ -385,12 +384,12 @@ function ReturnsPageInner() {
               <SearchField
                 value={receiptNumber}
                 onChange={setReceiptNumber}
-                placeholder="Bill Number or Invoice Number"
-                ariaLabel="Bill Number or Invoice Number"
+                placeholder={t('returns.billNumberPlaceholder')}
+                ariaLabel={t('returns.billNumberPlaceholder')}
                 flex
               />
               <button className="btn btn-pri" type="submit" disabled={!receiptNumber.trim() || isLoading}>
-                Search
+                {t('returns.search')}
               </button>
             </form>
           ) : (
@@ -405,14 +404,14 @@ function ReturnsPageInner() {
                 <SearchField
                   value={customerSearch}
                   onChange={setCustomerSearch}
-                  placeholder="Customer name, phone, or email"
-                  ariaLabel="Customer name, phone, or email"
+                  placeholder={t('returns.customerPlaceholder')}
+                  ariaLabel={t('returns.customerPlaceholder')}
                   flex
                 />
                 {(isLoadingSuggestions || customerSuggestions.length > 0) && (
                   <div
                     role="listbox"
-                    aria-label="Customer suggestions"
+                    aria-label={t('returns.customerSuggestions')}
                     style={{
                       position: 'absolute',
                       top: 'calc(100% + 6px)',
@@ -429,11 +428,11 @@ function ReturnsPageInner() {
                   >
                     {isLoadingSuggestions && (
                       <div role="status" style={{ padding: '10px 12px', fontSize: 12, color: 'var(--muted)' }}>
-                        Searching customers…
+                        {t('returns.searching')}
                       </div>
                     )}
                     {customerSuggestions.map((customer) => {
-                      const displayName = customer.name ?? customer.phone ?? customer.email ?? 'Unnamed customer'
+                      const displayName = customer.name ?? customer.phone ?? customer.email ?? t('returns.unnamedCustomer')
                       const details = [customer.phone, customer.email].filter(Boolean).join(' · ')
                       return (
                         <button
@@ -462,7 +461,7 @@ function ReturnsPageInner() {
                 )}
               </div>
               <button className="btn btn-pri" type="submit" disabled={!customerSearch.trim() || isLoading}>
-                Search
+                {t('returns.search')}
               </button>
             </form>
           )}
@@ -479,7 +478,7 @@ function ReturnsPageInner() {
           )}
 
           {hasSearched && !isLoading && matches.length === 0 && !error && (
-            <p style={{ marginTop: 18, fontSize: 13, color: 'var(--muted)' }}>{NO_MATCH}</p>
+            <p style={{ marginTop: 18, fontSize: 13, color: 'var(--muted)' }}>{t('returns.noMatch')}</p>
           )}
           {matches.length > 1 && !sale && (
             <div
@@ -507,7 +506,7 @@ function ReturnsPageInner() {
                 >
                   <span style={{ display: 'block', fontWeight: 700, fontSize: 13 }}>{match.id}</span>
                   <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                    {new Date(match.createdAt).toLocaleString()} · {formatMoney(match.totalAmount)}
+                    {dateTime.format(new Date(match.createdAt))} · {formatMoney(match.totalAmount)}
                   </span>
                 </button>
               ))}
@@ -520,11 +519,11 @@ function ReturnsPageInner() {
         <form onSubmit={requestRefund}>
           <Card style={{ marginTop: 18 }}>
           <CardHead
-            title="Select items to return"
-            sub={taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : isLoadingTaxInvoice ? 'Loading Tax Invoice…' : `Bill ${sale.id}`}
+            title={t('returns.selectItems')}
+            sub={taxInvoice ? `${t('documents.invoiceTitle')} ${taxInvoice.documentNumber}` : isLoadingTaxInvoice ? t('returns.taxInvoiceLoading') : t('returns.bill', { number: sale.id })}
           />
             <CardPad>
-              <DataTable cols={['Return', 'Item', 'Original qty', 'Return qty', 'Estimated refund incl. GST']}>
+              <DataTable cols={[t('returns.cols.select'), t('returns.cols.item'), t('returns.cols.originalQty'), t('returns.cols.returnQty'), t('returns.cols.estimate')]}>
                 {sale.lines.map((line) => {
                   const quantity = quantities[line.id] ?? 0
                   return (
@@ -532,6 +531,7 @@ function ReturnsPageInner() {
                       <td>
                         <div
                           role="checkbox"
+                          aria-label={t('returns.selectLine', { name: line.productName ?? line.sku ?? t('returns.item') })}
                           aria-checked={quantity > 0}
                           tabIndex={0}
                           onClick={() => updateQuantity(line.id, line.quantity, quantity > 0 ? 0 : 1)}
@@ -548,12 +548,12 @@ function ReturnsPageInner() {
                       </td>
                       <td>
                         <span style={{ display: 'block', fontWeight: 600, fontSize: 13 }}>
-                          {line.productName ?? line.sku ?? 'Item'}
+                          {line.productName ?? line.sku ?? t('returns.item')}
                         </span>
                         <span className="t-sub">
                           {[line.sku, line.size, line.color, line.material].filter(Boolean).join(' · ') || line.variantId}
                         </span>
-                        <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatMoney(line.unitPrice)} each</span>
+                        <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{formatMoney(line.unitPrice)} {t('returns.each')}</span>
                       </td>
                       <td>{line.quantity}</td>
                       <td>
@@ -575,10 +575,10 @@ function ReturnsPageInner() {
                 })}
               </DataTable>
               {isLoadingTaxInvoice ? (
-                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>Loading the immutable Tax Invoice snapshot…</p>
+                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>{t('returns.taxSnapshotLoading')}</p>
               ) : !taxInvoice ? (
                 <p style={{ marginTop: 10, fontSize: 12, color: 'var(--warning)' }}>
-                  The Tax Invoice snapshot could not be loaded. The server will recalculate and confirm the refund amount before recording it.
+                  {t('returns.taxSnapshotMissing')}
                 </p>
               ) : null}
 
@@ -593,37 +593,33 @@ function ReturnsPageInner() {
               >
                 <label style={{ display: 'block', marginBottom: 14 }}>
                   <span style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700 }}>
-                    Reason for return
+                    {t('returns.reasonLabel')}
                   </span>
                   <select
                     className="fld-select"
                     value={reason}
                     onChange={(event) => {
-                      const nextReason = event.target.value
+                      const nextReason = event.target.value as (typeof REASON_VALUES)[number] | ''
                       setReason(nextReason)
-                      if (nextReason !== 'Other return reason') setCustomReason('')
+                      if (nextReason !== 'other') setCustomReason('')
                     }}
                     required
                   >
-                    <option value="">Select a reason</option>
-                    <option value="Customer changed their mind">Customer changed their mind</option>
-                    <option value="Wrong item or size">Wrong item or size</option>
-                    <option value="Damaged or defective item">Damaged or defective item</option>
-                    <option value="Incorrect item billed">Incorrect item billed</option>
-                    <option value="Other return reason">Other</option>
+                    <option value="">{t('returns.selectReason')}</option>
+                    {REASON_VALUES.map((value) => <option key={value} value={value}>{t(`returns.reasons.${value}` as MessageKey)}</option>)}
                   </select>
                 </label>
-                {reason === 'Other return reason' && (
+                {reason === 'other' && (
                   <label style={{ display: 'block', marginTop: -2, marginBottom: 14 }}>
                     <span style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700 }}>
-                      Describe the reason
+                      {t('returns.describeReason')}
                     </span>
                     <textarea
                       className="fld-input"
-                      aria-label="Describe the reason"
+                      aria-label={t('returns.describeReason')}
                       value={customReason}
                       onChange={(event) => setCustomReason(event.target.value)}
-                      placeholder="Tell us why this item is being returned"
+                      placeholder={t('returns.describePlaceholder')}
                       minLength={2}
                       maxLength={500}
                       rows={3}
@@ -631,18 +627,17 @@ function ReturnsPageInner() {
                       style={{ width: '100%', minHeight: 78, resize: 'vertical' }}
                     />
                     <span style={{ display: 'block', marginTop: 5, fontSize: 11.5, color: 'var(--muted)' }}>
-                      This note is saved with the return audit trail.
+                      {t('returns.auditNote')}
                     </span>
                   </label>
                 )}
                 <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>
-                  Refund tender: {originalMethods.join(', ') || 'unavailable'}. The server validates the original sale,
-                  return entitlement, and final refund before anything is recorded.
+                  {t('returns.refundTender', { methods: originalMethods.map((method) => enumLabel(t, 'method', method)).join(', '), unavailable: t('returns.unavailable') })} {t('returns.refundValidation')}
                 </p>
                 <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                   <div>
                     <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--muted)' }}>
-                      Selected-line estimate
+                      {t('returns.selectedEstimate')}
                     </div>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 26, fontWeight: 700, color: 'var(--danger)', marginTop: 4 }}>
                       {formatMoney(refundTotal)}
@@ -660,7 +655,7 @@ function ReturnsPageInner() {
                       Boolean(successAmount)
                     }
                   >
-                    {isSubmitting ? 'Processing…' : 'Review refund'}
+                    {isSubmitting ? t('returns.processing') : t('returns.reviewRefund')}
                   </button>
                 </div>
               </div>
@@ -673,23 +668,23 @@ function ReturnsPageInner() {
         <Card style={{ marginTop: 18 }}>
           <CardPad style={{ background: 'var(--success-soft)', borderRadius: 'var(--r)' }}>
             <p style={{ fontWeight: 700, color: '#0f8f63', fontSize: 14 }}>
-              Refund of {formatMoney(Number(successAmount))} recorded by the server.
+              {t('returns.refundRecorded', { amount: formatMoney(Number(successAmount)) })}
             </p>
             {creditNote ? (
               <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
-                Credit note <Link href={appPath(`/app/documents/${creditNote.id}`)} style={{ fontWeight: 700 }}>{creditNote.number}</Link> is linked to the original Tax Invoice.
+                {t('returns.creditNoteLinked')} <Link href={appPath(`/app/documents/${creditNote.id}`)} style={{ fontWeight: 700 }}>{creditNote.number}</Link> {t('returns.creditNoteSuffix')}
               </p>
             ) : null}
             <p style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-2)' }}>
-              Return processed. Start a new sale to complete the exchange.
+              {t('returns.processed')}
             </p>
             <button
               className="btn btn-pri"
               type="button"
               style={{ marginTop: 14 }}
-              onClick={() => router.push(sale.customerId ? `/app/billing?customerId=${sale.customerId}` : '/app/billing')}
+              onClick={() => router.push(appPath(sale.customerId ? `/app/billing?customerId=${sale.customerId}` : '/app/billing'))}
             >
-              Start new sale
+              {t('returns.startNewSale')}
             </button>
           </CardPad>
         </Card>
@@ -697,12 +692,12 @@ function ReturnsPageInner() {
 
       {isConfirmationOpen && sale && (
         <Modal
-          title="Confirm refund request"
+          title={t('returns.confirmTitle')}
           onClose={() => setIsConfirmationOpen(false)}
           footer={
             <>
               <button className="btn" type="button" disabled={isSubmitting} onClick={() => setIsConfirmationOpen(false)}>
-                Keep return open
+                {t('returns.keepOpen')}
               </button>
               <button
                 className="btn btn-pri"
@@ -711,15 +706,19 @@ function ReturnsPageInner() {
                 aria-busy={isSubmitting}
                 onClick={() => void processRefund()}
               >
-                {isSubmitting ? 'Processing refund…' : 'Confirm refund request'}
+                {isSubmitting ? t('returns.processingRefund') : t('returns.confirm')}
               </button>
             </>
           }
         >
           <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-            Refund {formatMoney(refundTotal)} for {taxInvoice ? `Tax Invoice ${taxInvoice.documentNumber}` : `bill ${sale.id}`}? This sends the selected {selectedLines.length} line
-            {selectedLines.length === 1 ? '' : 's'} to the server for validation, reverses the original tender (
-            {originalMethods.join(', ')}), records “{effectiveReason}”, and returns approved units to stock.
+            {t('returns.confirmSummary', {
+              amount: formatMoney(refundTotal),
+              bill: taxInvoice ? `${t('documents.invoiceTitle')} ${taxInvoice.documentNumber}` : t('returns.bill', { number: sale.id }),
+              lines: `${selectedLines.length} ${selectedLines.length === 1 ? t('returns.lineOne') : t('returns.lineMany')}`,
+              methods: originalMethods.map((method) => enumLabel(t, 'method', method)).join(', '),
+              reason: displayReason,
+            })}
           </p>
         </Modal>
       )}
@@ -728,8 +727,9 @@ function ReturnsPageInner() {
 }
 
 export default function ReturnsPage() {
+  const t = useT()
   return (
-    <Suspense fallback={<EmptyState title="Loading returns…" />}>
+    <Suspense fallback={<EmptyState title={t('returns.loading')} />}>
       <ReturnsPageInner />
     </Suspense>
   )

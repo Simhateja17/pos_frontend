@@ -1,5 +1,7 @@
 'use client'
 
+import { useT } from '@/lib/i18n/i18n'
+
 export function ReconciliationFigure({
   label,
   amount,
@@ -9,9 +11,10 @@ export function ReconciliationFigure({
   amount: string
   variant: 'neutral' | 'match' | 'variance'
 }) {
+  const t = useT()
   const colorClass = variant === 'match' ? 'b-green' : variant === 'variance' ? 'b-amber' : ''
   return (
-    <div>
+    <div aria-label={t('shifts.reconciliationFigureAria', { label, amount })}>
       <div
         style={{
           fontSize: '10.5px',

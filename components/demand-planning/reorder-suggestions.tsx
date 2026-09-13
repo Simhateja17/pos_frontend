@@ -16,6 +16,8 @@ import {
 import { Card, CardHead, DataTable } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
 import { normalizeReorderReason } from '@/lib/operational-display'
+import { type Translate, useT } from '@/lib/i18n/i18n'
+import { useAppRegion } from '@/lib/app-region'
 
 const wholeUnits = (value: number) => Math.max(0, Math.ceil(value))
 
@@ -23,13 +25,13 @@ function stockOnHand(suggestion: ReorderSuggestion) {
   return normalizeReorderReason(suggestion.reason as unknown as Record<string, unknown>).currentStock
 }
 
-function quantityExplanation(suggestion: ReorderSuggestion) {
+function quantityExplanation(suggestion: ReorderSuggestion, t: Translate) {
   const reason = suggestion.reason
   const required = wholeUnits(reason.reorderPoint + reason.reviewPeriodDemand)
-  return `${stockOnHand(suggestion)} available + ${reason.onOrder} already ordered. About ${required} are needed to cover expected sales and a safety buffer.`
+  return t('demand.explanation', { available: stockOnHand(suggestion), onOrder: reason.onOrder, required })
 }
 
-function ReasonBreakdown({ suggestion }: { suggestion: ReorderSuggestion }) {
+function ReasonBreakdown({ suggestion, t }: { suggestion: ReorderSuggestion; t: Translate }) {
   const reason = suggestion.reason
   const required = wholeUnits(reason.reorderPoint + reason.reviewPeriodDemand)
   const expectedSales = wholeUnits(reason.leadTimeDemand + reason.reviewPeriodDemand)
@@ -37,42 +39,42 @@ function ReasonBreakdown({ suggestion }: { suggestion: ReorderSuggestion }) {
   return (
     <div style={{ padding: '14px 16px', background: 'var(--bg)', borderRadius: 10 }}>
       <div style={{ fontSize: 14, fontWeight: 650, marginBottom: 4 }}>
-        Why order {suggestion.suggestedQuantity} units?
+        {t('demand.whyOrder', { count: suggestion.suggestedQuantity })}
       </div>
       <div style={{ color: 'var(--muted)', fontSize: 12.5, marginBottom: 12 }}>
-        Based on recent sales, your current stock may not last until the next stock review.
+        {t('demand.basedOnSales')}
       </div>
       <div className="sum-row" style={{ fontSize: 12.5 }}>
-        <span>Sold in the last {reason.windowDays} days</span>
-        <b>{wholeUnits(reason.unitsSoldInWindow)} units</b>
+        <span>{t('demand.soldLast', { days: reason.windowDays })}</span>
+        <b>{wholeUnits(reason.unitsSoldInWindow)} {t('demand.units')}</b>
       </div>
       <div className="sum-row" style={{ fontSize: 12.5 }}>
-        <span>Expected sales before the next stock review</span>
-        <b>{expectedSales} units</b>
+        <span>{t('demand.expectedSales')}</span>
+        <b>{expectedSales} {t('demand.units')}</b>
       </div>
       <div className="sum-row" style={{ fontSize: 12.5 }}>
-        <span>Extra stock to avoid running out</span>
-        <b>{wholeUnits(reason.safetyStock)} units</b>
+        <span>{t('demand.extraStock')}</span>
+        <b>{wholeUnits(reason.safetyStock)} {t('demand.units')}</b>
       </div>
       <div className="sum-row" style={{ fontSize: 12.5 }}>
-        <span>Total stock needed</span>
-        <b>{required} units</b>
+        <span>{t('demand.totalNeeded')}</span>
+        <b>{required} {t('demand.units')}</b>
       </div>
       <div className="sum-row" style={{ fontSize: 12.5 }}>
-        <span>Available now</span>
-        <b>{stockOnHand(suggestion)} units</b>
+        <span>{t('demand.availableNow')}</span>
+        <b>{stockOnHand(suggestion)} {t('demand.units')}</b>
       </div>
       <div className="sum-row" style={{ fontSize: 12.5 }}>
-        <span>Already on the way</span>
-        <b>{reason.onOrder} units</b>
+        <span>{t('demand.onWay')}</span>
+        <b>{reason.onOrder} {t('demand.units')}</b>
       </div>
       <div className="sum-row" style={{ borderTop: '1px solid var(--border)', marginTop: 7, paddingTop: 9, fontSize: 13.5 }}>
-        <span style={{ fontWeight: 650 }}>Recommended order</span>
-        <b>{suggestion.suggestedQuantity} units</b>
+        <span style={{ fontWeight: 650 }}>{t('demand.recommended')}</span>
+        <b>{suggestion.suggestedQuantity} {t('demand.units')}</b>
       </div>
       {reason.supplierName ? (
         <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 10 }}>
-          This allows for {reason.leadTimeDays} days of delivery time from {reason.supplierName}.
+          {t('demand.deliveryTime', { days: reason.leadTimeDays, supplier: reason.supplierName })}
         </div>
       ) : null}
     </div>
@@ -80,6 +82,8 @@ function ReasonBreakdown({ suggestion }: { suggestion: ReorderSuggestion }) {
 }
 
 export function ReorderSuggestions() {
+  const t = useT()
+  const { dateLocale, pack } = useAppRegion()
   const [data, setData] = useState<ReorderSuggestionList | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -97,10 +101,12 @@ export function ReorderSuggestions() {
     try {
       setData(await getAuthenticatedReorderSuggestions())
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Recommendations are unavailable right now.')
+      setError(cause instanceof Error ? cause.message : t('demand.errorLoad'))
     } finally {
       setLoading(false)
     }
+    // t is intentionally omitted: changing locale must not refetch recommendations.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -135,17 +141,17 @@ export function ReorderSuggestions() {
           current = await getAuthenticatedForecastRun(current.id)
           setActiveRun(current)
         }
-        if (current.status === 'failed') throw new Error('Recommendations could not be updated. Please try again.')
-        if (current.status !== 'completed') throw new Error('The update is taking longer than expected. Refresh this page shortly.')
+        if (current.status === 'failed') throw new Error(t('demand.errorFailed'))
+        if (current.status !== 'completed') throw new Error(t('demand.errorSlow'))
         setActiveRun(null)
         await load()
       } else {
         setData(await generateAuthenticatedReorderSuggestions())
       }
       setSelected(new Set())
-      setNotice('Recommendations updated. Review the quantities before creating purchase orders.')
+      setNotice(t('demand.updated'))
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Recommendations could not be updated.')
+      setError(cause instanceof Error ? cause.message : t('demand.errorUpdate'))
     } finally {
       pollingRef.current = false
       setRefreshing(false)
@@ -187,9 +193,11 @@ export function ReorderSuggestions() {
         created.push(purchaseOrder.poNumber)
       }
       setSelected(new Set())
-      setNotice(`Created ${created.length} draft purchase order${created.length === 1 ? '' : 's'}: ${created.join(', ')}. Review prices before sending.`)
+      setNotice(created.length === 1
+        ? t('demand.createdOne', { numbers: created.join(', ') })
+        : t('demand.createdMany', { count: created.length, numbers: created.join(', ') }))
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The draft purchase orders could not be created.')
+      setError(cause instanceof Error ? cause.message : t('demand.errorCreate'))
     } finally {
       setCreatingOrders(false)
     }
@@ -199,23 +207,23 @@ export function ReorderSuggestions() {
   const totalUnits = items.reduce((total, item) => total + item.suggestedQuantity, 0)
   const updateInProgress = refreshing || activeRun?.status === 'queued' || activeRun?.status === 'running'
   const updatedAt = data?.generatedAt
-    ? new Date(data.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+    ? new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: pack.timeZone }).format(new Date(data.generatedAt))
     : null
 
   return (
     <Card>
       <CardHead
-        title="Recommended purchase list"
-        sub={updatedAt ? `${items.length} products · ${totalUnits} units to order · updated ${updatedAt}` : 'See what needs ordering and why'}
+        title={t('demand.listTitle')}
+        sub={updatedAt ? t('demand.listSub', { products: items.length, units: totalUnits, date: updatedAt }) : t('demand.listSubEmpty')}
         right={
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {selected.size > 0 ? (
               <button className="btn btn-sm btn-pri" onClick={() => void createDraftPurchaseOrders()} disabled={creatingOrders || updateInProgress}>
-                <ClipboardList size={14} /> {creatingOrders ? 'Creating…' : `Create draft PO (${selected.size})`}
+                <ClipboardList size={14} /> {creatingOrders ? t('demand.creating') : t('demand.createDraft', { count: selected.size })}
               </button>
             ) : null}
             <button className="btn btn-sm" onClick={() => void refreshRecommendations()} disabled={creatingOrders || updateInProgress}>
-              <RefreshCw size={14} /> {updateInProgress ? 'Updating…' : 'Refresh recommendations'}
+              <RefreshCw size={14} /> {updateInProgress ? t('demand.updating') : t('demand.refresh')}
             </button>
           </div>
         }
@@ -223,31 +231,31 @@ export function ReorderSuggestions() {
 
       {updateInProgress ? (
         <div style={{ padding: '11px 16px', borderBottom: '1px solid var(--border-soft)', color: 'var(--muted)', fontSize: 12.5 }} role="status">
-          Reviewing recent sales, current stock, incoming orders and supplier delivery times…
+          {t('demand.reviewProgress')}
         </div>
       ) : null}
       {notice ? <div style={{ padding: '11px 16px', fontSize: 13 }} role="status">{notice}</div> : null}
-      {loading && <LoadingState label="Loading purchase recommendations" rows={3} />}
+      {loading && <LoadingState label={t('demand.loading')} rows={3} />}
       {!loading && error && <ErrorState message={error} onRetry={() => void load()} />}
 
       {!loading && !error && items.length === 0 ? (
         <EmptyState
           icon={<PackageCheck size={24} strokeWidth={1.8} />}
-          title={updatedAt ? 'Stock levels look covered' : 'No recommendations yet'}
-          body={updatedAt ? 'No purchase is recommended right now. Refresh after new sales, deliveries or stock changes.' : 'Refresh to check recent sales, available stock and incoming orders.'}
-          action={<button className="btn btn-pri" onClick={() => void refreshRecommendations()} disabled={updateInProgress}><RefreshCw size={15} /> Refresh recommendations</button>}
+          title={updatedAt ? t('demand.coveredTitle') : t('demand.noneTitle')}
+          body={updatedAt ? t('demand.coveredBody') : t('demand.noneBody')}
+          action={<button className="btn btn-pri" onClick={() => void refreshRecommendations()} disabled={updateInProgress}><RefreshCw size={15} /> {t('demand.refresh')}</button>}
         />
       ) : null}
 
       {!loading && !error && items.length > 0 ? (
-        <DataTable cols={['', 'Product', 'Available now', 'Already ordered', 'Order now', 'Why this quantity', '']} minWidth={980}>
+        <DataTable cols={[t('demand.cols.select'), t('demand.cols.product'), t('demand.cols.available'), t('demand.cols.ordered'), t('demand.cols.orderNow'), t('demand.cols.why'), t('demand.cols.details')]} minWidth={980}>
           {items.map((suggestion) => (
             <Fragment key={suggestion.id}>
               <tr>
                 <td>
                   <input
                     type="checkbox"
-                    aria-label={`Select ${suggestion.productName} for a draft purchase order`}
+                    aria-label={t('demand.selectForPo', { name: suggestion.productName })}
                     checked={selected.has(suggestion.id)}
                     disabled={!suggestion.supplierId}
                     onChange={() => setSelected((current) => toggle(current, suggestion.id))}
@@ -260,15 +268,15 @@ export function ReorderSuggestions() {
                 <td className="num">{stockOnHand(suggestion)}</td>
                 <td className="num t-sub">{suggestion.reason.onOrder}</td>
                 <td className="num t-strong">{suggestion.suggestedQuantity}</td>
-                <td style={{ maxWidth: 390, color: 'var(--muted)', fontSize: 12.5 }}>{quantityExplanation(suggestion)}</td>
+                <td style={{ maxWidth: 390, color: 'var(--muted)', fontSize: 12.5 }}>{quantityExplanation(suggestion, t)}</td>
                 <td>
                   <button className="btn btn-sm" onClick={() => setExpanded((current) => toggle(current, suggestion.id))}>
-                    {expanded.has(suggestion.id) ? 'Hide details' : 'See why'}
+                    {expanded.has(suggestion.id) ? t('demand.hideDetails') : t('demand.seeWhy')}
                   </button>
                 </td>
               </tr>
               {expanded.has(suggestion.id) ? (
-                <tr><td colSpan={7} style={{ padding: '0 14px 12px' }}><ReasonBreakdown suggestion={suggestion} /></td></tr>
+                <tr><td colSpan={7} style={{ padding: '0 14px 12px' }}><ReasonBreakdown suggestion={suggestion} t={t} /></td></tr>
               ) : null}
             </Fragment>
           ))}

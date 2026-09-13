@@ -10,6 +10,7 @@
  * genuinely unknown shimmer.
  */
 import { KpiSkeleton, Sk } from '@/components/couture/states'
+import { useT } from '@/lib/i18n/i18n'
 
 /** Rows per nav group. Fixed, not random: the markup has to match on the server. */
 const NAV_GROUPS = [4, 5, 4]
@@ -47,8 +48,9 @@ export function ShellNavSkeleton() {
  * means the real page settles into place instead of shoving the view around.
  */
 export function ShellContentSkeleton() {
+  const t = useT()
   return (
-    <div aria-busy="true" aria-label="Loading page">
+    <div aria-busy="true" aria-label={t('shell.loadingPage')}>
       <div className="page-head">
         <div>
           <Sk w={208} h={22} r={7} />

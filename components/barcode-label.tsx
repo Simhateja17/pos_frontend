@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react'
 import JsBarcode from 'jsbarcode'
 import QRCode from 'qrcode'
+import { useT } from '@/lib/i18n/i18n'
 
 /**
  * Label symbology, mirroring tenants.barcode_label_format (migration 0050).
@@ -63,6 +64,7 @@ export function BarcodeLabel({
   /** Called when this variant could not be rendered in the selected format. */
   onFallback?: (sku: string) => void
 }) {
+  const t = useT()
   const svgRef = useRef<SVGSVGElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -101,7 +103,7 @@ export function BarcodeLabel({
   }, [encoding.format, encoding.value])
 
   return (
-    <div className="label">
+    <div className="label" aria-label={t('inventory.labels.barcodeLabelAria', { name })}>
       {encoding.format === 'qr' ? <canvas ref={canvasRef} /> : <svg ref={svgRef} />}
       <div className="label-name">{name}</div>
       <div className="label-price">{price}</div>

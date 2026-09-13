@@ -1,0 +1,21 @@
+export const email = {
+  title: 'Email',
+  subtitle: 'Bills sent to customers, and who we no longer email',
+  stopAddress: 'Stop emailing an address',
+  loading: 'Loading email records',
+  error: 'Email records are unavailable right now.',
+  missing: '—', suppressError: 'That address could not be suppressed.',
+  metrics: {
+    sent: 'Sent', sentMeta: 'Handed to the email provider', failed: 'Failed', failedMeta: 'These customers did not get an email', noneFailed: 'None failed', bounced: 'Bounced', bouncedMeta: 'Address rejected or reported as spam', suppressed: 'Suppressed', suppressedMeta: 'Not sent, address is on the do-not-email list',
+  },
+  providerNotice: 'No email provider is connected on this server, so nothing can actually be delivered yet. Attempts are still recorded below so you can see what would have been sent.',
+  sendLog: 'Send log', sendLogSub: 'Every attempt, including the ones that never left', searchLogPlaceholder: 'Search customer email or subject…', searchLogLabel: 'Search send log',
+  noEmails: 'No emails yet', noEmailsBody: 'Bills appear here as soon as a sale is completed with a customer email address.', noMatch: 'No emails match this search', noMatchBody: 'Try part of the customer address, the subject, or a status such as failed.',
+  cols: { when: 'When', to: 'To', kind: 'Kind', subject: 'Subject', status: 'Status', detail: 'Detail' },
+  kinds: { receipt: 'Bill', invoice: 'Tax Invoice', offer: 'Offer' },
+  doNotEmail: 'Do not email', doNotEmailSub: 'Unsubscribes stop offers only. Bounces and spam complaints stop everything, including bills.', searchSuppressionPlaceholder: 'Search address or reason…', searchSuppressionLabel: 'Search do not email list',
+  nobodySuppressed: 'Nobody is suppressed', nobodySuppressedBody: 'Addresses that unsubscribe, bounce or report spam appear here automatically.', noAddressMatch: 'No addresses match this search', noAddressMatchBody: 'Try part of the email address, or a reason such as bounced.', suppressionCols: { address: 'Address', reason: 'Reason', detail: 'Detail', since: 'Since' },
+  reasons: { unsubscribed: 'Unsubscribed', bounced: 'Bounced', complained: 'Complained' },
+  allowAgain: 'Allow again',
+  modalTitle: 'Stop emailing an address', address: 'Email address', addressPlaceholder: 'customer@example.com', modalNote: 'This records an unsubscribe, which stops offers. Bills for purchases they make are still sent, because those are not marketing.', saving: 'Saving…', cancel: 'Cancel',
+}
