@@ -55,14 +55,12 @@ type ReturnResponse = {
 const LOOKUP_TABS = ['receipt', 'customer'] as const
 const REASON_VALUES = ['changedMind', 'wrongItem', 'damaged', 'incorrect', 'other'] as const
 
-async function responseError(response: Response | undefined, fallback: string) {
-  if (!response) return fallback
-  try {
-    const body = (await response.clone().json()) as { error?: string }
-    return body.error ?? fallback
-  } catch {
-    return fallback
-  }
+function responseError(error: unknown, fallback: string) {
+  if (!error || typeof error !== 'object') return fallback
+  const body = error as { error?: unknown; message?: unknown }
+  if (typeof body.error === 'string') return body.error
+  if (typeof body.message === 'string') return body.message
+  return fallback
 }
 
 function money(value: number | string) {
@@ -228,7 +226,7 @@ function ReturnsPageInner() {
       const headers = await authHeaders()
       const result = await apiClient.GET('/sales', { params: { query }, headers })
       if (result.error) {
-        setError(await responseError(result.response, t('returns.loadError')))
+        setError(responseError(result.error, t('returns.loadError')))
         return
       }
       const found = result.data as Sale[]
@@ -304,10 +302,10 @@ function ReturnsPageInner() {
     })
     setIsSubmitting(false)
     if (result.error) {
-      setError(await responseError(result.response, t('returns.processError')))
+      setError(responseError(result.error, t('returns.processError')))
       return
     }
-    const response = (await result.response?.clone().json()) as ReturnResponse | undefined
+    const response = result.data as ReturnResponse | undefined
     if (!response?.refundTotal) {
       setError(t('returns.acceptedNoAmount'))
       return

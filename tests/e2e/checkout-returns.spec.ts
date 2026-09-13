@@ -55,6 +55,8 @@ test('checkout shows a bill only after a successful server charge and resend out
 })
 
 test('returns require an explicit confirmation and report only a server-confirmed refund', async ({ authenticatedPage }, testInfo) => {
+  const pageErrors: Error[] = []
+  authenticatedPage.on('pageerror', (error) => pageErrors.push(error))
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
   await authenticatedPage.getByPlaceholder(/bill number/i).fill('Q9-202627-0003')
@@ -68,12 +70,15 @@ test('returns require an explicit confirmation and report only a server-confirme
   await authenticatedPage.route('**/returns', (route) => route.fulfill({ status: 400, json: { error: 'Cannot return 1; only 0 remain returnable.' } }))
   await authenticatedPage.getByRole('button', { name: 'Confirm refund request' }).click()
   await expect(authenticatedPage.getByRole('alert')).toContainText('only 0 remain returnable')
+  expect(pageErrors).toEqual([])
   await expect(authenticatedPage.getByText('Selected-line estimate')).toBeVisible()
   await authenticatedPage.setViewportSize({ width: 393, height: 852 })
   await testInfo.attach('returns-mobile-rejection', { body: await authenticatedPage.screenshot(), contentType: 'image/png' })
 })
 
 test('returns display the server-confirmed amount only after a successful refund', async ({ authenticatedPage }) => {
+  const pageErrors: Error[] = []
+  authenticatedPage.on('pageerror', (error) => pageErrors.push(error))
   await authenticatedPage.route('**/sales?receiptNumber=*', (route) => route.fulfill({ json: [sale] }))
   await authenticatedPage.route('**/returns', (route) => route.fulfill({ status: 201, json: { saleId, refundedLines: [{ saleLineItemId: lineId, quantity: 1, refundAmount: '1180.00' }], refundTotal: '1180.00' } }))
   await authenticatedPage.goto('/checkout/returns?shiftId=41111111-1111-4111-8111-111111111111')
@@ -83,6 +88,7 @@ test('returns display the server-confirmed amount only after a successful refund
   await authenticatedPage.getByRole('button', { name: 'Review refund' }).click()
   await authenticatedPage.getByRole('button', { name: 'Confirm refund request' }).click()
   await expect(authenticatedPage.getByRole('alert')).toContainText('Refund of ₹1180.00 recorded by the server.')
+  expect(pageErrors).toEqual([])
 })
 
 test('Other return reasons require operator details before review', async ({ authenticatedPage }) => {
