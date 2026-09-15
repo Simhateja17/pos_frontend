@@ -297,6 +297,8 @@ export const inventory = {
     selectedCount: '{count} of these variants selected',
     addBarcode: 'Add a manufacturer barcode to print labels.',
     selectHint: 'Select one or more variants to generate labels.',
+    searchPlaceholder: 'Search by product, SKU, or barcode',
+    noSearchResults: 'No variants match "{query}".',
     fallbackOne: '{count} of these variants has no valid {format} barcode, so it prints as Code 128 of the SKU instead. Add a manufacturer barcode to the variant to change that.',
     fallbackMany: '{count} of these variants have no valid {format} barcode, so they print as Code 128 of the SKU instead. Add a manufacturer barcode to the variants to change that.',
     format: 'Label format',

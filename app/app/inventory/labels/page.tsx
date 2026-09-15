@@ -62,6 +62,7 @@ function LabelsPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [query, setQuery] = useState('')
   // The tenant's chosen symbology (0050). Null until settings load: labels
   // render in code128 meanwhile, which is what every tenant defaults to.
   const [labelFormat, setLabelFormat] = useState<BarcodeLabelFormat | null>(null)
@@ -133,6 +134,24 @@ function LabelsPageContent() {
     })
   }
 
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return rows
+    return rows.filter((row) => {
+      const haystack = [
+        row.productName,
+        row.variant.sku,
+        row.variant.barcode ?? '',
+        row.variant.size ?? '',
+        row.variant.color ?? '',
+        row.variant.material ?? '',
+      ]
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [rows, query])
+
   const selectedRows = useMemo(() => rows.filter((row) => selectedIds.has(row.variant.id)), [rows, selectedIds])
   const formatLabel = (format: BarcodeLabelFormat) => t(`inventory.labels.${format === 'qr' ? 'qr' : format}` as MessageKey)
 
@@ -151,14 +170,32 @@ function LabelsPageContent() {
       <Card>
         <CardHead title={t('inventory.newProduct.variants')} sub={rows.length > 0 ? `${rows.length} ${rows.length === 1 ? t('inventory.labels.variantsOne') : t('inventory.labels.variantsMany')}` : undefined} />
 
+        {!isLoading && !loadError && rows.length > 0 && (
+          <CardPad style={{ paddingBottom: 0 }}>
+            <input
+              type="search"
+              className="input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('inventory.labels.searchPlaceholder')}
+              style={{ width: '100%' }}
+            />
+          </CardPad>
+        )}
+
         {isLoading && <LoadingState label={t('inventory.labels.loading')} />}
         {!isLoading && loadError && <ErrorState message={loadError} onRetry={() => void loadVariants()} />}
         {!isLoading && !loadError && rows.length === 0 && (
           <EmptyState title={t('inventory.labels.emptyTitle')} body={t('inventory.labels.emptyBody')} />
         )}
-        {!isLoading && !loadError && rows.length > 0 && (
+        {!isLoading && !loadError && rows.length > 0 && filteredRows.length === 0 && (
+          <CardPad>
+            <p className="t-sub">{t('inventory.labels.noSearchResults', { query })}</p>
+          </CardPad>
+        )}
+        {!isLoading && !loadError && filteredRows.length > 0 && (
           <CardPad style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
-            {rows.map((row) => (
+            {filteredRows.map((row) => (
               <label
                 key={row.variant.id}
                 style={{

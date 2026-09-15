@@ -186,8 +186,8 @@ export function ReorderSuggestions() {
           supplierId,
           lines: group.map((suggestion) => ({
             variantId: suggestion.variantId,
-            quantityOrdered: suggestion.suggestedQuantity,
-            unitCost: 0,
+            quantityOrdered: String(suggestion.suggestedQuantity),
+            unitCost: '0',
           })),
         })
         created.push(purchaseOrder.poNumber)

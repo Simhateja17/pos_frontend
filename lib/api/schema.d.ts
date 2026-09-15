@@ -8816,8 +8816,8 @@ export interface components {
             lines: {
                 /** Format: uuid */
                 variantId: string;
-                quantityOrdered: number;
-                unitCost: number;
+                quantityOrdered: string;
+                unitCost: string;
             }[];
         };
         UpdatePurchaseOrderRequest: {
