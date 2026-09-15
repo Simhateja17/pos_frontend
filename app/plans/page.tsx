@@ -13,7 +13,9 @@ import { SubscriptionCheckout } from '@/components/billing/subscription-checkout
 function PlansRouter() {
   const region = useSearchParams().get('region') === 'INTL' ? 'INTL' : 'IN'
   const offer = useSearchParams().get('offer') ?? undefined
-  return <SubscriptionCheckout region={region} successPath="/store-type" privateOfferId={offer} />
+  // Owners arriving from the mobile activation email go back to the app.
+  const successPath = useSearchParams().get('return') === 'app' ? '/activate/complete' : '/store-type'
+  return <SubscriptionCheckout region={region} successPath={successPath} privateOfferId={offer} />
 }
 
 export default function PlansPage() {

@@ -375,10 +375,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Read the server-owned subscription entitlement and provider references for the authenticated tenant. */
+        /** @description Read the server-owned subscription entitlement and provider references for the authenticated tenant. `reconcile=1` (billing screens only) first refreshes an unfinished checkout or plan change from Razorpay. */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    reconcile?: "1";
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -609,6 +611,181 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Upgrade, downgrade, or renew by authorising a new Razorpay subscription. Upgrades charge now and end the current subscription once authorised (no refund for unused days); downgrades and renewals start when the current period ends. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChangeSubscriptionRequest"];
+                };
+            };
+            responses: {
+                /** @description Razorpay checkout ready for authorisation */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChangeSubscriptionResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No active subscription, same plan, a change already pending, or usage exceeds the target plan */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/subscription/change/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Discard a plan change that has not been authorised yet. Owner-only. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pending change discarded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingStatus"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No pending change */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Change already authorised */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Razorpay invoices for this business, newest first. `available` is false when Razorpay cannot be reached. Owner-only. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Invoices */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingInvoiceList"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1394,6 +1571,90 @@ export interface paths {
                 };
                 /** @description Provider temporarily unavailable */
                 502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/web-activation/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Owner only. Email a single-use web sign-in link that opens the plans page. The link is never returned in the response. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Activation email sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                            sentTo: string;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Cooldown between emails */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Email or auth provider unavailable */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Activation email not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2318,6 +2579,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/products/with-opening-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Atomically create a product, its tracked variants, and positive opening receive movements with store-scoped idempotency. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProductWithOpeningStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Original result replayed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductWithOpeningStockResult"];
+                    };
+                };
+                /** @description Product and opening stock created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductWithOpeningStockResult"];
+                    };
+                };
+                /** @description Invalid product or opening stock request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Store or referenced catalog value not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Idempotency, SKU, or barcode conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/products/{productId}": {
         parameters: {
             query?: never;
@@ -2968,7 +3299,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Read-only online total for whole-quantity carts without discounts. No reservation; POST /sales revalidates all state. */
+        /** @description Read-only online total for a cart with server-owned prices, reviewed line/cart discounts, measured quantities and stock-floor checks. No reservation or write; POST /sales revalidates all state. */
         post: {
             parameters: {
                 query?: never;
@@ -3250,6 +3581,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sales/recovery/{clientSaleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read-only recovery lookup by the immutable client sale ID. A scoped 404 proves no sale was committed for this key. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clientSaleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authoritative completed sale */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sale"];
+                    };
+                };
+                /** @description No committed sale for this tenant and store */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sales/{saleId}": {
         parameters: {
             query?: never;
@@ -3279,6 +3655,112 @@ export interface paths {
                     };
                 };
                 /** @description Sale not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Read-only server refund preview for selected sale lines. Uses the persisted tax snapshot or the same pure tax builder for legacy/International sales and never writes stock, payments, or document numbers. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReturnQuoteRequest"];
+                };
+            };
+            responses: {
+                /** @description Authoritative refund preview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReturnQuote"];
+                    };
+                };
+                /** @description Invalid quantities or store selection */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sale or line item not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sale is not returnable or the server snapshot cannot be built */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns/recovery/{returnReferenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read-only recovery lookup by the immutable payload-bound return reference. A scoped 404 proves no return was committed for this key. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    returnReferenceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authoritative completed return */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReturnResponse"];
+                    };
+                };
+                /** @description No committed return for this tenant and store */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -4150,6 +4632,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/shifts/recovery/{clientShiftId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read-only recovery lookup by the immutable client shift ID. A scoped 404 proves no opening was committed for this operator and store. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clientShiftId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authoritative shift opening */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Shift"];
+                    };
+                };
+                /** @description No committed shift opening for this operator and store */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/shifts": {
         parameters: {
             query?: never;
@@ -4179,7 +4706,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** @description Open a shift with a starting cash count on a named counter (D-14, 0034). One counter holds at most one open shift. */
+        /** @description Open a shift with a starting cash count on a named counter (D-14, 0034). A clientShiftId makes a timeout retry replay-safe; one counter holds at most one open shift. */
         post: {
             parameters: {
                 query?: never;
@@ -4900,7 +5427,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Pair or reassign this browser/device to a counter. Manager/owner only. */
+        /** @description Pair or reassign this browser/native device to a counter. Manager/owner only. Native clients persist deviceToken securely and send it as X-Counter-Device-Token. */
         post: {
             parameters: {
                 query?: never;
@@ -4918,7 +5445,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Terminal"];
+                        "application/json": components["schemas"]["PairedTerminal"];
                     };
                 };
                 /** @description Counter not found */
@@ -5094,14 +5621,45 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description A category with that name already exists */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Category creation failed */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -5145,12 +5703,41 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Invalid category id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Category not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -5181,19 +5768,59 @@ export interface paths {
                         "application/json": components["schemas"]["Category"];
                     };
                 };
+                /** @description Invalid request or category id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Owner role required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
                 /** @description Category not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
                 /** @description A category with that name already exists */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
+                };
+                /** @description Category update failed */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorEnvelope"];
+                    };
                 };
             };
         };
@@ -7155,6 +7782,7 @@ export interface components {
             entitlementVersion: string;
             entitlements: components["schemas"]["EntitlementLimits"];
             usage: components["schemas"]["EntitlementUsage"];
+            pendingChange: components["schemas"]["PendingPlanChange"];
             subscription: {
                 /** Format: uuid */
                 id: string;
@@ -7177,6 +7805,20 @@ export interface components {
             activeRegisters: number;
             monthlyPosTransactions: number;
         };
+        PendingPlanChange: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "upgrade" | "downgrade" | "renewal";
+            planKey: string;
+            billingCycle: components["schemas"]["BillingCycle"];
+            status: string;
+            authorised: boolean;
+            /** Format: date-time */
+            startsAt: string | null;
+            totalAmountMinor: number;
+            currency: components["schemas"]["BillingCurrency"];
+        } | null;
         /** @enum {string} */
         BillingCycle: "monthly" | "annual";
         CreateSubscriptionResponse: {
@@ -7184,6 +7826,8 @@ export interface components {
             attemptId: string;
             razorpayKeyId: string;
             razorpaySubscriptionId: string;
+            /** Format: uri */
+            checkoutUrl: string | null;
             status: string;
             region: components["schemas"]["BillingRegion"];
             planKey: string;
@@ -7213,7 +7857,45 @@ export interface components {
              */
             cancelAtCycleEnd: true;
         };
+        ChangeSubscriptionResponse: components["schemas"]["CreateSubscriptionResponse"] & {
+            /** @enum {string} */
+            kind: "upgrade" | "downgrade" | "renewal";
+            /** Format: date-time */
+            startsAt: string | null;
+        };
+        ChangeSubscriptionRequest: {
+            planKey: string;
+            billingCycle: components["schemas"]["BillingCycle"];
+            /** Format: uuid */
+            idempotencyKey: string;
+        };
+        BillingInvoiceList: {
+            invoices: components["schemas"]["BillingInvoice"][];
+            available: boolean;
+        };
+        BillingInvoice: {
+            id: string;
+            status: string;
+            amountMinor: number;
+            currency: string;
+            /** Format: date-time */
+            issuedAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** Format: date-time */
+            periodStart: string | null;
+            /** Format: date-time */
+            periodEnd: string | null;
+            planKey: string;
+            /** Format: uri */
+            url: string | null;
+        };
         AppContext: {
+            subscription?: {
+                accessAllowed: boolean;
+                /** Format: date-time */
+                graceUntil: string | null;
+            };
             staff: {
                 /** Format: uuid */
                 id: string | null;
@@ -7828,6 +8510,55 @@ export interface components {
                 reorderThreshold?: number;
             }[];
         };
+        ProductWithOpeningStockResult: {
+            product: components["schemas"]["Product"];
+            openingStock: components["schemas"]["OpeningStockResult"][];
+            replayed: boolean;
+        };
+        OpeningStockResult: {
+            /** Format: uuid */
+            movementId: string;
+            /** Format: uuid */
+            variantId: string;
+            quantityReceived: string;
+        };
+        CreateProductWithOpeningStockRequest: {
+            /** Format: uuid */
+            clientOperationId: string;
+            product: components["schemas"]["CreateProductRequest"] & {
+                variants?: ({
+                    sku?: string;
+                    barcode?: string;
+                    unitOfMeasure?: components["schemas"]["UnitOfMeasure"];
+                    size?: string;
+                    color?: string;
+                    material?: string;
+                    price: number;
+                    mrp?: number;
+                    listPrice?: number;
+                    initialCostPrice?: number;
+                    hsnSac?: string;
+                    purchaseUnit?: string;
+                    purchasePackSize?: number;
+                    /** @default true */
+                    trackInventory: boolean;
+                    /** @default false */
+                    allowNegativeStock: boolean;
+                    /** Format: date */
+                    expiryDate?: string;
+                    taxRatePercent: number;
+                    reorderThreshold?: number;
+                } & {
+                    trackInventory: boolean;
+                    allowNegativeStock: boolean;
+                })[];
+            };
+            openingStock: components["schemas"]["OpeningStockInput"][];
+        };
+        OpeningStockInput: {
+            variantIndex: number;
+            quantityReceived: string;
+        };
         UpdateProductRequest: {
             brand?: string | null;
             description?: string | null;
@@ -7861,20 +8592,25 @@ export interface components {
             variantId: string;
             /** @enum {string} */
             movementType: "sale" | "receive" | "adjustment" | "return" | "transfer";
-            quantityDelta: number;
+            quantityDelta: string;
             /** @enum {string|null} */
             reasonCode: "damage" | "shrinkage_theft" | "count_correction" | "other" | null;
             reasonNote: string | null;
             /** Format: uuid */
             createdBy: string | null;
             createdAt: string;
+            /** Format: uuid */
+            clientMovementId?: string | null;
+            replayed?: boolean;
         };
         CreateStockMovementRequest: {
+            /** Format: uuid */
+            clientMovementId?: string;
             /** Format: uuid */
             variantId: string;
             /** @enum {string} */
             movementType: "receive" | "adjustment" | "transfer";
-            quantityDelta: number;
+            quantityDelta: string | number;
             /** @enum {string} */
             reasonCode?: "damage" | "shrinkage_theft" | "count_correction" | "other";
             reasonNote?: string;
@@ -7931,6 +8667,7 @@ export interface components {
             storeId: string;
             currency: string;
             subtotal: string;
+            discountAmount: string;
             taxAmount: string;
             totalAmount: string;
             lines: {
@@ -7946,7 +8683,11 @@ export interface components {
                 /** Format: uuid */
                 variantId: string;
                 quantity: number;
+                discountPercent?: string;
+                discountAmount?: string;
             }[];
+            cartDiscountPercent?: string;
+            cartDiscountAmount?: string;
         };
         Sale: {
             /** Format: uuid */
@@ -8065,6 +8806,38 @@ export interface components {
         PaymentReadItem: components["schemas"]["Payment"] & {
             saleStatus: string;
         };
+        ReturnQuote: {
+            /** Format: uuid */
+            saleId: string;
+            /** Format: uuid */
+            storeId: string;
+            currency: string;
+            refundTotal: string;
+            lines: {
+                /** Format: uuid */
+                saleLineItemId: string;
+                /** Format: uuid */
+                variantId: string;
+                productName: string | null;
+                requestedQuantity: number;
+                remainingQuantity: number;
+                refundAmount: string;
+            }[];
+            originalPayments: {
+                /** @enum {string} */
+                method: "cash" | "card" | "check" | "upi" | "credit";
+                amount: string;
+            }[];
+        };
+        ReturnQuoteRequest: {
+            /** Format: uuid */
+            saleId: string;
+            lines: {
+                /** Format: uuid */
+                saleLineItemId: string;
+                quantity: number;
+            }[];
+        };
         ReturnResponse: {
             /** Format: uuid */
             saleId: string;
@@ -8075,6 +8848,11 @@ export interface components {
                 saleLineItemId: string;
                 quantity: number;
                 refundAmount: string;
+            }[];
+            refundPayments?: {
+                method: string;
+                amount: string;
+                referenceCode?: string | null;
             }[];
             refundTotal: string;
             /** Format: uuid */
@@ -8333,12 +9111,14 @@ export interface components {
             /** Format: uuid */
             saleId: string | null;
             /** Format: uuid */
+            returnReferenceId: string | null;
+            /** Format: uuid */
             recordedBy: string;
             note: string | null;
             createdAt: string;
         };
         /** @enum {string} */
-        CustomerCreditTransactionType: "credit_sale" | "repayment";
+        CustomerCreditTransactionType: "credit_sale" | "credit_refund" | "repayment";
         CustomerCreditRepaymentResponse: {
             transaction: components["schemas"]["CustomerCreditTransaction"];
             balance: string;
@@ -8373,10 +9153,6 @@ export interface components {
             /** Format: email */
             email?: string;
         };
-        ShiftHistoryEntry: components["schemas"]["Shift"] & {
-            staffName: string | null;
-            terminalName: string | null;
-        };
         Shift: {
             /** Format: uuid */
             id: string;
@@ -8389,6 +9165,13 @@ export interface components {
             countedCash: string | null;
             variance: string | null;
             closedAt: string | null;
+            /** Format: uuid */
+            clientShiftId?: string | null;
+            replayed?: boolean;
+        };
+        ShiftHistoryEntry: components["schemas"]["Shift"] & {
+            staffName: string | null;
+            terminalName: string | null;
         };
         CurrentShift: {
             terminal: components["schemas"]["Terminal"] | null;
@@ -8411,6 +9194,8 @@ export interface components {
             activeCashierName?: string | null;
         };
         OpenShiftRequest: {
+            /** Format: uuid */
+            clientShiftId?: string;
             startingCash?: string;
             /** Format: uuid */
             terminalId?: string;
@@ -8423,6 +9208,7 @@ export interface components {
             cardSalesTotal: string;
             upiSalesTotal: string;
             checkSalesTotal: string;
+            creditSalesTotal: string;
             refundsTotal: string;
             saleCount: number;
         };
@@ -8570,6 +9356,9 @@ export interface components {
              * @enum {string}
              */
             cashMode: "cash" | "none";
+        };
+        PairedTerminal: components["schemas"]["Terminal"] & {
+            deviceToken: string;
         };
         UpdateTerminalRequest: {
             name?: string;
@@ -8792,6 +9581,9 @@ export interface components {
             totalCost: string;
             lines: components["schemas"]["PurchaseOrderLine"][];
             createdAt: string;
+            /** Format: uuid */
+            clientPurchaseOrderId?: string | null;
+            replayed?: boolean;
         };
         /** @enum {string} */
         PurchaseOrderStatus: "draft" | "sent" | "partial" | "received" | "cancelled";
@@ -8802,12 +9594,14 @@ export interface components {
             variantId: string;
             sku: string;
             productName: string;
-            quantityOrdered: number;
-            quantityReceived: number;
+            quantityOrdered: string;
+            quantityReceived: string;
             unitCost: string;
             lineTotal: string;
         };
         CreatePurchaseOrderRequest: {
+            /** Format: uuid */
+            clientPurchaseOrderId?: string;
             /** Format: uuid */
             supplierId: string;
             /** Format: date */
@@ -8835,8 +9629,8 @@ export interface components {
                 /** Format: uuid */
                 purchaseOrderLineId: string;
                 sku: string;
-                quantityOrdered: number;
-                quantityReceived: number;
+                quantityOrdered: string;
+                quantityReceived: string;
             }[];
             purchaseOrder: components["schemas"]["PurchaseOrder"];
         };
@@ -8847,8 +9641,8 @@ export interface components {
             lines: {
                 /** Format: uuid */
                 purchaseOrderLineId: string;
-                quantityReceived: number;
-                unitCost?: number;
+                quantityReceived: string;
+                unitCost?: string;
             }[];
         };
         ReorderSuggestionList: {

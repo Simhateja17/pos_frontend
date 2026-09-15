@@ -55,7 +55,7 @@ function money(minor: number, currency: string, region: Region): string {
   }).format(minor / 100)
 }
 
-async function loadCheckoutScript(scriptError: string, unavailable: string): Promise<void> {
+export async function loadCheckoutScript(scriptError: string, unavailable: string): Promise<void> {
   if (window.Razorpay) return
   await new Promise<void>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay-checkout]')
