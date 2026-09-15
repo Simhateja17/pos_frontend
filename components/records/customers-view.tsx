@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { Card, CardHead, DataTable, Modal, PageHead, SearchField } from '@/components/couture/ui'
 import { EmptyState, ErrorState, LoadingState } from '@/components/couture/states'
@@ -20,6 +20,7 @@ import { useT } from '@/lib/i18n/i18n'
 export function CustomersView() {
   const { appPath, dateLocale } = useAppRegion()
   const t = useT()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const [data, setData] = useState<CustomerList | null>(null)
@@ -114,14 +115,22 @@ export function CustomersView() {
         {!loading && !error && data && data.items.length > 0 && (
           <DataTable cols={[t('records.customers.cols.customer'), t('records.customers.cols.phone'), t('records.customers.cols.email'), t('records.customers.cols.gstin'), t('records.customers.cols.created'), t('records.customers.cols.profile')]} minWidth={900}>
             {data.items.map((customer) => (
-              <tr key={customer.id}>
+              <tr
+                key={customer.id}
+                style={{ cursor: 'pointer' }}
+                onClick={() => router.push(appPath(`/app/customers/${customer.id}`))}
+              >
                 <td className="t-strong">{customer.billingName ?? customer.name ?? t('records.customers.unnamed')}</td>
                 <td className="t-mono t-sub">{customer.phone ?? '-'}</td>
                 <td className="t-sub">{customer.email ?? '-'}</td>
                 <td className="t-mono t-sub">{customer.gstin ?? '-'}</td>
                 <td className="t-mono t-sub">{new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(new Date(customer.createdAt))}</td>
                 <td>
-                  <Link className="btn btn-sm" href={appPath(`/app/customers/${customer.id}`)}>
+                  <Link
+                    className="btn btn-sm"
+                    href={appPath(`/app/customers/${customer.id}`)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {t('records.customers.viewProfile')}
                   </Link>
                 </td>

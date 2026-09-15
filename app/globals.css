@@ -676,7 +676,10 @@
     /* The card-h "right" slot is a flex row of filters (search + selects) built
        inline by the screens; it must be allowed to wrap here. */
     .card-h > div{flex-wrap:wrap;min-width:0}
-    .card-h .search{flex:1 1 180px}
+    /* .search's row-layout flex-basis (set above for desktop) would be read as a
+       height basis once .card-h switches to column here, stretching the box
+       and detaching its icon from the input. Reset it to a plain full-width block. */
+    .card-h .search{flex:1 1 auto;width:100%}
 
     .spot-grid{grid-template-columns:minmax(0,1fr)}
     .pay-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
