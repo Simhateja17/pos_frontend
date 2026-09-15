@@ -310,6 +310,11 @@ export const inventory = {
     qr: 'QR code',
     print: 'లేబుల్స్ ప్రింట్ చేయండి',
     barcodeLabelAria: '{name} బార్‌కోడ్ లేబుల్',
+    labelSize: 'లేబుల్ సైజ్',
+    customSize: 'కస్టమ్ సైజ్',
+    widthMm: 'వెడల్పు (mm)',
+    heightMm: 'ఎత్తు (mm)',
+    labelSizeHint: 'ఈ కౌంటర్ ప్రింటర్‌లో ఉన్న స్టిక్కర్ రోల్ సైజ్‌ని ఎంచుకోండి. ఈ డివైస్‌లో సేవ్ అవుతుంది. ప్రింట్ డైలాగ్‌లో margins "None", scale 100% ఉంచండి.',
   },
   detail: {
     backToCatalog: 'కాటలాగ్‌కు తిరిగి వెళ్లండి',

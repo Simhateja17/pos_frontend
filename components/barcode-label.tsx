@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import JsBarcode from 'jsbarcode'
 import QRCode from 'qrcode'
 import { useT } from '@/lib/i18n/i18n'
+import { DEFAULT_LABEL_SIZE, type LabelSize } from '@/lib/label-sizes'
 
 /**
  * Label symbology, mirroring tenants.barcode_label_format (migration 0050).
@@ -53,6 +54,7 @@ export function BarcodeLabel({
   price,
   barcode = null,
   format = 'code128',
+  size = DEFAULT_LABEL_SIZE,
   onFallback,
 }: {
   sku: string
@@ -61,6 +63,8 @@ export function BarcodeLabel({
   /** Manufacturer EAN/UPC, when the variant carries one. */
   barcode?: string | null
   format?: BarcodeLabelFormat
+  /** Physical label stock; the label renders at exactly this size. */
+  size?: LabelSize
   /** Called when this variant could not be rendered in the selected format. */
   onFallback?: (sku: string) => void
 }) {
@@ -98,15 +102,36 @@ export function BarcodeLabel({
       width: 2,
       height: 40,
       displayValue: false, // SKU/name rendered separately below per D-05 layout
-      margin: 4,
+      margin: 10, // quiet zone: scanners need blank space either side of the bars
     })
+    // JsBarcode writes fixed pixel width/height. Swap them for a viewBox so the
+    // symbol scales to the label: uniform horizontal scaling keeps bar ratios
+    // intact, which is all a 1D scanner needs.
+    const svg = svgRef.current
+    const w = svg.getAttribute('width')
+    const h = svg.getAttribute('height')
+    if (w && h) {
+      svg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`)
+      svg.setAttribute('preserveAspectRatio', 'none')
+      svg.removeAttribute('width')
+      svg.removeAttribute('height')
+    }
   }, [encoding.format, encoding.value])
 
+  // Type scales with label height so a 25mm sticker and a 150mm shipping
+  // label both stay legible without overflowing.
+  const namePt = Math.min(14, Math.max(6, size.heightMm * 0.26))
+  const pricePt = Math.min(22, Math.max(8, size.heightMm * 0.36))
+
   return (
-    <div className="label" aria-label={t('inventory.labels.barcodeLabelAria', { name })}>
+    <div
+      className="label"
+      aria-label={t('inventory.labels.barcodeLabelAria', { name })}
+      style={{ width: `${size.widthMm}mm`, height: `${size.heightMm}mm` }}
+    >
       {encoding.format === 'qr' ? <canvas ref={canvasRef} /> : <svg ref={svgRef} />}
-      <div className="label-name">{name}</div>
-      <div className="label-price">{price}</div>
+      <div className="label-name" style={{ fontSize: `${namePt}pt` }}>{name}</div>
+      <div className="label-price" style={{ fontSize: `${pricePt}pt` }}>{price}</div>
     </div>
   )
 }

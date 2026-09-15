@@ -308,6 +308,11 @@ export const inventory = {
     qr: 'QR code',
     print: 'Print labels',
     barcodeLabelAria: '{name} barcode label',
+    labelSize: 'Label size',
+    customSize: 'Custom size',
+    widthMm: 'Width (mm)',
+    heightMm: 'Height (mm)',
+    labelSizeHint: 'Match the sticker roll in this counter’s printer. Saved on this device. In the print dialog, keep margins at None and scale at 100%.',
   },
   detail: {
     backToCatalog: 'Back to catalog',

@@ -818,65 +818,69 @@
    the physical size (see labels page, plan 08); this block governs the
    actual browser print output only. */
 .label {
-  width: 2in;
-  height: 1in;
-  padding: 4px;
+  /* width/height come inline from the chosen label stock (lib/label-sizes.ts) */
+  padding: 1.5mm 1.5mm 1mm;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+}
+/* The symbol takes whatever height the text leaves over, at full label width. */
+.label svg {
+  display: block;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.label canvas {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 0;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
 }
 .label-name {
   font-family: Inter, sans-serif;
-  font-weight: 700;
-  font-size: 9pt; /* print-only exception per UI-SPEC: Sora not guaranteed crisp at thermal-print resolution */
+  font-weight: 700; /* print-only exception per UI-SPEC: Sora not guaranteed crisp at thermal-print resolution */
+  line-height: 1.15;
+  max-width: 100%;
+  text-align: center;
+  /* Long variant names truncate instead of spilling past the sticker edge. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .label-price {
   font-family: Inter, sans-serif;
   font-weight: 700;
-  font-size: 11pt;
+  line-height: 1.15;
 }
+/* One label per page. The page size itself is injected per print job by
+   react-to-print's pageStyle (labelPageStyle), so it always matches the
+   selected stock. The earlier named-page approach was silently ignored on an
+   absolutely positioned container and printed on A4. */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  .label-sheet,
-  .label-sheet * {
-    visibility: visible;
-  }
   .label-sheet {
-    position: absolute;
-    top: 0;
-    left: 0;
-    /* Named page: this file also defines an @page rule for .receipt-print at
-       80mm. Two unnamed @page rules in the same print job collide and Chrome
-       falls back to the system default paper size for both, which is what
-       broke the receipt's page size. Binding each printable block to its own
-       named page keeps them independent. */
-    page: label;
-    /* Undo the sr-only clipping (width:1px/height:1px/clip-path/overflow)
-       used to hide this container on screen — otherwise it stays visually
-       clamped to a 1px box even once visibility is toggled back on. */
+    position: static;
     width: auto;
     height: auto;
     margin: 0;
     overflow: visible;
     clip-path: none;
-    /* Two labels per row */
-    display: grid;
-    grid-template-columns: repeat(2, 2in);
+    white-space: normal;
   }
-  .label {
-    page-break-inside: avoid;
+  .label-sheet .label {
+    break-inside: avoid;
+    break-after: page;
   }
-  /* Break after every second label (end of a row), not every label. */
-  .label:nth-child(2n) {
-    page-break-after: always;
-  }
-  @page label {
-    size: 4in 1in;
-    margin: 0;
+  .label-sheet .label:last-child {
+    break-after: auto;
   }
 }
 

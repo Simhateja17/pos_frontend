@@ -11,6 +11,11 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/couture/state
 import { BarcodeLabel, type BarcodeLabelFormat } from '@/components/barcode-label'
 import { money } from '@/lib/region'
 import { useT, type MessageKey } from '@/lib/i18n/i18n'
+import { LABEL_SIZE_LIMITS, LABEL_SIZE_PRESETS, labelPageStyle, presetIdFor, useLabelSize } from '@/lib/label-sizes'
+
+// 96 CSS px per inch; preview is capped so a 4×6in label still fits the card.
+const MM_TO_PX = 96 / 25.4
+const PREVIEW_MAX_WIDTH_PX = 380
 
 type Variant = {
   id: string
@@ -75,8 +80,19 @@ function LabelsPageContent() {
     setFellBack((prev) => (prev.has(sku) ? prev : new Set(prev).add(sku)))
   }, [])
 
+  const [labelSize, setLabelSize] = useLabelSize()
+  const [customOpen, setCustomOpen] = useState(false)
+  const activePresetId = customOpen ? null : presetIdFor(labelSize)
+  const previewZoom = Math.min(2, PREVIEW_MAX_WIDTH_PX / (labelSize.widthMm * MM_TO_PX))
+
   const contentRef = useRef<HTMLDivElement>(null)
-  const handlePrint = useReactToPrint({ contentRef })
+  const handlePrint = useReactToPrint({ contentRef, pageStyle: labelPageStyle(labelSize) })
+
+  function setCustomDimension(key: 'widthMm' | 'heightMm', raw: string) {
+    const value = Number(raw)
+    if (!Number.isFinite(value)) return
+    setLabelSize({ ...labelSize, [key]: value })
+  }
 
   const loadVariants = useCallback(async () => {
     setIsLoading(true)
@@ -229,6 +245,49 @@ function LabelsPageContent() {
           sub={labelFormat ? t('inventory.labels.printingAs', { format: formatLabel(labelFormat) }) : undefined}
         />
         <CardPad>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', marginBottom: 8 }}>
+            <label className="fld" style={{ marginBottom: 0, minWidth: 220 }}>
+              <span>{t('inventory.labels.labelSize')}</span>
+              <select
+                value={activePresetId ?? 'custom'}
+                onChange={(e) => {
+                  const preset = LABEL_SIZE_PRESETS.find((p) => p.id === e.target.value)
+                  setCustomOpen(!preset)
+                  if (preset) setLabelSize(preset.size)
+                }}
+              >
+                {LABEL_SIZE_PRESETS.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+                <option value="custom">{t('inventory.labels.customSize')}</option>
+              </select>
+            </label>
+            {activePresetId === null && (
+              <>
+                <label className="fld" style={{ marginBottom: 0, width: 120 }}>
+                  <span>{t('inventory.labels.widthMm')}</span>
+                  <input
+                    type="number"
+                    min={LABEL_SIZE_LIMITS.min}
+                    max={LABEL_SIZE_LIMITS.max}
+                    value={labelSize.widthMm}
+                    onChange={(e) => setCustomDimension('widthMm', e.target.value)}
+                  />
+                </label>
+                <label className="fld" style={{ marginBottom: 0, width: 120 }}>
+                  <span>{t('inventory.labels.heightMm')}</span>
+                  <input
+                    type="number"
+                    min={LABEL_SIZE_LIMITS.min}
+                    max={LABEL_SIZE_LIMITS.max}
+                    value={labelSize.heightMm}
+                    onChange={(e) => setCustomDimension('heightMm', e.target.value)}
+                  />
+                </label>
+              </>
+            )}
+          </div>
+          <p className="t-sub" style={{ marginBottom: 16 }}>{t('inventory.labels.labelSizeHint')}</p>
           {selectedRows.length === 0 ? (
             <p className="t-sub">{t('inventory.labels.selectHint')}</p>
           ) : (
@@ -238,15 +297,16 @@ function LabelsPageContent() {
                   {t(fellBack.size === 1 ? 'inventory.labels.fallbackOne' : 'inventory.labels.fallbackMany', { count: fellBack.size, format: formatLabel(labelFormat) })}
                 </p>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, max-content)', gap: '24px 48px', alignItems: 'start' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
                 {selectedRows.map((row) => (
-                  <div key={row.variant.id} style={{ transform: 'scale(2)', transformOrigin: 'top left', width: '2in', height: '1in' }}>
+                  <div key={row.variant.id} style={{ zoom: previewZoom, outline: '1px dashed var(--border)' }}>
                     <BarcodeLabel
                       sku={row.variant.sku}
                       name={variantDisplayName(row)}
                       price={money(row.variant.price)}
                       barcode={row.variant.barcode}
                       format={labelFormat ?? 'code128'}
+                      size={labelSize}
                       onFallback={noteFallback}
                     />
                   </div>
@@ -269,6 +329,7 @@ function LabelsPageContent() {
             price={money(row.variant.price)}
             barcode={row.variant.barcode}
             format={labelFormat ?? 'code128'}
+            size={labelSize}
           />
         ))}
       </div>
