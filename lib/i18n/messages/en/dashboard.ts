@@ -50,6 +50,7 @@ export const dashboard = {
     lowSub: '{sku} · {quantity} remaining · reorder at {threshold}',
     registerOpen: 'Register is open',
     registerSub: 'Opened {date} · review the current shift',
+    showMore: 'Show more ({count})',
   },
   reorder: {
     title: 'Products to order',

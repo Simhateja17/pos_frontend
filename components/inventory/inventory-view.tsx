@@ -342,7 +342,7 @@ export function InventoryView() {
         )}
       </Card>
 
-      <div ref={exceptionsRef} style={{ scrollMarginTop: 16 }}>
+      <div ref={exceptionsRef} className="gap-block" style={{ scrollMarginTop: 16 }}>
         <Card>
           <CardHead
             title={

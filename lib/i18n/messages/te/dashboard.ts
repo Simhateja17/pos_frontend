@@ -50,6 +50,7 @@ export const dashboard = {
     lowSub: '{sku} · {quantity} మిగిలాయి · {threshold} వద్ద రీఆర్డర్',
     registerOpen: 'రిజిస్టర్ తెరిచి ఉంది',
     registerSub: '{date} న తెరిచారు · ప్రస్తుత షిఫ్ట్ చూడండి',
+    showMore: 'మరిన్ని చూడండి ({count})',
   },
   reorder: {
     title: 'ఆర్డర్ చేయాల్సిన ప్రొడక్ట్‌లు',

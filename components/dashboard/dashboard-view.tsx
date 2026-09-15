@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react'
-import { Boxes, PackageOpen, RotateCcw, Sparkle, Zap } from 'lucide-react'
+import { Boxes, PackageOpen, Sparkle, Zap } from 'lucide-react'
 import {
   type Dashboard,
   type DashboardRange,
@@ -12,6 +12,7 @@ import {
   getAuthenticatedReorderSuggestions,
 } from '@/lib/api/authenticated-client'
 import { Badge, Card, CardHead, CardPad, KpiRow, ListRow, PageHead, Seg, Split2, type KpiItem } from '@/components/couture/ui'
+import { ActionableItemRow } from '@/components/dashboard/action-center-row'
 import { SetupPrompt } from '@/components/onboarding/setup-prompt'
 import { EmptyState, ErrorState, InlineLoader, KpiSkeleton, LoadingState, UnavailableValue } from '@/components/couture/states'
 import { useAppRegion } from '@/lib/app-region'
@@ -391,10 +392,14 @@ function RevenueChart({ points }: { points: { date: string; amount: string }[] }
   )
 }
 
+const ACTION_CENTER_PREVIEW_COUNT = 5
+
 function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
-  const { shortDate: dateLabel, appPath } = useAppRegion()
+  const { appPath } = useAppRegion()
   const t = useT()
   const items = dashboard.actionable.items
+  const visible = items.slice(0, ACTION_CENTER_PREVIEW_COUNT)
+  const remaining = items.length - visible.length
 
   return (
     <Card style={{ display: 'flex', flexDirection: 'column' }}>
@@ -412,35 +417,18 @@ function ActionCenter({ dashboard }: { dashboard: Dashboard }) {
           <EmptyState title={t('dashboard.actions.emptyTitle')} body={t('dashboard.actions.emptyBody')} />
         </CardPad>
       ) : (
-        <CardPad style={{ paddingTop: 4, flex: 1 }}>
-          {items.map((item) =>
-            item.type === 'low_stock' ? (
-              <ListRow
-                key={item.variantId}
-                tone="red"
-                icon={<Boxes size={17} strokeWidth={1.85} />}
-                title={t('dashboard.actions.lowTitle', { product: item.productName })}
-                sub={t('dashboard.actions.lowSub', { sku: item.sku, quantity: item.quantity, threshold: item.reorderThreshold })}
-                action={
-                  <Link className="btn btn-sm btn-ghost" href={appPath('/app/inventory')}>
-                    {t('common.review')}
-                  </Link>
-                }
-              />
-            ) : (
-              <ListRow
-                key={item.shiftId}
-                tone="amber"
-                icon={<RotateCcw size={17} strokeWidth={1.85} />}
-                title={t('dashboard.actions.registerOpen')}
-                sub={t('dashboard.actions.registerSub', { date: dateLabel(item.openedAt) })}
-                action={
-                  <Link className="btn btn-sm btn-ghost" href={appPath('/app/shifts')}>
-                    {t('common.open')}
-                  </Link>
-                }
-              />
-            ),
+        <CardPad style={{ paddingTop: 4 }}>
+          {visible.map((item) => (
+            <ActionableItemRow key={item.type === 'low_stock' ? item.variantId : item.shiftId} item={item} />
+          ))}
+          {remaining > 0 && (
+            <Link
+              className="btn btn-sm btn-ghost"
+              href={appPath('/app/action-center')}
+              style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}
+            >
+              {t('dashboard.actions.showMore', { count: remaining })}
+            </Link>
           )}
         </CardPad>
       )}
