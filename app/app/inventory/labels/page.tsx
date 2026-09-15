@@ -174,7 +174,7 @@ function LabelsPageContent() {
           <CardPad style={{ paddingBottom: 0 }}>
             <input
               type="search"
-              className="input"
+              className="fld-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('inventory.labels.searchPlaceholder')}
