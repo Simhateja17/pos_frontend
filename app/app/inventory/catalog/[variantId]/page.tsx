@@ -58,7 +58,7 @@ type StockMovement = {
   id: string
   variantId: string
   movementType: 'sale' | 'receive' | 'adjustment' | 'return' | 'transfer'
-  quantityDelta: number
+  quantityDelta: string
   reasonCode: 'damage' | 'shrinkage_theft' | 'count_correction' | 'other' | null
   reasonNote: string | null
   createdBy: string | null
@@ -731,7 +731,7 @@ export default function VariantDetailPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Badge tone="grey">{movementTypeLabel(t, movement.movementType)}</Badge>
                       <span style={{ fontWeight: 700 }}>
-                        {movement.quantityDelta > 0 ? `+${movement.quantityDelta}` : movement.quantityDelta}
+                        {Number(movement.quantityDelta) > 0 ? `+${movement.quantityDelta}` : movement.quantityDelta}
                       </span>
                       {movement.reasonCode && <span className="t-sub">{t(`inventory.detail.reasons.${movement.reasonCode === 'shrinkage_theft' ? 'shrinkageTheft' : movement.reasonCode === 'count_correction' ? 'countCorrection' : movement.reasonCode}` as MessageKey)}</span>}
                     </div>

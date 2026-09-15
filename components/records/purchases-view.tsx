@@ -165,7 +165,7 @@ export function PurchasesView() {
     // field stays editable, because partial delivery is normal.
     setReceiptQty(
       Object.fromEntries(
-        po.lines.map((l) => [l.id, String(Math.max(0, l.quantityOrdered - l.quantityReceived))]),
+        po.lines.map((l) => [l.id, String(Math.max(0, Number(l.quantityOrdered) - Number(l.quantityReceived)))]),
       ),
     )
     setReceiptCost(Object.fromEntries(po.lines.map((l) => [l.id, l.unitCost])))
@@ -179,10 +179,10 @@ export function PurchasesView() {
     const lines = receiving.lines
       .map((l) => ({
         purchaseOrderLineId: l.id,
-        quantityReceived: Number(receiptQty[l.id] || 0),
-        unitCost: receiptCost[l.id] ? Number(receiptCost[l.id]) : undefined,
+        quantityReceived: receiptQty[l.id] || '0',
+        unitCost: receiptCost[l.id] || undefined,
       }))
-      .filter((l) => l.quantityReceived > 0)
+      .filter((l) => Number(l.quantityReceived) > 0)
 
     if (lines.length === 0) {
       setReceiptError(t('records.errors.purchaseReceiveQuantity'))
@@ -322,8 +322,8 @@ export function PurchasesView() {
             minWidth={940}
           >
             {visible.map((po) => {
-              const ordered = po.lines.reduce((s, l) => s + l.quantityOrdered, 0)
-              const received = po.lines.reduce((s, l) => s + l.quantityReceived, 0)
+              const ordered = po.lines.reduce((s, l) => s + Number(l.quantityOrdered), 0)
+              const received = po.lines.reduce((s, l) => s + Number(l.quantityReceived), 0)
               return (
                 <tr key={po.id}>
                   <td className="t-mono t-strong">{po.poNumber}</td>
