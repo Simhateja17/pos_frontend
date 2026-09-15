@@ -165,13 +165,12 @@ export function PaymentMethodGrid({
 
             {(row.method === 'card' || row.method === 'upi') && (
               <label className="fld" style={{ marginTop: 10, marginBottom: 0 }}>
-                <span>{row.method === 'upi' ? t('checkout.pay.upiRef') : t('checkout.pay.approvalCode')}</span>
+                <span>{row.method === 'upi' ? t('checkout.pay.upiRef') : t('checkout.pay.approvalCode')} <em style={{ fontStyle: 'normal', fontWeight: 500, color: 'var(--muted-2)' }}>{t('checkout.pay.optional')}</em></span>
                 <input
                   value={row.referenceCode ?? ''}
                   disabled={disabled}
                   onChange={(e) => onRowChange(index, { ...row, referenceCode: e.target.value })}
                   placeholder={row.method === 'upi' ? t('checkout.pay.upiPlaceholder') : t('checkout.pay.cardPlaceholder')}
-                  required
                 />
               </label>
             )}
