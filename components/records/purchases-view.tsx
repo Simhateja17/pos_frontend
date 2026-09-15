@@ -120,8 +120,8 @@ export function PurchasesView() {
       .filter((l) => l.variantId && l.quantityOrdered)
       .map((l) => ({
         variantId: l.variantId,
-        quantityOrdered: Number(l.quantityOrdered),
-        unitCost: Number(l.unitCost || 0),
+        quantityOrdered: String(Number(l.quantityOrdered)),
+        unitCost: String(Number(l.unitCost || 0)),
       }))
     if (lines.length === 0) {
       setCreateError(t('records.errors.purchaseItem'))

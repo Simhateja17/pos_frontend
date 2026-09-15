@@ -88,7 +88,11 @@ export function SaleDetailView({ saleId }: { saleId: string }) {
   const dateTime = new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
   const metrics: KpiItem[] = [
     { label: t('records.saleDetail.status'), value: <Badge tone={statusTone}>{enumLabel(t, 'status', sale.status)}</Badge>, meta: t('records.saleDetail.serverStatus') },
-    { label: t('records.saleDetail.recorded'), value: dateTime.format(new Date(sale.createdAt)), meta: t('records.saleDetail.serverTimestamp') },
+    {
+      label: t('records.saleDetail.recorded'),
+      value: <span style={{ fontSize: 15, whiteSpace: 'normal' }}>{dateTime.format(new Date(sale.createdAt))}</span>,
+      meta: t('records.saleDetail.serverTimestamp'),
+    },
     { label: t('records.saleDetail.items'), value: String(itemCount), meta: `${sale.lines.length} ${sale.lines.length === 1 ? t('records.saleDetail.itemOne') : t('records.saleDetail.itemMany')}` },
     { label: t('records.saleDetail.total'), value: money(Number(sale.totalAmount)), meta: t('records.saleDetail.serverTotal'), lead: true },
   ]

@@ -230,6 +230,12 @@
   /* grid helpers */
   .grid{display:grid;gap:16px}
   .split-2{display:grid;grid-template-columns:minmax(0,1fr) var(--split-aside,360px);gap:18px;align-items:stretch;margin-bottom:18px}
+  /* Cards in a split-2 pair (e.g. bill lines / payment records) should read as
+     one matched set: stretch each card to the row's height and let its last
+     child (the table wrapper or empty state) absorb the extra space, instead
+     of the shorter card's border stopping short of its neighbour. */
+  .split-2 > .card{display:flex;flex-direction:column}
+  .split-2 > .card > :last-child{flex:1 1 auto}
   /* descendant (not direct-child) so cards still get a gap when a page wraps
      them in a <form> or other non-.content element, e.g. catalog/new.
      .split-2/.gap-block are not on the left side here: they already carry
