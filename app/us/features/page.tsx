@@ -32,7 +32,7 @@ export default function USFeaturesPage() {
           Built for modern retail
         </div>
         <h1>Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h1>
-        <p>Deeply-integrated modules designed around multi-jurisdiction sales tax, card-present payment rails, and the real complexity of omnichannel specialty retail.</p>
+        <p>Every feature on this page is built and working today. Nothing here is coming soon, and nothing is a placeholder.</p>
       </section>
 
       <section className="content-section">

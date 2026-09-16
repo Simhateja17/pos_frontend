@@ -4,8 +4,8 @@ import SiteFooter from "@/components/marketing/site-footer";
 import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
 
 export const metadata = {
-  title: "Features | Ambel POS",
-  description: "Billing, inventory, staff, loyalty, GST reporting and AI reorder intelligence in one POS, with catalogue-based demos for fashion, electronics, beauty and grocery retail.",
+  title: "Features | Billing Software for Retail Shops | Ambel POS",
+  description: "Billing, stock, suppliers, shifts and reorder advice in one system for retail shops. Everything listed is built and working today.",
 };
 
 function featBadges(b3: string, b4: string) {
@@ -28,8 +28,8 @@ export default function FeaturesPage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7z" /></svg>
           Built for Indian retail
         </div>
-        <h1>Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h1>
-        <p>{FEATURES.length} deeply-integrated modules, all designed around GST compliance, Indian payment rails, and the real complexity of multi-store retail.</p>
+        <h1>Everything the counter needs,<br /><em>and nothing it doesn&apos;t.</em></h1>
+        <p>Every feature on this page is built and working today. Nothing here is coming soon, and nothing is a placeholder.</p>
       </section>
 
       <section className="content-section">
@@ -49,7 +49,7 @@ export default function FeaturesPage() {
 
       <section className="cta-section">
         <h2>See it running<br />on your own catalog.</h2>
-        <p>Import your products in minutes and choose the plan that fits your active locations, users and registers. Running a <a href="/retail/grocery-supermarket" style={{ color: "#fff", textDecoration: "underline" }}>grocery or supermarket</a>, or another store type? See how it fits.</p>
+        <p>Send us your catalogue on WhatsApp and we put it in for you. Running a <a href="/retail/grocery-supermarket" style={{ color: "#fff", textDecoration: "underline" }}>grocery or supermarket</a>, or another kind of shop? See how it fits your counter.</p>
         <div className="cta-actions">
           <a className="btn-cta-w" href="/signup">Choose a plan</a>
           <a className="btn-cta-g" href="/app/dashboard">Explore prototype →</a>

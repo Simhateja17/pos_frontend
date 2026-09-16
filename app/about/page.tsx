@@ -4,13 +4,13 @@ import SiteFooter from "@/components/marketing/site-footer";
 
 export const metadata = {
   title: "About | Ambel POS",
-  description: "Ambel POS is built by a Bengaluru-based founding team to replace the patchwork of billing apps, spreadsheets and manual GST filing Indian retailers stitch together today.",
+  description: "Ambel POS is built by a Bengaluru-based founding team to replace the patchwork of billing apps, spreadsheets and manual GST filing that Indian retailers stitch together today.",
 };
 
 const VALUES = [
-  ["Built for Indian retail", "Every workflow, from GST and HSN codes to UPI settlement and DLT-compliant WhatsApp, is designed around how Indian retailers actually operate, not adapted from a Western template."],
-  ["Offline is not optional", "Internet drops. Billing shouldn't. Every core workflow works offline-first and syncs the moment connectivity returns."],
-  ["AI that shows its work", "Our Copilot proposes actions with the data behind them, and always asks before it touches your store."],
+  ["Built for Indian retail", "GST slabs, HSN codes, split payments across cash, card and UPI, and multi-shop stock are designed around how Indian retailers actually work, not adapted from a Western template."],
+  ["A dropped connection should not stop a sale", "Internet drops. Billing should not. If the line goes while the till is open, bills are saved on the counter machine and sent up the moment the connection returns."],
+  ["Advice that shows its working", "When we suggest a reorder quantity, we show the reasoning behind it. When we do not have enough sales history to be sure, we say so rather than putting up a number we cannot stand behind."],
   ["Ship with retailers, not at them", "Roadmap priorities come from store owners and cashiers using the product daily, not from a boardroom."],
 ];
 

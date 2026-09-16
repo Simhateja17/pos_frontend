@@ -4,9 +4,9 @@ import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   metadataBase: new URL("https://www.ambelpos.com"),
-  title: "Ambel POS — Point of Sale & Inventory Software for Retail",
+  title: "Billing Software for Retail Shops, GST Ready | Ambel POS",
   description:
-    "GST-native POS for Indian retail with guided WhatsApp catalogue setup, offline billing, multi-store inventory and AI-powered reorder forecasting.",
+    "GST billing software for retail shops. Keeps billing through a connection drop, tracks stock across shops, and tells you what to reorder. Send your catalogue on WhatsApp and we set it up.",
   applicationName: "Ambel POS",
   icons: {
     icon: [
@@ -19,15 +19,15 @@ export const metadata = {
   openGraph: {
     type: "website",
     siteName: "Ambel POS",
-    title: "Ambel POS — Point of Sale & Inventory Software for Retail",
+    title: "Billing Software for Retail Shops, GST Ready | Ambel POS",
     description:
-      "Retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting.",
+      "GST billing software for retail shops. Keeps billing through a connection drop, tracks stock across shops, and tells you what to reorder.",
   },
   twitter: {
     card: "summary",
-    title: "Ambel POS — Point of Sale & Inventory Software for Retail",
+    title: "Billing Software for Retail Shops, GST Ready | Ambel POS",
     description:
-      "Retail point-of-sale software with inventory management, multi-store support, and AI-powered reorder forecasting.",
+      "GST billing software for retail shops. Keeps billing through a connection drop, tracks stock across shops, and tells you what to reorder.",
   },
 };
 

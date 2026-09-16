@@ -87,13 +87,14 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
       ['How it works', '/#how'],
       ['Screens', '/#screens'],
       ['Pricing', '/pricing'],
+      ['Blog', '/blog'],
     ],
     loginHref: '/login',
     signupHref: '/signup',
     demoHref: 'https://calendly.com/ambelpos-support/30-minute-meeting-clone',
     appHref: '/app/dashboard',
     appLabel: 'Back to Billing',
-    tagline: "India's most complete retail suite: GST-native, AI-powered, offline-first.",
+    tagline: "Billing software for Indian retail shops: GST-ready, reorder advice, billing that survives a connection drop.",
     footerColumns: [
       [
         'Product',
@@ -120,13 +121,14 @@ export const REGION_SITE: Record<MarketingRegion, SiteLinks> = {
       ['How it works', '/#how'],
       ['Screens', '/#screens'],
       ['Pricing', '/us/pricing'],
+      ['Blog', '/us/blog'],
     ],
     loginHref: '/us/auth',
     signupHref: '/us/auth',
     demoHref: 'https://calendly.com/ambelpos-support/30min',
     appHref: '/us/dashboard',
     appLabel: 'Back to Checkout',
-    tagline: 'The complete retail suite: sales-tax-native, omnichannel, offline-first.',
+    tagline: 'A retail POS system that tells you what to reorder, and keeps selling through a connection drop.',
     footerColumns: [
       [
         'Product',

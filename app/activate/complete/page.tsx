@@ -11,7 +11,7 @@ export default function ActivationCompletePage() {
           Open Ambel POS
         </a>
         <p style={{ color: 'var(--muted)', marginTop: 14, fontSize: 13, lineHeight: 1.6 }}>
-          If the app doesn&apos;t open, switch to it and tap <strong>I&apos;ve paid — check again</strong>.
+          If the app doesn&apos;t open, switch to it and tap <strong>I&apos;ve paid, check again</strong>.
         </p>
       </div>
     </main>

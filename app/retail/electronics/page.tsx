@@ -3,7 +3,7 @@ import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
 
 export const metadata = {
   title: "Electronics POS | Ambel POS",
-  description: "Electronics POS with IMEI/serial capture at billing, warranty and AMC tracking, manager approval on high-value discounts, and EMI settlement matching.",
+  description: "Billing software for electronics shops. Barcode billing, stock across branches, suppliers and purchase orders, and advice on what to reorder.",
 };
 
 export default function Page() {
@@ -16,15 +16,15 @@ export default function Page() {
       stats={[
         ["₹799", "Starting plan, per month"],
         ["18%", "GST built into every bill"],
-        ["Offline", "Billing works without signal"],
+        ["No signal", "Billing carries on, syncs after"],
       ]}
       features={[
-        { title: "IMEI & Serial Capture", body: "Scan or enter serial/IMEI at the point of sale, automatically linked to the invoice for warranty claims." },
-        { title: "Warranty & AMC Tracking", body: "Track manufacturer warranty windows and AMC renewals per unit, with alerts before coverage lapses." },
-        { title: "High-value Approval Flow", body: "Manager approval gates for big-ticket discounts, protecting margin on high-value electronics." },
-        { title: "EMI & Card Settlement", body: "Reconcile EMI, card and UPI settlements against PSP reports with automatic UTR matching." },
-        { title: "Return & RMA Handling", body: "Log defective-unit returns against the original serial number and route to vendor RMA in one step." },
-        { title: "Multi-brand Catalog", body: "Organize SKUs by brand, model and variant with spec-sheet fields built for electronics." },
+        { title: "Barcode Billing", body: "Scan the box or search by model, with line-level GST and split payment across cash, card and UPI." },
+        { title: "Returns Against the Original Bill", body: "Pull up the original sale, reprint or re-send it, and process the return, refund or exchange against that bill." },
+        { title: "Roles for Staff and Owners", body: "Owners see everything. Staff see only what their role allows, enforced in the database, not just hidden in the screen." },
+        { title: "Shift and Cash Tally", body: "Opening cash, a mid-day check, a count at closing, and the shortfall or excess shown plainly for every counter session." },
+        { title: "Suppliers and Purchase Orders", body: "Supplier lead times feed the reorder advice directly. Raise an order and receive it in parts as the stock arrives." },
+        { title: "Capital Tied Up in Slow Stock", body: "Electronics ties up more money per unit than most retail. We tell you what is actually moving and what to reorder, and say plainly when an item is too new to judge." },
       ]}
     />
   );

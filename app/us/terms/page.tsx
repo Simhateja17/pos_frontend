@@ -28,7 +28,7 @@ export default function USTermsPage() {
           <h2>3. Your responsibilities</h2>
           <ul>
             <li>Keep your account credentials secure and restrict staff access using role-based permissions.</li>
-            <li>Ensure the tax data entered into the platform — tax jurisdictions, product taxability and exemption certificates — is accurate. Ambel POS assists with sales tax calculation and reporting but does not file returns on your behalf unless you use our filing add-on.</li>
+            <li>Ensure that the tax data entered into the platform is accurate, including tax jurisdictions, product taxability and exemption certificates. Ambel POS assists with sales tax calculation and reporting but does not file returns on your behalf unless you use our filing add-on.</li>
             <li>Do not use the platform for unlawful transactions or to circumvent tax obligations.</li>
           </ul>
 

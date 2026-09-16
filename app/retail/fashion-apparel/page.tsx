@@ -16,15 +16,15 @@ export default function Page() {
       stats={[
         ["₹799", "Starting plan, per month"],
         ["18%", "GST built into every bill"],
-        ["Offline", "Billing works without signal"],
+        ["No signal", "Billing carries on, syncs after"],
       ]}
       features={[
         { title: "Size × Colour Matrix", body: "Add a style once and generate every size/colour variant instantly, with per-variant stock, MRP and barcode." },
-        { title: "Season & Collection Tags", body: "Group SKUs by season, drop or collection for faster reordering and end-of-season markdown planning." },
+        { title: "Categories for Every Line", body: "Group styles into categories you name and reorder yourself, so the counter finds things the way your shop is actually laid out." },
         { title: "Barcode Label Printing", body: "One-click label runs for new stock, sized to your printer, with GST-compliant MRP and HSN codes." },
         { title: "Exchange & Size Swap", body: "Handle exchanges without refunding: swap size or colour on the same invoice with automatic stock adjustment." },
-        { title: "Lookbook-ready Catalog", body: "Attach photos per variant and publish straight to your online store and Instagram shop." },
-        { title: "Fashion-specific Reports", body: "Sell-through by style, size-curve analysis, and slow-mover alerts tuned for apparel cycles." },
+        { title: "Branches and Transfers", body: "Stock counted per branch, and transfers that record what was sent and what actually arrived separately, so nothing is counted twice." },
+        { title: "Reports You Can Open in Excel", body: "Sales by day, style, category and staff member, plus stock value and stock movement. Every one downloads as a spreadsheet." },
       ]}
     />
   );

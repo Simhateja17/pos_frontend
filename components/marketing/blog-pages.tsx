@@ -1,5 +1,11 @@
 import Link from 'next/link'
 import type { BlogPost } from '@/lib/marketing/blogs'
+import { ArticleBody } from '@/components/marketing/article-blocks'
+
+/** Rough reading time; 220 wpm is the usual editorial estimate for prose. */
+function readingMinutes(body: string) {
+  return Math.max(1, Math.round(body.trim().split(/\s+/).length / 220))
+}
 
 function formatDate(value: string, region: 'IN' | 'INTL') {
   return new Intl.DateTimeFormat(region === 'IN' ? 'en-IN' : 'en-US', { dateStyle: 'medium' }).format(new Date(value))
@@ -21,12 +27,8 @@ export function BlogIndex({ posts, region }: { posts: BlogPost[]; region: 'IN' |
 export function BlogArticle({ post, region }: { post: BlogPost; region: 'IN' | 'INTL' }) {
   return <article className="article-shell">
     <Link className="article-back" href={region === 'IN' ? '/blog' : '/us/blog'}>← All articles</Link>
-    <header className="article-header"><div className="blog-cat">{post.category}</div><h1>{post.title}</h1><p>{post.excerpt}</p><div className="blog-meta">{formatDate(post.publishedAt, region)} · {post.authorName}</div></header>
+    <header className="article-header"><div className="blog-cat">{post.category}</div><h1>{post.title}</h1><p>{post.excerpt}</p><div className="blog-meta">{formatDate(post.publishedAt, region)} · {post.authorName} · {readingMinutes(post.body)} min read</div></header>
     {post.coverImageUrl && <img className="article-cover" src={post.coverImageUrl} alt="" />}
-    <div className="article-body">{post.body.split(/\n{2,}/).map((block, index) => {
-      if (block.startsWith('## ')) return <h2 key={index}>{block.slice(3)}</h2>
-      if (block.startsWith('### ')) return <h3 key={index}>{block.slice(4)}</h3>
-      return <p key={index}>{block}</p>
-    })}</div>
+    <ArticleBody body={post.body} />
   </article>
 }

@@ -43,7 +43,7 @@ export default function CareersPage() {
       <section className="content-section">
         <div className="content-wrap" style={{ maxWidth: 860, marginBottom: 8 }}>
           <h2 className="section-h" style={{ maxWidth: "none" }}>How hiring works here.</h2>
-          <p>We hire in person, not against a fixed requisition list. If you have backend, frontend, ML/forecasting, or retail-operations experience and want to work on GST-native billing, offline-first stock ledgers, or reorder intelligence for Indian retailers, send us a note about what you&apos;d want to build and why this problem interests you.</p>
+          <p>We hire in person, not against a fixed requisition list. If you have backend, frontend, ML/forecasting, or retail-operations experience and want to work on GST-native billing, stock records that survive a dropped connection, or reorder intelligence for Indian retailers, send us a note about what you&apos;d want to build and why this problem interests you.</p>
         </div>
         <p style={{ textAlign: "center", marginTop: 24, color: "var(--muted)", fontSize: 14.5 }}>
           Write to us at <a href="mailto:support@ambelpos.com" style={{ color: "var(--brand-1)" }}>support@ambelpos.com</a>.

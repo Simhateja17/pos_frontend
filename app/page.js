@@ -11,7 +11,7 @@ import { FEAT_ICONS, FEATURES } from "@/components/marketing/features-data";
 import { PricingPeriod } from "@/components/marketing/pricing-period";
 import { REGION_SITE } from "@/components/marketing/site-links";
 
-const MOCK_SB = ["Dashboard", "Billing", "Sales / Bills", "Inventory", "Customers", "Staff", "Payments", "Reports", "Analytics"];
+const MOCK_SB = ["Dashboard", "Billing", "Reorder advice", "Inventory", "Purchases", "Transfers", "Shifts", "Returns", "Reports"];
 const MOCK_KPI = [
   ["Today Sales", "₹4.84 L", true],
   ["Bills", "342", false],
@@ -19,37 +19,31 @@ const MOCK_KPI = [
   ["Margin", "37.4%", false],
 ];
 const MOCK_LIST = [
-  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "INV-24850", who: "Anika Kapoor · UPI", amt: "₹4,280" },
-  { bg: "#FEF3E0", color: "#B45309", bill: "INV-24849", who: "Walk-in · Cash", amt: "₹1,240" },
-  { bg: "#ECFDF5", color: "#0f8f63", bill: "INV-24848", who: "Rohit Mehra · Card", amt: "₹8,650" },
+  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "INV-24850", who: "UPI · 3 items", amt: "₹4,280" },
+  { bg: "#FEF3E0", color: "#B45309", bill: "INV-24849", who: "Cash · 1 item", amt: "₹1,240" },
+  { bg: "#ECFDF5", color: "#0f8f63", bill: "INV-24848", who: "Card · 7 items", amt: "₹8,650" },
 ];
 const MOCK_BARS = [38, 52, 44, 68, 60, 72, 58, 80, 70, 76];
 
 const STEPS = [
-  ["Business\nProfile", "Set your GSTIN, invoice header & store branding"],
-  ["GST &\nTax Setup", "Map HSN/SAC codes, configure slabs & round-off"],
-  ["Import\nCatalog", "CSV import or manual: 408 products in 4 minutes"],
-  ["Pair\nHardware", "Printer, scanner & cash drawer paired in one screen"],
-  ["First\nSale", "Run a test bill, verify the Tax Invoice, open for the day"],
+  ["Shop\ndetails", "Your GSTIN, shop name and what should print on the bill"],
+  ["Send your\ncatalogue", "Photos, supplier bills, an Excel file or a handwritten list on WhatsApp"],
+  ["Check\nyour stock", "We load it in; you confirm the counts and prices are right"],
+  ["Connect\nprinter", "Printer and barcode scanner, checked with a test print and a test scan"],
+  ["First\nbill", "Run one test bill, look at the GST on it, and open the counter"],
 ];
 
 const GALLERY = [
-  ["Dashboard", "#0A2348", "Sales overview, KPIs, action center, AI suggestions"],
-  ["Billing", "#06337A", "Cart, search, loyalty, payment, GST, all in one screen"],
-  ["Inventory", "#1A3A5C", "Stock matrix, variants, expiry, smart reorder"],
-  ["Analytics", "#0E2642", "Footfall, margin, Prophet forecast, anomaly detection"],
-  ["Customers", "#0A2348", "CRM, loyalty tiers, gift cards, WhatsApp campaigns"],
-  ["Payments", "#06337A", "PSP settlement, UTR match, failed payment queue"],
-  ["Staff", "#1A3A5C", "Roster, permissions matrix, commissions, AI coach"],
-  ["Settings", "#0E2642", "12 setting cards, each with its own detail sub-screen"],
-  ["Reports", "#0A2348", "GST-ready exports, custom builder, scheduled delivery"],
-  ["AI Copilot", "#06337A", "Ask anything. Copilot reads your live store data"],
-  ["Dashboard", "#0A2348", "Sales overview, KPIs, action center, AI suggestions"],
-  ["Billing", "#06337A", "Cart, search, loyalty, payment, GST, all in one screen"],
-  ["Inventory", "#1A3A5C", "Stock matrix, variants, expiry, smart reorder"],
-  ["Analytics", "#0E2642", "Footfall, margin, Prophet forecast, anomaly detection"],
-  ["Customers", "#0A2348", "CRM, loyalty tiers, gift cards, WhatsApp campaigns"],
-  ["Payments", "#06337A", "PSP settlement, UTR match, failed payment queue"],
+  ["Billing", "#0A2348", "Scan, discount, split payment, GST, bill printed"],
+  ["Reorder advice", "#06337A", "What to order, how much, and the reason behind it"],
+  ["Inventory", "#1A3A5C", "Variants, stock per shop, barcode labels"],
+  ["Dashboard", "#0E2642", "Today's sales, margin, low stock, what needs attention"],
+  ["Purchases", "#0A2348", "Suppliers, orders, and receiving goods in parts"],
+  ["Transfers", "#06337A", "Send stock between shops, sent and received tracked apart"],
+  ["Shifts", "#1A3A5C", "Opening cash, mid-day check, closing count, short or over"],
+  ["Returns", "#0E2642", "Pull up an old bill for a return, refund or exchange"],
+  ["Reports", "#0A2348", "Sales, stock value and movement, all downloadable"],
+  ["Offline", "#06337A", "Bills saved on the counter machine, sent up later"],
 ];
 const GC_BAR_W = [88, 72, 94];
 const GC_BAR_BG = ["#EEF4FF", "#F5F6F9", "#fff"];
@@ -201,9 +195,9 @@ export default function LandingPage() {
       <section className="hero-section">
         <div className="hero-bg"></div>
         <div className="hero-grid"></div>
-        <div className="hero-badge"><span></span> Now with AI Copilot · GST-native · Offline-first</div>
-        <h1 className="hero-h1">Start with a POS ready<br />for your store, <em>not an empty screen.</em></h1>
-        <p className="hero-sub">Send your product photos, supplier bills, Excel file or handwritten list on WhatsApp, and we help prepare your catalogue so billing, inventory, staff, loyalty, analytics and GST compliance are connected from your first sale.</p>
+        <div className="hero-badge"><span></span> GST on every bill · Survives a connection drop · Built for retail shops</div>
+        <h1 className="hero-h1">Billing software for your shop<br /><em>that also tells you what to order.</em></h1>
+        <p className="hero-sub">Send us your product photos, supplier bills, an Excel file or even a handwritten list on WhatsApp. We put your catalogue in for you, so billing, stock and GST are working together from your very first bill.</p>
         <div className="hero-actions">
           <a
             className="btn-hero btn-hero-pri"
@@ -221,9 +215,9 @@ export default function LandingPage() {
           <span className="dot"></span>
           <span>✓ GST-compliant from day 1</span>
           <span className="dot"></span>
-          <span>✓ Works offline</span>
+          <span>✓ Billing survives a drop</span>
           <span className="dot"></span>
-          <span>✓ Paid plans with secure checkout</span>
+          <span>✓ No per-bill charges</span>
         </div>
 
         {/* product mock */}
@@ -296,14 +290,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* STATS BAND — real product facts only, no customer/usage numbers we
+      {/* STATS BAND: real product facts only, no customer/usage numbers we
           can't back with retained evidence (see docs/AMBEL_POS_SEO_AUDIT_2026-09-02.html) */}
       <div className="stats-band animate-in">
         <div className="stats-inner">
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count={FEATURES.length}>0</span></div><div className="stat-label">Integrated modules</div></div>
+          <div className="stat-item"><div className="stat-num is-word">WhatsApp</div><div className="stat-label">Send your catalogue, we put it in</div></div>
           <div className="stat-item"><div className="stat-num"><span className="cv" data-count="799" data-prefix="₹">₹0</span></div><div className="stat-label">Starting plan, per month</div></div>
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="18" data-suffix="%">0%</span></div><div className="stat-label">GST built into every bill</div></div>
-          <div className="stat-item"><div className="stat-num is-word">Offline</div><div className="stat-label">Billing works without signal</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="18" data-suffix="%">0%</span></div><div className="stat-label">Slabs handled on every line</div></div>
+          <div className="stat-item"><div className="stat-num is-word">No&nbsp;signal</div><div className="stat-label">Billing carries on, syncs when it returns</div></div>
         </div>
       </div>
 
@@ -314,8 +308,8 @@ export default function LandingPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7z" /></svg>
             Built for Indian retail
           </div>
-          <h2 className="section-h animate-in">Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h2>
-          <p className="section-sub animate-in">{FEATURES.length} deeply-integrated modules, all designed around GST compliance, Indian payment rails, and the real complexity of multi-store retail.</p>
+          <h2 className="section-h animate-in">Everything the counter needs,<br /><em>and nothing it doesn&apos;t.</em></h2>
+          <p className="section-sub animate-in">Everything listed here is built and working today. If something is not ready yet, you will not find it on this page.</p>
           <div className="features-grid">
             {FEATURES.map((f, i) => (
               <div className="feat-card animate-in" key={i}>
@@ -336,9 +330,9 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
           <div className="section-tag" style={{ justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.6c2.9 1.6 4.8 4.6 4.8 8 0 2-.9 3.8-1.9 4.9l-2.9 1.9-2.9-1.9c-1-1.1-1.9-2.9-1.9-4.9 0-3.4 1.9-6.4 4.8-8z" /></svg>
-            Get started in 30 minutes
+            Open the counter the same week
           </div>
-          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>From empty to first sale,<br /><em>guided every step.</em></h2>
+          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>From empty shop to first bill,<br /><em>we do the hard part.</em></h2>
           <div className="steps-row" style={{ marginTop: 52 }}>
             {STEPS.map((s, i) => {
               const [l1, l2] = s[0].split("\n");
@@ -364,7 +358,7 @@ export default function LandingPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4.5" width="18" height="11" rx="2.2" /></svg>
 Built for retail professionals
           </div>
-          <h2 className="section-h animate-in">Every screen designed<br />for <em>retail professionals.</em></h2>
+          <h2 className="section-h animate-in">Plain screens,<br />built for <em>a busy counter.</em></h2>
         </div>
         <div style={{ overflow: "hidden", marginTop: 0, WebkitMask: "linear-gradient(90deg,transparent,black 8%,black 92%,transparent)" }}>
           <div className="gallery-track" id="gtrack">
@@ -410,24 +404,25 @@ Built for retail professionals
         </div>
       </section>
 
-      {/* SETUP PROMISE — replaces the removed testimonials section, which
-          named customers we had no retained evidence for (see the SEO audit) */}
+      {/* THE REORDER ADVICE: the differentiator, stated plainly. Claims here
+          are limited to what ml/forecast.py and ml/eligibility.py actually do. */}
       <section className="social-section">
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="3.6" /><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0" /></svg>
-            Guided setup, not a blank dashboard
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
+            The part other billing software leaves to you
           </div>
-          <h2 className="section-h animate-in">Start billing on day one, <em>not week three.</em></h2>
-          <p className="section-sub animate-in">Send your product photos, supplier bills, an Excel file or a handwritten list on WhatsApp. We help prepare your catalogue so sales and stock are connected from your first bill. Running a <a href="/retail/grocery-supermarket">grocery or supermarket</a>? See how it fits your counter.</p>
+          <h2 className="section-h animate-in">Your shop tells you<br /><em>what to order next.</em></h2>
+          <p className="section-sub animate-in">Most software can tell you what you sold. The hard question is what to buy next week, and every owner answers it from memory. Ambel POS looks at how fast each item has been moving and how long your supplier takes, then gives you a quantity and the reason for it. For an item that is too new to judge, it says <strong>&ldquo;not enough history&rdquo;</strong> rather than putting up a number it cannot stand behind, so you know exactly which advice to trust.</p>
+          <p className="section-sub animate-in">Running a <a href="/retail/grocery-supermarket">grocery or supermarket</a>? See how it fits your counter.</p>
         </div>
       </section>
 
       {/* CTA */}
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
-        <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Choose a paid plan, send us your catalogue, and activate your store.</p>
+        <h2 className="animate-in">Stop guessing<br />what to order.</h2>
+        <p className="animate-in">Pick a plan, send us your catalogue on WhatsApp, and start billing.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goApp}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>

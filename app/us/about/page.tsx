@@ -8,9 +8,9 @@ import SiteFooter from "@/components/marketing/site-footer";
 export const metadata = { title: "About | Ambel POS" };
 
 const VALUES = [
-  ["Built for modern retail", "Every workflow, from multi-jurisdiction tax and product taxability to BOPIS and ship-from-store, is designed around how specialty retail actually operates."],
-  ["Offline is not optional", "Internet drops. Checkout shouldn't. Every core workflow works offline-first and syncs the moment connectivity returns."],
-  ["AI that shows its work", "Our Copilot proposes actions with the data behind them, and always asks before it touches your store."],
+  ["Built for independent retail", "Tax on every line, variants, per-location stock and supplier lead times are designed around how a small retail business actually runs a counter."],
+  ["A dropped connection should not stop a sale", "Internet drops. Checkout should not. If the line goes while the register is open, sales are saved locally and sent up the moment the connection returns."],
+  ["Advice that shows its working", "When we suggest a reorder quantity we show the reasoning behind it, and when we do not have enough sales history to be sure, we say so rather than posting a number we cannot stand behind."],
   ["Ship with retailers, not at them", "Roadmap priorities come from store owners and associates using the product daily, not from a boardroom."],
 ];
 

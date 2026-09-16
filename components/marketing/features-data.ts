@@ -7,21 +7,22 @@ export const FEAT_ICONS: Record<string, string> = {
   reports: '<path d="M4.2 4v14.8a1.5 1.5 0 0 0 1.5 1.5H20.5"/><path d="M8 15.2l3.6-4.1 3 2.6L20.2 7.6"/><circle cx="20.2" cy="7.6" r="1.1" fill="currentColor" stroke="none"/>',
   customer: '<circle cx="12" cy="8" r="3.6"/><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0"/>',
   challan: '<path d="M2.6 6.4A1.5 1.5 0 0 1 4.1 5h8.4a1.5 1.5 0 0 1 1.5 1.5V16H2.6z"/><path d="M14 9h3.6l3.4 3.6V16H14z"/><circle cx="7" cy="18.4" r="2"/><circle cx="17.4" cy="18.4" r="2"/>',
+  offline: '<path d="M4.2 15.6a4 4 0 0 1 1.6-7.5 6.2 6.2 0 0 1 11.3-1.6 4.6 4.6 0 0 1 2.6 8.2"/><path d="M3 3l18 18"/>',
   payments: '<rect x="2.5" y="5.5" width="19" height="13" rx="2.6"/><path d="M2.5 9.6h19"/><path d="M5.8 14.6H10"/>',
 };
 
 export type Feature = [icon: string, title: string, body: string, badge3: string, badge4: string];
 
 export const FEATURES: Feature[] = [
-  ["bill", "Billing & Cart", "Ultra-fast billing with barcode scan, product search, multi-cashier, split payment, and real-time GST calculation on every line.", "EXISTING", ""],
-  ["bolt", "AI Copilot", "Ask your store anything. Copilot reads live data (stock, sales, customers) and proposes actions with data basis, requiring your approval.", "NEW", "AI"],
-  ["inventory", "Inventory & Variants", "Size × colour matrix editor, batch tracking, expiry alerts, smart reorder with Prophet forecasting, and one-click barcode labels.", "", "★"],
-  ["channels", "Omnichannel", "POS + website + Instagram + marketplace, all sharing one live stock pool. Orders flow in from every channel automatically.", "NEW", ""],
-  ["staff", "Staff & Commissions", "Role-based permissions, shift scheduling, attendance, and an AI coaching score that nudges cashiers on the POS in real time.", "NEW", "★"],
-  ["reports", "GST & Reports", "GSTR-1 ready reports, daily P&L, custom builder, scheduled exports, plus a direct filing API to the GST portal (coming).", "", ""],
-  ["customer", "Loyalty & CRM", "Tiered points, gift cards, WhatsApp campaigns, DND-safe DLT templates, and AI-segmented audience builder.", "", "IMPROVE"],
-  ["challan", "Delivery Challan", "Legally-required B2B and inter-branch dispatch documents, one-click convert to tax invoice on delivery.", "NEW", ""],
-  ["payments", "Payments & Settlement", "UPI, card, cash, split, with PSP-level UTR matching, daily settlement reconciliation, and failed-payment resolution.", "", "★"],
+  ["bolt", "Tells you what to reorder", "For each item it works out how fast it is selling, how long your supplier takes, and what is already on the way, then tells you how much to order and why. If an item is too new to judge, it says so instead of guessing.", "", "\u2605"],
+  ["bill", "Billing that adds up", "Scan or search, apply a discount, split the payment across cash, card and UPI. A bill cannot be closed until the payments match the total exactly.", "EXISTING", ""],
+  ["inventory", "Stock you can trust", "Size, colour and material variants, stock per store, and barcode labels in one click. Every change in stock is written down and never quietly edited, so a wrong number can always be traced back to what caused it.", "", "\u2605"],
+  ["offline", "Keeps billing when the net drops", "If the connection goes while the till is open, carry on billing. Bills are saved on the counter machine and sent up on their own once you are back online, and anything that clashes is shown to you rather than silently overwritten.", "", "\u2605"],
+  ["channels", "More than one shop", "Send stock from one shop to another, with what was sent and what actually arrived recorded separately, so the same stock is never counted twice.", "", ""],
+  ["challan", "Suppliers and orders", "Keep supplier details, how long each one takes to deliver, and their payment terms. Raise an order, and receive it in parts as the goods arrive.", "", ""],
+  ["staff", "Shift and cash tally", "Start the day with an opening cash amount, check the till mid-day, count it at closing, and see straight away if it is short or over.", "", ""],
+  ["customer", "Returns and exchanges", "Pull up any old bill, print or email it again, and take a return, refund or exchange against it.", "", ""],
+  ["reports", "Reports you can open in Excel", "Sales by day, item, category and staff member. Stock value and stock movement. Every one of them downloads as a spreadsheet.", "", ""],
 ];
 
 /**
@@ -30,13 +31,13 @@ export const FEATURES: Feature[] = [
  * the copy is market-specific.
  */
 export const US_FEATURES: Feature[] = [
-  ["bill", "Fast Checkout", "Payment-first checkout with barcode scan, variant picker, split tender and tap/chip card capture in a handful of taps.", "EXISTING", ""],
-  ["reports", "Sales Tax Automation", "Regional and local tax jurisdictions resolved per transaction, with product taxability and exemption certificates.", "NEW", "★"],
-  ["channels", "Omnichannel Sync", "One stock pool across store POS, Shopify storefront and social shops. BOPIS and ship-from-store fulfil out of the same inventory.", "NEW", ""],
-  ["bolt", "Offline-First Billing", "Keep selling when the internet drops. Sales, tax and card authorisations are stored locally and reconciled the moment you reconnect.", "", "★"],
-  ["inventory", "Inventory & Variants", "Size × colour × material matrix, multi-location transfers, purchase orders and reorder suggestions across every channel.", "", "★"],
-  ["challan", "BOPIS & Pickup", "Buy-online-pickup-in-store queues, staging shelves, promise times and late-pickup follow-up built into the associate view.", "NEW", ""],
-  ["payments", "Payments & Hardware", "Tap/chip readers, cash drawers, receipt and label printers paired from one screen, with store-and-forward card fallback.", "", ""],
-  ["customer", "Digital Receipts & Returns", "Email and SMS receipts by default, printed on request, each carrying a return barcode and the full tax breakdown.", "", "IMPROVE"],
-  ["staff", "Reports & Staff", "Best sellers, gross margin, tax liability, omnichannel mix and per-associate performance, scheduled straight to your inbox.", "", ""],
+  ["bolt", "Tells you what to reorder", "Every night it looks at how each item has been selling and works out how much you are likely to need next. You get a quantity to order, a best case and a worst case, and the reason behind the number.", "", "\u2605"],
+  ["reports", "Says when it is not sure", "An item needs about two months of sales before the forecast means anything. Until then it is listed as \"not enough history\" rather than given a made-up number, so you always know which part of your shelf the advice actually covers.", "", "\u2605"],
+  ["inventory", "Stock you can trust", "Every change in stock is written down and never quietly edited. If a count looks wrong, you can trace it back to the exact sale, delivery or transfer that caused it. That is also why the forecast has clean history to learn from.", "", "\u2605"],
+  ["bill", "Fast checkout", "Scan or search, pick the size and colour, take part cash and part card. A sale cannot close until the payments match the total exactly.", "EXISTING", ""],
+  ["offline", "Keeps selling when the internet drops", "If the connection goes while the register is open, carry on selling. Sales are saved on the register and sent up on their own once you reconnect, and anything that clashes is shown to you instead of being resolved behind your back.", "", "\u2605"],
+  ["channels", "More than one location", "Stock counted per location, and transfers between them that record what was sent and what actually arrived separately, so nothing is counted twice.", "", ""],
+  ["challan", "Suppliers and purchase orders", "How long each supplier takes to deliver feeds straight into the reorder advice. Raise an order and receive it in parts as the boxes turn up.", "", ""],
+  ["staff", "Shift and cash control", "Opening float, a mid-shift check, a count at close, and the difference shown plainly for every register session.", "", ""],
+  ["customer", "Returns and receipts", "Receipts by email or on paper, and any of them can be pulled up later for a return, refund or exchange.", "", ""],
 ];

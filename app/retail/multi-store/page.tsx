@@ -19,12 +19,12 @@ export default function Page() {
         ["18%", "GST, consolidated across branches"],
       ]}
       features={[
-        { title: "Central Stock Pool", body: "See stock across every branch in real time, and raise inter-branch transfers with delivery challans in a click." },
-        { title: "Per-branch Pricing & Tax", body: "Set different price lists, tax rates or offers per store while keeping one shared product catalog." },
-        { title: "Consolidated GST Filing", body: "Roll up GSTR-1 across all branches into one filing-ready export, or file per-branch when required." },
+        { title: "Stock Across Every Branch", body: "See what each branch holds, and move stock between them with what was sent and what arrived recorded separately." },
+        { title: "Per-branch Prices and Tax", body: "Override a price for one branch while every branch shares the same product catalogue, and set tax components per store." },
+        { title: "Reports Per Branch or Combined", body: "Sales, stock value and stock movement for one branch or all of them, downloadable as a spreadsheet for your accountant." },
         { title: "Role-based Store Access", body: "Owners see everything; store managers and staff see only their branch, enforced at the data layer." },
-        { title: "Cross-branch Reporting", body: "Compare footfall, margin and sell-through across stores side by side, down to a single counter." },
-        { title: "Franchise-ready Billing", body: "Support franchise and company-owned stores on the same account with separate settlement rules." },
+        { title: "Compare Branches Side by Side", body: "Put sales, margin and stock movement for each branch next to each other, down to a single counter." },
+        { title: "Reorder Advice Per Branch", body: "Each branch sells differently. Reorder quantities are worked out from that branch\u2019s own sales, not a company-wide average." },
       ]}
       relatedLink={{ href: "/retail/grocery-supermarket", label: "Running a multi-location supermarket or grocery chain? See the grocery & supermarket page →" }}
     />

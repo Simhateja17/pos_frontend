@@ -16,11 +16,11 @@ export default function Page() {
       stats={[
         ["₹799", "Starting plan, per month"],
         ["18%", "GST built into every bill"],
-        ["Offline", "Billing works without signal"],
+        ["No signal", "Billing carries on, syncs after"],
       ]}
       features={[
         { title: "Fast Barcode Billing", body: "Scan packaged goods or search loose items by name, weight or unit, with multi-cashier billing for busy counters." },
-        { title: "Purchases & Supplier Bills", body: "Log supplier purchases and goods-in as they arrive, so stock stays accurate without end-of-day recounts." },
+        { title: "Purchases and Goods In", body: "Raise a purchase order and receive it in parts as the stock arrives, so counts stay right without an end-of-day recount." },
         { title: "Stock & Reorder Guidance", body: "See stock across the store in real time, with reorder suggestions based on actual sales, not guesswork." },
         { title: "Multi-counter & Multi-location", body: "Run several billing counters and locations on one account, with the included registers and users your plan covers." },
         { title: "Weight & Loose-item Pricing", body: "Bill fruits, vegetables and loose grocery items by weight, alongside barcoded packaged SKUs, on the same invoice." },

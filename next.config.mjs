@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // The register's device identity is stored in an HttpOnly cookie. Calling the
   // API from a different site makes that a third-party cookie, which Chrome may
   // block even with SameSite=None. Keep browser API calls same-origin and let

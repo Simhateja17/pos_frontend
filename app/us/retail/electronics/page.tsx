@@ -1,8 +1,6 @@
 import "@/app/landing.css";
 import RetailVerticalPage from "@/components/marketing/retail-vertical-page";
-
 export const metadata = { title: "Electronics POS | Ambel POS" };
-
 export default function Page() {
   return (
     <RetailVerticalPage
@@ -12,9 +10,9 @@ export default function Page() {
       emphasis="and service plans, sorted."
       subtitle="Track IMEI and serial numbers, manage manufacturer warranties and extended service plans, and ring up high-value items with confidence."
       stats={[
-        ["340+", "Electronics stores"],
-        ["2.4M+", "Serials tracked"],
-        ["0.02%", "Warranty mismatch rate"],
+        ["3", "Forecasting methods tried per item"],
+        ["80%", "Of the time, demand lands in the range"],
+        ["60", "Days of sales before we advise you"],
       ]}
       features={[
         { title: "IMEI & Serial Capture", body: "Scan or enter serial/IMEI at the point of sale, automatically linked to the ticket for warranty claims." },

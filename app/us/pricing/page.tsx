@@ -28,7 +28,7 @@ const FAQ: [string, string][] = [
   ["How is sales tax handled on my subscription?", "Subscription prices are shown exclusive of tax. Any applicable regional or local tax is calculated and shown in the secure checkout."],
   ["Can I change plans later?", "Plan changes are scheduled for a future billing cycle. Your data is retained while an active subscription is in place."],
   ["How do Pro add-ons work?", "Pro includes a generous base allowance of locations, users and registers. Add more of any of the three at a small per-unit price once you outgrow it."],
-  ["What is included in every plan?", "Checkout, inventory management, ML reorder intelligence, multi-jurisdiction sales tax reports with CSV export, and offline checkout with sync."],
+  ["What is included in every plan?", "Checkout, inventory, suppliers and purchase orders, shifts and cash control, reorder advice, reports with CSV export, and billing that survives a dropped connection."],
 ];
 
 export default async function USPricingPage() {

@@ -24,7 +24,7 @@ import { FEAT_ICONS, US_FEATURES } from "@/components/marketing/features-data";
 import { PricingPeriod } from "@/components/marketing/pricing-period";
 import { REGION_SITE } from "@/components/marketing/site-links";
 
-const MOCK_SB = ["Dashboard", "Checkout", "Sales Tax", "Offline Sync", "Inventory", "Online Orders", "Receipts", "Hardware", "Reports"];
+const MOCK_SB = ["Dashboard", "Demand Planning", "Checkout", "Inventory", "Purchases", "Transfers", "Shifts", "Returns", "Reports"];
 const MOCK_KPI = [
   ["Net Sales", "$8,642", true],
   ["Transactions", "128", false],
@@ -32,46 +32,35 @@ const MOCK_KPI = [
   ["Margin", "58.4%", false],
 ];
 const MOCK_LIST = [
-  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "POS-24850", who: "Harper Lee · Tap", amt: "$251.97" },
+  { bg: "#EEF4FF", color: "var(--brand-1)", bill: "POS-24850", who: "Card · 2 items", amt: "$251.97" },
   { bg: "#FEF3E0", color: "#B45309", bill: "POS-24849", who: "Walk-in · Cash", amt: "$48.20" },
-  { bg: "#ECFDF5", color: "#0f8f63", bill: "WEB-1842", who: "Nora Patel · BOPIS", amt: "$164.50" },
+  { bg: "#ECFDF5", color: "#0f8f63", bill: "POS-24848", who: "Split · 6 items", amt: "$164.50" },
 ];
 const MOCK_BARS = [38, 52, 44, 68, 60, 72, 58, 80, 70, 76];
 
 const STEPS = [
-  ["Store\nProfile", "Set your business ID, store address, timezone and receipt header"],
-  ["Sales Tax\nRules", "Register your tax jurisdictions; rates and local rules resolve automatically"],
-  ["Import\nCatalog", "CSV import or manual: 4,826 SKUs with variants in minutes"],
-  ["Pair\nHardware", "Card reader, scanner, receipt printer and cash drawer in one screen"],
-  ["First\nSale", "Run a test transaction, verify the receipt, open for business"],
+  ["Store\nProfile", "Business details, locations, tax settings and receipt header"],
+  ["Import\nCatalog", "Bring products and variants in by CSV, or add them by hand"],
+  ["Count\nStock", "Your opening count is the starting point everything after it is measured against"],
+  ["Pair\nHardware", "Barcode scanner and receipt printer, verified with a test scan and a test print"],
+  ["Start\nSelling", "Run a test sale, check the receipt, open the register"],
 ];
 
 const GALLERY = [
-  ["Dashboard", "#0A2348", "Net sales, tickets, tax collected, action center"],
-  ["Checkout", "#06337A", "Cart, variant picker, tax, tender, receipt in one screen"],
-  ["Sales Tax", "#1A3A5C", "Tax jurisdictions, taxability, filing alerts"],
-  ["Offline Sync", "#0E2642", "Local-first register, store-and-forward, conflict resolver"],
-  ["Inventory", "#0A2348", "Variant matrix, transfers, purchase orders, reorder points"],
-  ["Online Orders", "#06337A", "Shopify sync, BOPIS queue, ship-from-store, pickup shelves"],
-  ["Receipts", "#1A3A5C", "Email and SMS delivery, return barcode, tax breakdown"],
-  ["Hardware", "#0E2642", "Readers, scanners, printers and drawers with diagnostics"],
-  ["Reports", "#0A2348", "Best sellers, margin, tax liability, scheduled delivery"],
-  ["Onboarding", "#06337A", "Guided first-run setup with a live launch checklist"],
-  ["Dashboard", "#0A2348", "Net sales, tickets, tax collected, action center"],
-  ["Checkout", "#06337A", "Cart, variant picker, tax, tender, receipt in one screen"],
-  ["Sales Tax", "#1A3A5C", "Tax jurisdictions, taxability, filing alerts"],
-  ["Offline Sync", "#0E2642", "Local-first register, store-and-forward, conflict resolver"],
-  ["Inventory", "#0A2348", "Variant matrix, transfers, purchase orders, reorder points"],
-  ["Online Orders", "#06337A", "Shopify sync, BOPIS queue, ship-from-store, pickup shelves"],
+  ["Demand Planning", "#0A2348", "Per-item forecast, suggested order quantity, confidence range"],
+  ["Dashboard", "#06337A", "Net sales, tickets, margin, low stock, reorder queue"],
+  ["Checkout", "#1A3A5C", "Cart, variant picker, tax, split tender, receipt"],
+  ["Inventory", "#0E2642", "Variant matrix, per-location stock, append-only movements"],
+  ["Offline Sync", "#0A2348", "Local-first register, automatic retry, conflict resolver"],
+  ["Purchases", "#06337A", "Suppliers, lead times, purchase orders, partial receiving"],
+  ["Transfers", "#1A3A5C", "Store-to-store dispatch with sent and received tracked apart"],
+  ["Shifts", "#0E2642", "Starting float, X report, counted cash, Z close variance"],
+  ["Returns", "#0A2348", "Reopen any sale for refund, exchange or receipt re-send"],
+  ["Reports", "#06337A", "Sales, stock valuation and movement, all exportable to CSV"],
 ];
 const GC_BAR_W = [88, 72, 94];
 const GC_BAR_BG = ["#EEF4FF", "#F5F6F9", "#fff"];
 
-const TESTIMONIALS = [
-  ["AM", "#0058BA", "Ambel POS runs checkout, tax and our Shopify stock pool from one place. Ringing up a customer takes half the taps it used to.", "Ava Mitchell", "Owner, The Dresser · Multi-location retailer"],
-  ["RK", "#0E7490", "Multi-jurisdiction tax used to be a monthly panic. Now the rates resolve per transaction and the filing alerts land before the deadline.", "Ryan Keller", "CFO, Style & Co · Retail group"],
-  ["PS", "#6D28D9", "A storm took our internet out on a Saturday. We kept selling all afternoon and everything reconciled the moment we reconnected.", "Priya Shah", "Store Manager, Urban Fits · Independent retailer"],
-];
 
 function featBadges(b3, b4) {
   return (
@@ -223,9 +212,9 @@ export default function USLandingPage() {
       <section className="hero-section">
         <div className="hero-bg"></div>
         <div className="hero-grid"></div>
-        <div className="hero-badge"><span></span> Sales-tax native · Omnichannel · Offline-first</div>
-        <h1 className="hero-h1">Retail, run from<br /><em>one register.</em></h1>
-        <p className="hero-sub">Checkout, sales tax, inventory, online orders, receipts and reports, unified in one beautiful POS built for independent boutiques and multi-location retailers.</p>
+        <div className="hero-badge"><span></span> Retail POS · Stock you can trust · Survives a connection drop</div>
+        <h1 className="hero-h1">A retail POS system<br /><em>that tells you what to reorder.</em></h1>
+        <p className="hero-sub">A complete point of sale that also does the part your current one leaves to you. Every night it works out how fast each item is selling and tells you what to order, how much, and how sure it is. When an item is too new to call, it says so instead of making a number up.</p>
         <div className="hero-actions">
           <a
             className="btn-hero btn-hero-pri"
@@ -241,9 +230,9 @@ export default function USLandingPage() {
         <div className="hero-trust">
           <span>✓ No setup fee</span>
           <span className="dot"></span>
-          <span>✓ Sales tax handled from day 1</span>
+          <span>✓ Tax on every line</span>
           <span className="dot"></span>
-          <span>✓ Works offline</span>
+          <span>✓ Billing survives a drop</span>
           <span className="dot"></span>
           <span>✓ Secure checkout</span>
         </div>
@@ -321,11 +310,11 @@ export default function USLandingPage() {
       {/* STATS BAND */}
       <div className="stats-band animate-in">
         <div className="stats-inner">
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="500">0</span><span>+</span></div><div className="stat-label">Retailers on Ambel POS</div></div>
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="240" data-prefix="$" data-suffix="M+">$0M+</span></div><div className="stat-label">GMV processed annually</div></div>
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="99.98" data-suffix="%">0%</span></div><div className="stat-label">Uptime SLA</div></div>
-          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="12000">0</span><span>+</span></div><div className="stat-label">Tax jurisdictions covered</div></div>
-        </div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="3">0</span></div><div className="stat-label">Forecasting methods tried on every item</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="80" data-suffix="%">0%</span></div><div className="stat-label">Of the time, real demand lands in the range</div></div>
+          <div className="stat-item"><div className="stat-num"><span className="cv" data-count="60">0</span></div><div className="stat-label">Days of sales before we will advise you</div></div>
+          <div className="stat-item"><div className="stat-num is-word">No&nbsp;signal</div><div className="stat-label">Selling carries on, syncs when it returns</div></div>
+      </div>
       </div>
 
       {/* FEATURES */}
@@ -333,10 +322,10 @@ export default function USLandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7z" /></svg>
-            Built for modern retail
+            Built on records you can trust
           </div>
-          <h2 className="section-h animate-in">Everything your store needs,<br /><em>nothing it doesn&apos;t.</em></h2>
-          <p className="section-sub animate-in">Deeply-integrated modules, designed around sales-tax workflows, card-present payments, and the real complexity of multi-location omnichannel retail.</p>
+          <h2 className="section-h animate-in">A full POS underneath,<br /><em>an advisor on top.</em></h2>
+          <p className="section-sub animate-in">Advice is only as good as the records it is built on. That is why stock changes are never quietly edited, and a sale will not close unless the payments match the total. Tidy records in, advice worth acting on out.</p>
           <div className="features-grid">
             {US_FEATURES.map((f, i) => (
               <div className="feat-card animate-in" key={i}>
@@ -357,9 +346,9 @@ export default function USLandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
           <div className="section-tag" style={{ justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.6c2.9 1.6 4.8 4.6 4.8 8 0 2-.9 3.8-1.9 4.9l-2.9 1.9-2.9-1.9c-1-1.1-1.9-2.9-1.9-4.9 0-3.4 1.9-6.4 4.8-8z" /></svg>
-            Get started in 30 minutes
+            Set up in an afternoon
           </div>
-          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>From empty to first sale,<br /><em>guided every step.</em></h2>
+          <h2 className="section-h animate-in" style={{ margin: "0 auto" }}>Set up in an afternoon.<br /><em>Advice starts in two months.</em></h2>
           <div className="steps-row" style={{ marginTop: 52 }}>
             {STEPS.map((s, i) => {
               const [l1, l2] = s[0].split("\n");
@@ -385,7 +374,7 @@ export default function USLandingPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4.5" width="18" height="11" rx="2.2" /></svg>
             Ten screens, zero compromises
           </div>
-          <h2 className="section-h animate-in">Every screen designed<br />for <em>retail professionals.</em></h2>
+          <h2 className="section-h animate-in">Every screen here is built.<br /><em>Nothing on this page is coming soon.</em></h2>
         </div>
         <div style={{ overflow: "hidden", marginTop: 0, WebkitMask: "linear-gradient(90deg,transparent,black 8%,black 92%,transparent)" }}>
           <div className="gallery-track" id="gtrack">
@@ -431,34 +420,24 @@ export default function USLandingPage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* WHAT WE DON'T CLAIM: replaces the removed testimonials block, which
+          quoted named people at named stores that we have no evidence for. */}
       <section className="social-section">
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="section-tag">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="3.6" /><path d="M5.6 20.2a6.4 6.4 0 0 1 12.8 0" /></svg>
-            Trusted by retailers worldwide
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.2M12 16.2v.2" /></svg>
+            What we are not claiming
           </div>
-          <h2 className="section-h animate-in">Real stores, <em>real results.</em></h2>
-          <div className="social-grid">
-            {TESTIMONIALS.map((t, i) => (
-              <div className="soc-card animate-in" key={i}>
-                <div className="stars">★★★★★</div>
-                <p className="soc-quote">&quot;{t[2]}&quot;</p>
-                <div className="soc-author">
-                  <div className="soc-ava" style={{ background: t[1] }}>{t[0]}</div>
-                  <div><div className="soc-name">{t[3]}</div><div className="soc-role">{t[4]}</div></div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h2 className="section-h animate-in">No star ratings. <em>No invented numbers.</em></h2>
+          <p className="section-sub animate-in">Most POS websites open with customer counts and five-star quotes. We are early, so we do not have those yet, and we are not going to make them up. It is the same reason the app tells you when it does not have enough sales history to advise you. What we can show you is the working product. <a href={REGION_SITE.INTL.demoHref} target="_blank" rel="noopener noreferrer">Book a demo</a> and push on it yourself.</p>
         </div>
       </section>
 
       {/* CTA */}
       <section className="cta-section">
         <svg className="cta-rings" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice"><circle cx="600" cy="200" r="180" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="1" /><circle cx="600" cy="200" r="280" fill="none" stroke="rgba(255,255,255,.04)" strokeWidth="1" /><circle cx="600" cy="200" r="380" fill="none" stroke="rgba(255,255,255,.03)" strokeWidth="1" /></svg>
-        <h2 className="animate-in">Ready to transform<br />your store?</h2>
-        <p className="animate-in">Join retailers already running on Ambel POS. Choose a paid plan and activate your store.</p>
+        <h2 className="animate-in">Stop guessing<br />your reorders.</h2>
+        <p className="animate-in">We are early, and we would rather say so than invent a customer count. Book a demo and judge the product itself.</p>
         <div className="cta-actions">
           <button className="btn-cta-w" onClick={goAuth}>
             <svg style={{ width: 18, height: 18, flexShrink: 0, stroke: "var(--brand-1)", fill: "none", strokeWidth: 2, strokeLinecap: "round" }} viewBox="0 0 24 24"><path d="M12.6 2.4 5 13.6h5.2l-1 8L17 10.4h-5.2z" /></svg>
