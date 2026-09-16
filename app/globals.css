@@ -108,6 +108,9 @@
   .nav-item.active .count{background:var(--brand-soft);color:var(--brand-1)}
   .nav-item .ni-badge{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:6px}
   .nav-item .ni-badge.new{background:var(--new-soft);color:var(--new)}
+  .nav-item.soon{cursor:default;opacity:.62}
+  .nav-item.soon:hover{background:transparent}
+  .nav-item .ni-badge.soon{background:#E6E8EB;color:var(--muted);text-transform:uppercase}
   .sb-foot{padding:12px;border-top:1px solid var(--border);flex-shrink:0}
   .sys-pill{background:var(--surface);border:1px solid var(--border-soft);border-radius:11px;padding:11px 13px;box-shadow:var(--shadow-sm)}
   .sys-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;margin-right:7px;box-shadow:0 0 0 3px var(--success-soft)}

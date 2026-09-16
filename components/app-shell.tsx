@@ -327,6 +327,15 @@ export function AppShell({ region = 'IN', children }: { region?: MarketingRegion
               {group.items.map((item) => {
                 const active = item.href === matchedHref
                 const Icon = item.icon
+                if (item.comingSoon) {
+                  return (
+                    <div key={item.href} className="nav-item soon" aria-disabled="true" title={t('nav.soon')}>
+                      <Icon strokeWidth={1.85} />
+                      <span>{item.label}</span>
+                      <span className="ni-badge soon">{t('nav.soon')}</span>
+                    </div>
+                  )
+                }
                 return (
                   <Link
                     key={item.href}

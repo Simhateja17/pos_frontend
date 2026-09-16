@@ -6,7 +6,6 @@ import {
   Boxes,
   FolderTree,
   ClipboardList,
-  Grid2X2,
   LayoutDashboard,
   Mail,
   MessageCircle,
@@ -48,6 +47,11 @@ export type AppNavItem = {
    * those routes render the explicit unavailable state.
    */
   badge?: 'new'
+  /**
+   * Announced but not built yet. The sidebar shows it with a "Soon" badge and
+   * does not link anywhere, rather than sending the user to a dead-end page.
+   */
+  comingSoon?: true
   /** Visible to, and route-authorized for, a PIN-logged cashier. */
   cashierAccessible?: boolean
   /**
@@ -68,11 +72,6 @@ export type AppNavGroup = {
 
 export const APP_NAVIGATION: AppNavGroup[] = [
   {
-    label: 'Overview',
-    labelKey: 'nav.groups.overview',
-    items: [{ label: 'Feature Map', labelKey: 'nav.items.featureMap', href: '/app/feature-map', icon: Grid2X2 }],
-  },
-  {
     label: 'Sales',
     labelKey: 'nav.groups.sales',
     items: [
@@ -81,8 +80,8 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Sales / Bills', labelKey: 'nav.items.orders', href: '/app/orders', icon: ClipboardList, cashierAccessible: true },
       { label: 'Register', labelKey: 'nav.items.shifts', href: '/app/shifts', icon: WalletCards, cashierAccessible: true },
       { label: 'Returns & Exchange', labelKey: 'nav.items.returns', href: '/app/returns', icon: RotateCcw, cashierAccessible: true },
-      { label: 'Sales Channels', labelKey: 'nav.items.salesChannels', href: '/app/sales-channels', icon: Radio },
-      { label: 'Delivery Challan', labelKey: 'nav.items.deliveryChallan', href: '/app/delivery-challan', icon: Truck },
+      { label: 'Sales Channels', labelKey: 'nav.items.salesChannels', href: '/app/sales-channels', icon: Radio, comingSoon: true },
+      { label: 'Delivery Challan', labelKey: 'nav.items.deliveryChallan', href: '/app/delivery-challan', icon: Truck, comingSoon: true },
     ],
   },
   {
@@ -102,7 +101,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     labelKey: 'nav.groups.customersTeam',
     items: [
       { label: 'Customers', labelKey: 'nav.items.customers', href: '/app/customers', icon: Users, cashierAccessible: true },
-      { label: 'WhatsApp Connect', labelKey: 'nav.items.whatsapp', href: '/app/whatsapp-connect', icon: MessageCircle },
+      { label: 'WhatsApp Connect', labelKey: 'nav.items.whatsapp', href: '/app/whatsapp-connect', icon: MessageCircle, comingSoon: true },
       { label: 'Staff', labelKey: 'nav.items.staff', href: '/app/settings/members', icon: UserCog },
     ],
   },
@@ -111,7 +110,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     labelKey: 'nav.groups.money',
     items: [
       { label: 'Payments', labelKey: 'nav.items.payments', href: '/app/payments', icon: BadgeIndianRupee },
-      { label: 'Expenses', labelKey: 'nav.items.expenses', href: '/app/expenses', icon: Wallet },
+      { label: 'Expenses', labelKey: 'nav.items.expenses', href: '/app/expenses', icon: Wallet, comingSoon: true },
       { label: 'Receivables', labelKey: 'nav.items.receivables', href: '/app/receivables', icon: ReceiptText, cashierAccessible: true },
       { label: 'GST Documents', labelKey: 'nav.items.documents', href: '/app/documents', icon: ReceiptText, cashierAccessible: true },
     ],
@@ -122,7 +121,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
     items: [
       { label: 'Reports', labelKey: 'nav.items.reports', href: '/app/reports', icon: ClipboardList },
       { label: 'Demand Planning', labelKey: 'nav.items.demandPlanning', href: '/app/demand-planning', icon: BarChart3 },
-      { label: 'AI Copilot', labelKey: 'nav.items.copilot', href: '/app/copilot', icon: Sparkles },
+      { label: 'AI Copilot', labelKey: 'nav.items.copilot', href: '/app/copilot', icon: Sparkles, comingSoon: true },
     ],
   },
   {
@@ -133,7 +132,7 @@ export const APP_NAVIGATION: AppNavGroup[] = [
       { label: 'Import Data', labelKey: 'nav.items.import', href: '/app/import', icon: Upload, ownerOnly: true },
       { label: 'Offline & Sync', labelKey: 'nav.items.offlineSync', href: '/app/offline-sync', icon: RefreshCw },
       { label: 'Hardware & Devices', labelKey: 'nav.items.hardware', href: '/app/hardware', icon: Usb },
-      { label: 'Customer Display', labelKey: 'nav.items.customerDisplay', href: '/app/customer-display', icon: Monitor },
+      { label: 'Customer Display', labelKey: 'nav.items.customerDisplay', href: '/app/customer-display', icon: Monitor, comingSoon: true },
       { label: 'Email', labelKey: 'nav.items.email', href: '/app/email', icon: Mail },
       { label: 'Notifications', labelKey: 'nav.items.notifications', href: '/app/notifications', icon: Bell },
       { label: 'Plan & subscription', labelKey: 'nav.items.subscription', href: '/app/subscription', icon: CreditCard, ownerOnly: true },
@@ -191,7 +190,7 @@ const INTL_OVERRIDES: Record<string, RegionItemOverride> = {
  * is captured at signup and lives in Settings.
  */
 const INTL_EXTRAS: Record<string, AppNavItem[]> = {
-  '/app/payments': [{ label: 'Sales Tax', href: '/app/settings/tax', icon: Landmark }],
+  '/app/payments': [{ label: 'Sales Tax', href: '/app/settings/tax', icon: Landmark, comingSoon: true }],
 }
 
 function itemsForRegion(items: AppNavItem[], region: MarketingRegion): AppNavItem[] {

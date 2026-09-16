@@ -1,6 +1,5 @@
 export const nav = {
   groups: {
-    overview: 'అవలోకనం',
     sales: 'అమ్మకాలు',
     stock: 'స్టాక్ & క్యాటలాగ్',
     customersTeam: 'కస్టమర్లు & సిబ్బంది',
@@ -9,7 +8,6 @@ export const nav = {
     system: 'సిస్టమ్',
   },
   items: {
-    featureMap: 'ఫీచర్ మ్యాప్',
     dashboard: 'డాష్‌బోర్డ్',
     billing: 'బిల్లింగ్',
     orders: 'అమ్మకాలు / బిల్లులు',
@@ -43,4 +41,5 @@ export const nav = {
     subscription: 'ప్లాన్ & సబ్‌స్క్రిప్షన్',
     settings: 'సెట్టింగ్స్',
   },
+  soon: 'త్వరలో',
 }

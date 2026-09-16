@@ -1,6 +1,5 @@
 export const nav = {
   groups: {
-    overview: 'Overview',
     sales: 'Sales',
     stock: 'Stock & Catalog',
     customersTeam: 'Customers & Team',
@@ -9,7 +8,6 @@ export const nav = {
     system: 'System',
   },
   items: {
-    featureMap: 'Feature Map',
     dashboard: 'Dashboard',
     billing: 'Billing',
     orders: 'Sales / Bills',
@@ -43,4 +41,5 @@ export const nav = {
     subscription: 'Plan & subscription',
     settings: 'Settings',
   },
+  soon: 'Soon',
 }
